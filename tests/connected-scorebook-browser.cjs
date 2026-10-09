@@ -38,6 +38,14 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
     await db.exec(
       `select set_config('request.jwt.claim.sub','${id(1)}',false);set role authenticated;`,
     );
+    await db.exec(
+      "reset role;" +
+        fs.readFileSync(
+          "supabase/migrations/20261009210007_tournament_games_guaranteed.sql",
+          "utf8",
+        ) +
+        "set role authenticated;",
+    );
     const { connectedScoring } =
       await import("../src/lib/connected-scoring.ts");
     const args = {
@@ -49,7 +57,13 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
         "p_cursor_at",
         "p_cursor_key",
       ],
-      da_create_scoring_tournament: ["p_team", "p_season", "p_id", "p_name"],
+      da_create_scoring_tournament: [
+        "p_team",
+        "p_season",
+        "p_id",
+        "p_name",
+        "p_guaranteed_games",
+      ],
       da_start_scoring_game: [
         "p_team",
         "p_season",
@@ -270,6 +284,76 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
         },
       };
     };
+    await db.exec("begin;");
+    const tournamentArgs = {
+      p_team: id(10),
+      p_season: id(11),
+      p_id: id(700),
+      p_name: "Synthetic guarantee",
+      p_guaranteed_games: 2,
+    };
+    assert.equal(
+      (await client.rpc("da_create_scoring_tournament", tournamentArgs)).error,
+      null,
+    );
+    assert.equal(
+      (await load()).data.snapshot.tournaments[0].guaranteedGames,
+      2,
+    );
+    assert.equal(
+      (await client.rpc("da_create_scoring_tournament", tournamentArgs)).data
+        .duplicate,
+      true,
+    );
+    await db.exec("savepoint changed_guarantee;");
+    assert.equal(
+      (
+        await client.rpc("da_create_scoring_tournament", {
+          ...tournamentArgs,
+          p_guaranteed_games: 3,
+        })
+      ).error?.code,
+      "22023",
+    );
+    await db.exec(
+      "rollback to savepoint changed_guarantee; savepoint invalid_guarantee;",
+    );
+    assert.equal(
+      (
+        await client.rpc("da_create_scoring_tournament", {
+          ...tournamentArgs,
+          p_id: id(701),
+          p_guaranteed_games: 4,
+        })
+      ).error?.code,
+      "22023",
+    );
+    await db.exec(
+      "rollback to savepoint invalid_guarantee;savepoint missing_guarantee;",
+    );
+    assert.equal(
+      (
+        await client.rpc("da_create_scoring_tournament", {
+          ...tournamentArgs,
+          p_id: id(702),
+          p_guaranteed_games: null,
+        })
+      ).error?.code,
+      "22023",
+    );
+    await db.exec("rollback to savepoint missing_guarantee;");
+    await db.query("select public.da_create_scoring_tournament($1,$2,$3,$4)", [
+      id(10),
+      id(11),
+      id(703),
+      "Synthetic older client",
+    ]);
+    assert.equal(
+      (await load()).data.snapshot.tournaments.find((t) => t.id === id(703))
+        .guaranteedGames,
+      null,
+    );
+    await db.exec("rollback;");
     const bundle = await esbuild.build({
       stdin: {
         contents: `import React from 'react';import{createRoot}from'react-dom/client';import{ConnectedScorebook}from'./src/components/connected-scorebook';const post=async(path,body)=>{const r=await fetch(path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});return r.json()};post('/load',{scope:'Overall'}).then(initial=>createRoot(document.getElementById('app')).render(<main className="connected-wrap"><h1>Synthetic team scorebook</h1><ConnectedScorebook storageKey="synthetic.pending" teamId="${id(10)}" seasonId="${id(11)}" initial={initial} submitAction={input=>post('/action',input)} reloadAction={(team,season,scope)=>post('/load',{scope})}/></main>));`,
@@ -412,10 +496,17 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
     await setup
       .getByLabel("Tournament name", { exact: true })
       .fill("Synthetic Cup");
+    await setup
+      .getByLabel("Games guaranteed", { exact: true })
+      .selectOption("3");
     await page
       .getByRole("button", { name: "Create tournament", exact: true })
       .click();
     await saved();
+    assert.equal(
+      (await load()).data.snapshot.tournaments[0].guaranteedGames,
+      3,
+    );
     await setup
       .getByLabel("Game kind", { exact: true })
       .selectOption("Tournament");
@@ -460,7 +551,9 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
         exact: true,
       }),
     });
-    await bandSection.getByText("Synthetic Cup", { exact: true }).click();
+    await bandSection
+      .getByText("Synthetic Cup · 3-game guaranteed", { exact: true })
+      .click();
     const correction = bandSection.locator("form").filter({
       has: page.getByLabel("HR Band for Synthetic Alex", { exact: false }),
     });

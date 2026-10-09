@@ -36,6 +36,9 @@ const assert = require("node:assert/strict");
       .getByLabel("Tournament name", { exact: true })
       .fill("Weekend cup");
     await page
+      .getByLabel("Games guaranteed", { exact: true })
+      .selectOption("3");
+    await page
       .getByLabel("Tournament fence HR limit", { exact: true })
       .fill("1");
     await page
@@ -163,8 +166,8 @@ const assert = require("node:assert/strict");
       path: ".cache/practice-season-validation.png",
       fullPage: true,
     });
-    await page.evaluate(()=>window.scrollTo(0,0));
-    await page.screenshot({path:'.cache/practice-season-mobile.png'});
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.screenshot({ path: ".cache/practice-season-mobile.png" });
     assert.deepEqual(errors, []);
     assert.deepEqual(external, []);
     console.log(

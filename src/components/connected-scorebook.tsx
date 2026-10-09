@@ -948,6 +948,9 @@ export function ConnectedScorebook({
                       {snapshot?.tournaments.map((t) => (
                         <option key={t.id} value={t.id}>
                           {t.name}
+                          {t.guaranteedGames
+                            ? ` · ${t.guaranteedGames}-game guaranteed`
+                            : ""}
                         </option>
                       ))}
                     </select>
@@ -1008,6 +1011,7 @@ export function ConnectedScorebook({
                     type: "tournament",
                     tournamentId: crypto.randomUUID(),
                     name: String(f.get("name")).trim(),
+                    guaranteedGames: Number(f.get("guaranteedGames")),
                   });
                 }}
               >
@@ -1015,6 +1019,21 @@ export function ConnectedScorebook({
                   <label>
                     Tournament name
                     <input name="name" maxLength={200} required />
+                  </label>
+                  <label>
+                    Games guaranteed
+                    <select
+                      name="guaranteedGames"
+                      aria-label="Games guaranteed"
+                      defaultValue=""
+                      required
+                    >
+                      <option value="" disabled>
+                        Choose games guaranteed
+                      </option>
+                      <option value="2">2-game guaranteed</option>
+                      <option value="3">3-game guaranteed</option>
+                    </select>
                   </label>
                   <button className="button secondary">
                     Create tournament
@@ -1031,7 +1050,12 @@ export function ConnectedScorebook({
             </p>
             {snapshot?.tournaments.map((t) => (
               <details key={t.id}>
-                <summary>{t.name}</summary>
+                <summary>
+                  {t.name}
+                  {t.guaranteedGames
+                    ? ` · ${t.guaranteedGames}-game guaranteed`
+                    : ""}
+                </summary>
                 {data.bands
                   .filter((b) => b.tournament_id === t.id)
                   .map((b) => (

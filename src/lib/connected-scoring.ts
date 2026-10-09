@@ -28,9 +28,7 @@ const text = (v: unknown, max: number) =>
 function object(v: unknown): v is Record<string, unknown> {
   return v !== null && typeof v === "object" && !Array.isArray(v);
 }
-function prepare(
-  input: unknown,
-): {
+function prepare(input: unknown): {
   name: string;
   args: Record<string, unknown>;
   commandId?: string;
@@ -73,10 +71,27 @@ function prepare(
       };
       break;
     case "tournament":
-      keys = ["tournamentId", "name"];
+      keys = ["tournamentId", "name", "guaranteedGames"];
       if (!isId(input.tournamentId) || !text(input.name, 200)) return null;
+      if (
+        input.guaranteedGames != null &&
+        ![2, 3].includes(Number(input.guaranteedGames))
+      )
+        return null;
+      if (
+        input.guaranteedGames != null &&
+        typeof input.guaranteedGames !== "number"
+      )
+        return null;
       name = "da_create_scoring_tournament";
-      args = { ...common, p_id: input.tournamentId, p_name: input.name };
+      args = {
+        ...common,
+        p_id: input.tournamentId,
+        p_name: input.name,
+        ...(input.guaranteedGames != null
+          ? { p_guaranteed_games: input.guaranteedGames }
+          : {}),
+      };
       break;
     case "start":
       keys = [

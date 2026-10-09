@@ -37,7 +37,12 @@ export type ScorebookView = {
   totals: Record<string, Totals>;
   board: Record<string, number>;
   games: ConnectedGame[];
-  tournaments: { id: string; name: string; revision: number }[];
+  tournaments: {
+    id: string;
+    name: string;
+    revision: number;
+    guaranteedGames?: 2 | 3 | null;
+  }[];
 };
 export type ConnectedRoster = {
   user_id?: string | null;

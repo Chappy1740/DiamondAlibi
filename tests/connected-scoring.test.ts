@@ -148,3 +148,23 @@ test("checked read and setup dispatch do not infer rules or request extra privil
     { status: "invalid" },
   );
 });
+
+test("tournament guarantee accepts only explicit 2 or 3 and preserves the value on dispatch", async () => {
+  const c = client(async (_name, args) => {
+    assert.equal(args.p_guaranteed_games, 2);
+    return { data: {}, error: null };
+  });
+  const setup = {
+    type: "tournament",
+    teamId: id(1),
+    seasonId: id(2),
+    tournamentId: id(6),
+    name: "Synthetic",
+    guaranteedGames: 2,
+  };
+  assert.equal((await connectedScoring(c, setup)).status, "ok");
+  for (const guaranteedGames of [0, 1, 4, "2", false])
+    assert.deepEqual(await connectedScoring(c, { ...setup, guaranteedGames }), {
+      status: "invalid",
+    });
+});

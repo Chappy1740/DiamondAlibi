@@ -112,6 +112,9 @@ const assert = require("node:assert/strict");
       .getByLabel("Tournament name", { exact: true })
       .fill("Sample cup");
     await page
+      .getByLabel("Games guaranteed", { exact: true })
+      .selectOption("2");
+    await page
       .getByLabel("Tournament fence HR limit", { exact: true })
       .fill("0");
     await page

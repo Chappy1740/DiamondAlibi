@@ -16,7 +16,12 @@ import {
   type SeasonScoring,
 } from "./season-scoring.ts";
 
-export type TournamentSetup = { id: string; name: string; rules: Rules };
+export type TournamentSetup = {
+  id: string;
+  name: string;
+  rules: Rules;
+  guaranteedGames?: 2 | 3;
+};
 export type SeasonBook = {
   id: string;
   name: string;
@@ -44,6 +49,7 @@ export type SeasonCommand =
       tournamentId: string;
       name: string;
       rules: Rules;
+      guaranteedGames?: 2 | 3;
     }
   | { type: "rules"; seasonId: string; tournamentId?: string; rules: Rules }
   | {
@@ -152,7 +158,10 @@ export function parseSeasonCommand(input: unknown): SeasonCommand {
   const c = record(JSON.parse(encoded));
   const shape: Record<string, [string[], string[]]> = {
     season: [["type", "seasonId", "name", "rules"], []],
-    tournament: [["type", "seasonId", "tournamentId", "name", "rules"], []],
+    tournament: [
+      ["type", "seasonId", "tournamentId", "name", "rules"],
+      ["guaranteedGames"],
+    ],
     rules: [["type", "seasonId", "rules"], ["tournamentId"]],
     start: [
       [
@@ -358,6 +367,12 @@ export function applySeasonCommand(
     requireValue(season, "Season was not found.");
     if (cmd.type === "tournament") {
       requireValue(
+        cmd.guaranteedGames === undefined ||
+          cmd.guaranteedGames === 2 ||
+          cmd.guaranteedGames === 3,
+        "Choose 2-game or 3-game guaranteed.",
+      );
+      requireValue(
         !season.tournaments.some((t) => t.id === cmd.tournamentId),
         "Tournament already exists.",
       );
@@ -365,6 +380,9 @@ export function applySeasonCommand(
         id: cmd.tournamentId,
         name: cmd.name.trim(),
         rules: structuredClone(cmd.rules),
+        ...(cmd.guaranteedGames !== undefined
+          ? { guaranteedGames: cmd.guaranteedGames }
+          : {}),
       });
     } else if (cmd.type === "rules") {
       if (cmd.tournamentId) {

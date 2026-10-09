@@ -440,6 +440,8 @@ export function PracticeScorebook() {
                         seasonId,
                         tournamentId: id,
                         name: String(d.get("name")),
+                        guaranteedGames: Number(d.get("guaranteedGames")) as
+                          2 | 3,
                         rules: {
                           version: crypto.randomUUID(),
                           fenceLimit: Number(d.get("limit")),
@@ -456,6 +458,21 @@ export function PracticeScorebook() {
                   <label>
                     Tournament name
                     <input name="name" required maxLength={80} />
+                  </label>
+                  <label>
+                    Games guaranteed
+                    <select
+                      name="guaranteedGames"
+                      aria-label="Games guaranteed"
+                      defaultValue=""
+                      required
+                    >
+                      <option value="" disabled>
+                        Choose games guaranteed
+                      </option>
+                      <option value="2">2-game guaranteed</option>
+                      <option value="3">3-game guaranteed</option>
+                    </select>
                   </label>
                   <label>
                     Tournament fence HR limit
@@ -563,6 +580,9 @@ export function PracticeScorebook() {
                       {season?.tournaments.map((t) => (
                         <option key={t.id} value={t.id}>
                           {t.name}
+                          {t.guaranteedGames
+                            ? ` · ${t.guaranteedGames}-game guaranteed`
+                            : ""}
                         </option>
                       ))}
                     </select>
