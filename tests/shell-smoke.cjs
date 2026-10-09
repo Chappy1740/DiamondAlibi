@@ -126,9 +126,10 @@ const fs = require("node:fs");
       "Summer 2026",
     );
     await page.getByRole("button", { name: "Tournament", exact: true }).click();
-    await expectText(".400");
+    await expectText(".500");
+    assert.equal(await page.getByText("AVG", { exact: true }).count(), 0);
     await page.getByRole("button", { name: "Overall", exact: true }).click();
-    await expectText(".471");
+    await expectText(".571");
     await nav.getByRole("link", { name: "Beverages", exact: true }).click();
     await expectText("2 beverages in credit");
     await page

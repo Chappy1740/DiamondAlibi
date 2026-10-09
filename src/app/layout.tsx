@@ -6,7 +6,7 @@ import "@fontsource/inter/700.css";
 import "./globals.css";
 import { PreviewProvider } from "@/components/workspace";
 export const metadata: Metadata = {
-  title: "Diamond Alibi · Local preview",
+  title: "Diamond Alibi · Development preview",
   description: "The stats don't lie. Your teammates might.",
   robots: { index: false, follow: false },
 };

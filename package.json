@@ -11,6 +11,14 @@
     "typecheck": "tsc --noEmit",
     "test:browser": "node tests/shell-smoke.cjs",
     "test:rules": "node --experimental-strip-types --test tests/scoring.test.ts",
+    "test:scoring-service": "node --experimental-strip-types --test tests/scoring-service.test.ts",
+    "test:season-scoring": "node --experimental-strip-types --test tests/season-scoring.test.ts",
+    "test:season-scorebook": "node --experimental-strip-types --test tests/season-scorebook.test.ts",
+    "test:season-service": "node --experimental-strip-types --test tests/season-scoring-service.test.ts",
+    "test:connected-scoring": "node --experimental-strip-types --test tests/connected-scoring.test.ts",
+    "test:connected-scorebook": "node --experimental-strip-types tests/connected-scorebook-browser.cjs",
+    "test:scoring-metadata": "node --experimental-strip-types --test tests/scoring-metadata-pages.test.ts",
+    "test:practice-season": "node tests/practice-season-browser.cjs",
     "test:practice": "node tests/practice-browser.cjs",
     "test:alibi": "node tests/alibi-browser.cjs",
     "test:worker-access": "node tests/worker-access.cjs"
@@ -30,11 +38,13 @@
     }
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
     "@opennextjs/cloudflare": "1.20.10",
     "@types/node": "24.10.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.2.3",
     "axe-core": "4.14.0",
+    "esbuild": "0.28.2",
     "playwright": "1.62.1",
     "prettier": "3.9.9",
     "typescript": "7.0.2",

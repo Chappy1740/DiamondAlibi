@@ -97,9 +97,7 @@ export default async function ClubPage({
         <div>
           <span className="eyebrow">Connected to your clubhouse</span>
           <h1>Welcome, {nickname}.</h1>
-          <p>
-            Your teams and seasons are real records. Game scoring comes next.
-          </p>
+          <p>Your teams, seasons and scorebook share the same clubhouse.</p>
         </div>
       </div>
       {(failed || detailError) && (
@@ -215,9 +213,14 @@ export default async function ClubPage({
         {selected && (
           <section className="card detail-card">
             <h2>Seasons</h2>
+            {season && (
+              <Link className="button primary" href="/club/score">
+                Open team scorebook
+              </Link>
+            )}
             <p className="muted">
               Selected: {season?.name ?? "No season yet"}. History is retained;
-              no beverage balance resets.
+              each new season starts a fresh Beverage Board.
             </p>
             {seasons.map((s) => (
               <div className="season-actions" key={s.id}>

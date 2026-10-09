@@ -261,7 +261,6 @@ function PersonalStats() {
       <ScopeTabs />
       <div className="stats-grid">
         {[
-          { value: s.avg, label: "AVG" },
           { value: s.obp, label: "OBP" },
           { value: s.reach, label: "Reach Base %" },
         ].map((stat) => (
@@ -542,7 +541,7 @@ function Stats() {
               </div>
             </dl>
             <p className="micro">
-              These are display fixtures. Official AVG, OBP and Reach Base %
+              These are display fixtures. Official OBP and Reach Base %
               rules remain unchanged in the project rulebook. Overall preview
               covers only the selected sample team and season.
             </p>
@@ -673,7 +672,7 @@ function More() {
       <div className="brand-note">
         <strong>DIAMOND ALIBI</strong>
         <p>The stats don’t lie. Your teammates might.</p>
-        <span>Local shell · M4.1 · synthetic data</span>
+        <span>Sample dashboard · synthetic data</span>
       </div>
     </>
   );
@@ -727,7 +726,8 @@ function Team() {
           <span>
             Tag myself as Team Captain{" "}
             <small>
-              Local preview only. This does not grant extra scoring permissions.
+              Sample designation. Captain tags do not grant extra scoring
+              permissions.
             </small>
           </span>
         </label>
@@ -1197,9 +1197,9 @@ export function Workspace({
         <div className="rail-footer">
           <ShieldCheck size={18} aria-hidden />
           <span>
-            Local preview
+            Sample dashboard
             <br />
-            <small>No live services connected</small>
+            <small>Team accounts: My clubhouse</small>
           </span>
         </div>
       </div>
@@ -1226,7 +1226,7 @@ export function Workspace({
             <ContextSelectors />
             <span className="context-status">
               <span className="status-dot" />
-              Local preview
+              Sample data
             </span>
           </div>
           <ConnectionNotice />
@@ -1244,7 +1244,7 @@ export function Workspace({
           </main>
           <footer className="content-footer">
             <span>Made for the game. Built for the clubhouse.</span>
-            <span>Sample data · M4.1</span>
+            <span>Sample data</span>
           </footer>
         </div>
       </div>

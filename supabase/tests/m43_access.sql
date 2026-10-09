@@ -1,0 +1,108 @@
+-- Live PostgreSQL role/RPC checks. Every synthetic row rolls back; no emails.
+begin;
+do $$ declare a uuid:=gen_random_uuid(); b uuid:=gen_random_uuid(); begin
+ perform set_config('test.a',a::text,true); perform set_config('test.b',b::text,true);
+ insert into auth.users(id,email) values(a,'m43-rollback-'||a||'@example.invalid'),(b,'m43-rollback-'||b||'@example.invalid');
+end $$;
+set local role authenticated;
+select set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('test.a'),'role','authenticated')::text,true);
+do $$ declare t uuid; s uuid; p uuid; inv record; begin
+ t:=public.da_create_team('Synthetic M43 rollback','Synthetic A');
+ s:=public.da_create_season(t,'Synthetic first season');
+ p:=public.da_add_guest(t,'Synthetic Guest');
+ perform set_config('test.team',t::text,true); perform set_config('test.season',s::text,true); perform set_config('test.player',p::text,true);
+ perform set_config('test.fresh',public.da_create_season(t,'Synthetic fresh season')::text,true);
+ select * into inv from public.da_create_invite(t,1); perform set_config('test.code',inv.code,true);
+end $$;
+select set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('test.b'),'role','authenticated')::text,true);
+do $$ declare denied boolean:=false; begin
+ if exists(select 1 from public.scoring_game_days where team_id=current_setting('test.team')::uuid) then raise exception 'Cross-team day leak'; end if;
+ begin perform public.da_read_scoring_season(current_setting('test.team')::uuid,current_setting('test.season')::uuid); exception when insufficient_privilege then denied:=true; end;
+ if not denied then raise exception 'Nonmember RPC read allowed'; end if;
+ if not (public.da_redeem_invite(current_setting('test.code'),'Synthetic B')->>'ok')::boolean then raise exception 'Synthetic member join failed'; end if;
+end $$;
+do $$ declare
+ t uuid:=current_setting('test.team')::uuid; s uuid:=current_setting('test.season')::uuid; p uuid:=current_setting('test.player')::uuid;
+ tournament uuid:=gen_random_uuid(); day1 uuid:=gen_random_uuid(); day2 uuid:=gen_random_uuid(); league_day uuid:=gen_random_uuid();
+ game1 uuid:=gen_random_uuid(); game2 uuid:=gen_random_uuid(); league_game uuid:=gen_random_uuid(); play1 uuid:=gen_random_uuid();
+ command uuid:=gen_random_uuid(); band_command uuid:=gen_random_uuid(); r jsonb; snap jsonb; change jsonb; setup jsonb; denied boolean;
+ rules jsonb:='{"version":"synthetic-v1","fenceLimit":1,"board":{"strikeout":1,"solo":1,"bandSolo":-1,"grandSlam":-1,"overLimit":1,"insidePark":-1,"multiRun":0}}';
+begin
+ r:=public.da_create_scoring_tournament(t,s,tournament,'Synthetic cross-date Cup');
+ if (r->>'duplicate')::boolean then raise exception 'Unexpected tournament duplicate'; end if;
+ if not (public.da_create_scoring_tournament(t,s,tournament,'Synthetic cross-date Cup')->>'duplicate')::boolean then raise exception 'Tournament retry duplicated'; end if;
+ setup:=jsonb_build_object('type','start','gameId',game1,'opponent','Synthetic one','kind','Tournament','lineup',jsonb_build_array(p),'rules',rules,'bands',jsonb_build_object(p::text,true));
+ r:=public.da_start_scoring_game(t,s,day1,'2026-10-09',tournament,command,0,0,setup);
+ if r->>'status'<>'accepted' then raise exception 'First game not accepted: %',r; end if;
+ if not (public.da_start_scoring_game(t,s,day1,'2026-10-09',tournament,command,0,0,setup)->>'duplicate')::boolean then raise exception 'Game retry duplicated'; end if;
+ change:=jsonb_build_object('type','score','gameId',game1,'playId',play1,'playerId',p,'outcome','Fence HR','runs',1,'rbi',1);
+ command:=gen_random_uuid();
+ r:=public.da_apply_scoring_game_change(t,s,day1,game1,command,1,1,change);
+ if r->>'status'<>'accepted' then raise exception 'Score not accepted: %',r; end if;
+ if not (public.da_apply_scoring_game_change(t,s,day1,game1,command,1,1,change)->>'duplicate')::boolean then raise exception 'Score retry duplicated'; end if;
+ if public.da_apply_scoring_game_change(t,s,day1,game1,gen_random_uuid(),1,1,change)->>'status'<>'conflict' then raise exception 'Stale score allowed'; end if;
+ denied:=false;
+ begin perform public.da_apply_scoring_game_change(t,s,day1,game1,command,2,2,change||'{"runs":2}'); exception when invalid_parameter_value then denied:=true; end;
+ if not denied then raise exception 'Changed retry payload allowed'; end if;
+ setup:=setup||jsonb_build_object('gameId',game2,'opponent','Synthetic two','bands','{}'::jsonb);
+ r:=public.da_start_scoring_game(t,s,day2,'2026-10-10',tournament,gen_random_uuid(),0,2,setup);
+ if r->>'status'<>'accepted' then raise exception 'Later game not accepted: %',r; end if;
+ r:=public.da_apply_scoring_game_change(t,s,day2,game2,gen_random_uuid(),1,3,jsonb_build_object('type','score','gameId',game2,'playId',gen_random_uuid(),'playerId',p,'outcome','Fence HR','runs',1,'rbi',1));
+ if r->>'status'<>'accepted' then raise exception 'Later score not accepted: %',r; end if;
+ snap:=public.da_read_scoring_season(t,s);
+ if (snap->'board'->>p::text)::integer<>-2 then raise exception 'Cross-date Band credit incorrect: %',snap; end if;
+ r:=public.da_correct_tournament_band(t,s,tournament,band_command,4,p,false,'Synthetic first-assignment correction');
+ if r->>'status'<>'accepted' then raise exception 'Band correction failed'; end if;
+ if not (public.da_correct_tournament_band(t,s,tournament,band_command,4,p,false,'Synthetic first-assignment correction')->>'duplicate')::boolean then raise exception 'Band retry duplicated'; end if;
+ snap:=public.da_read_scoring_season(t,s);
+ if (snap->'board'->>p::text)::integer<>2 then raise exception 'Tournament-wide replay failed'; end if;
+ if public.da_apply_scoring_game_change(t,s,day1,game1,gen_random_uuid(),2,4,jsonb_build_object('type','complete','gameId',game1))->>'status'<>'conflict' then raise exception 'Old tournament revision accepted'; end if;
+ r:=public.da_apply_scoring_game_change(t,s,day1,game1,gen_random_uuid(),2,5,jsonb_build_object('type','complete','gameId',game1));
+ if r->>'status'<>'accepted' then raise exception 'Completion failed'; end if;
+ r:=public.da_apply_scoring_game_change(t,s,day1,game1,gen_random_uuid(),3,6,jsonb_build_object('type','correct','gameId',game1,'playId',play1,'outcome','K','runs',0,'rbi',0,'voided',false,'reason','Synthetic completed-game correction'));
+ if r->>'status'<>'accepted' then raise exception 'Completed correction failed'; end if;
+ setup:=setup||jsonb_build_object('gameId',league_game,'kind','League','opponent','Synthetic zero limit','bands',jsonb_build_object(p::text,false),'rules',rules||'{"fenceLimit":0}');
+ r:=public.da_start_scoring_game(t,s,league_day,'2026-10-11',null,gen_random_uuid(),0,null,setup);
+ if r->>'status'<>'accepted' then raise exception 'Zero league start failed'; end if;
+ r:=public.da_apply_scoring_game_change(t,s,league_day,league_game,gen_random_uuid(),1,null,jsonb_build_object('type','score','gameId',league_game,'playId',gen_random_uuid(),'playerId',p,'outcome','Fence HR','runs',1,'rbi',1));
+ if r->>'status'<>'accepted' then raise exception 'Zero league scoring failed'; end if;
+ snap:=public.da_read_scoring_season(t,s,'League');
+ if (snap->'totals'->p::text->>'HR')::integer<>0 or (snap->'totals'->p::text->>'H')::integer<>0 or (snap->'totals'->p::text->>'RBI')::integer<>0 then raise exception 'Zero allowance official accounting failed'; end if;
+ if (snap->'board'->>p::text)::integer<>3 then raise exception 'Filtered view lost season-wide Board'; end if;
+ if public.da_read_scoring_season(t,current_setting('test.fresh')::uuid)->'board'<>'{}'::jsonb then raise exception 'Fresh season inherited Board'; end if;
+ if jsonb_array_length(public.da_read_scoring_audit(t,s,100)->'events')<6 then raise exception 'Audit projection missing'; end if;
+ denied:=false;
+ begin perform public.da_apply_scoring_game_change(t,s,league_day,league_game,gen_random_uuid(),2,null,jsonb_build_object('type','score','gameId',league_game,'playId',gen_random_uuid(),'playerId',p,'outcome','Hit','runs',0,'rbi',0,'actor','forged')); exception when invalid_parameter_value then denied:=true; end;
+ if not denied then raise exception 'Forged actor allowed'; end if;
+ denied:=false;
+ begin update public.scoring_games set completed=false where id=game1; exception when insufficient_privilege then denied:=true; end;
+ if not denied then raise exception 'Direct table write allowed'; end if;
+ denied:=false;
+ begin perform 1 from private.scoring_commands; exception when insufficient_privilege then denied:=true; end;
+ if not denied then raise exception 'Private journal readable'; end if;
+ perform set_config('test.day',league_day::text,true); perform set_config('test.game',league_game::text,true);
+end $$;
+reset role;
+update public.team_memberships set active=false where team_id=current_setting('test.team')::uuid and user_id=current_setting('test.b')::uuid;
+set local role authenticated;
+do $$ declare denied boolean:=false; begin
+ if exists(select 1 from public.scoring_games where team_id=current_setting('test.team')::uuid) then raise exception 'Revoked member table read'; end if;
+ begin perform public.da_read_scoring_season(current_setting('test.team')::uuid,current_setting('test.season')::uuid); exception when insufficient_privilege then denied:=true; end;
+ if not denied then raise exception 'Revoked member RPC allowed'; end if;
+end $$;
+select set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('test.a'),'role','authenticated')::text,true);
+reset role;
+update public.team_seasons set archived=true where id=current_setting('test.season')::uuid;
+set local role authenticated;
+do $$ declare denied boolean:=false; begin
+ perform public.da_read_scoring_season(current_setting('test.team')::uuid,current_setting('test.season')::uuid);
+ begin perform public.da_apply_scoring_game_change(current_setting('test.team')::uuid,current_setting('test.season')::uuid,current_setting('test.day')::uuid,current_setting('test.game')::uuid,gen_random_uuid(),2,null,jsonb_build_object('type','complete','gameId',current_setting('test.game'))); exception when sqlstate '55000' then denied:=true; end;
+ if not denied then raise exception 'Archived season write allowed'; end if;
+end $$;
+set local role anon;
+do $$ declare denied boolean:=false; begin
+ begin perform public.da_read_scoring_season(current_setting('test.team')::uuid,current_setting('test.season')::uuid); exception when insufficient_privilege then denied:=true; end;
+ if not denied then raise exception 'Anonymous RPC allowed'; end if;
+end $$;
+rollback;
+select jsonb_build_object('status','PASS','version',current_setting('server_version'),'coverage','member scoring, nonmember/revoked/anon/direct-write denial, guest, retries, conflicts, cross-date Bands, completed correction, zero HR, season Board, fresh season, audit, archived write pause','persistent_synthetic_users',(select count(*) from auth.users where email like 'm43-rollback-%@example.invalid'),'persistent_scoring_games',(select count(*) from public.scoring_games)) as validation;

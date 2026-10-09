@@ -42,11 +42,11 @@ export const connections: Connection[] = [
 ];
 export const sampleStats: Record<
   Scope,
-  { avg: string; obp: string; reach: string; games: number }
+  { obp: string; reach: string; games: number }
 > = {
-  League: { avg: ".500", obp: ".600", reach: ".650", games: 8 },
-  Tournament: { avg: ".400", obp: ".500", reach: ".550", games: 3 },
-  Overall: { avg: ".471", obp: ".571", reach: ".621", games: 11 },
+  League: { obp: ".600", reach: ".650", games: 8 },
+  Tournament: { obp: ".500", reach: ".550", games: 3 },
+  Overall: { obp: ".571", reach: ".621", games: 11 },
 };
 export const samplePlayers = [
   { name: "Alex R.", balance: 4 },

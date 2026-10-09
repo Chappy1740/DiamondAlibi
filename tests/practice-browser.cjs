@@ -25,9 +25,17 @@ const assert = require("node:assert/strict");
     });
     const base = process.env.PREVIEW_URL || "http://127.0.0.1:3000";
     await page.goto(`${base}/practice`);
-    await page.getByLabel("Fence HR limit for this practice day").fill("1");
+    await page.evaluate(() =>
+      localStorage.setItem(
+        "diamond-alibi.practice.v1",
+        "preserved legacy fixture",
+      ),
+    );
+    await page.reload();
+    await page.getByLabel("Season name", { exact: true }).fill("Sample fall");
+    await page.getByLabel("League fence HR limit", { exact: true }).fill("1");
     await page
-      .getByRole("button", { name: "Create practice day", exact: true })
+      .getByRole("button", { name: "Create practice season", exact: true })
       .click();
     await page.getByLabel("Opponent", { exact: true }).fill("Sample Opponent");
     await page.getByRole("button", { name: "Start game", exact: true }).click();
@@ -79,7 +87,7 @@ const assert = require("node:assert/strict");
     await page.getByText("Wrong sample outcome", { exact: false }).waitFor();
     const revision = await page.evaluate(
       () =>
-        JSON.parse(localStorage.getItem("diamond-alibi.practice.v1")).requests
+        JSON.parse(localStorage.getItem("diamond-alibi.practice.v2")).requests
           .length,
     );
     await page.reload();
@@ -89,7 +97,7 @@ const assert = require("node:assert/strict");
     assert.equal(
       await page.evaluate(
         () =>
-          JSON.parse(localStorage.getItem("diamond-alibi.practice.v1")).requests
+          JSON.parse(localStorage.getItem("diamond-alibi.practice.v2")).requests
             .length,
       ),
       revision,
@@ -99,6 +107,16 @@ const assert = require("node:assert/strict");
       .getByRole("button", { name: "Save new rule version", exact: true })
       .click();
     await page.getByText("Fence HRs 1/1", { exact: false }).waitFor();
+    await page.getByText("Add a tournament", { exact: true }).click();
+    await page
+      .getByLabel("Tournament name", { exact: true })
+      .fill("Sample cup");
+    await page
+      .getByLabel("Tournament fence HR limit", { exact: true })
+      .fill("0");
+    await page
+      .getByRole("button", { name: "Add tournament", exact: true })
+      .click();
     await page
       .getByLabel("Opponent", { exact: true })
       .fill("Tournament sample");
@@ -184,7 +202,7 @@ const assert = require("node:assert/strict");
       );
     }
     await page.evaluate(() =>
-      localStorage.setItem("diamond-alibi.practice.v1", "broken"),
+      localStorage.setItem("diamond-alibi.practice.v2", "broken"),
     );
     await page.reload();
     await page
@@ -193,13 +211,13 @@ const assert = require("node:assert/strict");
       .waitFor();
     assert.equal(
       await page
-        .getByRole("button", { name: "Create practice day", exact: true })
+        .getByRole("button", { name: "Create practice season", exact: true })
         .count(),
       0,
     );
     assert.equal(
       await page.evaluate(() =>
-        localStorage.getItem("diamond-alibi.practice.v1"),
+        localStorage.getItem("diamond-alibi.practice.v2"),
       ),
       "broken",
     );
@@ -207,7 +225,13 @@ const assert = require("node:assert/strict");
     await page
       .getByRole("button", { name: "Clear practice scorebook", exact: true })
       .click();
-    await page.getByLabel("Fence HR limit for this practice day").waitFor();
+    await page.getByLabel("League fence HR limit", { exact: true }).waitFor();
+    assert.equal(
+      await page.evaluate(() =>
+        localStorage.getItem("diamond-alibi.practice.v1"),
+      ),
+      "preserved legacy fixture",
+    );
     assert.deepEqual(errors, []);
     assert.deepEqual(external, []);
     console.log(
