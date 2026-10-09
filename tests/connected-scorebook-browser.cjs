@@ -102,6 +102,140 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
         }
       },
     };
+    const bandPatch = fs.readFileSync(
+      "supabase/migrations/20261009203125_tournament_only_bands.sql",
+      "utf8",
+    );
+    // Simulate a pre-fix league Band, then prove the migration ignores it without deleting history.
+    await db.exec("begin;");
+    const leagueSetup = {
+      type: "start",
+      gameId: id(501),
+      opponent: "Synthetic legacy league",
+      kind: "League",
+      lineup: [id(101)],
+      rules: {
+        version: "Synthetic band regression",
+        fenceLimit: 5,
+        board: {
+          strikeout: 1,
+          solo: 1,
+          bandSolo: -1,
+          grandSlam: -1,
+          overLimit: 1,
+          insidePark: -1,
+          multiRun: 0,
+        },
+      },
+      bands: { [id(101)]: true },
+    };
+    const startArgs = {
+      p_team: id(10),
+      p_season: id(11),
+      p_day: id(500),
+      p_date: "2026-10-01",
+      p_tournament: null,
+      p_command: id(502),
+      p_expected: 0,
+      p_tournament_expected: null,
+      p_setup: leagueSetup,
+    };
+    assert.equal(
+      (await client.rpc("da_start_scoring_game", startArgs)).error,
+      null,
+    );
+    const changeArgs = {
+      p_team: id(10),
+      p_season: id(11),
+      p_day: id(500),
+      p_game: id(501),
+      p_command: id(503),
+      p_expected: 1,
+      p_tournament_expected: null,
+      p_change: {
+        type: "score",
+        gameId: id(501),
+        playId: id(504),
+        playerId: id(101),
+        outcome: "Fence HR",
+        runs: 1,
+        rbi: 1,
+      },
+    };
+    assert.equal(
+      (await client.rpc("da_apply_scoring_game_change", changeArgs)).error,
+      null,
+    );
+    const leagueBoard = async () =>
+      (
+        await client.rpc("da_read_scoring_season", {
+          p_team: id(10),
+          p_season: id(11),
+          p_scope: "Overall",
+        })
+      ).data.board[id(101)];
+    assert.equal(await leagueBoard(), -1);
+    await db.exec("reset role;" + bandPatch + "set role authenticated;");
+    assert.equal(await leagueBoard(), 1);
+    assert.equal(
+      (await db.query("select count(*)::int as n from public.scoring_bands"))
+        .rows[0].n,
+      1,
+    );
+    await db.exec("savepoint rejected_start;");
+    assert.equal(
+      (
+        await client.rpc("da_start_scoring_game", {
+          ...startArgs,
+          p_day: id(510),
+          p_command: id(511),
+          p_date: "2026-10-02",
+          p_setup: { ...leagueSetup, gameId: id(512) },
+        })
+      ).error?.code,
+      "22023",
+    );
+    await db.exec(
+      "rollback to savepoint rejected_start; savepoint rejected_lineup;",
+    );
+    assert.equal(
+      (
+        await client.rpc("da_apply_scoring_game_change", {
+          ...changeArgs,
+          p_command: id(513),
+          p_expected: 2,
+          p_change: {
+            type: "lineup",
+            gameId: id(501),
+            lineup: [id(101), id(103)],
+            leagueBands: { [id(103)]: true },
+          },
+        })
+      ).error?.code,
+      "22023",
+    );
+    await db.exec("rollback to savepoint rejected_lineup;");
+    assert.equal(
+      (
+        await client.rpc("da_apply_scoring_game_change", {
+          ...changeArgs,
+          p_command: id(514),
+          p_expected: 2,
+          p_change: {
+            ...changeArgs.p_change,
+            playId: id(515),
+            outcome: "K",
+            runs: 0,
+            rbi: 0,
+          },
+        })
+      ).error,
+      null,
+    );
+    assert.equal(await leagueBoard(), 2);
+    await db.exec(
+      "rollback;reset role;" + bandPatch + "set role authenticated;",
+    );
     const load = async (scope) => {
       const response = await connectedScoring(client, {
         type: "snapshot",
@@ -216,11 +350,9 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
     await page
       .getByRole("heading", { name: "Set up a game", exact: true })
       .waitFor();
-    const setup = page
-      .locator("section")
-      .filter({
-        has: page.getByRole("heading", { name: "Set up a game", exact: true }),
-      });
+    const setup = page.locator("section").filter({
+      has: page.getByRole("heading", { name: "Set up a game", exact: true }),
+    });
     const saved = async () => {
       await page
         .getByText("Saved to the team scorebook.", { exact: true })
@@ -246,6 +378,7 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
       .getByLabel("Fence HR limit for this game", { exact: true })
       .fill("0");
     await setup.locator('input[name="player"]').nth(2).uncheck();
+    assert.equal(await setup.getByLabel(/HR Band for/).count(), 0);
     await page.getByRole("button", { name: "Start game", exact: true }).click();
     await saved();
     assert.deepEqual(errors, []);
@@ -321,20 +454,16 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
       .getByRole("button", { name: "Record plate appearance", exact: true })
       .click();
     await saved();
-    const bandSection = page
-      .locator("section")
-      .filter({
-        has: page.getByRole("heading", {
-          name: "Tournament Band corrections",
-          exact: true,
-        }),
-      });
+    const bandSection = page.locator("section").filter({
+      has: page.getByRole("heading", {
+        name: "Tournament Band corrections",
+        exact: true,
+      }),
+    });
     await bandSection.getByText("Synthetic Cup", { exact: true }).click();
-    const correction = bandSection
-      .locator("form")
-      .filter({
-        has: page.getByLabel("HR Band for Synthetic Alex", { exact: false }),
-      });
+    const correction = bandSection.locator("form").filter({
+      has: page.getByLabel("HR Band for Synthetic Alex", { exact: false }),
+    });
     await correction
       .getByLabel("HR Band for Synthetic Alex", { exact: false })
       .uncheck();

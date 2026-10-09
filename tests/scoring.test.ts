@@ -103,7 +103,7 @@ test("every default HR board treatment; ITP ignores bands and fence allowance", 
     for (const runs of [1, 2, 3, 4]) {
       let b = initial();
       if (band) b = send(b, { type: "bands", players: ["a", "b"] });
-      b = start(b);
+      b = start(b, "g", "Tournament");
       b = score(b, "Fence HR", runs, runs);
       assert.equal(
         aggregate(b, "Overall").a.board,
@@ -119,13 +119,13 @@ test("every default HR board treatment; ITP ignores bands and fence allowance", 
       assert.equal(ev.totals.a.RBI, runs * 2);
     }
 });
-test("fence resets each game, day bands persist, shared scope engine separates league/tournament", () => {
+test("league ignores stored Bands; tournament uses Bands and each game resets its fence allowance", () => {
   let b = send(initial(), { type: "bands", players: ["a"] });
   b = score(start(b), "Fence HR", 1, 1);
   b = start(b, "g2", "Tournament");
   b = score(b, "Fence HR", 1, 1, "g2");
   assert.equal(aggregate(b, "Overall").a.HR, 2);
-  assert.equal(aggregate(b, "League").a.board, -1);
+  assert.equal(aggregate(b, "League").a.board, 1);
   assert.equal(aggregate(b, "Tournament").a.board, -1);
 });
 test("completed-game correction replays downstream OLHR and retains prior rule version", () => {

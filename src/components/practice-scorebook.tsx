@@ -153,7 +153,7 @@ export function PracticeScorebook() {
       .filter(
         (id) => kind === "League" || !assigned.some((b) => b.playerId === id),
       )
-      .map((id) => [id, bands.includes(id)]),
+      .map((id) => [id, kind === "Tournament" && bands.includes(id)]),
   );
   function save(j: SeasonJournal, b: SeasonScorebook) {
     localStorage.setItem(KEY, JSON.stringify(j));
@@ -601,33 +601,35 @@ export function PracticeScorebook() {
                     </label>
                   ))}
                 </fieldset>
-                <fieldset>
-                  <legend>
-                    {kind === "Tournament"
-                      ? "First tournament game Bands (multiple or none)"
-                      : "League-game Bands (explicit sample setup)"}
-                  </legend>
-                  {lineup.map((id) => {
-                    const fixed =
-                      kind === "Tournament"
-                        ? assigned.find((b) => b.playerId === id)
-                        : undefined;
-                    return (
-                      <label key={id} className="check-label">
-                        <input
-                          type="checkbox"
-                          checked={fixed ? fixed.hasBand : bands.includes(id)}
-                          disabled={!!fixed}
-                          onChange={() => toggle(id, bands, setBands)}
-                        />
-                        {roster.find((p) => p.id === id)?.name}
-                        {fixed
-                          ? ` · ${fixed.hasBand ? "Band" : "No Band"} retained from first game`
-                          : ""}
-                      </label>
-                    );
-                  })}
-                </fieldset>
+                {kind === "Tournament" && (
+                  <fieldset>
+                    <legend>
+                      {kind === "Tournament"
+                        ? "First tournament game Bands (multiple or none)"
+                        : "League-game Bands (explicit sample setup)"}
+                    </legend>
+                    {lineup.map((id) => {
+                      const fixed =
+                        kind === "Tournament"
+                          ? assigned.find((b) => b.playerId === id)
+                          : undefined;
+                      return (
+                        <label key={id} className="check-label">
+                          <input
+                            type="checkbox"
+                            checked={fixed ? fixed.hasBand : bands.includes(id)}
+                            disabled={!!fixed}
+                            onChange={() => toggle(id, bands, setBands)}
+                          />
+                          {roster.find((p) => p.id === id)?.name}
+                          {fixed
+                            ? ` · ${fixed.hasBand ? "Band" : "No Band"} retained from first game`
+                            : ""}
+                        </label>
+                      );
+                    })}
+                  </fieldset>
+                )}
                 <ol>
                   {lineup.map((id, i) => (
                     <li key={id}>
@@ -1101,7 +1103,10 @@ export function PracticeScorebook() {
                 {(
                   Object.keys(DEFAULT_BOARD) as (keyof typeof DEFAULT_BOARD)[]
                 ).map((key) => (
-                  <label key={key}>
+                  <label
+                    key={key}
+                    hidden={rulesTarget === "league" && key === "bandSolo"}
+                  >
                     {
                       {
                         strikeout: "Strikeout",

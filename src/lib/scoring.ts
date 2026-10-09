@@ -375,7 +375,7 @@ export function evaluateGame(game: Game, bands: string[]) {
     }
     const t = (totals[play.playerId] ??= emptyTotals()),
       b = game.rules.board,
-      band = bands.includes(play.playerId);
+      band = game.kind === "Tournament" && bands.includes(play.playerId);
     const over =
       play.outcome === "Fence HR" && fenceUsed >= game.rules.fenceLimit;
     const hit =

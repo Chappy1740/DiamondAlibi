@@ -357,16 +357,18 @@ export function ConnectedScorebook({
               }
             />
           </label>
-          <label>
-            <input
-              type="checkbox"
-              name={`band-${p.id}`}
-              defaultChecked={hasBand}
-              disabled={Boolean(fixed || participated)}
-            />
-            HR Band for {p.display_name}
-            {fixed || participated ? " · retained" : " · first assignment"}
-          </label>
+          {tour && (
+            <label>
+              <input
+                type="checkbox"
+                name={`band-${p.id}`}
+                defaultChecked={hasBand}
+                disabled={Boolean(fixed || participated)}
+              />
+              HR Band for {p.display_name}
+              {fixed || participated ? " · retained" : " · first assignment"}
+            </label>
+          )}
         </div>
       );
     });
@@ -394,7 +396,7 @@ export function ConnectedScorebook({
               (b) => b.tournament_id === tour.id && b.player_id === id,
             ),
         )
-        .map((id) => [id, form.has(`band-${id}`)]),
+        .map((id) => [id, Boolean(tour) && form.has(`band-${id}`)]),
     );
     const board = Object.fromEntries(
       Object.keys(DEFAULT_BOARD).map((key) => [
@@ -453,7 +455,7 @@ export function ConnectedScorebook({
                 (p) => p.game_id === g.game.id && p.player_id === id,
               ),
           )
-          .map((id) => [id, form.has(`band-${id}`)]),
+          .map((id) => [id, false]),
       );
     void save(gameRequest(g, changes));
   }
@@ -602,7 +604,7 @@ export function ConnectedScorebook({
                 {current.evaluation.fenceUsed}.{" "}
                 {current.game.kind === "Tournament"
                   ? "Bands remain fixed throughout the tournament."
-                  : "League game assignments are separate from tournament Bands."}
+                  : "HR Bands apply only to tournaments."}
               </p>
               {!current.game.completed && (
                 <>
@@ -965,14 +967,21 @@ export function ConnectedScorebook({
                   Zero is allowed. These rules are frozen when the game starts;
                   1-up is deferred.
                 </p>
-                <h3>Lineup and first Band assignments</h3>
+                <h3>
+                  {kind === "Tournament"
+                    ? "Lineup and first Band assignments"
+                    : "Lineup"}
+                </h3>
                 <div key={`${kind}-${tournamentId}`}>
                   {bandFields(kind === "Tournament" ? tournamentId : null)}
                 </div>
                 <details>
                   <summary>Beverage rules for this game</summary>
                   {Object.entries(DEFAULT_BOARD).map(([key, value]) => (
-                    <label key={key}>
+                    <label
+                      key={key}
+                      hidden={kind === "League" && key === "bandSolo"}
+                    >
                       {boardLabels[key as keyof typeof DEFAULT_BOARD]}
                       <input
                         name={`board-${key}`}
