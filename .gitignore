@@ -1,0 +1,19 @@
+node_modules/
+.cache/
+supabase/.temp/
+.next/
+out/
+.env*
+!.env.example
+*.tsbuildinfo
+test-results/
+playwright-report/
+# Owner planning stays local; publish only reviewed, sanitized project material.
+AGENTS.md
+README.md
+docs/
+dist/
+.wrangler/
+.open-next/
+.dev.vars*
+!.dev.vars.example

@@ -1,0 +1,43 @@
+{
+  "name": "diamond-alibi",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --hostname 127.0.0.1",
+    "build": "next build",
+    "build:worker": "node scripts/build-worker.cjs",
+    "preview:worker": "opennextjs-cloudflare preview --ip 127.0.0.1 --port 3002",
+    "start": "next start --hostname 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "test:browser": "node tests/shell-smoke.cjs",
+    "test:rules": "node --experimental-strip-types --test tests/scoring.test.ts",
+    "test:practice": "node tests/practice-browser.cjs",
+    "test:alibi": "node tests/alibi-browser.cjs",
+    "test:worker-access": "node tests/worker-access.cjs"
+  },
+  "dependencies": {
+    "@fontsource/inter": "5.3.0",
+    "@supabase/ssr": "0.12.7",
+    "@supabase/supabase-js": "2.117.3",
+    "lucide-react": "1.53.0",
+    "next": "16.4.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "overrides": {
+    "@node-minify/core": {
+      "glob": "10.5.0"
+    }
+  },
+  "devDependencies": {
+    "@opennextjs/cloudflare": "1.20.10",
+    "@types/node": "24.10.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.2.3",
+    "axe-core": "4.14.0",
+    "playwright": "1.62.1",
+    "prettier": "3.9.9",
+    "typescript": "7.0.2",
+    "wrangler": "4.149.0"
+  }
+}
