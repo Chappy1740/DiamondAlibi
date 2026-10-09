@@ -5,7 +5,12 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { loadScorebook, scoringAction } from "@/app/club/scoring-actions";
 import { ConnectedScorebook } from "@/components/connected-scorebook";
 export const dynamic = "force-dynamic";
-export default async function ScorePage() {
+export default async function ScorePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ team?: string; season?: string; game?: string }>;
+}) {
+  const query = await searchParams;
   const client = await supabaseServer();
   const {
     data: { user },
@@ -18,8 +23,9 @@ export default async function ScorePage() {
     .select("id,name")
     .order("created_at");
   const team =
-    teams.data?.find((t) => t.id === jar.get("da-team")?.value) ??
-    teams.data?.[0];
+    teams.data?.find(
+      (t) => t.id === (query.team ?? jar.get("da-team")?.value),
+    ) ?? (query.team ? undefined : teams.data?.[0]);
   if (!team)
     return (
       <main className="connected-wrap">
@@ -34,9 +40,12 @@ export default async function ScorePage() {
     .eq("team_id", team.id)
     .order("created_at", { ascending: false });
   const season =
-    seasons.data?.find((s) => s.id === jar.get("da-season")?.value) ??
-    seasons.data?.find((s) => !s.archived) ??
-    seasons.data?.[0];
+    seasons.data?.find(
+      (s) => s.id === (query.season ?? jar.get("da-season")?.value),
+    ) ??
+    (query.season
+      ? undefined
+      : (seasons.data?.find((s) => !s.archived) ?? seasons.data?.[0]));
   if (!season)
     return (
       <main className="connected-wrap">
@@ -64,11 +73,12 @@ export default async function ScorePage() {
         </div>
       </div>
       <ConnectedScorebook
-        key={`${user.id}-${team.id}-${season.id}`}
+        key={`${user.id}-${team.id}-${season.id}-${query.game ?? ""}`}
         storageKey={`diamond-alibi.pending.${user.id}.${team.id}.${season.id}`}
         teamId={team.id}
         seasonId={season.id}
         initial={initial}
+        initialGameId={query.game}
         submitAction={scoringAction}
         reloadAction={loadScorebook}
       />

@@ -22,6 +22,7 @@ type Props = {
   teamId: string;
   seasonId: string;
   initial: ScorebookLoadResult;
+  initialGameId?: string;
   submitAction(input: unknown): Promise<ConnectedResult>;
   reloadAction(
     team: string,
@@ -45,6 +46,7 @@ export function ConnectedScorebook({
   teamId,
   seasonId,
   initial,
+  initialGameId = "",
   submitAction,
   reloadAction,
 }: Props) {
@@ -52,7 +54,7 @@ export function ConnectedScorebook({
     initial.status === "ok" ? initial.data : null,
   );
   const [scope, setScope] = useState<Scope>("Overall"),
-    [selected, setSelected] = useState("");
+    [selected, setSelected] = useState(initialGameId);
   const [busy, setBusy] = useState(false),
     [online, setOnline] = useState(true),
     [paused, setPaused] = useState(initial.status !== "ok");
