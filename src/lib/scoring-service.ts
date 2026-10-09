@@ -69,6 +69,15 @@ const commandFields: Record<Command["type"], readonly string[]> = {
   lineup: ["type", "gameId", "lineup"],
   batter: ["type", "gameId", "playerId"],
   complete: ["type", "gameId"],
+  scoreboard: [
+    "type",
+    "gameId",
+    "teamRuns",
+    "opponentRuns",
+    "inning",
+    "half",
+    "reason",
+  ],
   rules: ["type", "rules"],
   bands: ["type", "players", "reason"],
 };

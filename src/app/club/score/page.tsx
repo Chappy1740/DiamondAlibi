@@ -8,7 +8,12 @@ export const dynamic = "force-dynamic";
 export default async function ScorePage({
   searchParams,
 }: {
-  searchParams: Promise<{ team?: string; season?: string; game?: string }>;
+  searchParams: Promise<{
+    team?: string;
+    season?: string;
+    game?: string;
+    tournament?: string;
+  }>;
 }) {
   const query = await searchParams;
   const client = await supabaseServer();
@@ -73,12 +78,20 @@ export default async function ScorePage({
         </div>
       </div>
       <ConnectedScorebook
-        key={`${user.id}-${team.id}-${season.id}-${query.game ?? ""}`}
+        key={`${user.id}-${team.id}-${season.id}-${query.game ?? ""}-${query.tournament ?? ""}`}
         storageKey={`diamond-alibi.pending.${user.id}.${team.id}.${season.id}`}
         teamId={team.id}
         seasonId={season.id}
         initial={initial}
         initialGameId={query.game}
+        initialTournamentId={
+          initial.status === "ok" &&
+          initial.data.snapshot.tournaments.some(
+            (t) => t.id === query.tournament,
+          )
+            ? query.tournament
+            : undefined
+        }
         submitAction={scoringAction}
         reloadAction={loadScorebook}
       />

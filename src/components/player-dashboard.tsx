@@ -11,6 +11,8 @@ import { emptyTotals, rates, type Scope, type Totals } from "@/lib/scoring";
 import type { LoadedScorebook } from "@/lib/scorebook-view";
 import { DashboardRefresh } from "./dashboard-refresh";
 import { Alibi } from "./workspace";
+import { GameScoreboardPanel } from "./game-scoreboard";
+import { connectedScoreboard } from "@/lib/game-scoreboard";
 
 type Option = { id: string; name: string };
 export type DashboardProps = {
@@ -110,6 +112,10 @@ export function PlayerDashboard(p: DashboardProps) {
           <p>
             {g.playedOn} · {g.lineup.length} players
           </p>
+          {g.game.tournament_game_number && (
+            <p>Tournament Game {g.game.tournament_game_number}</p>
+          )}
+          <GameScoreboardPanel value={connectedScoreboard(g.game)} />
           {!g.game.completed && (
             <p>
               Current batter:{" "}
@@ -374,6 +380,21 @@ export function PlayerDashboard(p: DashboardProps) {
                             ).length
                           }{" "}
                           games recorded
+                        </p>
+                        <Link
+                          className="button secondary"
+                          href={
+                            p.sample
+                              ? "/practice"
+                              : `/club/score?${new URLSearchParams({ team: p.teamId, season: p.seasonId, tournament: t.id })}`
+                          }
+                        >
+                          {p.sample
+                            ? "Practice additional games"
+                            : `Create Game ${loaded.snapshot.games.filter((g) => g.game.tournament_id === t.id).length + 1}`}
+                        </Link>
+                        <p className="micro">
+                          Game setup remains separate from bracket advancement.
                         </p>
                       </section>
                     ))}

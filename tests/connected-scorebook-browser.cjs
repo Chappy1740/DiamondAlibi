@@ -250,6 +250,14 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
     await db.exec(
       "rollback;reset role;" + bandPatch + "set role authenticated;",
     );
+    await db.exec(
+      "reset role;" +
+        fs.readFileSync(
+          "supabase/migrations/20261009224553_game_scoreboard_tournament_numbers.sql",
+          "utf8",
+        ) +
+        "set role authenticated;",
+    );
     const load = async (scope) => {
       const response = await connectedScoring(client, {
         type: "snapshot",
@@ -353,7 +361,85 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
         .guaranteedGames,
       null,
     );
-    await db.exec("rollback;");
+    for (let n = 0; n < 4; n++) {
+      const setup = {
+        ...leagueSetup,
+        gameId: id(720 + n),
+        kind: "Tournament",
+        bands: n === 0 ? { [id(101)]: false } : {},
+        rules: { ...leagueSetup.rules, version: `Synthetic numbered ${n}` },
+      };
+      const numbered = await client.rpc("da_start_scoring_game", {
+        ...startArgs,
+        p_day: id(710 + n),
+        p_date: `2026-10-${String(n + 2).padStart(2, "0")}`,
+        p_tournament: id(700),
+        p_tournament_expected: n,
+        p_command: id(730 + n),
+        p_setup: setup,
+      });
+      assert.equal(numbered.error, null);
+    }
+    const beforeScoreboard = (await load()).data.snapshot;
+    assert.deepEqual(
+      beforeScoreboard.games.map((g) => g.game.tournament_game_number),
+      [1, 2, 3, 4],
+    );
+    const scoreboardArgs = {
+      p_team: id(10),
+      p_season: id(11),
+      p_day: id(713),
+      p_game: id(723),
+      p_command: id(750),
+      p_expected: 1,
+      p_tournament_expected: 4,
+      p_change: {
+        type: "scoreboard",
+        gameId: id(723),
+        teamRuns: 0,
+        opponentRuns: 7,
+        inning: 3,
+        half: "Top",
+        reason: "Synthetic confirmation",
+      },
+    };
+    assert.equal(
+      (await client.rpc("da_apply_scoring_game_change", scoreboardArgs)).error,
+      null,
+    );
+    assert.equal(
+      (await client.rpc("da_apply_scoring_game_change", scoreboardArgs)).data
+        .duplicate,
+      true,
+    );
+    const afterScoreboard = (await load()).data.snapshot;
+    assert.equal(afterScoreboard.games[3].game.team_runs, 0);
+    assert.deepEqual(afterScoreboard.totals, beforeScoreboard.totals);
+    assert.deepEqual(afterScoreboard.board, beforeScoreboard.board);
+    assert.equal(
+      (
+        await client.rpc("da_apply_scoring_game_change", {
+          ...scoreboardArgs,
+          p_command: id(751),
+          p_tournament_expected: 5,
+        })
+      ).data.status,
+      "conflict",
+    );
+    await db.exec("savepoint invalid_scoreboard;");
+    assert.equal(
+      (
+        await client.rpc("da_apply_scoring_game_change", {
+          ...scoreboardArgs,
+          p_command: id(752),
+          p_expected: 2,
+          p_tournament_expected: 5,
+          p_change: { ...scoreboardArgs.p_change, teamRuns: -1 },
+        })
+      ).error?.code,
+      "22023",
+    );
+    await db.exec("rollback to savepoint invalid_scoreboard;rollback;");
     const bundle = await esbuild.build({
       stdin: {
         contents: `import React from 'react';import{createRoot}from'react-dom/client';import{ConnectedScorebook}from'./src/components/connected-scorebook';const post=async(path,body)=>{const r=await fetch(path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});return r.json()};post('/load',{scope:'Overall'}).then(initial=>createRoot(document.getElementById('app')).render(<main className="connected-wrap"><h1>Synthetic team scorebook</h1><ConnectedScorebook storageKey="synthetic.pending" teamId="${id(10)}" seasonId="${id(11)}" initial={initial} submitAction={input=>post('/action',input)} reloadAction={(team,season,scope)=>post('/load',{scope})}/></main>));`,
@@ -467,6 +553,22 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
     await saved();
     assert.deepEqual(errors, []);
     assert.equal((await load("Overall")).data.snapshot.games.length, 1);
+    await page.getByText("Update score and inning", { exact: true }).click();
+    await page.getByLabel("Our team runs", { exact: true }).fill("8");
+    await page.getByLabel("Opponent runs", { exact: true }).fill("6");
+    await page.getByLabel("Inning", { exact: true }).fill("3");
+    await page
+      .getByLabel("Inning half", { exact: true })
+      .selectOption("Bottom");
+    await page
+      .getByLabel("Scoreboard update reason", { exact: true })
+      .fill("Synthetic scoreboard confirmation");
+    await page
+      .getByRole("button", { name: "Save scoreboard", exact: true })
+      .click();
+    await saved();
+    assert.equal((await load()).data.snapshot.games[0].game.team_runs, 8);
+    assert.equal((await load()).data.snapshot.games[0].game.inning, 3);
     await page
       .getByLabel("Batting outcome", { exact: true })
       .selectOption("Fence HR");
@@ -479,6 +581,16 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
       .getByRole("button", { name: "Mark game complete", exact: true })
       .click();
     await saved();
+    await page.getByText("Update score and inning", { exact: true }).click();
+    await page.getByLabel("Our team runs", { exact: true }).fill("9");
+    await page
+      .getByLabel("Scoreboard update reason", { exact: true })
+      .fill("Synthetic final-score correction");
+    await page
+      .getByRole("button", { name: "Save scoreboard", exact: true })
+      .click();
+    await saved();
+    assert.equal((await load()).data.snapshot.games[0].game.team_runs, 9);
     await page.getByText(/Synthetic Alex · OLHR/).click();
     await page
       .getByLabel("Correct outcome", { exact: true })
@@ -547,13 +659,26 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
     await saved();
     const bandSection = page.locator("section").filter({
       has: page.getByRole("heading", {
-        name: "Tournament Band corrections",
+        name: "Tournament games and Band corrections",
         exact: true,
       }),
     });
     await bandSection
       .getByText("Synthetic Cup · 3-game guaranteed", { exact: true })
       .click();
+    const nextTournamentGame =
+      (await load()).data.snapshot.games.filter((g) => g.game.tournament_id)
+        .length + 1;
+    await bandSection
+      .getByRole("button", {
+        name: `Create Game ${nextTournamentGame}`,
+        exact: true,
+      })
+      .click();
+    assert.equal(
+      await setup.getByLabel("Game kind", { exact: true }).inputValue(),
+      "Tournament",
+    );
     const correction = bandSection.locator("form").filter({
       has: page.getByLabel("HR Band for Synthetic Alex", { exact: false }),
     });

@@ -236,6 +236,15 @@ export function parseSeasonCommand(input: unknown): SeasonCommand {
       lineup: ["type", "gameId", "lineup"],
       batter: ["type", "gameId", "playerId"],
       complete: ["type", "gameId"],
+      scoreboard: [
+        "type",
+        "gameId",
+        "teamRuns",
+        "opponentRuns",
+        "inning",
+        "half",
+        "reason",
+      ],
     };
     requireValue(
       typeof change.type === "string" && Object.hasOwn(gameFields, change.type),
@@ -436,6 +445,11 @@ export function applySeasonCommand(
             cmd.lineup.every((id) => Object.hasOwn(cmd.bands, id)),
           "Choose explicit league-game Bands, including none.",
         );
+      if (cmd.kind === "Tournament")
+        started.games[0].tournamentGameNumber =
+          season.scoring.games.filter(
+            (g) => g.tournamentId === cmd.tournamentId,
+          ).length + 1;
       season.scoring = addSeasonGame(
         season.scoring,
         {
@@ -520,7 +534,8 @@ export function applySeasonCommand(
   const reason =
     cmd.type === "band"
       ? cmd.reason
-      : cmd.type === "game" && cmd.change.type === "correct"
+      : cmd.type === "game" &&
+          (cmd.change.type === "correct" || cmd.change.type === "scoreboard")
         ? cmd.change.reason
         : undefined;
   next.audit.push({

@@ -1,5 +1,7 @@
 "use client";
 import { ScorebookAudit } from "@/components/scorebook-audit";
+import { GameScoreboardPanel } from "@/components/game-scoreboard";
+import { connectedScoreboard } from "@/lib/game-scoreboard";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   DEFAULT_BOARD,
@@ -23,6 +25,7 @@ type Props = {
   seasonId: string;
   initial: ScorebookLoadResult;
   initialGameId?: string;
+  initialTournamentId?: string;
   submitAction(input: unknown): Promise<ConnectedResult>;
   reloadAction(
     team: string,
@@ -47,6 +50,7 @@ export function ConnectedScorebook({
   seasonId,
   initial,
   initialGameId = "",
+  initialTournamentId = "",
   submitAction,
   reloadAction,
 }: Props) {
@@ -65,8 +69,10 @@ export function ConnectedScorebook({
         ? "Scorebook loaded."
         : "Could not load the scorebook. Refresh to retry.",
     );
-  const [kind, setKind] = useState<"League" | "Tournament">("League"),
-    [tournamentId, setTournamentId] = useState("");
+  const [kind, setKind] = useState<"League" | "Tournament">(
+      initialTournamentId ? "Tournament" : "League",
+    ),
+    [tournamentId, setTournamentId] = useState(initialTournamentId);
   const [outcome, setOutcome] = useState<Outcome>("Hit"),
     [runs, setRuns] = useState(0),
     [rbi, setRbi] = useState(0);
@@ -601,6 +607,21 @@ export function ConnectedScorebook({
                   ? "Final — corrections remain available"
                   : "Live"}
               </p>
+              {current.game.tournament_game_number && (
+                <p>
+                  Game {current.game.tournament_game_number} in this tournament
+                </p>
+              )}
+              <GameScoreboardPanel
+                key={`${current.game.id}-${current.dayRevision}`}
+                value={connectedScoreboard(current.game)}
+                disabled={disabled}
+                save={(value) =>
+                  void save(
+                    gameRequest(current, { type: "scoreboard", ...value }),
+                  )
+                }
+              />
               <p className="micro">
                 Frozen fence HR limit: {current.rules.fence_limit}. Used:{" "}
                 {current.evaluation.fenceUsed}.{" "}
@@ -910,7 +931,9 @@ export function ConnectedScorebook({
             </div>
           </section>
           <section className="card detail-card">
-            <h2>Set up a game</h2>
+            <h2 id="new-game-setup" tabIndex={-1}>
+              Set up a game
+            </h2>
             <form className="club-form" onSubmit={start}>
               <fieldset disabled={disabled}>
                 <label>
@@ -1045,7 +1068,7 @@ export function ConnectedScorebook({
             </details>
           </section>
           <section className="card detail-card">
-            <h2>Tournament Band corrections</h2>
+            <h2>Tournament games and Band corrections</h2>
             <p className="micro">
               Assignments stay fixed across tournament games. Corrections
               require a reason and recalculate the tournament.
@@ -1058,6 +1081,35 @@ export function ConnectedScorebook({
                     ? ` · ${t.guaranteedGames}-game guaranteed`
                     : ""}
                 </summary>
+                <p>
+                  {
+                    snapshot.games.filter((g) => g.game.tournament_id === t.id)
+                      .length
+                  }{" "}
+                  games recorded. Guarantee is a minimum, not a cap.
+                </p>
+                <button
+                  className="button secondary"
+                  disabled={disabled}
+                  onClick={() => {
+                    setKind("Tournament");
+                    setTournamentId(t.id);
+                    setMessage(
+                      `Set up Game ${snapshot.games.filter((g) => g.game.tournament_id === t.id).length + 1} for ${t.name}. Confirm the date, opponent and lineup below.`,
+                    );
+                    const heading = document.getElementById("new-game-setup");
+                    heading?.scrollIntoView({ block: "start" });
+                    heading?.focus();
+                  }}
+                >
+                  Create Game{" "}
+                  {snapshot.games.filter((g) => g.game.tournament_id === t.id)
+                    .length + 1}
+                </button>
+                <p className="micro">
+                  This opens game setup. It does not decide bracket advancement
+                  or championship eligibility.
+                </p>
                 {data.bands
                   .filter((b) => b.tournament_id === t.id)
                   .map((b) => (

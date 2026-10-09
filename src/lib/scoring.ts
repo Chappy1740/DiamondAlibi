@@ -1,4 +1,5 @@
 /** Established rules only. This engine performs no I/O or authorization. */
+import { validScoreboard, type GameScoreboard } from "./game-scoreboard.ts";
 export const OUTCOMES = [
   "Hit",
   "BB",
@@ -44,6 +45,8 @@ export type Play = {
   voided: boolean;
 };
 export type Game = {
+  scoreboard?: GameScoreboard;
+  tournamentGameNumber?: number;
   id: string;
   opponent: string;
   kind: Exclude<Scope, "Overall">;
@@ -105,6 +108,7 @@ export type Command =
   | { type: "lineup"; gameId: string; lineup: string[] }
   | { type: "batter"; gameId: string; playerId: string }
   | { type: "complete"; gameId: string }
+  | ({ type: "scoreboard"; gameId: string; reason: string } & GameScoreboard)
   | { type: "rules"; rules: Rules }
   | { type: "bands"; players: string[]; reason?: string };
 export type Request = {
@@ -260,7 +264,20 @@ export function applyCommand(current: Scorebook, request: Request): Scorebook {
   } else {
     const game = book.games.find((g) => g.id === cmd.gameId);
     insist(game, "Game does not belong to this scorebook.");
-    if (cmd.type === "correct") {
+    if (cmd.type === "scoreboard") {
+      insist(
+        validScoreboard(cmd),
+        "Use whole scores 0–999, inning 1–99, and Top or Bottom.",
+      );
+      text(cmd.reason, "Scoreboard update reason");
+      reason = cmd.reason.trim();
+      game.scoreboard = {
+        teamRuns: cmd.teamRuns,
+        opponentRuns: cmd.opponentRuns,
+        inning: cmd.inning,
+        half: cmd.half,
+      };
+    } else if (cmd.type === "correct") {
       text(cmd.reason, "Correction reason");
       reason = cmd.reason.trim();
       const play = game.plays.find((p) => p.id === cmd.playId);

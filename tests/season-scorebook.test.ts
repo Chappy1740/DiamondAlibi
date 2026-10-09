@@ -22,6 +22,18 @@ const roster = [
   { id: "a", name: "Synthetic A" },
   { id: "b", name: "Synthetic B" },
 ];
+
+test("tournament Game 4 is numbered and scoreboard updates preserve season totals", () => {
+  let b = fixture();
+  for (let n = 1; n <= 4; n++) b = start(b, `numbered-${n}`, `2026-10-${String(n).padStart(2,"0")}`, n === 1 ? { a: false } : {});
+  assert.deepEqual(b.seasons[0].scoring.games.map(g => g.game.tournamentGameNumber), [1,2,3,4]);
+  const before = seasonTotals(b.seasons[0].scoring);
+  const command: SeasonCommand = { type:"game", seasonId:"fall", change:{ type:"scoreboard", gameId:"numbered-4", teamRuns:8,opponentRuns:6,inning:3,half:"Bottom",reason:"Confirmed field score" } };
+  b = run(b, command);
+  assert.equal(b.seasons[0].scoring.games[3].game.scoreboard?.teamRuns,8);
+  assert.equal(b.audit.at(-1)?.reason,"Confirmed field score");
+  assert.deepEqual(seasonTotals(b.seasons[0].scoring),before);
+});
 function run(
   book: SeasonScorebook,
   command: SeasonCommand,

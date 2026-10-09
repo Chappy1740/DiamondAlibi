@@ -18,6 +18,11 @@ export type ConnectedGame = {
     kind: "League" | "Tournament";
     completed: boolean;
     next_batter_position: number;
+    team_runs?: number | null;
+    opponent_runs?: number | null;
+    inning?: number | null;
+    inning_half?: string | null;
+    tournament_game_number?: number | null;
   };
   playedOn: string;
   dayRevision: number;

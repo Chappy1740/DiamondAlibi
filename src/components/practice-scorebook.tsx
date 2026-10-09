@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { GameScoreboardPanel } from "@/components/game-scoreboard";
 import { useEffect, useState, type FormEvent } from "react";
 import {
   createScorebook,
@@ -729,9 +730,20 @@ export function PracticeScorebook() {
                     (sum, t) => sum + t.runs,
                     0,
                   )}
-                  . Opponent scoring and inning automation are not included in
-                  this practice workflow.
+                  . Individual totals and the confirmed scoreboard are tracked
+                  separately.
                 </p>
+                <GameScoreboardPanel
+                  key={`${game.id}-${book?.revision ?? seasonBook?.revision}`}
+                  value={game.scoreboard ?? null}
+                  disabled={!online}
+                  save={(value) =>
+                    send({ type: "scoreboard", gameId: game.id, ...value })
+                  }
+                />
+                {game.tournamentGameNumber && (
+                  <p>Tournament Game {game.tournamentGameNumber}</p>
+                )}
                 {!game.complete && (
                   <form
                     onSubmit={(e) => {
