@@ -2,7 +2,7 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 2,
+  revision: 8,
   updatedAt: "2026-10-10",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
@@ -85,6 +85,16 @@ export const projectTracker: ProjectTracker = {
       description:
         "Locked scoring rules with examples, replay checks and connected acceptance.",
       tasks: [
+        {
+          id: "M2-team-phone-review",
+          group: "Review access",
+          title: "Prepare private phone review access for 2–3 teammates",
+          status: "in_progress",
+          evidence:
+            "Phone-view sample history and isolated twelve-player scoring prepared locally; ordinary practice remains separate.",
+          next: "Publish the approved phone review package and verify hosted reviewer phone access.",
+          kind: "work",
+        },
         {
           id: "M2-1",
           group: "Rules",
@@ -721,6 +731,12 @@ export const projectTracker: ProjectTracker = {
     },
   ],
   changes: [
+    {
+      title: "Private team phone review",
+      status:
+        "Phone review release approved; ongoing private reviewer access configured; publication and reviewer phone acceptance pending",
+      milestone: "M2",
+    },
     {
       title: "Compact tournament continuation",
       status: "Released; owner acceptance open",

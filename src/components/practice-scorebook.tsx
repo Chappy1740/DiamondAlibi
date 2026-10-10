@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { sampleRoster } from "@/lib/sample-seasons";
 import { GameScoreboardPanel } from "@/components/game-scoreboard";
 import { GameHrLimitPanel } from "@/components/game-hr-limit";
 import { useEffect, useState, type FormEvent } from "react";
@@ -35,6 +36,12 @@ const roster = [
   { id: "demo-b", name: "Morgan (sample)" },
   { id: "demo-c", name: "Casey (sample guest)" },
 ];
+const practiceRoster = roster;
+const reviewerRoster = sampleRoster.map((p) => ({
+  id: p.id,
+  name: `${p.display_name} (sample)`,
+}));
+const PRACTICE_KEY = KEY;
 type LegacyJournal = {
   format: 1;
   initial: Parameters<typeof createScorebook>[0];
@@ -59,7 +66,12 @@ function replayLegacy(journal: LegacyJournal) {
 }
 const rate = (value: number | null) =>
   value === null ? "—" : value.toFixed(3);
-export function PracticeScorebook() {
+export function PracticeScorebook({
+  review = false,
+}: { review?: boolean } = {}) {
+  const roster = review ? reviewerRoster : practiceRoster;
+  const KEY = review ? "diamond-alibi.team-review.practice.v1" : PRACTICE_KEY;
+  const teamId = review ? "review-practice-team" : "practice-team";
   const [journal, setJournal] = useState<SeasonJournal | null>(null),
     [seasonBook, setSeasonBook] = useState<SeasonScorebook | null>(null),
     [seasonId, setSeasonId] = useState(""),
@@ -87,7 +99,7 @@ export function PracticeScorebook() {
       if (saved) {
         const j = JSON.parse(saved) as SeasonJournal;
         if (
-          j.initial.teamId !== "practice-team" ||
+          j.initial.teamId !== teamId ||
           JSON.stringify(j.initial.players) !== JSON.stringify(roster)
         )
           throw new Error("Synthetic roster only.");
@@ -106,7 +118,7 @@ export function PracticeScorebook() {
       setReady(true);
     }
     try {
-      const old = localStorage.getItem(LEGACY_KEY);
+      const old = review ? null : localStorage.getItem(LEGACY_KEY);
       if (old) {
         const b = replayLegacy(JSON.parse(old));
         setLegacy(
@@ -252,7 +264,7 @@ export function PracticeScorebook() {
         if (localStorage.getItem(KEY) !== null)
           throw new Error("Another tab created practice. Reload first.");
         if (!online) throw new Error("Reconnect before setup.");
-        const initial = { teamId: "practice-team", players: roster };
+        const initial = { teamId, players: roster };
         const request = {
           commandId: crypto.randomUUID(),
           expectedRevision: 0,
@@ -304,8 +316,18 @@ export function PracticeScorebook() {
         Skip to scorebook
       </a>
       <header className="club-header">
-        <Link href="/">Diamond Alibi</Link>
-        <Link href="/club">My clubhouse</Link>
+        <Link
+          href={review ? "/review" : "/"}
+          target={review ? "_top" : undefined}
+        >
+          Diamond Alibi
+        </Link>
+        <Link
+          href={review ? "/review" : "/club"}
+          target={review ? "_top" : undefined}
+        >
+          {review ? "Review hub" : "My clubhouse"}
+        </Link>
       </header>
       <main id="practice-main">
         <p className="eyebrow">Practice · synthetic players only</p>

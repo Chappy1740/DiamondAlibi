@@ -25,6 +25,13 @@
 .status-badge { font-size: 12px; padding: 6px 10px; border: 1px solid var(--muted); border-radius: 8px; color: var(--white); }
 .status-done { border-color: var(--green); }
 .status-group { margin-block: 20px; }
+.team-review { width: 100%; max-width: 440px; margin: auto; }
+.team-review > header { padding: 16px; }
+.team-review h1 { font-size: 24px; }
+.team-review nav { display: flex; flex-wrap: wrap; gap: 12px; }
+.team-review [aria-pressed="true"] { border-color: var(--green); }
+.team-review iframe { display: block; width: 100%; height: max(600px, calc(100dvh - 260px)); border: 1px solid var(--border); }
+.practice-page summary { min-height: 44px; padding-block: 12px; cursor: pointer; }
 
 .dashboard-context { display: flex; flex-wrap: wrap; align-items: end; gap: 16px; margin: 24px 0; }
 .dashboard-context label { flex: 1 1 160px; min-width: 0; }

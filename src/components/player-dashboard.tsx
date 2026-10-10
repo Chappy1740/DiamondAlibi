@@ -16,6 +16,7 @@ import { connectedScoreboard } from "@/lib/game-scoreboard";
 
 type Option = { id: string; name: string };
 export type DashboardProps = {
+  review?: boolean;
   route: string;
   sample: boolean;
   userId: string;
@@ -59,12 +60,17 @@ export function PlayerDashboard(p: DashboardProps) {
     query.set("sample", "1");
     query.set("player", p.userId);
   }
-  const href = (path: string) => `/${path}?${query}`;
+  const href = (path: string) =>
+    p.review
+      ? `/review/history?${query}&route=${encodeURIComponent(path)}`
+      : `/${path}?${query}`;
   const scoring = (game?: string) =>
     p.sample
       ? game
         ? `${href("games/live")}&game=${encodeURIComponent(game)}`
-        : "/practice"
+        : p.review
+          ? "/review/scoring"
+          : "/practice"
       : `/club/score?${new URLSearchParams({ team: p.teamId, season: p.seasonId, ...(game ? { game } : {}) })}`;
   const filteredGames =
     loaded?.snapshot.games.filter(
@@ -149,8 +155,12 @@ export function PlayerDashboard(p: DashboardProps) {
           <Link className="compact-brand" href={href("")}>
             DIAMOND ALIBI<span className="accent">.</span>
           </Link>
-          <Link className="button secondary" href="/club">
-            My clubhouse
+          <Link
+            className="button secondary"
+            href={p.review ? "/review" : "/club"}
+            target={p.review ? "_top" : undefined}
+          >
+            {p.review ? "Review hub" : "My clubhouse"}
           </Link>
         </header>
         <div className="content-wrap">
@@ -158,16 +168,19 @@ export function PlayerDashboard(p: DashboardProps) {
             {p.sample
               ? "Sample history · 12 players · four 16-game league seasons · seven tournaments. These records are separate from your clubhouse."
               : "Your clubhouse records · everyone on the team can score for everyone."}{" "}
-            <Link className="text-link" href={p.sample ? "/" : "/?sample=1"}>
-              {p.sample ? "Use my account" : "Explore sample history"}
-            </Link>
+            {!p.review && (
+              <Link className="text-link" href={p.sample ? "/" : "/?sample=1"}>
+                {p.sample ? "Use my account" : "Explore sample history"}
+              </Link>
+            )}
           </p>
           <form
             className="dashboard-context"
             method="get"
-            action={`/${p.route}`}
+            action={p.review ? "/review/history" : `/${p.route}`}
           >
             {p.sample && <input type="hidden" name="sample" value="1" />}
+            {p.review && <input type="hidden" name="route" value={p.route} />}
             <label>
               Team
               <select aria-label="Team" name="team" defaultValue={p.teamId}>
@@ -254,7 +267,10 @@ export function PlayerDashboard(p: DashboardProps) {
                       Recorded synthetic plays · read-only history. Use local
                       practice to try entering or correcting plays.
                     </p>
-                    <Link className="button secondary" href="/practice">
+                    <Link
+                      className="button secondary"
+                      href={p.review ? "/review/scoring" : "/practice"}
+                    >
                       Try local scoring
                     </Link>
                     <h3>Plate appearances</h3>
@@ -385,7 +401,9 @@ export function PlayerDashboard(p: DashboardProps) {
                           className="button secondary"
                           href={
                             p.sample
-                              ? "/practice"
+                              ? p.review
+                                ? "/review/scoring"
+                                : "/practice"
                               : `/club/score?${new URLSearchParams({ team: p.teamId, season: p.seasonId, tournament: t.id })}`
                           }
                         >
@@ -514,13 +532,18 @@ export function PlayerDashboard(p: DashboardProps) {
                   <Link className="button secondary" href="/status">
                     Project status
                   </Link>
-                  <Link className="button secondary" href="/club">
-                    Teams, invitations and seasons
-                  </Link>
+                  {!p.review && (
+                    <Link className="button secondary" href="/club">
+                      Teams, invitations and seasons
+                    </Link>
+                  )}
                   <Link className="button secondary" href={href("more/alibi")}>
                     Generate an Alibi
                   </Link>
-                  <Link className="button secondary" href="/practice">
+                  <Link
+                    className="button secondary"
+                    href={p.review ? "/review/scoring" : "/practice"}
+                  >
                     Local scoring practice
                   </Link>
                 </div>
