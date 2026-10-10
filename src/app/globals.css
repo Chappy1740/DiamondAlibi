@@ -12,6 +12,20 @@
   font-family: Inter, Arial, sans-serif;
 }
 
+.project-status { max-width: 1000px; }
+.project-status .detail-card { max-width: none; margin-block: 24px; }
+.project-status progress { width: 100%; height: 18px; accent-color: var(--green); }
+.status-filter label { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.status-filter select { min-height: 44px; background: var(--surface); color: var(--white); padding: 10px; border: 1px solid var(--muted); border-radius: 8px; font: inherit; max-width: 100%; }
+.status-milestone summary { min-height: 44px; cursor: pointer; padding-block: 12px; font-weight: 600; }
+.status-gate { padding: 12px; border-left: 3px solid var(--teal); background: var(--background); }
+.status-tasks { list-style: none; padding: 0; }
+.status-tasks li { padding-block: 16px; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+.status-task-heading { display: flex; flex-wrap: wrap; gap: 12px; align-items: start; justify-content: space-between; }
+.status-badge { font-size: 12px; padding: 6px 10px; border: 1px solid var(--muted); border-radius: 8px; color: var(--white); }
+.status-done { border-color: var(--green); }
+.status-group { margin-block: 20px; }
+
 .dashboard-context { display: flex; flex-wrap: wrap; align-items: end; gap: 16px; margin: 24px 0; }
 .dashboard-context label { flex: 1 1 160px; min-width: 0; }
 .dashboard-context select { width: 100%; }

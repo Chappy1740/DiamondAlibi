@@ -511,6 +511,9 @@ export function PlayerDashboard(p: DashboardProps) {
               <section className="card detail-card">
                 <h2>Clubhouse tools</h2>
                 <div className="dashboard-cards">
+                  <Link className="button secondary" href="/status">
+                    Project status
+                  </Link>
                   <Link className="button secondary" href="/club">
                     Teams, invitations and seasons
                   </Link>

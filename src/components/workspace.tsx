@@ -656,6 +656,7 @@ function More() {
         subtitle="Keep game day simple. Find the extras here."
       />
       <div className="card menu-list">
+        <Link href="/status"><span className="grow"><strong>Project status</strong><small>Milestones, remaining tasks and completion gates</small></span><ChevronRight size={18} aria-hidden /></Link>
         {moreItems.map((item) => (
           <Link key={item.path} href={`/more/${item.path}`}>
             <span className="menu-icon">
