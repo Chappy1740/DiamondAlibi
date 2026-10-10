@@ -2,14 +2,14 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 8,
+  revision: 9,
   updatedAt: "2026-10-10",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
   release: {
-    commit: "2f25aec",
-    label: "Detailed status screen and milestone gates",
-    status: "Protected preview deployed; phone acceptance pending",
+    commit: "8ba1179",
+    label: "Private phone review and isolated sample scoring",
+    status: "Protected preview deployed; reviewer phone acceptance pending",
   },
   milestones: [
     {
@@ -91,8 +91,8 @@ export const projectTracker: ProjectTracker = {
           title: "Prepare private phone review access for 2–3 teammates",
           status: "in_progress",
           evidence:
-            "Phone-view sample history and isolated twelve-player scoring prepared locally; ordinary practice remains separate.",
-          next: "Publish the approved phone review package and verify hosted reviewer phone access.",
+            "Phone sample history and isolated twelve-player practice released; private access configured; signed-in hosted browser loads both modes and anonymous routes/assets remain protected.",
+          next: "Each reviewer verifies email-code sign-in, sample history and scoring on their phone.",
           kind: "work",
         },
         {
@@ -734,7 +734,7 @@ export const projectTracker: ProjectTracker = {
     {
       title: "Private team phone review",
       status:
-        "Phone review release approved; ongoing private reviewer access configured; publication and reviewer phone acceptance pending",
+        "Released to the protected preview with ongoing private access; reviewer phone acceptance pending",
       milestone: "M2",
     },
     {
