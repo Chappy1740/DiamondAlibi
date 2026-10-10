@@ -1,4 +1,6 @@
 "use client";
+import { TournamentNextGame } from "@/components/tournament-next-game";
+import { tournamentContinuation } from "@/lib/tournament-continuation";
 import { ScorebookAudit } from "@/components/scorebook-audit";
 import { GameHrLimitPanel } from "@/components/game-hr-limit";
 import { GameScoreboardPanel } from "@/components/game-scoreboard";
@@ -74,6 +76,11 @@ export function ConnectedScorebook({
       initialTournamentId ? "Tournament" : "League",
     ),
     [tournamentId, setTournamentId] = useState(initialTournamentId);
+  const [nextTournamentId, setNextTournamentId] = useState(initialTournamentId);
+  const [openTournaments, setOpenTournaments] = useState<
+    Record<string, boolean>
+  >(initialTournamentId ? { [initialTournamentId]: true } : {});
+  const [auditStale, setAuditStale] = useState(false);
   const [leagueId, setLeagueId] = useState("");
   const [overrideLimit, setOverrideLimit] = useState(false);
   const [outcome, setOutcome] = useState<Outcome>("Hit"),
@@ -100,6 +107,8 @@ export function ConnectedScorebook({
   const disabled =
     busy || !online || paused || review || uncertain || !data || data.archived;
   const base = { teamId, seasonId };
+  const continuation =
+    kind === "Tournament" ? tournamentContinuation(data, tournamentId) : null;
   const inheritedLimit =
     kind === "Tournament"
       ? snapshot?.tournaments.find((t) => t.id === tournamentId)?.fenceLimit
@@ -240,7 +249,7 @@ export function ConnectedScorebook({
         return;
       }
       setUncertain(false);
-      setAudit(null);
+      setAuditStale(true);
       pending.current = null;
       try {
         sessionStorage.removeItem(storageKey);
@@ -296,6 +305,7 @@ export function ConnectedScorebook({
               ? "Previous save confirmed. The change was recorded once."
               : "Saved to the team scorebook.",
         );
+      return loaded && !conflict;
     } finally {
       lock.current = false;
       if (mounted.current) setBusy(false);
@@ -397,16 +407,30 @@ export function ConnectedScorebook({
     });
   }
   function start(event: FormEvent<HTMLFormElement>) {
-    const form = formData(event),
-      selectedLineup = lineup(form);
+    void startGame(
+      formData(event),
+      kind,
+      tournamentId,
+      leagueId,
+      overrideLimit,
+    );
+  }
+  async function startGame(
+    form: FormData,
+    gameKind: "League" | "Tournament",
+    chosenTournament: string,
+    chosenLeague: string,
+    gameOverride: boolean,
+  ) {
+    const selectedLineup = lineup(form);
     if (!selectedLineup) return;
     const date = String(form.get("date")),
       existingDay = snapshot?.games.find((g) => g.playedOn === date);
     const tour =
-      kind === "Tournament"
-        ? snapshot?.tournaments.find((t) => t.id === tournamentId)
+      gameKind === "Tournament"
+        ? snapshot?.tournaments.find((t) => t.id === chosenTournament)
         : null;
-    if (kind === "Tournament" && !tour) {
+    if (gameKind === "Tournament" && !tour) {
       setMessage("Choose a tournament first.");
       return;
     }
@@ -427,7 +451,7 @@ export function ConnectedScorebook({
         Number(form.get(`board-${key}`)),
       ]),
     );
-    void save({
+    const accepted = await save({
       ...base,
       type: "start",
       dayId: existingDay?.game.day_id ?? crypto.randomUUID(),
@@ -440,9 +464,11 @@ export function ConnectedScorebook({
         type: "start",
         gameId: crypto.randomUUID(),
         opponent: String(form.get("opponent")).trim(),
-        kind,
-        ...(kind === "League" && leagueId ? { leagueId } : {}),
-        ...(overrideLimit
+        kind: gameKind,
+        ...(gameKind === "League" && chosenLeague
+          ? { leagueId: chosenLeague }
+          : {}),
+        ...(gameOverride
           ? {
               overrideLimit: true,
               overrideReason: String(form.get("overrideReason")).trim(),
@@ -457,6 +483,11 @@ export function ConnectedScorebook({
         bands,
       },
     });
+    if (accepted && tour) {
+      setNextTournamentId(tour.id);
+      setOpenTournaments((current) => ({ ...current, [tour.id]: true }));
+    }
+    return accepted;
   }
   function editLineup(event: FormEvent<HTMLFormElement>, g: ConnectedGame) {
     const form = formData(event),
@@ -522,6 +553,7 @@ export function ConnectedScorebook({
       });
       if (result.status === "ok") {
         const page = result.data as NonNullable<typeof audit>;
+        setAuditStale(false);
         setAudit({
           ...page,
           events: more
@@ -636,7 +668,7 @@ export function ConnectedScorebook({
                 </p>
               )}
               <GameScoreboardPanel
-                key={`${current.game.id}-${current.dayRevision}`}
+                key={current.game.id}
                 value={connectedScoreboard(current.game)}
                 disabled={disabled}
                 save={(value) =>
@@ -653,7 +685,7 @@ export function ConnectedScorebook({
                   : "HR Bands apply only to tournaments."}
               </p>
               <GameHrLimitPanel
-                key={`hr-limit-${current.game.id}-${current.dayRevision}`}
+                key={`hr-limit-${current.game.id}`}
                 limit={current.rules.fence_limit}
                 disabled={disabled}
                 save={(value) =>
@@ -800,10 +832,7 @@ export function ConnectedScorebook({
                 <p>No plate appearances recorded.</p>
               )}
               {current.evaluation.rows.map((row) => (
-                <details
-                  key={`${row.id}-${current.dayRevision}`}
-                  className="scorebook-play"
-                >
+                <details key={row.id} className="scorebook-play">
                   <summary>
                     {playerName(row.playerId)} · {row.official} ·{" "}
                     {row.voided ? "voided" : `${row.runs} runs, ${row.rbi} RBI`}
@@ -813,6 +842,7 @@ export function ConnectedScorebook({
                     {row.delta}
                   </p>
                   <form
+                    key={JSON.stringify(row)}
                     className="club-form"
                     onSubmit={(e) => correct(e, current, row)}
                   >
@@ -961,236 +991,238 @@ export function ConnectedScorebook({
               </table>
             </div>
           </section>
-          <section className="card detail-card">
-            <h2 id="new-game-setup" tabIndex={-1}>
-              Set up a game
-            </h2>
-            <form className="club-form" onSubmit={start}>
-              <fieldset disabled={disabled}>
-                <label>
-                  Game date
-                  <input
-                    name="date"
-                    type="date"
-                    defaultValue={new Date().toLocaleDateString("en-CA")}
-                    required
-                  />
-                </label>
-                <label>
-                  Opponent
-                  <input name="opponent" maxLength={200} required />
-                </label>
-                <label>
-                  Game kind
-                  <select
-                    value={kind}
-                    aria-label="Game kind"
-                    onChange={(e) => setKind(e.target.value as typeof kind)}
-                  >
-                    <option>League</option>
-                    <option>Tournament</option>
-                  </select>
-                </label>
-                {kind === "Tournament" && (
+          {!continuation && (
+            <section className="card detail-card">
+              <h2 id="new-game-setup" tabIndex={-1}>
+                Set up a game
+              </h2>
+              <form className="club-form" onSubmit={start}>
+                <fieldset disabled={disabled}>
                   <label>
-                    Tournament
-                    <select
-                      value={tournamentId}
-                      aria-label="Tournament"
-                      onChange={(e) => setTournamentId(e.target.value)}
+                    Game date
+                    <input
+                      name="date"
+                      type="date"
+                      defaultValue={new Date().toLocaleDateString("en-CA")}
                       required
-                    >
-                      <option value="">Choose tournament</option>
-                      {snapshot?.tournaments.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.name}
-                          {t.guaranteedGames
-                            ? ` · ${t.guaranteedGames}-game guaranteed`
-                            : ""}
-                        </option>
-                      ))}
-                    </select>
+                    />
                   </label>
-                )}
-                {kind === "League" && (
                   <label>
-                    League
+                    Opponent
+                    <input name="opponent" maxLength={200} required />
+                  </label>
+                  <label>
+                    Game kind
                     <select
-                      aria-label="League"
-                      value={leagueId}
-                      onChange={(e) => setLeagueId(e.target.value)}
+                      value={kind}
+                      aria-label="Game kind"
+                      onChange={(e) => setKind(e.target.value as typeof kind)}
                     >
-                      <option value="">
-                        No saved league — enter game limit
-                      </option>
-                      {snapshot?.leagues?.map((l) => (
-                        <option key={l.id} value={l.id}>
-                          {l.name} · {l.fenceLimit} HR
-                        </option>
-                      ))}
+                      <option>League</option>
+                      <option>Tournament</option>
                     </select>
                   </label>
-                )}
-                {inheritedLimit != null && (
-                  <>
-                    <p>
-                      Saved {kind.toLowerCase()} fence HR limit:{" "}
-                      {inheritedLimit}. HRs used reset each game.
-                    </p>
+                  {kind === "Tournament" && (
                     <label>
-                      <input
-                        type="checkbox"
-                        checked={overrideLimit}
-                        onChange={(e) => setOverrideLimit(e.target.checked)}
-                      />
-                      Override HR limit for this game only
+                      Tournament
+                      <select
+                        value={tournamentId}
+                        aria-label="Tournament"
+                        onChange={(e) => setTournamentId(e.target.value)}
+                        required
+                      >
+                        <option value="">Choose tournament</option>
+                        {snapshot?.tournaments.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.name}
+                            {t.guaranteedGames
+                              ? ` · ${t.guaranteedGames}-game guaranteed`
+                              : ""}
+                          </option>
+                        ))}
+                      </select>
                     </label>
-                  </>
-                )}
-                <label>
-                  Fence HR limit for this game
-                  <input
-                    key={`${kind}-${tournamentId}-${leagueId}-${overrideLimit}`}
-                    name="limit"
-                    type="number"
-                    min={0}
-                    max={100}
-                    defaultValue={inheritedLimit ?? ""}
-                    readOnly={inheritedLimit != null && !overrideLimit}
-                    required
-                  />
-                </label>
-                {overrideLimit && (
+                  )}
+                  {kind === "League" && (
+                    <label>
+                      League
+                      <select
+                        aria-label="League"
+                        value={leagueId}
+                        onChange={(e) => setLeagueId(e.target.value)}
+                      >
+                        <option value="">
+                          No saved league — enter game limit
+                        </option>
+                        {snapshot?.leagues?.map((l) => (
+                          <option key={l.id} value={l.id}>
+                            {l.name} · {l.fenceLimit} HR
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                  {inheritedLimit != null && (
+                    <>
+                      <p>
+                        Saved {kind.toLowerCase()} fence HR limit:{" "}
+                        {inheritedLimit}. HRs used reset each game.
+                      </p>
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={overrideLimit}
+                          onChange={(e) => setOverrideLimit(e.target.checked)}
+                        />
+                        Override HR limit for this game only
+                      </label>
+                    </>
+                  )}
                   <label>
-                    Game HR override reason
-                    <input name="overrideReason" maxLength={200} required />
+                    Fence HR limit for this game
+                    <input
+                      key={`${kind}-${tournamentId}-${leagueId}-${overrideLimit}`}
+                      name="limit"
+                      type="number"
+                      min={0}
+                      max={100}
+                      defaultValue={inheritedLimit ?? ""}
+                      readOnly={inheritedLimit != null && !overrideLimit}
+                      required
+                    />
                   </label>
-                )}
-                <p className="micro">
-                  Zero is allowed. The game inherits the saved competition limit
-                  unless explicitly overridden. An in-game correction
-                  recalculates the whole game; 1-up is deferred.
-                </p>
-                <h3>
-                  {kind === "Tournament"
-                    ? "Lineup and first Band assignments"
-                    : "Lineup"}
-                </h3>
-                <div key={`${kind}-${tournamentId}`}>
-                  {bandFields(kind === "Tournament" ? tournamentId : null)}
-                </div>
-                <details>
-                  <summary>Beverage rules for this game</summary>
-                  {Object.entries(DEFAULT_BOARD).map(([key, value]) => (
-                    <label
-                      key={key}
-                      hidden={kind === "League" && key === "bandSolo"}
-                    >
-                      {boardLabels[key as keyof typeof DEFAULT_BOARD]}
+                  {overrideLimit && (
+                    <label>
+                      Game HR override reason
+                      <input name="overrideReason" maxLength={200} required />
+                    </label>
+                  )}
+                  <p className="micro">
+                    Zero is allowed. The game inherits the saved competition
+                    limit unless explicitly overridden. An in-game correction
+                    recalculates the whole game; 1-up is deferred.
+                  </p>
+                  <h3>
+                    {kind === "Tournament"
+                      ? "Lineup and first Band assignments"
+                      : "Lineup"}
+                  </h3>
+                  <div key={`${kind}-${tournamentId}`}>
+                    {bandFields(kind === "Tournament" ? tournamentId : null)}
+                  </div>
+                  <details>
+                    <summary>Beverage rules for this game</summary>
+                    {Object.entries(DEFAULT_BOARD).map(([key, value]) => (
+                      <label
+                        key={key}
+                        hidden={kind === "League" && key === "bandSolo"}
+                      >
+                        {boardLabels[key as keyof typeof DEFAULT_BOARD]}
+                        <input
+                          name={`board-${key}`}
+                          type="number"
+                          min={-100}
+                          max={100}
+                          defaultValue={value}
+                          required
+                        />
+                      </label>
+                    ))}
+                  </details>
+                  <button className="button primary">Start game</button>
+                </fieldset>
+              </form>
+              <details>
+                <summary>Create a tournament</summary>
+                <form
+                  className="club-form"
+                  onSubmit={(e) => {
+                    const f = formData(e);
+                    void save({
+                      ...base,
+                      type: "competition",
+                      competitionId: crypto.randomUUID(),
+                      kind: "Tournament",
+                      name: String(f.get("name")).trim(),
+                      fenceLimit: Number(f.get("fenceLimit")),
+                      guaranteedGames: Number(f.get("guaranteedGames")),
+                    });
+                  }}
+                >
+                  <fieldset disabled={disabled}>
+                    <label>
+                      Tournament name
+                      <input name="name" maxLength={200} required />
+                    </label>
+                    <label>
+                      Tournament fence HR limit
                       <input
-                        name={`board-${key}`}
+                        name="fenceLimit"
                         type="number"
-                        min={-100}
+                        min={0}
                         max={100}
-                        defaultValue={value}
                         required
                       />
                     </label>
-                  ))}
-                </details>
-                <button className="button primary">Start game</button>
-              </fieldset>
-            </form>
-            <details>
-              <summary>Create a tournament</summary>
-              <form
-                className="club-form"
-                onSubmit={(e) => {
-                  const f = formData(e);
-                  void save({
-                    ...base,
-                    type: "competition",
-                    competitionId: crypto.randomUUID(),
-                    kind: "Tournament",
-                    name: String(f.get("name")).trim(),
-                    fenceLimit: Number(f.get("fenceLimit")),
-                    guaranteedGames: Number(f.get("guaranteedGames")),
-                  });
-                }}
-              >
-                <fieldset disabled={disabled}>
-                  <label>
-                    Tournament name
-                    <input name="name" maxLength={200} required />
-                  </label>
-                  <label>
-                    Tournament fence HR limit
-                    <input
-                      name="fenceLimit"
-                      type="number"
-                      min={0}
-                      max={100}
-                      required
-                    />
-                  </label>
-                  <label>
-                    Games guaranteed
-                    <select
-                      name="guaranteedGames"
-                      aria-label="Games guaranteed"
-                      defaultValue=""
-                      required
-                    >
-                      <option value="" disabled>
-                        Choose games guaranteed
-                      </option>
-                      <option value="2">2-game guaranteed</option>
-                      <option value="3">3-game guaranteed</option>
-                    </select>
-                  </label>
-                  <button className="button secondary">
-                    Create tournament
-                  </button>
-                </fieldset>
-              </form>
-            </details>
-            <details>
-              <summary>Create a league</summary>
-              <form
-                className="club-form"
-                onSubmit={(e) => {
-                  const f = formData(e);
-                  void save({
-                    ...base,
-                    type: "competition",
-                    competitionId: crypto.randomUUID(),
-                    kind: "League",
-                    name: String(f.get("name")).trim(),
-                    fenceLimit: Number(f.get("fenceLimit")),
-                    guaranteedGames: null,
-                  });
-                }}
-              >
-                <fieldset disabled={disabled}>
-                  <label>
-                    League name
-                    <input name="name" maxLength={200} required />
-                  </label>
-                  <label>
-                    League fence HR limit
-                    <input
-                      name="fenceLimit"
-                      type="number"
-                      min={0}
-                      max={100}
-                      required
-                    />
-                  </label>
-                  <button className="button secondary">Create league</button>
-                </fieldset>
-              </form>
-            </details>
-          </section>
+                    <label>
+                      Games guaranteed
+                      <select
+                        name="guaranteedGames"
+                        aria-label="Games guaranteed"
+                        defaultValue=""
+                        required
+                      >
+                        <option value="" disabled>
+                          Choose games guaranteed
+                        </option>
+                        <option value="2">2-game guaranteed</option>
+                        <option value="3">3-game guaranteed</option>
+                      </select>
+                    </label>
+                    <button className="button secondary">
+                      Create tournament
+                    </button>
+                  </fieldset>
+                </form>
+              </details>
+              <details>
+                <summary>Create a league</summary>
+                <form
+                  className="club-form"
+                  onSubmit={(e) => {
+                    const f = formData(e);
+                    void save({
+                      ...base,
+                      type: "competition",
+                      competitionId: crypto.randomUUID(),
+                      kind: "League",
+                      name: String(f.get("name")).trim(),
+                      fenceLimit: Number(f.get("fenceLimit")),
+                      guaranteedGames: null,
+                    });
+                  }}
+                >
+                  <fieldset disabled={disabled}>
+                    <label>
+                      League name
+                      <input name="name" maxLength={200} required />
+                    </label>
+                    <label>
+                      League fence HR limit
+                      <input
+                        name="fenceLimit"
+                        type="number"
+                        min={0}
+                        max={100}
+                        required
+                      />
+                    </label>
+                    <button className="button secondary">Create league</button>
+                  </fieldset>
+                </form>
+              </details>
+            </section>
+          )}
           <section className="card detail-card">
             <h2>Tournament games and Band corrections</h2>
             <p className="micro">
@@ -1198,7 +1230,18 @@ export function ConnectedScorebook({
               require a reason and recalculate the tournament.
             </p>
             {snapshot?.tournaments.map((t) => (
-              <details key={t.id}>
+              <details
+                key={t.id}
+                open={openTournaments[t.id] ?? false}
+                onToggle={(e) => {
+                  const open = e.currentTarget.open;
+                  setOpenTournaments((current) =>
+                    current[t.id] === open
+                      ? current
+                      : { ...current, [t.id]: open },
+                  );
+                }}
+              >
                 <summary>
                   {t.name}
                   {t.guaranteedGames
@@ -1257,12 +1300,12 @@ export function ConnectedScorebook({
                   onClick={() => {
                     setKind("Tournament");
                     setTournamentId(t.id);
+                    const template = tournamentContinuation(data, t.id);
+                    setNextTournamentId(template ? t.id : "");
                     setMessage(
-                      `Set up Game ${snapshot.games.filter((g) => g.game.tournament_id === t.id).length + 1} for ${t.name}. Confirm the date, opponent and lineup below.`,
+                      `Set up Game ${snapshot.games.filter((g) => g.game.tournament_id === t.id).length + 1} for ${t.name}.`,
                     );
-                    const heading = document.getElementById("new-game-setup");
-                    heading?.scrollIntoView({ block: "start" });
-                    heading?.focus();
+                    // The next-game form opens here, without scrolling to another section.
                   }}
                 >
                   Create Game{" "}
@@ -1273,45 +1316,76 @@ export function ConnectedScorebook({
                   This opens game setup. It does not decide bracket advancement
                   or championship eligibility.
                 </p>
-                {data.bands
-                  .filter((b) => b.tournament_id === t.id)
-                  .map((b) => (
-                    <form
-                      className="club-form"
-                      key={`${b.player_id}-${t.revision}`}
-                      onSubmit={(e) => {
-                        const f = formData(e);
-                        void save({
-                          ...base,
-                          type: "band",
-                          tournamentId: t.id,
-                          commandId: crypto.randomUUID(),
-                          expectedRevision: t.revision,
-                          playerId: b.player_id,
-                          hasBand: f.has("band"),
-                          reason: String(f.get("reason")).trim(),
-                        });
+                {nextTournamentId === t.id &&
+                  tournamentContinuation(data, t.id) && (
+                    <TournamentNextGame
+                      key={t.id}
+                      template={tournamentContinuation(data, t.id)!}
+                      data={data}
+                      number={
+                        snapshot.games.filter(
+                          (g) => g.game.tournament_id === t.id,
+                        ).length + 1
+                      }
+                      disabled={disabled}
+                      submit={(form) =>
+                        startGame(
+                          form,
+                          "Tournament",
+                          t.id,
+                          "",
+                          form.has("overrideLimit"),
+                        )
+                      }
+                      otherCompetition={() => {
+                        setKind("League");
+                        setTournamentId("");
+                        setNextTournamentId("");
                       }}
-                    >
-                      <fieldset disabled={disabled}>
-                        <label>
-                          <input
-                            name="band"
-                            type="checkbox"
-                            defaultChecked={b.has_band}
-                          />
-                          HR Band for {playerName(b.player_id)}
-                        </label>
-                        <label>
-                          Band correction reason
-                          <input name="reason" maxLength={200} required />
-                        </label>
-                        <button className="button secondary">
-                          Correct tournament Band
-                        </button>
-                      </fieldset>
-                    </form>
-                  ))}
+                    />
+                  )}
+                <details>
+                  <summary>Correct tournament Bands</summary>
+                  {data.bands
+                    .filter((b) => b.tournament_id === t.id)
+                    .map((b) => (
+                      <form
+                        className="club-form"
+                        key={`${b.player_id}-${t.revision}`}
+                        onSubmit={(e) => {
+                          const f = formData(e);
+                          void save({
+                            ...base,
+                            type: "band",
+                            tournamentId: t.id,
+                            commandId: crypto.randomUUID(),
+                            expectedRevision: t.revision,
+                            playerId: b.player_id,
+                            hasBand: f.has("band"),
+                            reason: String(f.get("reason")).trim(),
+                          });
+                        }}
+                      >
+                        <fieldset disabled={disabled}>
+                          <label>
+                            <input
+                              name="band"
+                              type="checkbox"
+                              defaultChecked={b.has_band}
+                            />
+                            HR Band for {playerName(b.player_id)}
+                          </label>
+                          <label>
+                            Band correction reason
+                            <input name="reason" maxLength={200} required />
+                          </label>
+                          <button className="button secondary">
+                            Correct tournament Band
+                          </button>
+                        </fieldset>
+                      </form>
+                    ))}
+                </details>
               </details>
             ))}
           </section>
@@ -1326,7 +1400,12 @@ export function ConnectedScorebook({
             </button>
             {audit && (
               <>
-                <p>{audit.events.length} history entries loaded.</p>
+                <p>
+                  {audit.events.length} history entries loaded.
+                  {auditStale
+                    ? " New changes are available; load history to refresh."
+                    : ""}
+                </p>
                 <ScorebookAudit entries={audit.events} roster={data.roster} />
                 {audit.nextCursor && (
                   <button

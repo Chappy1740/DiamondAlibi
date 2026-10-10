@@ -17,6 +17,7 @@ export function GameHrLimitPanel({
         unchanged.
       </p>
       <form
+        key={limit}
         className="club-form"
         onSubmit={(e) => {
           e.preventDefault();

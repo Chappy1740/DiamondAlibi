@@ -29,7 +29,17 @@ export type ConnectedGame = {
   dayRevision: number;
   tournamentRevision: number | null;
   lineup: string[];
-  rules: { version_label: string; fence_limit: number };
+  rules: {
+    version_label: string;
+    fence_limit: number;
+    strikeout?: number;
+    solo?: number;
+    band_solo?: number;
+    grand_slam?: number;
+    over_limit?: number;
+    inside_park?: number;
+    multi_run?: number;
+  };
   evaluation: {
     rows: ScoreRow[];
     fenceUsed: number;

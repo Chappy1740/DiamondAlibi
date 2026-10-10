@@ -821,7 +821,9 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
       await assertDisabled(false);
     };
     const assertDisabled = async (value) => {
-      const b = page.getByRole("button", { name: "Start game", exact: true });
+      const b = page
+        .getByRole("button", { name: /^Start (game|Game \d+)$/ })
+        .first();
       if (value)
         await b.evaluate((el) => {
           if (!el.matches(":disabled")) throw Error("Expected paused writes");
@@ -872,7 +874,10 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
       .getByRole("button", { name: "Mark game complete", exact: true })
       .click();
     await saved();
-    await page.getByText("Update score and inning", { exact: true }).click();
+    assert.equal(
+      await page.getByLabel("Our team runs", { exact: true }).isVisible(),
+      true,
+    );
     await page.getByLabel("Our team runs", { exact: true }).fill("9");
     await page
       .getByLabel("Scoreboard update reason", { exact: true })
@@ -938,44 +943,63 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
       .getByRole("button", { name: "Record plate appearance", exact: true })
       .click();
     await saved();
-    await setup.getByLabel("Game date", { exact: true }).fill("2026-10-10");
-    await setup
-      .getByLabel("Opponent", { exact: true })
-      .fill("Synthetic Cup later");
-    assert.equal(
-      await setup
-        .getByLabel("HR Band for Synthetic Alex", { exact: false })
-        .isDisabled(),
-      true,
-    );
-    await page.getByRole("button", { name: "Start game", exact: true }).click();
-    await saved();
-    await page
-      .getByRole("button", { name: "Record plate appearance", exact: true })
-      .click();
-    await saved();
     const bandSection = page.locator("section").filter({
       has: page.getByRole("heading", {
         name: "Tournament games and Band corrections",
         exact: true,
       }),
     });
-    await bandSection
-      .getByText("Synthetic Cup · 3-game guaranteed", { exact: true })
-      .click();
-    const nextTournamentGame =
-      (await load()).data.snapshot.games.filter((g) => g.game.tournament_id)
-        .length + 1;
-    await bandSection
-      .getByRole("button", {
-        name: `Create Game ${nextTournamentGame}`,
-        exact: true,
-      })
-      .click();
-    assert.equal(
-      await setup.getByLabel("Game kind", { exact: true }).inputValue(),
-      "Tournament",
+    const nextForm = page.getByRole("form", {
+      name: "Next game for Synthetic Cup",
+      exact: true,
+    });
+    assert.equal(await setup.count(), 0);
+    assert.equal(await nextForm.locator("input:visible").count(), 1);
+    const firstTournamentGame = (await load()).data.snapshot.games.find(
+      (g) => g.game.tournament_id,
     );
+    await nextForm
+      .getByLabel("Opponent", { exact: true })
+      .fill("Synthetic Cup later");
+    await nextForm.getByText("Edit game settings", { exact: true }).click();
+    await nextForm.getByLabel("Game date", { exact: true }).fill("2026-10-10");
+    await nextForm.getByText("Edit game settings", { exact: true }).click();
+    await nextForm
+      .getByRole("button", { name: "Start Game 2", exact: true })
+      .click();
+    await saved();
+    const secondTournamentGame = (await load()).data.snapshot.games.find(
+      (g) => g.game.opponent === "Synthetic Cup later",
+    );
+    assert.deepEqual(secondTournamentGame.lineup, firstTournamentGame.lineup);
+    for (const key of [
+      "fence_limit",
+      "strikeout",
+      "solo",
+      "band_solo",
+      "grand_slam",
+      "over_limit",
+      "inside_park",
+      "multi_run",
+    ])
+      assert.equal(
+        secondTournamentGame.rules[key],
+        firstTournamentGame.rules[key],
+      );
+    await page
+      .getByRole("button", { name: "Record plate appearance", exact: true })
+      .click();
+    await saved();
+    await bandSection
+      .getByRole("button", { name: "Create Game 3", exact: true })
+      .click();
+    assert.equal(await nextForm.locator("input:visible").count(), 1);
+    await nextForm
+      .getByLabel("Opponent", { exact: true })
+      .fill("Draft opponent");
+    await bandSection
+      .getByText("Correct tournament Bands", { exact: true })
+      .click();
     const correction = bandSection.locator("form").filter({
       has: page.getByLabel("HR Band for Synthetic Alex", { exact: false }),
     });
@@ -989,6 +1013,10 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
       .getByRole("button", { name: "Correct tournament Band", exact: true })
       .click();
     await saved();
+    assert.equal(
+      await nextForm.getByLabel("Opponent", { exact: true }).inputValue(),
+      "Draft opponent",
+    );
     const row = page
       .getByRole("region", { name: "Season statistics" })
       .getByRole("row")
@@ -1126,6 +1154,14 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
     await saved();
     const afterHrUi = (await load()).data.snapshot;
     assert.equal(
+      await page.getByText(/history entries loaded/).isVisible(),
+      true,
+    );
+    assert.equal(
+      await page.getByLabel("New fence HR limit", { exact: true }).isVisible(),
+      true,
+    );
+    assert.equal(
       afterHrUi.games.find((g) => g.game.id === selectedGame).rules.fence_limit,
       0,
     );
@@ -1143,6 +1179,15 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
       .first();
     await hrHistory.locator("summary").click();
     await hrHistory.getByText("Fence HR limit: 0", { exact: true }).waitFor();
+    if (await nextForm.count()) {
+      await nextForm.getByText("Edit game settings", { exact: true }).click();
+      await nextForm
+        .getByRole("button", {
+          name: "Set up a different league or tournament",
+          exact: true,
+        })
+        .click();
+    }
     await setup.getByText("Create a league", { exact: true }).click();
     await setup
       .getByLabel("League name", { exact: true })

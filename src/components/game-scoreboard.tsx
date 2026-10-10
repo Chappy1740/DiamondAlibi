@@ -39,6 +39,7 @@ export function GameScoreboardPanel({
             audit history.
           </p>
           <form
+            key={JSON.stringify(value)}
             className="club-form dashboard-context"
             onSubmit={(e) => {
               e.preventDefault();
