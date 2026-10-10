@@ -2,13 +2,13 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 1,
+  revision: 2,
   updatedAt: "2026-10-10",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
   release: {
-    commit: "640fb1c",
-    label: "Compact tournament setup",
+    commit: "2f25aec",
+    label: "Detailed status screen and milestone gates",
     status: "Protected preview deployed; phone acceptance pending",
   },
   milestones: [
@@ -733,7 +733,7 @@ export const projectTracker: ProjectTracker = {
     },
     {
       title: "Detailed status screen and milestone gates",
-      status: "Locally verified; publication and deployment approval pending",
+      status: "Released to the protected preview; owner phone review pending",
       milestone: "M1",
     },
   ],
