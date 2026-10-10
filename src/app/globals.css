@@ -403,6 +403,13 @@ p {
   width: 100%;
   height: auto;
 }
+.header-logo {
+  width: clamp(146px, 46vw, 184px);
+  flex: none;
+}
+.connected-header .header-logo {
+  width: clamp(124px, 38vw, 152px);
+}
 .rail-logo {
   width: 100%;
 }

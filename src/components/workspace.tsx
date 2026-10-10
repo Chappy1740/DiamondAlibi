@@ -1202,7 +1202,7 @@ export function Workspace({
       </div>
       <div className="workspace">
         <header className="topbar">
-          <BrandLink href="/" className="compact-brand" />
+          <BrandLink href="/" className="header-logo" variant="primary" />
           <span className="topbar-note">THE STATS DON’T LIE.</span>
           <Link className="sign-in-link" href="/club">
             My clubhouse

@@ -102,7 +102,7 @@ export function ProjectStatusDashboard({
   return (
     <main className="connected-wrap project-status">
       <nav aria-label="Project status navigation" className="connected-header">
-        <BrandLink className="compact-brand" href="/" />
+        <BrandLink className="header-logo" href="/" variant="primary" />
         <Link className="button secondary" href="/more">
           Back to More
         </Link>

@@ -148,7 +148,7 @@ export function PlayerDashboard(p: DashboardProps) {
       </aside>
       <div className="workspace">
         <header className="topbar">
-          <BrandLink className="compact-brand" href={href("")} />
+          <BrandLink className="header-logo" href={href("")} variant="primary" />
           <Link
             className="button secondary"
             href={p.review ? "/review" : "/club"}

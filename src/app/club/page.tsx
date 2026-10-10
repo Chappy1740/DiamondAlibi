@@ -87,7 +87,7 @@ export default async function ClubPage({
   return (
     <main className="connected-wrap">
       <header className="connected-header">
-        <BrandLink className="compact-brand" href="/" />
+        <BrandLink className="header-logo" href="/" variant="primary" />
         <form action={signout}>
           <button className="button secondary">Sign out</button>
         </form>
