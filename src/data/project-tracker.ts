@@ -2,14 +2,14 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 15,
+  revision: 16,
   updatedAt: "2026-10-10",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
   release: {
     commit: "d7bc86f",
     label: "Full Script Northwest app header",
-    status: "Protected preview deployed; reviewer and brand phone acceptance pending",
+    status: "Protected preview deployed; owner phone checks passed; teammate and remaining asset checks pending",
   },
   milestones: [
     {
@@ -91,7 +91,7 @@ export const projectTracker: ProjectTracker = {
           title: "Prepare private phone review access for four teammates",
           status: "in_progress",
           evidence:
-            "Phone sample history and isolated twelve-player practice released; four exact reviewer identities have ongoing One-time PIN access on the existing protected preview. Signed-in hosted browser loads both modes and anonymous routes/assets remain protected.",
+            "Phone sample history and isolated twelve-player practice released; four approved reviewers have ongoing One-time PIN access. Owner confirmed review history and practice scoring passed on phone on October 10; individual reviewer results remain pending.",
           next: "Each reviewer verifies email-code sign-in, sample history and scoring on their phone.",
           kind: "work",
         },
@@ -158,9 +158,9 @@ export const projectTracker: ProjectTracker = {
           id: "M2-6",
           group: "Rules",
           title: "Verify the latest HR rules on the hosted phone scorebook",
-          status: "blocked",
-          evidence: "",
-          next: "Check inherited limit, zero, league without Bands, game-only override, correction totals and Board.",
+          status: "done",
+          evidence: "Owner explicitly confirmed the requested My clubhouse HR-limit changes/corrections and review checks passed on phone on October 10, 2026.",
+          next: "",
           kind: "acceptance",
         },
         {
@@ -168,9 +168,9 @@ export const projectTracker: ProjectTracker = {
           group: "Rules",
           title:
             "Verify a fresh season and prior-season correction on hosted data",
-          status: "blocked",
-          evidence: "",
-          next: "Confirm new-season zero balance and preserved prior-season history.",
+          status: "done",
+          evidence: "Owner explicitly confirmed the requested My clubhouse new-season/prior-season history checks passed on phone on October 10, 2026.",
+          next: "",
           kind: "acceptance",
         },
       ],
@@ -233,8 +233,8 @@ export const projectTracker: ProjectTracker = {
           group: "Brand",
           title: "Produce final production logo artwork",
           status: "implemented",
-          evidence: "Supplied Script Northwest raster artwork and larger full-logo headers are released to the protected preview.",
-          next: "Review the larger phone header on-device and confirm production usage rights/source artwork.",
+          evidence: "Supplied Script Northwest raster artwork and full-logo headers are released; owner accepted the larger header on phone on October 10, 2026.",
+          next: "Confirm production usage rights/source artwork.",
           kind: "work",
         },
         {
@@ -251,9 +251,9 @@ export const projectTracker: ProjectTracker = {
           group: "Phone UX",
           title:
             "Accept dashboard, navigation and game-day flows on a real phone",
-          status: "blocked",
-          evidence: "",
-          next: "Review existing screens and compact setup; record specific acceptance.",
+          status: "done",
+          evidence: "Owner confirmed the requested phone checks passed for both My clubhouse and review sample history/practice scoring on October 10, 2026.",
+          next: "",
           kind: "acceptance",
         },
       ],
@@ -742,8 +742,13 @@ export const projectTracker: ProjectTracker = {
   ],
   changes: [
     {
+      title: "Owner phone acceptance",
+      status: "Owner confirmed full header, review history/scoring and hosted HR/season checks on October 10",
+      milestone: "M2",
+    },
+    {
       title: "Full Script Northwest phone header",
-      status: "Released to the protected preview; owner phone confirmation pending",
+      status: "Released to the protected preview; owner accepted the phone header",
       milestone: "M3",
     },
     {
