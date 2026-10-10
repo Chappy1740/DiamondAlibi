@@ -14,6 +14,7 @@ export type ConnectedGame = {
     id: string;
     day_id: string;
     tournament_id: string | null;
+    league_id?: string | null;
     opponent: string;
     kind: "League" | "Tournament";
     completed: boolean;
@@ -42,11 +43,13 @@ export type ScorebookView = {
   totals: Record<string, Totals>;
   board: Record<string, number>;
   games: ConnectedGame[];
+  leagues?: { id: string; name: string; fenceLimit: number }[];
   tournaments: {
     id: string;
     name: string;
     revision: number;
     guaranteedGames?: 2 | 3 | null;
+    fenceLimit?: number | null;
   }[];
 };
 export type ConnectedRoster = {

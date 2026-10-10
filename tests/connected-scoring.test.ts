@@ -25,6 +25,35 @@ function client(rpc: ScoringClient["rpc"]): ScoringClient {
     rpc,
   };
 }
+test("named competition creation preserves explicit zero and rejects forged or mismatched settings", async () => {
+  let calls = 0;
+  const c = client(async (name, args) => {
+    calls++;
+    assert.equal(name, "da_create_scoring_competition");
+    assert.equal(args.p_fence_limit, 0);
+    assert.equal(args.p_kind, "League");
+    return { data: { duplicate: false }, error: null };
+  });
+  const request = {
+    type: "competition",
+    teamId: id(1),
+    seasonId: id(2),
+    competitionId: id(3),
+    kind: "League",
+    name: "Tuesday",
+    fenceLimit: 0,
+    guaranteedGames: null,
+  };
+  assert.equal((await connectedScoring(c, request)).status, "ok");
+  for (const bad of [
+    { ...request, fenceLimit: "0" },
+    { ...request, fenceLimit: -1 },
+    { ...request, guaranteedGames: 3 },
+    { ...request, actorId: id(9) },
+  ])
+    assert.equal((await connectedScoring(c, bad)).status, "invalid");
+  assert.equal(calls, 1);
+});
 test("fresh authentication is required and forged envelopes never reach RPC", async () => {
   let calls = 0;
   const c = client(async () => {

@@ -49,6 +49,15 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
     const { connectedScoring } =
       await import("../src/lib/connected-scoring.ts");
     const args = {
+      da_create_scoring_competition: [
+        "p_team",
+        "p_season",
+        "p_id",
+        "p_kind",
+        "p_name",
+        "p_fence_limit",
+        "p_guaranteed_games",
+      ],
       da_read_scoring_season: ["p_team", "p_season", "p_scope"],
       da_read_scoring_audit: [
         "p_team",
@@ -258,6 +267,14 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
         ) +
         "set role authenticated;",
     );
+    await db.exec(
+      "reset role;" +
+        fs.readFileSync(
+          "supabase/migrations/20261009234045_competition_hr_limits.sql",
+          "utf8",
+        ) +
+        "set role authenticated;",
+    );
     const load = async (scope) => {
       const response = await connectedScoring(client, {
         type: "snapshot",
@@ -440,6 +457,280 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
       "22023",
     );
     await db.exec("rollback to savepoint invalid_scoreboard;rollback;");
+    await db.exec("begin;");
+    const competition = async (n, kind, limit) => {
+      const r = await connectedScoring(client, {
+        type: "competition",
+        teamId: id(10),
+        seasonId: id(11),
+        competitionId: id(n),
+        kind,
+        name: "Synthetic competition " + n,
+        fenceLimit: limit,
+        guaranteedGames: kind === "Tournament" ? 3 : null,
+      });
+      assert.equal(r.status, "ok");
+      return r;
+    };
+    await competition(800, "League", 0);
+    await competition(801, "League", 2);
+    await competition(802, "Tournament", 1);
+    assert.equal((await competition(800, "League", 0)).data.duplicate, true);
+    const freshStart = async (n, kind, context, trev, extra = {}) =>
+      client.rpc("da_start_scoring_game", {
+        ...startArgs,
+        p_day: id(n + 100),
+        p_date: "2026-11-01",
+        p_tournament: kind === "Tournament" ? id(context) : null,
+        p_tournament_expected: trev,
+        p_command: id(n + 200),
+        p_setup: {
+          ...leagueSetup,
+          gameId: id(n),
+          kind,
+          bands:
+            kind === "Tournament" && trev > 0
+              ? {}
+              : { [id(101)]: kind === "Tournament" },
+          rules: {
+            ...leagueSetup.rules,
+            version: "Synthetic HR " + n,
+            fenceLimit: 99,
+          },
+          ...(kind === "League" ? { leagueId: id(context) } : {}),
+          ...extra,
+        },
+      });
+    assert.equal((await freshStart(810, "League", 800, null)).error, null);
+    assert.equal((await freshStart(811, "League", 801, null)).error, null);
+    assert.equal((await freshStart(812, "Tournament", 802, 0)).error, null);
+    assert.equal((await freshStart(813, "Tournament", 802, 1)).error, null);
+    let snap = (await load()).data.snapshot;
+    assert.deepEqual(
+      snap.games.map((g) => g.rules.fence_limit),
+      [0, 2, 1, 1],
+    );
+    assert.equal(snap.leagues.length, 2);
+    const gameChange = async (cmd, rev, trev, command = 900 + rev) =>
+      client.rpc("da_apply_scoring_game_change", {
+        p_team: id(10),
+        p_season: id(11),
+        p_day: id(912),
+        p_game: id(812),
+        p_command: id(command),
+        p_expected: rev,
+        p_tournament_expected: trev,
+        p_change: { ...cmd, gameId: id(812) },
+      });
+    for (let n = 0; n < 2; n++)
+      assert.equal(
+        (
+          await gameChange(
+            {
+              type: "score",
+              playId: id(950 + n),
+              playerId: id(101),
+              outcome: "Fence HR",
+              runs: 1,
+              rbi: 1,
+            },
+            1 + n,
+            2 + n,
+          )
+        ).error,
+        null,
+      );
+    snap = (await load()).data.snapshot;
+    assert.equal(snap.totals[id(101)].HR, 1);
+    assert.equal(snap.board[id(101)], 0);
+    const oldRules = snap.games.find((g) => g.game.id === id(812)).game
+      .rules_id;
+    const corrected = await gameChange(
+      {
+        type: "hrLimit",
+        fenceLimit: 0,
+        reason: "Synthetic whole-game correction",
+      },
+      3,
+      4,
+    );
+    assert.equal(corrected.error, null);
+    assert.equal(
+      (
+        await gameChange(
+          {
+            type: "hrLimit",
+            fenceLimit: 0,
+            reason: "Synthetic whole-game correction",
+          },
+          3,
+          4,
+        )
+      ).data.duplicate,
+      true,
+    );
+    snap = (await load()).data.snapshot;
+    assert.equal(snap.totals[id(101)].HR, 0);
+    assert.equal(snap.totals[id(101)].H, 0);
+    assert.equal(snap.totals[id(101)].RBI, 0);
+    assert.equal(snap.board[id(101)], 2);
+    assert.equal(
+      snap.games.find((g) => g.game.id === id(813)).rules.fence_limit,
+      1,
+    );
+    assert.equal(snap.tournaments[0].fenceLimit, 1);
+    assert.equal(
+      (
+        await db.query(
+          "select fence_limit from public.scoring_rule_versions where id=$1",
+          [oldRules],
+        )
+      ).rows[0].fence_limit,
+      1,
+    );
+    assert.equal((await gameChange({ type: "complete" }, 4, 5)).error, null);
+    assert.equal(
+      (
+        await gameChange(
+          {
+            type: "hrLimit",
+            fenceLimit: 2,
+            reason: "Synthetic final correction",
+          },
+          5,
+          6,
+        )
+      ).error,
+      null,
+    );
+    snap = (await load()).data.snapshot;
+    assert.equal(snap.totals[id(101)].HR, 2);
+    assert.equal(snap.totals[id(101)].H, 2);
+    assert.equal(snap.totals[id(101)].RBI, 2);
+    assert.equal(snap.board[id(101)], -2);
+    assert.equal(
+      (
+        await gameChange(
+          { type: "hrLimit", fenceLimit: 0, reason: "Stale" },
+          5,
+          6,
+          970,
+        )
+      ).data.status,
+      "conflict",
+    );
+    assert.equal((await freshStart(814, "Tournament", 802, 7)).error, null);
+    assert.equal(
+      (await load()).data.snapshot.games.find((g) => g.game.id === id(814))
+        .rules.fence_limit,
+      1,
+    );
+    assert.equal(
+      (
+        await freshStart(815, "League", 801, null, {
+          overrideLimit: true,
+          overrideReason: "Synthetic game exception",
+          rules: { ...leagueSetup.rules, version: "override", fenceLimit: 0 },
+        })
+      ).error,
+      null,
+    );
+    assert.equal(
+      (await load()).data.snapshot.games.find((g) => g.game.id === id(815))
+        .rules.fence_limit,
+      0,
+    );
+    for (const [n, cmd] of [
+      [980, { type: "hrLimit", fenceLimit: -1, reason: "Invalid" }],
+      [981, { type: "hrLimit", fenceLimit: 1, reason: "" }],
+    ]) {
+      await db.exec("savepoint invalid_hr;");
+      assert.equal((await gameChange(cmd, 6, 8, n)).error?.code, "22023");
+      await db.exec("rollback to savepoint invalid_hr;");
+    }
+    await db.exec("savepoint wrong_league;");
+    assert.equal(
+      (await freshStart(816, "League", 999, null)).error?.code,
+      "22023",
+    );
+    await db.exec("rollback to savepoint wrong_league;");
+    const audited = await client.rpc("da_read_scoring_audit", {
+      p_team: id(10),
+      p_season: id(11),
+      p_limit: 100,
+      p_cursor_at: null,
+      p_cursor_key: null,
+    });
+    const hrAudits = audited.data.events.filter((e) => e.action === "hrLimit");
+    assert.equal(hrAudits.length, 2);
+    assert.equal(hrAudits[0].before.fenceLimit, 0);
+    assert.equal(hrAudits[0].after.fenceLimit, 2);
+    await db.exec("rollback;");
+    await db.exec("begin;");
+    assert.equal(
+      (
+        await db.query(
+          "select relrowsecurity from pg_class where oid='public.scoring_leagues'::regclass",
+        )
+      ).rows[0].relrowsecurity,
+      true,
+    );
+    assert.equal(
+      (
+        await db.query(
+          "select has_table_privilege('authenticated','public.scoring_leagues','INSERT') as allowed",
+        )
+      ).rows[0].allowed,
+      false,
+    );
+    assert.equal(
+      (
+        await db.query(
+          "select has_function_privilege('anon','public.da_create_scoring_competition(uuid,uuid,uuid,text,text,integer,integer)','EXECUTE') as allowed",
+        )
+      ).rows[0].allowed,
+      false,
+    );
+    await client.rpc("da_create_scoring_tournament", {
+      ...tournamentArgs,
+      p_id: id(820),
+      p_name: "Synthetic competition 820",
+      p_guaranteed_games: 3,
+    });
+    assert.equal((await freshStart(821, "Tournament", 820, 0)).error, null);
+    assert.equal((await load()).data.snapshot.games[0].rules.fence_limit, 99);
+    await competition(820, "Tournament", 0);
+    assert.equal((await load()).data.snapshot.games[0].rules.fence_limit, 99);
+    assert.equal((await freshStart(822, "Tournament", 820, 2)).error, null);
+    assert.equal(
+      (await load()).data.snapshot.games.find((g) => g.game.id === id(822))
+        .rules.fence_limit,
+      0,
+    );
+    await db.exec("savepoint outsider;");
+    await db.query("select set_config('request.jwt.claim.sub',$1,false)", [
+      id(2),
+    ]);
+    assert.equal(
+      (await db.query("select count(*) as n from public.scoring_leagues"))
+        .rows[0].n,
+      0,
+    );
+    assert.equal(
+      (
+        await client.rpc("da_create_scoring_competition", {
+          p_team: id(10),
+          p_season: id(11),
+          p_id: id(823),
+          p_kind: "League",
+          p_name: "Forbidden",
+          p_fence_limit: 0,
+          p_guaranteed_games: null,
+        })
+      ).error?.code,
+      "42501",
+    );
+    await db.exec("rollback to savepoint outsider;rollback;");
     const bundle = await esbuild.build({
       stdin: {
         contents: `import React from 'react';import{createRoot}from'react-dom/client';import{ConnectedScorebook}from'./src/components/connected-scorebook';const post=async(path,body)=>{const r=await fetch(path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});return r.json()};post('/load',{scope:'Overall'}).then(initial=>createRoot(document.getElementById('app')).render(<main className="connected-wrap"><h1>Synthetic team scorebook</h1><ConnectedScorebook storageKey="synthetic.pending" teamId="${id(10)}" seasonId="${id(11)}" initial={initial} submitAction={input=>post('/action',input)} reloadAction={(team,season,scope)=>post('/load',{scope})}/></main>));`,
@@ -609,6 +900,9 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
       .getByLabel("Tournament name", { exact: true })
       .fill("Synthetic Cup");
     await setup
+      .getByLabel("Tournament fence HR limit", { exact: true })
+      .fill("1");
+    await setup
       .getByLabel("Games guaranteed", { exact: true })
       .selectOption("3");
     await page
@@ -625,9 +919,12 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
     await setup
       .getByLabel("Opponent", { exact: true })
       .fill("Synthetic Cup first");
-    await setup
-      .getByLabel("Fence HR limit for this game", { exact: true })
-      .fill("1");
+    assert.equal(
+      await setup
+        .getByLabel("Fence HR limit for this game", { exact: true })
+        .inputValue(),
+      "1",
+    );
     await setup
       .getByLabel("HR Band for Synthetic Alex", { exact: false })
       .check();
@@ -809,6 +1106,68 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
       .getByRole("button", { name: "Load audit history", exact: true })
       .click();
     await page.getByText(/history entries loaded/).waitFor();
+    await page
+      .getByText("Change HR limit for this game", { exact: true })
+      .click();
+    await page.getByLabel("New fence HR limit", { exact: true }).fill("0");
+    await page
+      .getByLabel("HR limit correction reason", { exact: true })
+      .fill("Synthetic mobile HR correction");
+    const selectedGame = await page
+      .getByLabel("Choose a game", { exact: true })
+      .inputValue();
+    const beforeHrUi = (await load()).data.snapshot;
+    await page
+      .getByRole("button", {
+        name: "Apply limit and recalculate game",
+        exact: true,
+      })
+      .click();
+    await saved();
+    const afterHrUi = (await load()).data.snapshot;
+    assert.equal(
+      afterHrUi.games.find((g) => g.game.id === selectedGame).rules.fence_limit,
+      0,
+    );
+    for (const g of beforeHrUi.games.filter((g) => g.game.id !== selectedGame))
+      assert.deepEqual(
+        afterHrUi.games.find((n) => n.game.id === g.game.id).rules,
+        g.rules,
+      );
+    await page
+      .getByRole("button", { name: "Load audit history", exact: true })
+      .click();
+    const hrHistory = page
+      .locator("li")
+      .filter({ has: page.getByText(/Game HR limit corrected/) })
+      .first();
+    await hrHistory.locator("summary").click();
+    await hrHistory.getByText("Fence HR limit: 0", { exact: true }).waitFor();
+    await setup.getByText("Create a league", { exact: true }).click();
+    await setup
+      .getByLabel("League name", { exact: true })
+      .fill("Synthetic Tuesday league");
+    await setup.getByLabel("League fence HR limit", { exact: true }).fill("2");
+    await setup
+      .getByRole("button", { name: "Create league", exact: true })
+      .click();
+    await saved();
+    await setup.getByLabel("Game kind", { exact: true }).selectOption("League");
+    assert.equal(
+      await setup
+        .getByLabel("Fence HR limit for this game", { exact: true })
+        .inputValue(),
+      "2",
+    );
+    await setup
+      .getByLabel("Override HR limit for this game only", { exact: true })
+      .check();
+    await setup
+      .getByLabel("Fence HR limit for this game", { exact: true })
+      .fill("0");
+    await setup
+      .getByLabel("Game HR override reason", { exact: true })
+      .fill("Synthetic field exception");
     await page.addScriptTag({ path: require.resolve("axe-core") });
     for (const width of [320, 390, 430, 768, 1440]) {
       await page.setViewportSize({ width, height: 844 });

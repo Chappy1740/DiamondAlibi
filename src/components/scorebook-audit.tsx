@@ -16,12 +16,24 @@ const labels: Record<string, string> = {
   lineup: "Lineup changed",
   batter: "Next batter changed",
   complete: "Game completed",
+  scoreboard: "Score and inning changed",
+  hrLimit: "Game HR limit corrected",
+  create_scoring_league: "League created",
+  set_scoring_tournament_limit: "Tournament HR default recorded",
   band: "Tournament Band corrected",
   create_scoring_tournament: "Tournament created",
 };
 type State = {
   lineup?: string[];
-  game?: { completed?: boolean; next_batter_position?: number };
+  game?: {
+    completed?: boolean;
+    next_batter_position?: number;
+    team_runs?: number | null;
+    opponent_runs?: number | null;
+    inning?: number | null;
+    inning_half?: string | null;
+  };
+  fenceLimit?: number;
   play?: {
     outcome?: string;
     player_id?: string;
@@ -50,6 +62,18 @@ export function ScorebookAudit({
     if (!value || typeof value !== "object") return "No prior entry";
     const s = value as State,
       play = s.play ?? s;
+    if (action === "hrLimit" && s.fenceLimit != null)
+      return `Fence HR limit: ${s.fenceLimit}`;
+    if (
+      (action === "create_scoring_league" ||
+        action === "set_scoring_tournament_limit") &&
+      s.fenceLimit != null
+    )
+      return `${s.name ?? "Competition"} · Fence HR limit: ${s.fenceLimit}`;
+    if (action === "scoreboard")
+      return s.game?.team_runs != null
+        ? `Our team ${s.game.team_runs}, opponent ${s.game.opponent_runs} · ${s.game.inning_half}, inning ${s.game.inning}`
+        : "Score and inning not yet recorded";
     if (play.outcome)
       return `${name("player_id" in play ? play.player_id : s.playerId)} · ${play.outcome} · ${play.runs ?? 0} runs, ${play.rbi ?? 0} RBI${play.voided ? " · voided" : ""}`;
     if (action === "lineup" && s.lineup) return s.lineup.map(name).join(" → ");

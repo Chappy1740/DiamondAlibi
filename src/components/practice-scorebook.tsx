@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { GameScoreboardPanel } from "@/components/game-scoreboard";
+import { GameHrLimitPanel } from "@/components/game-hr-limit";
 import { useEffect, useState, type FormEvent } from "react";
 import {
   createScorebook,
@@ -739,6 +740,14 @@ export function PracticeScorebook() {
                   disabled={!online}
                   save={(value) =>
                     send({ type: "scoreboard", gameId: game.id, ...value })
+                  }
+                />
+                <GameHrLimitPanel
+                  key={`hr-${game.id}-${book?.revision ?? seasonBook?.revision}`}
+                  limit={game.rules.fenceLimit}
+                  disabled={!online}
+                  save={(value) =>
+                    send({ type: "hrLimit", gameId: game.id, ...value })
                   }
                 />
                 {game.tournamentGameNumber && (

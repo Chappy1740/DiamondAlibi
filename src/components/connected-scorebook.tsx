@@ -1,5 +1,6 @@
 "use client";
 import { ScorebookAudit } from "@/components/scorebook-audit";
+import { GameHrLimitPanel } from "@/components/game-hr-limit";
 import { GameScoreboardPanel } from "@/components/game-scoreboard";
 import { connectedScoreboard } from "@/lib/game-scoreboard";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -73,6 +74,8 @@ export function ConnectedScorebook({
       initialTournamentId ? "Tournament" : "League",
     ),
     [tournamentId, setTournamentId] = useState(initialTournamentId);
+  const [leagueId, setLeagueId] = useState("");
+  const [overrideLimit, setOverrideLimit] = useState(false);
   const [outcome, setOutcome] = useState<Outcome>("Hit"),
     [runs, setRuns] = useState(0),
     [rbi, setRbi] = useState(0);
@@ -97,6 +100,11 @@ export function ConnectedScorebook({
   const disabled =
     busy || !online || paused || review || uncertain || !data || data.archived;
   const base = { teamId, seasonId };
+  const inheritedLimit =
+    kind === "Tournament"
+      ? snapshot?.tournaments.find((t) => t.id === tournamentId)?.fenceLimit
+      : snapshot?.leagues?.find((l) => l.id === leagueId)?.fenceLimit;
+  useEffect(() => setOverrideLimit(false), [kind, tournamentId, leagueId]);
   async function read(nextScope = scope): Promise<boolean> {
     try {
       const result = await reloadAction(teamId, seasonId, nextScope);
@@ -267,11 +275,18 @@ export function ConnectedScorebook({
           type?: string;
           setup?: { gameId?: string };
           tournamentId?: string;
+          competitionId?: string;
+          kind?: string;
         };
         if (submitted.type === "start" && submitted.setup?.gameId)
           setSelected(submitted.setup.gameId);
         if (submitted.type === "tournament" && submitted.tournamentId)
           setTournamentId(submitted.tournamentId);
+        if (submitted.type === "competition" && submitted.competitionId) {
+          if (submitted.kind === "Tournament")
+            setTournamentId(submitted.competitionId);
+          else setLeagueId(submitted.competitionId);
+        }
       }
       if (loaded)
         setMessage(
@@ -426,6 +441,13 @@ export function ConnectedScorebook({
         gameId: crypto.randomUUID(),
         opponent: String(form.get("opponent")).trim(),
         kind,
+        ...(kind === "League" && leagueId ? { leagueId } : {}),
+        ...(overrideLimit
+          ? {
+              overrideLimit: true,
+              overrideReason: String(form.get("overrideReason")).trim(),
+            }
+          : {}),
         lineup: selectedLineup,
         rules: {
           version: `Game rules ${crypto.randomUUID()}`,
@@ -583,6 +605,7 @@ export function ConnectedScorebook({
                 Choose a game
                 <select
                   value={current?.game.id ?? ""}
+                  aria-label="Choose a game"
                   onChange={(e) => setSelected(e.target.value)}
                   disabled={busy}
                 >
@@ -623,12 +646,20 @@ export function ConnectedScorebook({
                 }
               />
               <p className="micro">
-                Frozen fence HR limit: {current.rules.fence_limit}. Used:{" "}
+                Game fence HR limit: {current.rules.fence_limit}. Used:{" "}
                 {current.evaluation.fenceUsed}.{" "}
                 {current.game.kind === "Tournament"
                   ? "Bands remain fixed throughout the tournament."
                   : "HR Bands apply only to tournaments."}
               </p>
+              <GameHrLimitPanel
+                key={`hr-limit-${current.game.id}-${current.dayRevision}`}
+                limit={current.rules.fence_limit}
+                disabled={disabled}
+                save={(value) =>
+                  void save(gameRequest(current, { type: "hrLimit", ...value }))
+                }
+              />
               {!current.game.completed && (
                 <>
                   <h3>
@@ -981,19 +1012,64 @@ export function ConnectedScorebook({
                     </select>
                   </label>
                 )}
+                {kind === "League" && (
+                  <label>
+                    League
+                    <select
+                      aria-label="League"
+                      value={leagueId}
+                      onChange={(e) => setLeagueId(e.target.value)}
+                    >
+                      <option value="">
+                        No saved league — enter game limit
+                      </option>
+                      {snapshot?.leagues?.map((l) => (
+                        <option key={l.id} value={l.id}>
+                          {l.name} · {l.fenceLimit} HR
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                {inheritedLimit != null && (
+                  <>
+                    <p>
+                      Saved {kind.toLowerCase()} fence HR limit:{" "}
+                      {inheritedLimit}. HRs used reset each game.
+                    </p>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={overrideLimit}
+                        onChange={(e) => setOverrideLimit(e.target.checked)}
+                      />
+                      Override HR limit for this game only
+                    </label>
+                  </>
+                )}
                 <label>
                   Fence HR limit for this game
                   <input
+                    key={`${kind}-${tournamentId}-${leagueId}-${overrideLimit}`}
                     name="limit"
                     type="number"
                     min={0}
                     max={100}
+                    defaultValue={inheritedLimit ?? ""}
+                    readOnly={inheritedLimit != null && !overrideLimit}
                     required
                   />
                 </label>
+                {overrideLimit && (
+                  <label>
+                    Game HR override reason
+                    <input name="overrideReason" maxLength={200} required />
+                  </label>
+                )}
                 <p className="micro">
-                  Zero is allowed. These rules are frozen when the game starts;
-                  1-up is deferred.
+                  Zero is allowed. The game inherits the saved competition limit
+                  unless explicitly overridden. An in-game correction
+                  recalculates the whole game; 1-up is deferred.
                 </p>
                 <h3>
                   {kind === "Tournament"
@@ -1033,9 +1109,11 @@ export function ConnectedScorebook({
                   const f = formData(e);
                   void save({
                     ...base,
-                    type: "tournament",
-                    tournamentId: crypto.randomUUID(),
+                    type: "competition",
+                    competitionId: crypto.randomUUID(),
+                    kind: "Tournament",
                     name: String(f.get("name")).trim(),
+                    fenceLimit: Number(f.get("fenceLimit")),
                     guaranteedGames: Number(f.get("guaranteedGames")),
                   });
                 }}
@@ -1044,6 +1122,16 @@ export function ConnectedScorebook({
                   <label>
                     Tournament name
                     <input name="name" maxLength={200} required />
+                  </label>
+                  <label>
+                    Tournament fence HR limit
+                    <input
+                      name="fenceLimit"
+                      type="number"
+                      min={0}
+                      max={100}
+                      required
+                    />
                   </label>
                   <label>
                     Games guaranteed
@@ -1066,6 +1154,42 @@ export function ConnectedScorebook({
                 </fieldset>
               </form>
             </details>
+            <details>
+              <summary>Create a league</summary>
+              <form
+                className="club-form"
+                onSubmit={(e) => {
+                  const f = formData(e);
+                  void save({
+                    ...base,
+                    type: "competition",
+                    competitionId: crypto.randomUUID(),
+                    kind: "League",
+                    name: String(f.get("name")).trim(),
+                    fenceLimit: Number(f.get("fenceLimit")),
+                    guaranteedGames: null,
+                  });
+                }}
+              >
+                <fieldset disabled={disabled}>
+                  <label>
+                    League name
+                    <input name="name" maxLength={200} required />
+                  </label>
+                  <label>
+                    League fence HR limit
+                    <input
+                      name="fenceLimit"
+                      type="number"
+                      min={0}
+                      max={100}
+                      required
+                    />
+                  </label>
+                  <button className="button secondary">Create league</button>
+                </fieldset>
+              </form>
+            </details>
           </section>
           <section className="card detail-card">
             <h2>Tournament games and Band corrections</h2>
@@ -1081,6 +1205,45 @@ export function ConnectedScorebook({
                     ? ` · ${t.guaranteedGames}-game guaranteed`
                     : ""}
                 </summary>
+                {t.fenceLimit != null ? (
+                  <p>Saved fence HR limit: {t.fenceLimit}</p>
+                ) : (
+                  <form
+                    className="club-form"
+                    onSubmit={(e) => {
+                      const f = formData(e);
+                      void save({
+                        ...base,
+                        type: "competition",
+                        competitionId: t.id,
+                        kind: "Tournament",
+                        name: t.name,
+                        guaranteedGames: t.guaranteedGames ?? null,
+                        fenceLimit: Number(f.get("fenceLimit")),
+                      });
+                    }}
+                  >
+                    <fieldset disabled={disabled}>
+                      <label>
+                        Save tournament fence HR limit
+                        <input
+                          name="fenceLimit"
+                          type="number"
+                          min={0}
+                          max={100}
+                          required
+                        />
+                      </label>
+                      <p>
+                        The previous default is unknown. Saving it applies to
+                        new games; existing game rules stay intact.
+                      </p>
+                      <button className="button secondary">
+                        Save tournament HR limit
+                      </button>
+                    </fieldset>
+                  </form>
+                )}
                 <p>
                   {
                     snapshot.games.filter((g) => g.game.tournament_id === t.id)

@@ -236,6 +236,7 @@ export function parseSeasonCommand(input: unknown): SeasonCommand {
       lineup: ["type", "gameId", "lineup"],
       batter: ["type", "gameId", "playerId"],
       complete: ["type", "gameId"],
+      hrLimit: ["type", "gameId", "fenceLimit", "reason"],
       scoreboard: [
         "type",
         "gameId",
@@ -535,7 +536,9 @@ export function applySeasonCommand(
     cmd.type === "band"
       ? cmd.reason
       : cmd.type === "game" &&
-          (cmd.change.type === "correct" || cmd.change.type === "scoreboard")
+          (cmd.change.type === "correct" ||
+            cmd.change.type === "scoreboard" ||
+            cmd.change.type === "hrLimit")
         ? cmd.change.reason
         : undefined;
   next.audit.push({

@@ -6,6 +6,7 @@ import {
   bandsForGame,
   createSeasonScorebook,
   replaySeasonJournal,
+  parseSeasonCommand,
   type SeasonCommand,
   type SeasonScorebook,
 } from "../src/lib/season-scorebook.ts";
@@ -25,14 +26,35 @@ const roster = [
 
 test("tournament Game 4 is numbered and scoreboard updates preserve season totals", () => {
   let b = fixture();
-  for (let n = 1; n <= 4; n++) b = start(b, `numbered-${n}`, `2026-10-${String(n).padStart(2,"0")}`, n === 1 ? { a: false } : {});
-  assert.deepEqual(b.seasons[0].scoring.games.map(g => g.game.tournamentGameNumber), [1,2,3,4]);
+  for (let n = 1; n <= 4; n++)
+    b = start(
+      b,
+      `numbered-${n}`,
+      `2026-10-${String(n).padStart(2, "0")}`,
+      n === 1 ? { a: false } : {},
+    );
+  assert.deepEqual(
+    b.seasons[0].scoring.games.map((g) => g.game.tournamentGameNumber),
+    [1, 2, 3, 4],
+  );
   const before = seasonTotals(b.seasons[0].scoring);
-  const command: SeasonCommand = { type:"game", seasonId:"fall", change:{ type:"scoreboard", gameId:"numbered-4", teamRuns:8,opponentRuns:6,inning:3,half:"Bottom",reason:"Confirmed field score" } };
+  const command: SeasonCommand = {
+    type: "game",
+    seasonId: "fall",
+    change: {
+      type: "scoreboard",
+      gameId: "numbered-4",
+      teamRuns: 8,
+      opponentRuns: 6,
+      inning: 3,
+      half: "Bottom",
+      reason: "Confirmed field score",
+    },
+  };
   b = run(b, command);
-  assert.equal(b.seasons[0].scoring.games[3].game.scoreboard?.teamRuns,8);
-  assert.equal(b.audit.at(-1)?.reason,"Confirmed field score");
-  assert.deepEqual(seasonTotals(b.seasons[0].scoring),before);
+  assert.equal(b.seasons[0].scoring.games[3].game.scoreboard?.teamRuns, 8);
+  assert.equal(b.audit.at(-1)?.reason, "Confirmed field score");
+  assert.deepEqual(seasonTotals(b.seasons[0].scoring), before);
 });
 function run(
   book: SeasonScorebook,
@@ -97,6 +119,25 @@ function hr(b: SeasonScorebook, id: string, player = "a") {
     },
   });
 }
+test("season journal accepts an audited whole-game limit correction and recomputes the Board", () => {
+  let b = hr(hr(start(fixture(), "g", "2026-10-09", { a: true }), "g"), "g");
+  const command: SeasonCommand = {
+    type: "game",
+    seasonId: "fall",
+    change: {
+      type: "hrLimit",
+      gameId: "g",
+      fenceLimit: 0,
+      reason: "Confirmed tournament rule",
+    },
+  };
+  assert.deepEqual(parseSeasonCommand(command), command);
+  b = run(b, command);
+  assert.equal(seasonTotals(b.seasons[0].scoring).a.HR, 0);
+  assert.equal(seasonTotals(b.seasons[0].scoring).a.board, 2);
+  assert.equal(b.seasons[0].tournaments[0].rules.fenceLimit, 1);
+  assert.equal(b.audit.at(-1)?.reason, "Confirmed tournament rule");
+});
 test("season journal reuses scoring controls with fixed cross-date tournament Bands and audited corrections", () => {
   let b = hr(start(fixture(), "g1", "2026-10-09", { a: true }), "g1");
   b = run(b, {

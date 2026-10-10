@@ -109,6 +109,7 @@ export type Command =
   | { type: "batter"; gameId: string; playerId: string }
   | { type: "complete"; gameId: string }
   | ({ type: "scoreboard"; gameId: string; reason: string } & GameScoreboard)
+  | { type: "hrLimit"; gameId: string; fenceLimit: number; reason: string }
   | { type: "rules"; rules: Rules }
   | { type: "bands"; players: string[]; reason?: string };
 export type Request = {
@@ -264,7 +265,17 @@ export function applyCommand(current: Scorebook, request: Request): Scorebook {
   } else {
     const game = book.games.find((g) => g.id === cmd.gameId);
     insist(game, "Game does not belong to this scorebook.");
-    if (cmd.type === "scoreboard") {
+    if (cmd.type === "hrLimit") {
+      text(cmd.reason, "HR limit correction reason");
+      const corrected = {
+        ...game.rules,
+        fenceLimit: cmd.fenceLimit,
+        version: `HR correction ${request.commandId}`,
+      };
+      validateRules(corrected);
+      game.rules = corrected;
+      reason = cmd.reason.trim();
+    } else if (cmd.type === "scoreboard") {
       insist(
         validScoreboard(cmd),
         "Use whole scores 0–999, inning 1–99, and Top or Bottom.",

@@ -39,6 +39,32 @@ function prepare(input: unknown): {
   const common = { p_team: input.teamId, p_season: input.seasonId };
   let keys: string[], name: string, args: Record<string, unknown>;
   switch (input.type) {
+    case "competition":
+      keys = ["competitionId", "kind", "name", "fenceLimit", "guaranteedGames"];
+      if (
+        !isId(input.competitionId) ||
+        !text(input.name, 200) ||
+        !["League", "Tournament"].includes(String(input.kind)) ||
+        !Number.isInteger(input.fenceLimit) ||
+        Number(input.fenceLimit) < 0 ||
+        Number(input.fenceLimit) > 100 ||
+        (input.kind === "League"
+          ? input.guaranteedGames !== null
+          : input.guaranteedGames !== null &&
+            input.guaranteedGames !== 2 &&
+            input.guaranteedGames !== 3)
+      )
+        return null;
+      name = "da_create_scoring_competition";
+      args = {
+        ...common,
+        p_id: input.competitionId,
+        p_kind: input.kind,
+        p_name: input.name,
+        p_fence_limit: input.fenceLimit,
+        p_guaranteed_games: input.guaranteedGames,
+      };
+      break;
     case "snapshot":
       keys = ["scope"];
       if (!["League", "Tournament", "Overall"].includes(String(input.scope)))
@@ -203,8 +229,8 @@ function prepare(input: unknown): {
     name,
     args,
     ...(journalWrite ? { commandId: input.commandId as string } : {}),
-    ...(input.type === "tournament"
-      ? { tournamentId: input.tournamentId as string }
+    ...(["tournament", "competition"].includes(String(input.type))
+      ? { tournamentId: (input.tournamentId ?? input.competitionId) as string }
       : {}),
   };
 }
