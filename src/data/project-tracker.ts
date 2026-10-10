@@ -2,14 +2,14 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 12,
+  revision: 13,
   updatedAt: "2026-10-10",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
   release: {
-    commit: "8ba1179",
-    label: "Private phone review and isolated sample scoring",
-    status: "Protected preview deployed; reviewer phone acceptance pending",
+    commit: "700401f",
+    label: "Private phone review and approved brand assets",
+    status: "Protected preview deployed; reviewer and brand phone acceptance pending",
   },
   milestones: [
     {
@@ -743,7 +743,7 @@ export const projectTracker: ProjectTracker = {
   changes: [
     {
       title: "Locked logo and app icon integration",
-      status: "Local shell, sign-in and PWA metadata prepared; phone review and publication pending",
+      status: "Released to the protected preview; phone appearance and icon review pending",
       milestone: "M3",
     },
     {
