@@ -2,13 +2,13 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 14,
+  revision: 15,
   updatedAt: "2026-10-10",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
   release: {
-    commit: "700401f",
-    label: "Private phone review and approved brand assets",
+    commit: "d7bc86f",
+    label: "Full Script Northwest app header",
     status: "Protected preview deployed; reviewer and brand phone acceptance pending",
   },
   milestones: [
@@ -233,7 +233,7 @@ export const projectTracker: ProjectTracker = {
           group: "Brand",
           title: "Produce final production logo artwork",
           status: "implemented",
-          evidence: "Supplied Script Northwest raster artwork is released in the shell and sign-in view; a larger phone-header treatment is prepared locally after owner feedback.",
+          evidence: "Supplied Script Northwest raster artwork and larger full-logo headers are released to the protected preview.",
           next: "Review the larger phone header on-device and confirm production usage rights/source artwork.",
           kind: "work",
         },
@@ -743,7 +743,7 @@ export const projectTracker: ProjectTracker = {
   changes: [
     {
       title: "Full Script Northwest phone header",
-      status: "Owner-requested larger wordmark prepared locally; phone review and publication pending",
+      status: "Released to the protected preview; owner phone confirmation pending",
       milestone: "M3",
     },
     {
