@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandLink } from "./brand-link";
 import {
   House,
   Trophy,
@@ -141,20 +142,13 @@ export function PlayerDashboard(p: DashboardProps) {
         Skip to content
       </a>
       <aside className="desktop-rail">
-        <Link href={href("")} className="wordmark">
-          DIAMOND
-          <span>
-            ALIBI<span className="accent">.</span>
-          </span>
-        </Link>
+        <BrandLink href={href("")} className="rail-logo" variant="primary" />
         <span className="rail-caption">THE STATS DON’T LIE.</span>
         <nav aria-label="Desktop primary">{navigation}</nav>
       </aside>
       <div className="workspace">
         <header className="topbar">
-          <Link className="compact-brand" href={href("")}>
-            DIAMOND ALIBI<span className="accent">.</span>
-          </Link>
+          <BrandLink className="compact-brand" href={href("")} />
           <Link
             className="button secondary"
             href={p.review ? "/review" : "/club"}

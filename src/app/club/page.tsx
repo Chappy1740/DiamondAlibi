@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { ClubForm } from "@/components/club-form";
+import { BrandLink } from "@/components/brand-link";
 import { signout } from "@/app/login/actions";
 export const dynamic = "force-dynamic";
 type Team = { id: string; name: string };
@@ -86,9 +87,7 @@ export default async function ClubPage({
   return (
     <main className="connected-wrap">
       <header className="connected-header">
-        <Link className="compact-brand" href="/">
-          DIAMOND ALIBI<span className="accent">.</span>
-        </Link>
+        <BrandLink className="compact-brand" href="/" />
         <form action={signout}>
           <button className="button secondary">Sign out</button>
         </form>

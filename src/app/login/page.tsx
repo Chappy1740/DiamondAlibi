@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { AuthForm } from "@/components/auth-form";
+import { BrandLink } from "@/components/brand-link";
 export default function LoginPage() {
   return (
     <main className="connected-wrap">
-      <Link className="compact-brand" href="/">
-        DIAMOND ALIBI<span className="accent">.</span>
-      </Link>
+      <BrandLink className="login-logo" href="/" variant="primary" />
       <div className="page-heading">
         <div>
           <span className="eyebrow">Your real clubhouse</span>

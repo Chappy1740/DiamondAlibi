@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import Link from "next/link";
+import { BrandLink } from "./brand-link";
 import { usePathname } from "next/navigation";
 import {
   House,
@@ -1172,12 +1173,7 @@ export function Workspace({
         Skip to content
       </a>
       <div className="desktop-rail">
-        <Link href="/" className="wordmark">
-          DIAMOND
-          <span>
-            ALIBI<span className="accent">.</span>
-          </span>
-        </Link>
+        <BrandLink href="/" className="rail-logo" variant="primary" />
         <span className="rail-caption">YOUR GAME. YOUR STORY.</span>
         <nav aria-label="Desktop primary">
           {navigation.map((item) => (
@@ -1206,13 +1202,7 @@ export function Workspace({
       </div>
       <div className="workspace">
         <header className="topbar">
-          <Link
-            href="/"
-            className="compact-brand"
-            aria-label="Diamond Alibi home"
-          >
-            DIAMOND ALIBI<span className="accent">.</span>
-          </Link>
+          <BrandLink href="/" className="compact-brand" />
           <span className="topbar-note">THE STATS DON’T LIE.</span>
           <Link className="sign-in-link" href="/club">
             My clubhouse

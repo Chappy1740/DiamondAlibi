@@ -17,3 +17,5 @@ dist/
 .open-next/
 .dev.vars*
 !.dev.vars.example
+# Keep the supplied source package locally; selected runtime copies live in public/brand.
+Diamond_Alibi_Brand_Package/

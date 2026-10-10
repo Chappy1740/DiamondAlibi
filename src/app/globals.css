@@ -377,6 +377,38 @@ p {
   font-weight: 700;
   letter-spacing: 2px;
 }
+.brand-link {
+  color: var(--white);
+  text-decoration: none;
+}
+.brand-link--compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  white-space: nowrap;
+}
+.brand-link--compact img {
+  width: 40px;
+  height: 40px;
+  flex: none;
+}
+.brand-link--primary {
+  display: inline-block;
+  width: min(100%, 240px);
+  line-height: 0;
+}
+.brand-link--primary img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.rail-logo {
+  width: 100%;
+}
+.login-logo {
+  margin-bottom: 16px;
+}
 .topbar-note {
   font-size: 9px;
   letter-spacing: 2px;

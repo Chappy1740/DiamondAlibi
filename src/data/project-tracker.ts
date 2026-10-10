@@ -2,7 +2,7 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 9,
+  revision: 12,
   updatedAt: "2026-10-10",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
@@ -88,11 +88,21 @@ export const projectTracker: ProjectTracker = {
         {
           id: "M2-team-phone-review",
           group: "Review access",
-          title: "Prepare private phone review access for 2–3 teammates",
+          title: "Prepare private phone review access for four teammates",
           status: "in_progress",
           evidence:
-            "Phone sample history and isolated twelve-player practice released; private access configured; signed-in hosted browser loads both modes and anonymous routes/assets remain protected.",
+            "Phone sample history and isolated twelve-player practice released; four exact reviewer identities have ongoing One-time PIN access on the existing protected preview. Signed-in hosted browser loads both modes and anonymous routes/assets remain protected.",
           next: "Each reviewer verifies email-code sign-in, sample history and scoring on their phone.",
+          kind: "work",
+        },
+        {
+          id: "M2-outgoing-email-brand",
+          group: "Review access",
+          title: "Brand account emails and resolve reviewer code-email appearance",
+          status: "in_progress",
+          evidence:
+            "Current senders and Free-plan limits verified; local palette/copy preview prepared. The locked Logo #5 raster package is now available locally.",
+          next: "Review a mail sender for account templates; confirm the acceptable appearance of Cloudflare code emails, then validate live templates with the supplied logo.",
           kind: "work",
         },
         {
@@ -222,18 +232,18 @@ export const projectTracker: ProjectTracker = {
           id: "M3-6",
           group: "Brand",
           title: "Produce final production logo artwork",
-          status: "planned",
-          evidence: "",
-          next: "Refine/export the locked Script Northwest selection; no concept redesign.",
+          status: "implemented",
+          evidence: "Supplied Script Northwest raster artwork is integrated into the local shell and sign-in view.",
+          next: "Check phone display and confirm production usage rights/source artwork before release.",
           kind: "work",
         },
         {
           id: "M3-7",
           group: "Brand",
           title: "Produce final icon, sizing and accessible asset variants",
-          status: "planned",
-          evidence: "",
-          next: "Export locked Northwest DA icon and validate small sizes.",
+          status: "implemented",
+          evidence: "Supplied Northwest DA raster sizes are wired to local favicon, Apple icon and PWA manifest metadata.",
+          next: "Check actual phone home-screen and small-icon rendering before release.",
           kind: "work",
         },
         {
@@ -732,9 +742,19 @@ export const projectTracker: ProjectTracker = {
   ],
   changes: [
     {
+      title: "Locked logo and app icon integration",
+      status: "Local shell, sign-in and PWA metadata prepared; phone review and publication pending",
+      milestone: "M3",
+    },
+    {
+      title: "Outgoing email branding",
+      status: "Local design draft and artwork available; sending capability pending",
+      milestone: "M2",
+    },
+    {
       title: "Private team phone review",
       status:
-        "Released to the protected preview with ongoing private access; reviewer phone acceptance pending",
+        "Four exact reviewers have ongoing One-time PIN access on the protected preview; their phone acceptance is pending",
       milestone: "M2",
     },
     {

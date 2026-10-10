@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { BrandLink } from "./brand-link";
 import { useEffect, useState } from "react";
 import {
   milestoneGate,
@@ -101,9 +102,7 @@ export function ProjectStatusDashboard({
   return (
     <main className="connected-wrap project-status">
       <nav aria-label="Project status navigation" className="connected-header">
-        <Link className="compact-brand" href="/">
-          Diamond Alibi
-        </Link>
+        <BrandLink className="compact-brand" href="/" />
         <Link className="button secondary" href="/more">
           Back to More
         </Link>
