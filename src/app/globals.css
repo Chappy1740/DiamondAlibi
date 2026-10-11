@@ -1747,3 +1747,12 @@ blockquote {
   border-bottom: 1px solid #587088;
   white-space: nowrap;
 }
+.feedback-page { max-width: 720px; margin-inline: auto; padding: 20px; }
+.feedback-page header { margin-block: 20px; }
+.feedback-page form, .feedback-page label { display: grid; gap: 8px; }
+.feedback-page form { gap: 16px; }
+.feedback-page input, .feedback-page select, .feedback-page textarea { width: 100%; min-height: 44px; padding: 12px; font: inherit; font-size: 16px; border: 1px solid #587088; border-radius: 8px; background: #071a2b; color: #fff; }
+.feedback-page textarea { resize: vertical; }
+.feedback-page .panel { margin-block: 20px; padding: 20px; }
+.feedback-page .feedback-message { white-space: pre-wrap; overflow-wrap: anywhere; }
+.feedback-page nav { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }

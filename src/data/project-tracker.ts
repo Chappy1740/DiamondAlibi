@@ -2,14 +2,15 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 19,
-  updatedAt: "2026-10-10",
+  revision: 22,
+  updatedAt: "2026-10-11",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
   release: {
     commit: "d7bc86f",
     label: "Full Script Northwest app header",
-    status: "Protected preview deployed; owner phone checks passed; teammate and remaining asset checks pending",
+    status:
+      "Protected preview deployed; owner phone checks passed; teammate and remaining asset checks pending",
   },
   milestones: [
     {
@@ -86,19 +87,31 @@ export const projectTracker: ProjectTracker = {
         "Locked scoring rules with examples, replay checks and connected acceptance.",
       tasks: [
         {
+          id: "M2-review-feedback",
+          group: "Review access",
+          title:
+            "Send reviewer questions, suggestions and issues to a private owner inbox",
+          status: "in_progress",
+          evidence:
+            "Challenge the Call form, verified-owner inbox, bounded feedback API and reviewed migration prepared. Synthetic JWT, API and disposable SQL privacy/retry/rate-limit checks and Worker build pass. Local phone form and synthetic inbox checks pass. Source publication approved October 11; database/configuration and hosted acceptance remain open.",
+          next: "Approve the reviewed feedback database addition and server-only activation settings, deploy the approved source to the existing preview, then validate real submission and owner-only inbox on phones.",
+          kind: "work",
+        },
+        {
           id: "M2-team-phone-review",
           group: "Review access",
           title: "Prepare private phone review access for five teammates",
           status: "in_progress",
           evidence:
             "Phone sample history and isolated twelve-player practice released; five approved reviewers have ongoing One-time PIN access. The saved policy was reopened and verified on October 10 with the existing preview association and 24-hour sessions. Owner confirmed review history and practice scoring passed on phone on October 10; individual reviewer results remain pending.",
-          next: "Each reviewer verifies email-code sign-in, sample history and scoring on their phone.",
+          next: "Resolve one reported login-code delivery failure; saved reviewer policy reverified October 11. Each reviewer verifies email-code sign-in, sample history and scoring persistence after reload on their phone.",
           kind: "work",
         },
         {
           id: "M2-outgoing-email-brand",
           group: "Review access",
-          title: "Brand account emails and resolve reviewer code-email appearance",
+          title:
+            "Brand account emails and resolve reviewer code-email appearance",
           status: "in_progress",
           evidence:
             "Current senders and Free-plan limits verified; local palette/copy preview prepared. The locked Logo #5 raster package is now available locally.",
@@ -159,7 +172,8 @@ export const projectTracker: ProjectTracker = {
           group: "Rules",
           title: "Verify the latest HR rules on the hosted phone scorebook",
           status: "done",
-          evidence: "Owner explicitly confirmed the requested My clubhouse HR-limit changes/corrections and review checks passed on phone on October 10, 2026.",
+          evidence:
+            "Owner explicitly confirmed the requested My clubhouse HR-limit changes/corrections and review checks passed on phone on October 10, 2026.",
           next: "",
           kind: "acceptance",
         },
@@ -169,7 +183,8 @@ export const projectTracker: ProjectTracker = {
           title:
             "Verify a fresh season and prior-season correction on hosted data",
           status: "done",
-          evidence: "Owner explicitly confirmed the requested My clubhouse new-season/prior-season history checks passed on phone on October 10, 2026.",
+          evidence:
+            "Owner explicitly confirmed the requested My clubhouse new-season/prior-season history checks passed on phone on October 10, 2026.",
           next: "",
           kind: "acceptance",
         },
@@ -233,7 +248,8 @@ export const projectTracker: ProjectTracker = {
           group: "Brand",
           title: "Produce final production logo artwork",
           status: "implemented",
-          evidence: "Supplied Script Northwest raster artwork and full-logo headers are released; owner accepted the larger header on phone on October 10, 2026.",
+          evidence:
+            "Supplied Script Northwest raster artwork and full-logo headers are released; owner accepted the larger header on phone on October 10, 2026.",
           next: "Confirm production usage rights/source artwork.",
           kind: "work",
         },
@@ -242,7 +258,8 @@ export const projectTracker: ProjectTracker = {
           group: "Brand",
           title: "Produce final icon, sizing and accessible asset variants",
           status: "implemented",
-          evidence: "Supplied Northwest DA raster sizes are wired to local favicon, Apple icon and PWA manifest metadata.",
+          evidence:
+            "Supplied Northwest DA raster sizes are wired to local favicon, Apple icon and PWA manifest metadata.",
           next: "Check actual phone home-screen and small-icon rendering before release.",
           kind: "work",
         },
@@ -252,7 +269,8 @@ export const projectTracker: ProjectTracker = {
           title:
             "Accept dashboard, navigation and game-day flows on a real phone",
           status: "done",
-          evidence: "Owner confirmed the requested phone checks passed for both My clubhouse and review sample history/practice scoring on October 10, 2026.",
+          evidence:
+            "Owner confirmed the requested phone checks passed for both My clubhouse and review sample history/practice scoring on October 10, 2026.",
           next: "",
           kind: "acceptance",
         },
@@ -742,23 +760,33 @@ export const projectTracker: ProjectTracker = {
   ],
   changes: [
     {
+      title: "Challenge the Call feedback",
+      status:
+        "Local question/suggestion/issue form and private owner inbox prepared; hosted activation and acceptance pending",
+      milestone: "M2",
+    },
+    {
       title: "Owner phone acceptance",
-      status: "Owner confirmed full header, review history/scoring and hosted HR/season checks on October 10",
+      status:
+        "Owner confirmed full header, review history/scoring and hosted HR/season checks on October 10",
       milestone: "M2",
     },
     {
       title: "Full Script Northwest phone header",
-      status: "Released to the protected preview; owner accepted the phone header",
+      status:
+        "Released to the protected preview; owner accepted the phone header",
       milestone: "M3",
     },
     {
       title: "Locked logo and app icon integration",
-      status: "Released to the protected preview; phone appearance and icon review pending",
+      status:
+        "Released to the protected preview; phone appearance and icon review pending",
       milestone: "M3",
     },
     {
       title: "Outgoing email branding",
-      status: "Local design draft and artwork available; sending capability pending",
+      status:
+        "Local design draft and artwork available; sending capability pending",
       milestone: "M2",
     },
     {

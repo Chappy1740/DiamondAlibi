@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 export function TeamReview() {
   const [mode, setMode] = useState<"history" | "scoring">("history");
   return (
@@ -26,6 +27,9 @@ export function TeamReview() {
             Test scoring
           </button>
         </nav>
+        <Link className="button secondary" href="/review/feedback">
+          Challenge the Call · Send feedback
+        </Link>
         <p className="micro" role="status">
           {mode === "history"
             ? "Explore the shared sample history. These examples are read-only."

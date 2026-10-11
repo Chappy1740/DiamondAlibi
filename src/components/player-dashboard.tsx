@@ -523,6 +523,9 @@ export function PlayerDashboard(p: DashboardProps) {
               <section className="card detail-card">
                 <h2>Clubhouse tools</h2>
                 <div className="dashboard-cards">
+                  <Link className="button secondary" href="/review/feedback">
+                    Challenge the Call · Send feedback
+                  </Link>
                   <Link className="button secondary" href="/status">
                     Project status
                   </Link>

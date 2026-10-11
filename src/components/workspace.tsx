@@ -657,6 +657,7 @@ function More() {
         subtitle="Keep game day simple. Find the extras here."
       />
       <div className="card menu-list">
+        <Link href="/review/feedback"><span className="grow"><strong>Challenge the Call</strong><small>Send a question, suggestion, or issue to the owner</small></span><ChevronRight size={18} aria-hidden /></Link>
         <Link href="/status"><span className="grow"><strong>Project status</strong><small>Milestones, remaining tasks and completion gates</small></span><ChevronRight size={18} aria-hidden /></Link>
         {moreItems.map((item) => (
           <Link key={item.path} href={`/more/${item.path}`}>
