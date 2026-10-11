@@ -2,15 +2,15 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 23,
+  revision: 24,
   updatedAt: "2026-10-11",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
   release: {
-    commit: "48775c5",
+    commit: "6494574",
     label: "Challenge the Call and private Booth Reviews",
     status:
-      "Feedback activation approved; owner phone feedback acceptance pending; prior owner checks preserved",
+      "Feedback deployed to protected preview; owner phone feedback acceptance pending; prior owner checks preserved",
   },
   milestones: [
     {
@@ -93,7 +93,7 @@ export const projectTracker: ProjectTracker = {
             "Send reviewer questions, suggestions and issues to a private owner inbox",
           status: "in_progress",
           evidence:
-            "Challenge the Call form, verified-owner inbox and bounded API published as 48775c5. Synthetic JWT/API/SQL and local phone layout checks pass. Approved feedback migration applied October 11; RLS and denied direct browser reads verified. Four encrypted server settings saved in the existing protected preview. Hosted submission and phone acceptance remain open.",
+            "Feedback source 48775c5 and activation tracker 6494574 deployed to the protected preview. Approved migration, RLS and encrypted server settings verified. Authenticated form shows the owner inbox link; inbox loads successfully. Anonymous pages/API/new asset redirect to Access. Synthetic JWT/API/SQL and local phone layout checks pass. Hosted submission, reviewer inbox denial and phone acceptance remain open.",
           next: "Validate hosted submission persistence, reviewer inbox denial and owner-only inbox on phones; preserve prior owner acceptance.",
           kind: "work",
         },
@@ -762,7 +762,7 @@ export const projectTracker: ProjectTracker = {
     {
       title: "Challenge the Call feedback",
       status:
-        "Approved database and encrypted server configuration applied; hosted submission and owner phone acceptance pending",
+        "Protected preview deployed; authenticated owner inbox read verified; hosted submission and phone acceptance pending",
       milestone: "M2",
     },
     {
