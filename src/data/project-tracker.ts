@@ -2,15 +2,15 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 22,
+  revision: 23,
   updatedAt: "2026-10-11",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
   release: {
-    commit: "d7bc86f",
-    label: "Full Script Northwest app header",
+    commit: "48775c5",
+    label: "Challenge the Call and private Booth Reviews",
     status:
-      "Protected preview deployed; owner phone checks passed; teammate and remaining asset checks pending",
+      "Feedback activation approved; owner phone feedback acceptance pending; prior owner checks preserved",
   },
   milestones: [
     {
@@ -93,8 +93,8 @@ export const projectTracker: ProjectTracker = {
             "Send reviewer questions, suggestions and issues to a private owner inbox",
           status: "in_progress",
           evidence:
-            "Challenge the Call form, verified-owner inbox, bounded feedback API and reviewed migration prepared. Synthetic JWT, API and disposable SQL privacy/retry/rate-limit checks and Worker build pass. Local phone form and synthetic inbox checks pass. Source publication approved October 11; database/configuration and hosted acceptance remain open.",
-          next: "Approve the reviewed feedback database addition and server-only activation settings, deploy the approved source to the existing preview, then validate real submission and owner-only inbox on phones.",
+            "Challenge the Call form, verified-owner inbox and bounded API published as 48775c5. Synthetic JWT/API/SQL and local phone layout checks pass. Approved feedback migration applied October 11; RLS and denied direct browser reads verified. Four encrypted server settings saved in the existing protected preview. Hosted submission and phone acceptance remain open.",
+          next: "Validate hosted submission persistence, reviewer inbox denial and owner-only inbox on phones; preserve prior owner acceptance.",
           kind: "work",
         },
         {
@@ -762,7 +762,7 @@ export const projectTracker: ProjectTracker = {
     {
       title: "Challenge the Call feedback",
       status:
-        "Local question/suggestion/issue form and private owner inbox prepared; hosted activation and acceptance pending",
+        "Approved database and encrypted server configuration applied; hosted submission and owner phone acceptance pending",
       milestone: "M2",
     },
     {
