@@ -2,7 +2,7 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 16,
+  revision: 19,
   updatedAt: "2026-10-10",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
@@ -88,10 +88,10 @@ export const projectTracker: ProjectTracker = {
         {
           id: "M2-team-phone-review",
           group: "Review access",
-          title: "Prepare private phone review access for four teammates",
+          title: "Prepare private phone review access for five teammates",
           status: "in_progress",
           evidence:
-            "Phone sample history and isolated twelve-player practice released; four approved reviewers have ongoing One-time PIN access. Owner confirmed review history and practice scoring passed on phone on October 10; individual reviewer results remain pending.",
+            "Phone sample history and isolated twelve-player practice released; five approved reviewers have ongoing One-time PIN access. The saved policy was reopened and verified on October 10 with the existing preview association and 24-hour sessions. Owner confirmed review history and practice scoring passed on phone on October 10; individual reviewer results remain pending.",
           next: "Each reviewer verifies email-code sign-in, sample history and scoring on their phone.",
           kind: "work",
         },
@@ -764,7 +764,7 @@ export const projectTracker: ProjectTracker = {
     {
       title: "Private team phone review",
       status:
-        "Four exact reviewers have ongoing One-time PIN access on the protected preview; their phone acceptance is pending",
+        "Five exact reviewers have ongoing One-time PIN access on the protected preview; their phone acceptance is pending",
       milestone: "M2",
     },
     {
