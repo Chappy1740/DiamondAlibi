@@ -45,15 +45,18 @@ export function AuthForm() {
           </p>
         )}
         {result.message && <p role="status">{result.message}</p>}
+        {!creating && (
+          <div>
+            <Link className="text-link" href="/forgot-password">
+              Forgot Password?
+            </Link>
+          </div>
+        )}
         <button className="button primary" disabled={pending}>
           {pending ? "Please wait…" : creating ? "Create account" : "Sign in"}
         </button>
       </form>
-      {!creating && (
-        <Link className="text-link" href="/forgot-password">
-          Forgot Password?
-        </Link>
-      )}
+
       <button
         className="text-button"
         onClick={() => setCreating(!creating)}
