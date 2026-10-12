@@ -1,2 +1,4 @@
 # Local Workers preview only. Keep actual environment configuration untracked.
 NEXTJS_ENV=development
+# Exact application origin for auth email links and fixed callback redirects.
+AUTH_SITE_URL=https://YOUR_APPLICATION_HOST

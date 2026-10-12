@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test:password-recovery": "node --experimental-strip-types --test tests/password-recovery.test.ts && node tests/password-recovery-actions.cjs",
+    "test:password-recovery-browser": "node tests/password-recovery-browser.cjs",
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
     "build:worker": "node scripts/build-worker.cjs",
