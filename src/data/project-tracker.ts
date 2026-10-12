@@ -2,15 +2,15 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 24,
-  updatedAt: "2026-10-11",
+  revision: 30,
+  updatedAt: "2026-10-12",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
   release: {
-    commit: "6494574",
+    commit: "5fda987",
     label: "Challenge the Call and private Booth Reviews",
     status:
-      "Feedback deployed to protected preview; owner phone feedback acceptance pending; prior owner checks preserved",
+      "Feedback deployed; owner phone submission and reviewed-state persistence passed; reviewer privacy check pending",
   },
   milestones: [
     {
@@ -93,8 +93,8 @@ export const projectTracker: ProjectTracker = {
             "Send reviewer questions, suggestions and issues to a private owner inbox",
           status: "in_progress",
           evidence:
-            "Feedback source 48775c5 and activation tracker 6494574 deployed to the protected preview. Approved migration, RLS and encrypted server settings verified. Authenticated form shows the owner inbox link; inbox loads successfully. Anonymous pages/API/new asset redirect to Access. Synthetic JWT/API/SQL and local phone layout checks pass. Hosted submission, reviewer inbox denial and phone acceptance remain open.",
-          next: "Validate hosted submission persistence, reviewer inbox denial and owner-only inbox on phones; preserve prior owner acceptance.",
+            "Feedback source 48775c5 and activation tracker 6494574 deployed to the protected preview. Approved migration, RLS and encrypted server settings verified. Authenticated form shows the owner inbox link; inbox loads successfully. Anonymous pages/API/new asset redirect to Access. Synthetic JWT/API/SQL and local phone layout checks pass. Will provided phone screenshots showing a successful submission receipt and two messages in Booth Reviews on October 11. A subsequent owner phone screenshot confirms the selected message displays Reviewed with Mark as new available. Will explicitly confirmed on October 12 that Reviewed remained saved after reopening the owner inbox. Owner-controlled reviewer test login saved and reopened to verify on October 12; original five reviewers, required email-code login and 24-hour sessions preserved. Reviewer inbox denial remains open.",
+          next: "Sign in using the separate reviewer test email in a private browser, then verify feedback submission and owner inbox denial.",
           kind: "work",
         },
         {
@@ -762,7 +762,7 @@ export const projectTracker: ProjectTracker = {
     {
       title: "Challenge the Call feedback",
       status:
-        "Protected preview deployed; authenticated owner inbox read verified; hosted submission and phone acceptance pending",
+        "Protected preview deployed; owner phone submission, inbox delivery and reviewed-state persistence passed; reviewer privacy check pending",
       milestone: "M2",
     },
     {
