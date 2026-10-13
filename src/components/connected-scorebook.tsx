@@ -1,5 +1,6 @@
 "use client";
 import { competitionGames, competitionPath, contextQuery } from "@/lib/competitions";
+import { revealInvalidField } from "@/lib/form-details";
 import { TournamentNextGame } from "@/components/tournament-next-game";
 import { tournamentContinuation } from "@/lib/tournament-continuation";
 import { ScorebookAudit } from "@/components/scorebook-audit";
@@ -98,6 +99,7 @@ export function ConnectedScorebook({
   const lock = useRef(false),
     pending = useRef<unknown>(null),
     mounted = useRef(true);
+  const setupForm = useRef<HTMLFormElement | null>(null);
   const snapshot = data?.snapshot;
   const allGames = snapshot?.games ?? [];
   const visibleGames = initialTournamentId ? competitionGames(allGames, "Tournament", initialTournamentId)
@@ -122,6 +124,10 @@ export function ConnectedScorebook({
     kind === "Tournament"
       ? snapshot?.tournaments.find((t) => t.id === tournamentId)?.fenceLimit
       : snapshot?.leagues?.find((l) => l.id === leagueId)?.fenceLimit;
+  const setupNumber = kind === "Tournament"
+    ? (snapshot?.games.filter((g) => g.game.tournament_id === tournamentId).length ?? 0) + 1 : null;
+  const routineMessage = /^(Scorebook loaded\.|Scorebook refreshed\.|Latest scorebook reviewed\.|Saved to the team scorebook\.|Previous save confirmed\.|Saving…|Set up Game )/.test(message);
+  const needsAttention = !online || paused || review || uncertain || !routineMessage;
   useEffect(() => setOverrideLimit(false), [kind, tournamentId, leagueId]);
   async function read(nextScope = scope): Promise<boolean> {
     try {
@@ -339,6 +345,8 @@ export function ConnectedScorebook({
       setMessage(
         "Choose at least one player and give each selected player a different batting position.",
       );
+      const settings = setupForm.current?.querySelector<HTMLDetailsElement>("[data-setup-lineup]");
+      if (settings) settings.open = true;
       return null;
     }
     return chosen.sort(
@@ -593,29 +601,32 @@ export function ConnectedScorebook({
     }
   }
   return (
-    <div className="team-scorebook">
-      <section className="card detail-card">
+    <div className={`team-scorebook${mode === "setup" ? " team-scorebook--setup" : ""}`}>
+      <section className={mode === "full" ? "card detail-card" : `scorebook-status${needsAttention ? " scorebook-status--attention" : ""}`} aria-label="Scorebook connection">
         <div className="scorebook-toolbar">
-          <h2>Team scorebook</h2>
+          {mode === "full" ? <h2>Team scorebook</h2> : <span className="connection-indicator" role="status">
+            {busy ? "Working…" : !online ? "Offline" : paused ? "Paused" : uncertain ? "Save unconfirmed" : review ? "Review needed" : data?.archived ? "Read only" : "Connected"}
+          </span>}
           <button
             className="button secondary"
             disabled={busy || !online}
             onClick={() => void refresh()}
+            aria-label="Refresh scorebook"
           >
-            Refresh scorebook
+            {mode === "full" ? "Refresh scorebook" : "Refresh"}
           </button>
         </div>
-        <p role="status" aria-live="polite">
+        {(mode === "full" || needsAttention || (!busy && message !== "Scorebook loaded.")) && <p role={needsAttention && mode !== "full" ? "alert" : "status"}>
           {busy ? "Working… " : ""}
           {message}
-        </p>
-        <p className="micro">
+        </p>}
+        {mode === "full" && <p className="micro">
           {online ? "Connected" : "Offline"} ·{" "}
           {data?.archived
             ? "Archived season · read only"
             : "Changes require a confirmed save"}
           . Automatic refresh every 15 seconds while this page is visible.
-        </p>
+        </p>}
         {uncertain && (
           <button
             className="button primary"
@@ -1005,10 +1016,18 @@ export function ConnectedScorebook({
             </div>
           </details>}
           {!continuation && mode !== "score" && (
-            <section className="card detail-card">
-              <h2 id="new-game-setup" tabIndex={-1}>Set up a game</h2>
-              <form className="club-form" onSubmit={start}>
+            <section className="card detail-card game-setup-card">
+              {mode === "full" && <h2 id="new-game-setup" tabIndex={-1}>Set up a game</h2>}
+              <form className="club-form game-setup-form" aria-label="Set up a game" ref={setupForm} onSubmit={start} onInvalidCapture={(e) => revealInvalidField(e.target)}>
                 <fieldset disabled={disabled}>
+                  <label>
+                    Opponent
+                    <input name="opponent" maxLength={200} required />
+                  </label>
+                  {mode === "setup" && <button className="button primary" type="submit">{setupNumber ? `Start Game ${setupNumber}` : "Start game"}</button>}
+                  {mode === "setup" && <p className="setup-summary">{inheritedLimit != null ? `Fence HR limit: ${inheritedLimit} · ` : ""}Review lineup{kind === "Tournament" ? " and HR Bands" : ""} before starting.</p>}
+                  <details className="setup-details" open={mode === "full" || inheritedLimit == null}>
+                    <summary>Date & HR limit</summary>
                   <label>
                     Game date
                     <input
@@ -1018,11 +1037,7 @@ export function ConnectedScorebook({
                       required
                     />
                   </label>
-                  <label>
-                    Opponent
-                    <input name="opponent" maxLength={200} required />
-                  </label>
-                  <label hidden={mode === "setup"}>
+                  <label hidden={mode === "setup" && !!initialTournamentId || mode === "setup" && !!initialLeagueId}>
                     Game kind
                     <select
                       value={kind}
@@ -1034,7 +1049,7 @@ export function ConnectedScorebook({
                     </select>
                   </label>
                   {kind === "Tournament" && (
-                    <label hidden={mode === "setup"}>
+                    <label hidden={mode === "setup" && !!initialTournamentId}>
                       Tournament
                       <select
                         value={tournamentId}
@@ -1043,7 +1058,7 @@ export function ConnectedScorebook({
                         required
                       >
                         <option value="">Choose tournament</option>
-                        {snapshot?.tournaments.filter((t) => mode === "full" || t.id === (initialTournamentId || current?.game.tournament_id)).map((t) => (
+                        {snapshot?.tournaments.map((t) => (
                           <option key={t.id} value={t.id}>
                             {t.name}
                             {t.guaranteedGames
@@ -1113,15 +1128,14 @@ export function ConnectedScorebook({
                     limit unless explicitly overridden. An in-game correction
                     recalculates the whole game; 1-up is deferred.
                   </p>
-                  <h3>
-                    {kind === "Tournament"
-                      ? "Lineup and first Band assignments"
-                      : "Lineup"}
-                  </h3>
+                  </details>
+                  <details className="setup-details" data-setup-lineup open={mode === "full"}>
+                    <summary>{kind === "Tournament" ? "Lineup & HR Bands" : "Lineup"}</summary>
                   <div key={`${kind}-${tournamentId}`}>
                     {bandFields(kind === "Tournament" ? tournamentId : null)}
                   </div>
-                  <details>
+                  </details>
+                  <details className="setup-details">
                     <summary>Beverage rules for this game</summary>
                     {Object.entries(DEFAULT_BOARD).map(([key, value]) => (
                       <label
@@ -1140,7 +1154,7 @@ export function ConnectedScorebook({
                       </label>
                     ))}
                   </details>
-                  <button className="button primary">Start game</button>
+                  {mode === "full" && <button className="button primary">Start game</button>}
                 </fieldset>
               </form>
               {mode === "full" && <>
@@ -1236,13 +1250,26 @@ export function ConnectedScorebook({
               </>}
             </section>
           )}
-          {(mode === "full" || !!initialTournamentId || !!current?.game.tournament_id) && <section className="card detail-card">
+          {mode === "setup" && continuation && (
+            <section className="card detail-card game-setup-card">
+              <TournamentNextGame
+                template={continuation}
+                data={data}
+                number={setupNumber ?? 1}
+                compact
+                disabled={disabled}
+                submit={(form) => startGame(form, "Tournament", tournamentId, "", form.has("overrideLimit"))}
+                otherCompetition={() => window.location.assign(`/?${contextQuery(teamId, seasonId)}`)}
+              />
+            </section>
+          )}
+          {mode !== "setup" && (mode === "full" || !!initialTournamentId || !!current?.game.tournament_id) && <section className="card detail-card">
             <h2>Tournament games and Band corrections</h2>
             <p className="micro">
               Assignments stay fixed across tournament games. Corrections
               require a reason and recalculate the tournament.
             </p>
-            {snapshot?.tournaments.map((t) => (
+            {snapshot?.tournaments.filter((t) => mode === "full" || t.id === (initialTournamentId || current?.game.tournament_id)).map((t) => (
               <details
                 key={t.id}
                 open={openTournaments[t.id] ?? false}

@@ -19,10 +19,12 @@ jobs:
       - run: node --experimental-strip-types --test --test-isolation=none tests/*.test.ts tests/signout.cjs
       - run: node tests/personal-alibis-sql.cjs
       - run: node tests/dashboard-loader.cjs
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps chromium webkit
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
       - run: node tests/personal-workflow-browser.cjs
       - run: node tests/scorebook-modes-browser.cjs
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+      - run: BROWSER_ENGINE=webkit node tests/scorebook-modes-browser.cjs
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
       - run: npm run test:connected-scorebook
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
