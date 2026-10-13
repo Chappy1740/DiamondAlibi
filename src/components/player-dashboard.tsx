@@ -149,7 +149,7 @@ export function PlayerDashboard(p: DashboardProps) {
       </aside>
       <div className="workspace">
         <header className="topbar">
-          <BrandLink className="header-logo" href={href("")} variant="primary" />
+          <BrandLink className={p.route.includes("/") ? "" : "header-logo"} href={href("")} variant={p.route.includes("/") ? "compact" : "primary"} />
           {p.review ? <Link className="button secondary" href="/review" target="_top">Review hub</Link>
             : <ProfileMenu signedIn={!p.sample && !!p.userId} context={query.toString()} />}
 

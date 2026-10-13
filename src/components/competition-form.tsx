@@ -14,6 +14,9 @@ export function CompetitionForm({ team, season, kind, archived, existing }: {
   const [retry, setRetry] = useState(false);
   const pending = useRef<Record<string, unknown> | null>(null);
   const locked = useRef(false);
+  // The existing command only creates fixed defaults or initializes an unknown
+  // historical tournament limit. It cannot edit an established competition.
+  const fixed = !!existing && (kind === "League" || existing.fenceLimit != null);
   async function send(request: Record<string, unknown>) {
     if (locked.current) return;
     if (!navigator.onLine) { setMessage("Offline. Reconnect before saving."); return; }
@@ -38,7 +41,8 @@ export function CompetitionForm({ team, season, kind, archived, existing }: {
       const options = loaded.status === "ok" ? kind === "League"
         ? loaded.data.snapshot.leagues : loaded.data.snapshot.tournaments : [];
       const confirmed = options?.find((c) => c.id === request.competitionId);
-      if (!confirmed || confirmed.name !== request.name || confirmed.fenceLimit !== request.fenceLimit) {
+      if (!confirmed || confirmed.name !== request.name || confirmed.fenceLimit !== request.fenceLimit ||
+        (kind === "Tournament" && (!("guaranteedGames" in confirmed) || (confirmed.guaranteedGames ?? null) !== request.guaranteedGames))) {
         setRetry(true);
         setMessage("Save needs confirmation. Retry the same change before editing further.");
         return;
@@ -58,21 +62,26 @@ export function CompetitionForm({ team, season, kind, archived, existing }: {
     const form = new FormData(event.currentTarget);
     void send({ type: "competition", teamId: team, seasonId: season,
       competitionId: existing?.id ?? crypto.randomUUID(), kind,
-      name: String(form.get("name")).trim(), fenceLimit: Number(form.get("fenceLimit")),
-      guaranteedGames: kind === "Tournament" ? (form.get("guaranteedGames") ? Number(form.get("guaranteedGames")) : null) : null });
+      name: existing?.name ?? String(form.get("name")).trim(), fenceLimit: Number(form.get("fenceLimit")),
+      guaranteedGames: kind === "Tournament" ? existing ? existing.guaranteedGames ?? null : (form.get("guaranteedGames") ? Number(form.get("guaranteedGames")) : null) : null });
   }
+  if (fixed) return <>
+    <p>Saved fence HR limit: <strong>{existing.fenceLimit}</strong> per game. HRs used reset each game.</p>
+    {kind === "Tournament" && <p>{existing.guaranteedGames ? `${existing.guaranteedGames}-game guaranteed` : "Guarantee unspecified"}. The guarantee is a minimum, not a cap.</p>}
+    <p className="micro">Competition defaults are retained. Set a game exception or correct a game's HR limit in its scorebook with a reason.</p>
+  </>;
   return <>
     <form className="club-form" onSubmit={submit}>
       <fieldset disabled={busy || retry || archived}>
-        <label>{kind} name<input name="name" maxLength={200} defaultValue={existing?.name} required /></label>
+        <label>{kind} name<input name="name" maxLength={200} defaultValue={existing?.name} readOnly={!!existing} required /></label>
         <label>Fence HR limit<input name="fenceLimit" type="number" min={0} max={100} defaultValue={existing?.fenceLimit ?? ""} required /></label>
-        {kind === "Tournament" && <label>Games guaranteed
+        {kind === "Tournament" && !existing && <label>Games guaranteed
           <select name="guaranteedGames" defaultValue={existing?.guaranteedGames ?? ""} required={!existing}>
             <option value="">{existing ? "Unspecified" : "Choose games guaranteed"}</option>
             <option value="2">2-game guaranteed</option><option value="3">3-game guaranteed</option>
           </select>
         </label>}
-        <button className="button primary">{busy ? "Saving…" : existing ? "Save competition settings" : `Create ${kind.toLowerCase()}`}</button>
+        <button className="button primary">{busy ? "Saving…" : existing ? "Save tournament HR default" : `Create ${kind.toLowerCase()}`}</button>
       </fieldset>
     </form>
     {retry && <button className="button primary" disabled={busy} onClick={() => pending.current && void send(pending.current)}>Retry the same change</button>}

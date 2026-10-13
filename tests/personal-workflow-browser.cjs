@@ -15,7 +15,7 @@ const assert = require("node:assert/strict");
         contents: `import React from 'react';import{createRoot}from'react-dom/client';import{AlibiEditor}from'./src/components/alibi-editor';import{CompetitionForm}from'./src/components/competition-form';
           const post=async(path,input)=>{const r=await fetch(path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(input)});return r.json()};
           window.__routes=[];window.__competition=(input)=>post('/competition',input);window.__loadCompetition=()=>post('/competition-load',{});
-          post('/list',{}).then(initial=>createRoot(document.getElementById('app')).render(<main className="connected-wrap"><AlibiEditor initial={initial} saveAction={input=>post('/save',input)} reloadAction={()=>post('/list',{})}/><section className="card detail-card"><h2>Synthetic league setup</h2><CompetitionForm team="00000000-0000-4000-8000-000000000001" season="00000000-0000-4000-8000-000000000002" kind="League" archived={false}/></section></main>));`,
+          post('/list',{}).then(initial=>createRoot(document.getElementById('app')).render(<main className="connected-wrap"><AlibiEditor initial={initial} saveAction={input=>post('/save',input)} reloadAction={()=>post('/list',{})}/><section className="card detail-card"><h2>Synthetic league setup</h2><CompetitionForm team="00000000-0000-4000-8000-000000000001" season="00000000-0000-4000-8000-000000000002" kind="League" archived={false}/><CompetitionForm team="00000000-0000-4000-8000-000000000001" season="00000000-0000-4000-8000-000000000002" kind="League" archived={false} existing={{id:'fixed-league',name:'Fixed synthetic league',fenceLimit:2}}/></section></main>));`,
         resolveDir: process.cwd(), loader: "tsx",
       },
       bundle: true, write: false, platform: "browser", jsx: "automatic",
@@ -103,6 +103,7 @@ const assert = require("node:assert/strict");
     await page.getByRole("button",{name:"Delete alibi",exact:true}).click();assert.equal(items.length,2);
     await page.getByRole("button",{name:"Confirm delete",exact:true}).click();
     await page.getByText("Alibi deleted.",{exact:true}).waitFor();assert.equal(items.length,1);
+    assert.equal(await page.getByRole("button",{name:"Save competition settings",exact:true}).count(),0);
     await page.getByLabel("League name",{exact:true}).fill("Synthetic league");
     await page.getByLabel("Fence HR limit",{exact:true}).fill("0");
     await page.getByRole("button",{name:"Create league",exact:true}).click();
