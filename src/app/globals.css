@@ -1811,6 +1811,7 @@ blockquote {
 .at-bat-form .button.primary { width: 100%; min-height: 44px; margin: 0; }
 .team-scorebook--score { gap: 12px; }
 .team-scorebook--score > details { padding: 12px 0; margin: 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; background: transparent; }
+.team-scorebook details:not([open]) > :not(summary) { display: none; }
 .game-management, .at-bat-history, .game-switcher { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
 .game-management > summary, .at-bat-history > summary, .game-switcher > summary { cursor: pointer; font-size: 13px; }
 .dashboard-context-panel { margin-block: 20px; padding-top: 4px; border-top: 1px solid var(--border); }
