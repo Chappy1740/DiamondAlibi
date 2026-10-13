@@ -2,7 +2,7 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 30,
+  revision: 38,
   updatedAt: "2026-10-12",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
@@ -10,7 +10,7 @@ export const projectTracker: ProjectTracker = {
     commit: "5fda987",
     label: "Challenge the Call and private Booth Reviews",
     status:
-      "Feedback deployed; owner phone submission and reviewed-state persistence passed; reviewer privacy check pending",
+      "Feedback deployed; owner and reviewer test submission, owner delivery/readability, reviewed-state persistence and reviewer inbox denial passed",
   },
   milestones: [
     {
@@ -91,10 +91,10 @@ export const projectTracker: ProjectTracker = {
           group: "Review access",
           title:
             "Send reviewer questions, suggestions and issues to a private owner inbox",
-          status: "in_progress",
+          status: "done",
           evidence:
-            "Feedback source 48775c5 and activation tracker 6494574 deployed to the protected preview. Approved migration, RLS and encrypted server settings verified. Authenticated form shows the owner inbox link; inbox loads successfully. Anonymous pages/API/new asset redirect to Access. Synthetic JWT/API/SQL and local phone layout checks pass. Will provided phone screenshots showing a successful submission receipt and two messages in Booth Reviews on October 11. A subsequent owner phone screenshot confirms the selected message displays Reviewed with Mark as new available. Will explicitly confirmed on October 12 that Reviewed remained saved after reopening the owner inbox. Owner-controlled reviewer test login saved and reopened to verify on October 12; original five reviewers, required email-code login and 24-hour sessions preserved. Reviewer inbox denial remains open.",
-          next: "Sign in using the separate reviewer test email in a private browser, then verify feedback submission and owner inbox denial.",
+            "Feedback deployed to protected preview; approved migration, RLS and encrypted configuration verified. Worker build and synthetic JWT/API/SQL checks pass. Will confirmed owner phone submission, inbox delivery and reviewed-state persistence after reopening. Separate reviewer test login succeeded, submitted feedback and received 404 at the owner inbox. October 12 screenshot confirms the full reviewer message is readable in Booth Reviews with Reviewed status. Inline message display clarified; no defect remains reported. Five teammate phone checks remain a separate task.",
+          next: "",
           kind: "work",
         },
         {
@@ -103,7 +103,7 @@ export const projectTracker: ProjectTracker = {
           title: "Prepare private phone review access for five teammates",
           status: "in_progress",
           evidence:
-            "Phone sample history and isolated twelve-player practice released; five approved reviewers have ongoing One-time PIN access. The saved policy was reopened and verified on October 10 with the existing preview association and 24-hour sessions. Owner confirmed review history and practice scoring passed on phone on October 10; individual reviewer results remain pending.",
+            "Phone sample history and isolated twelve-player practice released; five approved reviewers have ongoing One-time PIN access. The saved policy was reopened and verified on October 10 with the existing preview association and 24-hour sessions. Owner confirmed review history and practice scoring passed on phone on October 10; Will confirmed October 12 that the separate reviewer test login on his phone displays sample players and switches seasons. Will then confirmed a synthetic practice plate appearance was recorded and visible in the scorebook. In response to the reload check, Will provided a screenshot showing the recorded synthetic hit still in the scorebook. Owner-controlled reviewer test login, sample history, scoring and reload persistence passed; the five teammates individual results remain pending.",
           next: "Resolve one reported login-code delivery failure; saved reviewer policy reverified October 11. Each reviewer verifies email-code sign-in, sample history and scoring persistence after reload on their phone.",
           kind: "work",
         },
@@ -114,8 +114,8 @@ export const projectTracker: ProjectTracker = {
             "Brand account emails and resolve reviewer code-email appearance",
           status: "in_progress",
           evidence:
-            "Current senders and Free-plan limits verified; local palette/copy preview prepared. The locked Logo #5 raster package is now available locally.",
-          next: "Review a mail sender for account templates; confirm the acceptable appearance of Cloudflare code emails, then validate live templates with the supplied logo.",
+            "Local palette/copy preview and locked logo prepared. Will reported saving branded custom SMTP October 12; delivery is not yet verified. Requested password recovery is prepared locally: Forgot password above Sign in, reset-email request, authenticated password update and bounded callback. Synthetic validation and TypeScript pass; publication and live reset acceptance remain open.",
+          next: "Publish the reviewed recovery flow after exact approval; verify the allowed callback URL and reset template, then test email delivery and password recovery on the owner test account. Confirm acceptable Cloudflare code-email appearance separately.",
           kind: "work",
         },
         {
@@ -762,7 +762,7 @@ export const projectTracker: ProjectTracker = {
     {
       title: "Challenge the Call feedback",
       status:
-        "Protected preview deployed; owner phone submission, inbox delivery and reviewed-state persistence passed; reviewer privacy check pending",
+        "Owner and reviewer test submission, owner delivery/readability, reviewed-state persistence and reviewer inbox denial passed",
       milestone: "M2",
     },
     {

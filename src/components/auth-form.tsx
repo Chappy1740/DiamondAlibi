@@ -1,5 +1,6 @@
 "use client";
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import { login, signup, type AuthResult } from "@/app/login/actions";
 export function AuthForm() {
   const [creating, setCreating] = useState(false);
@@ -44,6 +45,13 @@ export function AuthForm() {
           </p>
         )}
         {result.message && <p role="status">{result.message}</p>}
+        {!creating && (
+          <p>
+            <Link className="text-link" href="/forgot-password">
+              Forgot password?
+            </Link>
+          </p>
+        )}
         <button className="button primary" disabled={pending}>
           {pending ? "Please wait…" : creating ? "Create account" : "Sign in"}
         </button>
