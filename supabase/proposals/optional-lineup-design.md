@@ -1,16 +1,16 @@
 # Optional lineup and named-player scoring
 
-Design proposal, October 13, 2026. This is not an applied migration or an implemented feature. Live schema changes require the owner's specific approval after the executable migration and security tests are ready.
+Design and release review, October 13, 2026. Owner explicitly approved live application, commit and publication. The optional-lineup migration is applied as `20261013235234_optional_lineups`; hosted iPhone acceptance remains open.
 
 ## Normal scoring
 
 The game, team and season are selected once on entry. With a saved lineup, display the next batter and advance after a confirmed play. Without a lineup, select the existing roster player or resolve a spoken player name, then save that player's result. Do not require batting positions or a next-batter override for each play. All authorized team members may score; coach/captain designation does not grant exclusive scoring rights.
 
-The scoring view contains the player, result, counts when needed, and save status. Scoreboard, HR corrections, lineup administration and audited history belong on a separate game-details page. Voice capture and the full quick-save interaction remain M3-11 and M3-10 work; this proposal must not be presented as delivered voice or one-tap scoring.
+The scoring view contains the player, result, counts when needed, and save status. Scoreboard, HR corrections, lineup administration and audited history belong on a separate game-details page. Quick result taps and typed/opt-in browser speech entry are implemented. Real iPhone microphone behavior and owner acceptance remain open under M3-10/M3-11.
 
 ## Existing restriction
 
-`da_start_scoring_game` currently requires a nonempty lineup. `da_apply_scoring_game_change` rejects a missing lineup, requires the submitted player to equal the next batter, and advances the lineup after scoring. `tournamentContinuation` also rejects an empty lineup. Removing a front-end dropdown cannot provide genuine no-lineup scoring.
+Before this migration, `da_start_scoring_game` required a nonempty lineup. The prior `da_apply_scoring_game_change` rejected a missing lineup, required the submitted player to equal the next batter, and advances the lineup after scoring. The prior `tournamentContinuation` also rejected an empty lineup. Removing a front-end dropdown cannot provide genuine no-lineup scoring.
 
 ## Required schema and command changes
 
@@ -41,10 +41,10 @@ Implement the model/RPC changes and executable migration in a reviewable branch,
 
 ## Executable review and release gate
 
-`optional_lineups.sql` is an unapplied, transactional proposal. It adds only constrained `scoring_games.batting_mode` (existing rows default ordered), then replaces three reviewed private functions. Hash preflight refuses an unexpected live definition. Public wrappers, ACLs, RLS, authentication, membership/season checks and lock/revision/retry/audit behavior are retained. No scorer privilege depends on captain designation.
+The canonical executable file is `../migrations/20261013235234_optional_lineups.sql`, applied with explicit owner approval. It preserves the tested proposal SQL apart from its header. It adds only constrained `scoring_games.batting_mode` (existing rows default ordered), then replaces three reviewed private functions. Hash preflight refuses an unexpected live definition. Public wrappers, ACLs, RLS, authentication, membership/season checks and lock/revision/retry/audit behavior are retained. No scorer privilege depends on captain designation.
 
 Disposable PostgreSQL tests match the current live function hashes, then exercise manual/ordered scoring, atomic first Bands, fixed assignments, arbitrary scoped players/guests, historical denial, Game 2 HR reset/Band carry, completed corrections, replay/negative credits, stale commands, idempotent retries, changed fingerprints, cross-team/season denial, archived-write denial, legacy ordered setup and unchanged grants. Browser tests cover quick saves, count resets, named results, recognition duplicate finals, permission fallback and late offline results. Native speech is opt-in and may use the browser speech provider; the app stores no audio or raw transcript. Real iPhone acceptance remains required.
 
 Read-only Supabase advisor baseline on 2026-10-13: security INFO for intentional deny-by-default private/RPC tables and review_feedback; existing WARN for leaked-password protection disabled ([remediation](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection)). Performance INFO reports five unindexed foreign keys and four unused indexes ([foreign-key guidance](https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys)). These predate this proposal; no auth/index changes are included.
 
-Specific owner approval is required before applying this proposal live. The published UI uses the authorized snapshot capability flag, so existing schema remains ordered-compatible until application. Apply once through tracked migration history after approval, verify unchanged policies/grants/advisors and both scoring modes with isolated synthetic data. Roll back UI behavior by removing the capability flag first; retain play/participant/history records and the mode column rather than erasing manual game state.
+Owner approval was received and the migration was applied once through Supabase migration history. The published UI reads the authorized capability flag and now enables manual setup. Existing games default to ordered. Live RLS, ACLs, fixed search paths and restricted execute grants are unchanged. Hosted rollback-only synthetic RPC checks passed for manual scoring, legacy ordered advancement, atomic first Bands, repeated players/guests, retries/fingerprints/conflicts, team/season isolation, Game 2 HR reset/Band carry, credits and archived denial. All synthetic rows were rolled back; no owner records were mutated. Security/performance advisors remain at the reviewed baseline. See `../tests/optional_lineups_hosted_rollback.sql`. Roll back UI behavior by removing the capability flag first; retain play/participant/history records and the mode column rather than erasing manual game state.

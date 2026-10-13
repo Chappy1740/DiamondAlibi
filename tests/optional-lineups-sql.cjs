@@ -24,7 +24,7 @@ const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
  for(const name of ['20261009192021_m43_tournament_season_scoring.sql','20261009210007_tournament_games_guaranteed.sql','20261009203125_tournament_only_bands.sql','20261009224553_game_scoreboard_tournament_numbers.sql','20261009234045_competition_hr_limits.sql']) await db.exec(fs.readFileSync('supabase/migrations/'+name,'utf8'));
  const baseline=await db.query("select proname,md5(pg_get_functiondef(oid)) hash from pg_proc where pronamespace='private'::regnamespace and proname in ('apply_scoring_game_change','start_scoring_game','read_scoring_season') order by proname");
  assert.deepEqual(baseline.rows.map(r=>r.hash),['d6f883359209cb7b1bb7b73e094ff549','d84cfeb15f9422dd5555a9e8cd78da0b','4756d36b59d1c47df7c7ebabba59de8b'],'Disposable definitions must match the reviewed live schema hashes');
- await db.exec(fs.readFileSync('supabase/proposals/optional_lineups.sql','utf8'));
+ await db.exec(fs.readFileSync('supabase/migrations/20261013235234_optional_lineups.sql','utf8'));
  await db.exec(`select set_config('request.jwt.claim.sub','${id(1)}',false);set role authenticated;`);
  const rpc=async(name,args)=>{const r=await db.query(`select public.${name}(${args.map((_,i)=>'$'+(i+1)).join(',')}) result`,args);return r.rows[0].result};
  const read=()=>rpc('da_read_scoring_season',[id(10),id(11),'Overall']);
