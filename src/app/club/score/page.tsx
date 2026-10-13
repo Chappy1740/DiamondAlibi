@@ -84,11 +84,11 @@ export default async function ScorePage({
         <ProfileMenu context={context} />
       </header>
       <Link className="text-link" href={competitionId ? `${competitionPath(competitionKind, competitionId)}?${context}` : `/?${context}`}>{competitionId ? `Back to ${competitionKind.toLowerCase()}` : "Home"}</Link>
-      <div className="page-heading">
+      <div className={setupMode ? "page-heading" : "scoring-page-heading"}>
         <div>
-          <span className="eyebrow">{setupMode ? setupNumber ? `Game ${setupNumber} · Tournament` : query.tournament ? "New tournament game" : "New league game" : "Team scorebook"}</span>
-          <h1>{setupMode ? tournament?.name ?? league?.name ?? "Set up a game" : team.name}</h1>
-          <p>{setupMode ? `${team.name} · ${season.name}` : `${season.name} · Everyone on this team can score for everyone.`}</p>
+          <span className="eyebrow">{setupMode ? setupNumber ? `Game ${setupNumber} · Tournament` : query.tournament ? "New tournament game" : "New league game" : ""}</span>
+          <h1>{setupMode ? tournament?.name ?? league?.name ?? "Set up a game" : "Scorebook"}</h1>
+          <p>{setupMode ? `${team.name} · ${season.name}` : ""}</p>
         </div>
       </div>
       <ConnectedScorebook

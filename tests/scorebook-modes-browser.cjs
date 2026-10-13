@@ -16,7 +16,7 @@ const assert = require("node:assert/strict");
       const query=new URLSearchParams(location.search);window.__writes=[];window.__writeResult='invalid';window.__reloadStatus='ok';
       if(query.has('empty')){data.snapshot.games=data.snapshot.games.filter(g=>!g.game.tournament_id);data.bands=[];}
       window.__fixture=data;
-      if(query.has('page')) ScorePage({searchParams:Promise.resolve({setup:'1',tournament:query.get('tournament')||undefined,league:query.get('league')||undefined})}).then(ui=>createRoot(document.getElementById('app')).render(ui));
+      if(query.has('page')) ScorePage({searchParams:Promise.resolve({setup:query.has('scoring-page')?undefined:'1',game:query.has('scoring-page')?'cup-game':undefined,tournament:query.get('tournament')||undefined,league:query.get('league')||undefined})}).then(ui=>createRoot(document.getElementById('app')).render(ui));
       else
       createRoot(document.getElementById('app')).render(<main className="connected-wrap"><h1>Synthetic scorebook</h1><ConnectedScorebook storageKey="synthetic.mode-test" teamId="synthetic-team" seasonId="synthetic-season" initial={{status:'ok',data}} mode={query.get('mode')||'score'} initialGameId={query.get('game')||''} initialLeagueId={query.get('league')||''} initialTournamentId={query.get('tournament')||''} submitAction={async(input)=>{window.__writes.push(input);return{status:'invalid'}}} reloadAction={async()=>({status:'ok',data})}/></main>);
     `},bundle:true,write:false,platform:"browser",jsx:"automatic",plugins:[{name:"synthetic-page-context",setup(build){
@@ -51,16 +51,16 @@ const assert = require("node:assert/strict");
       assert.equal(await picker.getByRole("button",{name,exact:true}).getAttribute("aria-pressed"),"true");
       assert.equal(await picker.locator('[aria-pressed="true"]').count(),1);
       assert.equal(await page.getByLabel("Runs on this play",{exact:true}).inputValue(),String(runs));
-      assert.equal(await page.getByLabel("RBI on this play",{exact:true}).inputValue(),String(runs));
+      assert.equal(await page.locator('input[name="at-bat-rbi"]').inputValue(),String(runs));
     }
     assert.deepEqual(await page.evaluate(()=>window.__writes),[]);
     const hr=picker.getByRole("button",{name:"Fence home run",exact:true});
     await hr.focus();await page.keyboard.press("Space");
     await page.getByLabel("Runs on this play",{exact:true}).fill("2");
-    await page.getByLabel("RBI on this play",{exact:true}).fill("2");
+    await page.getByRole("button",{name:"2 RBI",exact:true}).click();
     await hr.click();
     assert.equal(await page.getByLabel("Runs on this play",{exact:true}).inputValue(),"2");
-    assert.equal(await page.getByLabel("RBI on this play",{exact:true}).inputValue(),"2");
+    assert.equal(await page.locator('input[name="at-bat-rbi"]').inputValue(),"2");
     await picker.getByRole("button",{name:"Out",exact:true}).click();await hr.click();
     for(const width of [320,390,430,800,1440]){
       await page.setViewportSize({width,height:900});
@@ -73,15 +73,37 @@ const assert = require("node:assert/strict");
       })),true,`Readable outcome labels and touch targets at ${width}px`);
     }
     await page.setViewportSize({width:390,height:844});
-    if(process.env.BATTING_SCREENSHOT)await picker.screenshot({path:process.env.BATTING_SCREENSHOT});
+    const savePlay=page.getByRole("button",{name:"Record plate appearance",exact:true});
+    if(process.env.BATTING_SCREENSHOT)await page.locator('.at-bat-card').screenshot({path:process.env.BATTING_SCREENSHOT});
+    const atBatSize=await savePlay.evaluate(el=>({height:el.getBoundingClientRect().bottom-document.querySelector('.at-bat-card').getBoundingClientRect().top,form:document.querySelector('.at-bat-form').getBoundingClientRect().height,picker:document.querySelector('.batting-outcomes').getBoundingClientRect().height}));
+    assert.equal(atBatSize.height<660,true,JSON.stringify(atBatSize));
+    assert.equal(await page.getByText("Score and inning have not been recorded.",{exact:true}).isVisible(),false);
+    assert.equal(await page.getByLabel("New fence HR limit",{exact:true}).isVisible(),false);
+    for(const value of [1,2,3,4,0]){
+      await page.getByRole("button",{name:`${value} RBI`,exact:true}).click();
+      assert.equal(await page.locator('input[name="at-bat-rbi"]').inputValue(),String(value));
+      assert.equal(await page.getByRole("button",{name:`${value} RBI`,exact:true}).getAttribute("aria-pressed"),"true");
+      assert.equal(Number(await page.getByLabel("Runs on this play",{exact:true}).inputValue())>=value,true);
+    }
+    await picker.getByRole("button",{name:"Out",exact:true}).click();await hr.click();
+    if(process.env.BATTING_SCREENSHOT)await page.locator('.at-bat-card').screenshot({path:process.env.BATTING_SCREENSHOT});
+    await page.getByRole("button",{name:"2 RBI",exact:true}).click();
     await page.getByRole("button",{name:"Record plate appearance",exact:true}).click();
     assert.equal(await page.evaluate(()=>window.__writes.length),1);
-    assert.deepEqual(await page.evaluate(()=>{const c=window.__writes[0].change;return{type:c.type,outcome:c.outcome,runs:c.runs,rbi:c.rbi}}),{type:"score",outcome:"Fence HR",runs:1,rbi:1});
+    assert.deepEqual(await page.evaluate(()=>{const c=window.__writes[0].change;return{type:c.type,outcome:c.outcome,runs:c.runs,rbi:c.rbi}}),{type:"score",outcome:"Fence HR",runs:2,rbi:2});
     await page.goto(`${base}/?mode=score&game=league-game&league=synthetic-league`);
     await page.getByRole("group",{name:"Batting outcome",exact:true}).waitFor();
     await page.evaluate(()=>{Object.defineProperty(navigator,'onLine',{configurable:true,value:false});window.dispatchEvent(new Event('offline'))});
+    await page.waitForFunction(()=>document.querySelector('.batting-outcomes button').disabled);
     assert.equal(await page.getByRole("group",{name:"Batting outcome",exact:true}).getByRole("button",{name:"Fence home run",exact:true}).isDisabled(),true);
     assert.equal(await page.getByRole("button",{name:"Record plate appearance",exact:true}).isDisabled(),true);
+    await page.goto(`${base}/?page=1&scoring-page=1&tournament=synthetic-cup`);
+    await page.getByRole("group",{name:"Batting outcome",exact:true}).waitFor();
+    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+    assert.equal(await page.getByRole("button",{name:"Record plate appearance",exact:true}).evaluate(el=>el.getBoundingClientRect().bottom<800),true);
+    assert.equal(await page.getByText("Score and inning have not been recorded.",{exact:true}).isVisible(),false);
+    assert.equal(await page.getByRole("button",{name:"Start Game 2",exact:true}).isVisible(),false);
+    if(process.env.PAGE_SCREENSHOT)await page.screenshot({path:process.env.PAGE_SCREENSHOT,fullPage:true});
     await page.goto(`${base}/?mode=setup&league=synthetic-league`);
     await page.getByRole("form",{name:"Set up a game",exact:true}).waitFor();
     assert.equal(await page.getByRole("button",{name:"Record plate appearance",exact:true}).count(),0);
@@ -165,6 +187,6 @@ const assert = require("node:assert/strict");
     await page.getByText("That game is unavailable in this scorebook.",{exact:false}).waitFor();
     assert.equal(await page.getByRole("button",{name:"Record plate appearance",exact:true}).count(),0);
     assert.deepEqual(await page.evaluate(()=>window.__writes),[]);assert.deepEqual(errors,[]);
-    console.log(`PASS ${process.env.BROWSER_ENGINE || "chromium"} grouped outcome buttons: all nine choices, selected/keyboard state, HR defaults/reset, no write until confirmed, unchanged score payload, offline disabling and readable touch targets at 320–1440px. Compact setup: actual page heading, first/next-game primary actions above the fold, native date containment, hidden-field validation, preserved HR/Bands payloads and prominent uncertain/offline handling. Score/setup modes: selected competition isolation, no unrelated scoring during setup, inherited zero/2 limits, opponent-only tournament continuation, collapsed statistics/audit, missing-game denial and mobile overflow. Synthetic services only; no hosted writes.`);
+    console.log(`PASS ${process.env.BROWSER_ENGINE || "chromium"} compact at-bat: 0–4 RBI buttons with visible runs, batter/outcome/save first and game/HR/score/history below; actual page primary controls within 800px. Grouped outcome buttons: all nine choices, selected/keyboard state, HR defaults/reset, no write until confirmed, unchanged score payload, offline disabling and readable touch targets at 320–1440px. Compact setup: actual page heading, first/next-game primary actions above the fold, native date containment, hidden-field validation, preserved HR/Bands payloads and prominent uncertain/offline handling. Score/setup modes: selected competition isolation, no unrelated scoring during setup, inherited zero/2 limits, opponent-only tournament continuation, collapsed statistics/audit, missing-game denial and mobile overflow. Synthetic services only; no hosted writes.`);
   } finally{if(browser)await browser.close();if(server)await new Promise(resolve=>server.close(resolve));}
 })().catch(error=>{console.error(error);process.exitCode=1;});
