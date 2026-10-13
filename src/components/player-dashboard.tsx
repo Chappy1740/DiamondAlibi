@@ -12,6 +12,7 @@ import { personalDashboard } from "@/lib/personal-dashboard";
 import { emptyTotals, rates, type Scope, type Totals } from "@/lib/scoring";
 import type { LoadedScorebook } from "@/lib/scorebook-view";
 import { DashboardRefresh } from "./dashboard-refresh";
+import { DashboardSelect } from "./dashboard-select";
 import { PersonalAlibis } from "./personal-alibis";
 import { GameScoreboardPanel } from "./game-scoreboard";
 import { connectedScoreboard } from "@/lib/game-scoreboard";
@@ -137,6 +138,34 @@ export function PlayerDashboard(p: DashboardProps) {
           </Link>
         </article>
       ));
+  const contextControls = (
+    <section className="dashboard-context-panel" aria-label="Team, season and statistics controls">
+          <form
+            className="dashboard-context"
+            method="get"
+            action={p.review ? "/review/history" : `/${p.route}`}
+          >
+            {p.sample && <input type="hidden" name="sample" value="1" />}
+            {p.review && <input type="hidden" name="route" value={p.route} />}
+            <DashboardSelect label="Team" name="team" value={p.teamId} options={p.teams} />
+            <DashboardSelect label="Season" name="season" value={p.seasonId} options={p.seasons.map((s) => ({ id: s.id, name: `${s.name}${s.archived ? " · history" : ""}` }))} />
+            <DashboardSelect label="Personal stats" accessibleLabel="Statistics view" name="scope" value={p.scope} options={["Overall", "League", "Tournament"].map((name) => ({ id: name, name }))} />
+            {p.sample && <DashboardSelect label="Sample player" name="player" value={p.userId} options={loaded?.roster.map((r) => ({ id: r.user_id ?? "", name: r.display_name })) ?? []} />}
+            <button className="button secondary">Apply context</button>
+          </form>
+      {!p.sample && <DashboardRefresh />}
+          <p className="connection-notice dashboard-notice">
+            {p.sample
+              ? "Sample history · 12 players · four 16-game league seasons · seven tournaments. These records are separate from your clubhouse."
+              : "Your clubhouse records · everyone on the team can score for everyone."}{" "}
+            {!p.review && (
+              <Link className="text-link" href={p.sample ? "/" : "/?sample=1"}>
+                {p.sample ? "Use my account" : "Explore sample history"}
+              </Link>
+            )}
+          </p>
+    </section>
+  );
   return (
     <>
       <a className="skip-link" href="#main">
@@ -155,86 +184,14 @@ export function PlayerDashboard(p: DashboardProps) {
 
         </header>
         <div className="content-wrap">
-          <p className="connection-notice dashboard-notice">
-            {p.sample
-              ? "Sample history · 12 players · four 16-game league seasons · seven tournaments. These records are separate from your clubhouse."
-              : "Your clubhouse records · everyone on the team can score for everyone."}{" "}
-            {!p.review && (
-              <Link className="text-link" href={p.sample ? "/" : "/?sample=1"}>
-                {p.sample ? "Use my account" : "Explore sample history"}
-              </Link>
-            )}
-          </p>
-          <form
-            className="dashboard-context"
-            method="get"
-            action={p.review ? "/review/history" : `/${p.route}`}
-          >
-            {p.sample && <input type="hidden" name="sample" value="1" />}
-            {p.review && <input type="hidden" name="route" value={p.route} />}
-            <label>
-              Team
-              <select aria-label="Team" name="team" defaultValue={p.teamId}>
-                {p.teams.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Season
-              <select
-                aria-label="Season"
-                name="season"
-                defaultValue={p.seasonId}
-              >
-                {p.seasons.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                    {s.archived ? " · history" : ""}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Personal stats
-              <select
-                aria-label="Statistics view"
-                name="scope"
-                defaultValue={p.scope}
-              >
-                {["Overall", "League", "Tournament"].map((s) => (
-                  <option key={s}>{s}</option>
-                ))}
-              </select>
-            </label>
-            {p.sample && (
-              <label>
-                Sample player
-                <select
-                  aria-label="Sample player"
-                  name="player"
-                  defaultValue={p.userId}
-                >
-                  {loaded?.roster.map((r) => (
-                    <option key={r.id} value={r.user_id ?? ""}>
-                      {r.display_name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-            <button className="button secondary">Apply context</button>
-          </form>
-          {!p.sample && <DashboardRefresh />}
+          {p.route !== "" && contextControls}
           <main id="main" tabIndex={-1}>
             {p.route !== "more/alibi" && <div className="page-heading">
               <div>
-                <span className="eyebrow">
+                {p.route !== "" && <span className="eyebrow">
                   {team?.name ?? "Your team"} ·{" "}
                   {season?.name ?? "Choose a season"} · {p.scope}
-                </span>
+                </span>}
                 <h1>
                   {p.route === ""
                     ? `Your game, ${view?.player?.name ?? "Player"}.`
@@ -290,6 +247,7 @@ export function PlayerDashboard(p: DashboardProps) {
                 {p.error} <Link href={href(p.route)}>Retry</Link>
               </p>
             )}
+            {p.route === "" && !loaded && contextControls}
             {!loaded && !p.error && (
               <section className="card detail-card">
                 <h2>Your season starts here</h2>
@@ -318,6 +276,7 @@ export function PlayerDashboard(p: DashboardProps) {
                     )}
                     <section className="card detail-card">
                       <h2>My season</h2>
+                      <p className="dashboard-selected-context">{team?.name} · {season?.name} · {p.scope}</p>
                       {view?.statistics ? (
                         <div className="dashboard-metrics">
                           <span>
@@ -351,6 +310,7 @@ export function PlayerDashboard(p: DashboardProps) {
                         All player statistics
                       </Link>
                     </section>
+                    {contextControls}
                     <details className="card detail-card">
                       <summary>Season activity</summary>
                       <p>
