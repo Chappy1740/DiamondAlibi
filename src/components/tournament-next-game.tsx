@@ -1,4 +1,5 @@
 "use client";
+import { revealInvalidField } from "@/lib/form-details";
 import { useEffect, useState } from "react";
 import type { LoadedScorebook } from "@/lib/scorebook-view";
 import type { TournamentContinuation } from "@/lib/tournament-continuation";
@@ -23,6 +24,7 @@ export function TournamentNextGame({
   disabled,
   submit,
   otherCompetition,
+  compact = false,
 }: {
   template: TournamentContinuation;
   data: LoadedScorebook;
@@ -30,6 +32,7 @@ export function TournamentNextGame({
   disabled: boolean;
   submit(form: FormData): Promise<boolean | undefined>;
   otherCompetition(): void;
+  compact?: boolean;
 }) {
   // Preserve an in-progress draft during polling and other players' saves.
   const [seed, setSeed] = useState(template);
@@ -47,7 +50,8 @@ export function TournamentNextGame({
   }, [accepted, template]);
   return (
     <form
-      className="club-form tournament-next-game"
+      className={`club-form tournament-next-game${compact ? " game-setup-form" : ""}`}
+      onInvalidCapture={(e) => revealInvalidField(e.target)}
       aria-label={`Next game for ${template.tournament.name}`}
       onSubmit={async (e) => {
         e.preventDefault();
@@ -59,10 +63,10 @@ export function TournamentNextGame({
       }}
     >
       <fieldset disabled={disabled}>
-        <p>
+        {!compact && <p>
           Game {number} · {date} · Reuses the lineup and beverage rules.
           Tournament HR limit: {template.tournament.fenceLimit}.
-        </p>
+        </p>}
         <label>
           Opponent
           <input
@@ -73,7 +77,9 @@ export function TournamentNextGame({
             required
           />
         </label>
-        <details>
+        <button className="button primary" type="submit">Start Game {number}</button>
+        {compact && <p className="setup-summary">Fence HR limit: {template.tournament.fenceLimit} · Lineup, HR Bands and Beverage rules retained.</p>}
+        <details className="setup-details">
           <summary>Edit game settings</summary>
           <div key={seed.game.game.id}>
             <label>
@@ -181,7 +187,6 @@ export function TournamentNextGame({
             Set up a different league or tournament
           </button>
         </details>
-        <button className="button primary">Start Game {number}</button>
       </fieldset>
     </form>
   );

@@ -74,18 +74,21 @@ export default async function ScorePage({
   const competitionId = tournament?.id ?? league?.id ?? game?.game.tournament_id ?? game?.game.league_id;
   const competitionKind = tournament || game?.game.kind === "Tournament" ? "Tournament" : "League";
   const context = contextQuery(team.id, season.id);
+  const setupMode = query.setup === "1" || (!query.game && initial.status === "ok" && !initial.data.snapshot.games.length);
+  const setupNumber = tournament && initial.status === "ok"
+    ? initial.data.snapshot.games.filter((g) => g.game.tournament_id === tournament.id).length + 1 : null;
   return (
-    <main className="connected-wrap">
+    <main className={`connected-wrap${setupMode ? " game-setup-page" : ""}`}>
       <header className="connected-header" style={{ flexWrap: "wrap" }}>
         <BrandLink href={`/?${context}`} />
         <ProfileMenu context={context} />
       </header>
-      <Link className="text-link" href={competitionId ? `${competitionPath(competitionKind, competitionId)}?${context}` : `/?${context}`}>{competitionId ? "Competition games & settings" : "Home"}</Link>
+      <Link className="text-link" href={competitionId ? `${competitionPath(competitionKind, competitionId)}?${context}` : `/?${context}`}>{competitionId ? `Back to ${competitionKind.toLowerCase()}` : "Home"}</Link>
       <div className="page-heading">
         <div>
-          <span className="eyebrow">Team scorebook</span>
-          <h1>{team.name}</h1>
-          <p>{season.name} · Everyone on this team can score for everyone.</p>
+          <span className="eyebrow">{setupMode ? setupNumber ? `Game ${setupNumber} · Tournament` : query.tournament ? "New tournament game" : "New league game" : "Team scorebook"}</span>
+          <h1>{setupMode ? tournament?.name ?? league?.name ?? "Set up a game" : team.name}</h1>
+          <p>{setupMode ? `${team.name} · ${season.name}` : `${season.name} · Everyone on this team can score for everyone.`}</p>
         </div>
       </div>
       <ConnectedScorebook
@@ -96,7 +99,7 @@ export default async function ScorePage({
         initial={initial}
         initialGameId={query.game}
         initialLeagueId={league?.id}
-        mode={query.setup === "1" || (!query.game && initial.status === "ok" && !initial.data.snapshot.games.length) ? "setup" : "score"}
+        mode={setupMode ? "setup" : "score"}
         initialTournamentId={
           initial.status === "ok" &&
           initial.data.snapshot.tournaments.some(
