@@ -863,8 +863,7 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
     assert.equal((await load()).data.snapshot.games[0].game.team_runs, 8);
     assert.equal((await load()).data.snapshot.games[0].game.inning, 3);
     await page
-      .getByLabel("Batting outcome", { exact: true })
-      .selectOption("Fence HR");
+      .getByRole("group", { name: "Batting outcome", exact: true }).getByRole("button", { name: "Fence home run", exact: true }).click();
     await page
       .getByRole("button", { name: "Record plate appearance", exact: true })
       .click();
@@ -937,8 +936,7 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
     await page.getByRole("button", { name: "Start game", exact: true }).click();
     await saved();
     await page
-      .getByLabel("Batting outcome", { exact: true })
-      .selectOption("Fence HR");
+      .getByRole("group", { name: "Batting outcome", exact: true }).getByRole("button", { name: "Fence home run", exact: true }).click();
     await page
       .getByRole("button", { name: "Record plate appearance", exact: true })
       .click();
@@ -1054,7 +1052,7 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
       })
       .click();
     fault = "uncertain";
-    await page.getByLabel("Batting outcome", { exact: true }).selectOption("K");
+    await page.getByRole("group", { name: "Batting outcome", exact: true }).getByRole("button", { name: "Strikeout", exact: true }).click();
     await page
       .getByRole("button", { name: "Record plate appearance", exact: true })
       .click();
@@ -1104,8 +1102,7 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
       })
       .waitFor();
     await page
-      .getByLabel("Batting outcome", { exact: true })
-      .selectOption("BB");
+      .getByRole("group", { name: "Batting outcome", exact: true }).getByRole("button", { name: "Walk", exact: true }).click();
     await page
       .getByRole("button", { name: "Record plate appearance", exact: true })
       .click();
