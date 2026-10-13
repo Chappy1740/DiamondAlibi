@@ -65,7 +65,7 @@ export function CompetitionForm({ team, season, kind, archived, existing }: {
       name: existing?.name ?? String(form.get("name")).trim(), fenceLimit: Number(form.get("fenceLimit")),
       guaranteedGames: kind === "Tournament" ? existing ? existing.guaranteedGames ?? null : (form.get("guaranteedGames") ? Number(form.get("guaranteedGames")) : null) : null });
   }
-  if (fixed) return <>
+  if (fixed && existing) return <>
     <p>Saved fence HR limit: <strong>{existing.fenceLimit}</strong> per game. HRs used reset each game.</p>
     {kind === "Tournament" && <p>{existing.guaranteedGames ? `${existing.guaranteedGames}-game guaranteed` : "Guarantee unspecified"}. The guarantee is a minimum, not a cap.</p>}
     <p className="micro">Competition defaults are retained. Set a game exception or correct a game's HR limit in its scorebook with a reason.</p>
@@ -76,8 +76,8 @@ export function CompetitionForm({ team, season, kind, archived, existing }: {
         <label>{kind} name<input name="name" maxLength={200} defaultValue={existing?.name} readOnly={!!existing} required /></label>
         <label>Fence HR limit<input name="fenceLimit" type="number" min={0} max={100} defaultValue={existing?.fenceLimit ?? ""} required /></label>
         {kind === "Tournament" && !existing && <label>Games guaranteed
-          <select name="guaranteedGames" defaultValue={existing?.guaranteedGames ?? ""} required={!existing}>
-            <option value="">{existing ? "Unspecified" : "Choose games guaranteed"}</option>
+          <select name="guaranteedGames" defaultValue="" required>
+            <option value="">Choose games guaranteed</option>
             <option value="2">2-game guaranteed</option><option value="3">3-game guaranteed</option>
           </select>
         </label>}

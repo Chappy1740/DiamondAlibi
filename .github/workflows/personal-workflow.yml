@@ -20,6 +20,7 @@ jobs:
       - run: node tests/personal-alibis-sql.cjs
       - run: node tests/dashboard-loader.cjs
       - run: npx playwright install --with-deps chromium
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
       - run: node tests/personal-workflow-browser.cjs
       - run: node tests/scorebook-modes-browser.cjs
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
