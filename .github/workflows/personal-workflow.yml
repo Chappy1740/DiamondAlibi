@@ -22,6 +22,8 @@ jobs:
       - run: npx playwright install --with-deps chromium webkit
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
       - run: node tests/personal-workflow-browser.cjs
+      - run: node tests/home-layout-browser.cjs
+      - run: BROWSER_ENGINE=webkit node tests/home-layout-browser.cjs
       - run: node tests/scorebook-modes-browser.cjs
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
       - run: BROWSER_ENGINE=webkit node tests/scorebook-modes-browser.cjs
