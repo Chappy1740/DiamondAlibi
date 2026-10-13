@@ -2,15 +2,15 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 42,
+  revision: 43,
   updatedAt: "2026-10-13",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
   release: {
-    commit: "ab2ac0e",
-    label: "Authenticated sign-out controls",
+    commit: "39d7170",
+    label: "Personal Home, competitions, profiles and alibi editing",
     status:
-      "Sign-out controls added in e9fb665; ab2ac0e triggered the configured main build. Owner screenshot reported active Worker d40cf3c5. Owner accepted dashboard sign-out to login, signed-out Back/refresh and protected /club. Scorebook control visible; its logout flow remains untested. Dashboard/competition/profile and private alibi work is a draft, not deployed or hosted-accepted.",
+      "Sign-out controls added in e9fb665; ab2ac0e triggered the configured main build. Owner screenshot reported active Worker d40cf3c5. Owner accepted dashboard sign-out to login, signed-out Back/refresh and protected /club. Scorebook control visible; its logout flow remains untested. Personal workflow source 39d7170 passed GitHub validation (66 unit checks, disposable alibi RLS, dashboard loader, actual React/browser workflows, full connected scorebook regression, Worker build and built Next.js pages). Preview publication proceeds through the authorized main Git build. Hosted acceptance remains open; private alibi persistence is unapplied.",
   },
   milestones: [
     {
@@ -279,8 +279,8 @@ export const projectTracker: ProjectTracker = {
           group: "Personal workflow redesign",
           title: "Make Home personal, add profile control and competition pages, compact phone setup",
           status: "implemented",
-          evidence: "Draft implementation reuses authorized snapshots and existing scoring commands. Login returns Home; leagues/tournaments have games/settings pages; profile menu includes bio, settings, team management and sign-out. Bio uses existing user metadata only as profile text. 51 focused synthetic checks pass locally; typecheck, build, SQL and app-browser checks cannot run locally because dependencies are unavailable through the unreachable proxy.",
-          next: "Run dependency-backed validation and security checks, then publish the verified scope and test hosted behavior. Physical iPhone acceptance and scorebook logout remain open.",
+          evidence: "Implementation reuses authorized snapshots and existing scoring commands. Login returns Home; leagues/tournaments have games/settings pages; profile menu includes bio, settings, team management and sign-out. Bio uses existing user metadata only as profile text. 55 focused synthetic checks passed locally. Source 39d7170 passed all GitHub checks: 66 unit checks, typecheck, disposable ownership/RLS SQL, actual React workflows, score/setup modes, complete connected scoring regression, Worker build and built Next.js route/mobile checks. Shell dependency installation remains blocked by its unreachable proxy; CI supplied the dependency-backed validation.",
+          next: "Verify the protected main build and hosted behavior, then guide physical iPhone acceptance one step at a time. Scorebook logout still needs a separate owner check.",
           kind: "work",
         },
       ],
@@ -568,8 +568,8 @@ export const projectTracker: ProjectTracker = {
           group: "M4.5 Social/integration",
           title: "Write, generate, edit and privately save personal alibis",
           status: "in_progress",
-          evidence: "Draft editor and session-verified service implement write/generate/edit/save, reopen/copy/share/edit/delete, revision conflicts and uncertain-save retries. New account-owned persistence SQL and disposable RLS/browser tests are prepared. No live alibi table exists and no proposal has been applied. Saving stays disabled until setup is available.",
-          next: "Pass disposable SQL/UI/build checks; review and approve the exact persistence proposal before live application; verify isolated cross-account and cross-device saving, deletion and phone copy/share.",
+          evidence: "Editor and session-verified service implement write/generate/edit/save, reopen/copy/share/edit/delete, revision conflicts and uncertain-save retries. New account-owned persistence SQL passed disposable owner/nonowner/anonymous/forged-owner/retry/conflict/delete/cascade tests in GitHub validation; React editor save/reopen/edit/copy/share/delete tests passed with synthetic transport. No live alibi table exists and no proposal has been applied. Saving stays disabled until setup is available.",
+          next: "Approve the exact reviewed persistence proposal before live application, verify live grants/RLS/advisors with isolated synthetic accounts, and complete cross-device saving/deletion and phone copy/share acceptance.",
           kind: "work",
         },
         {
@@ -719,7 +719,7 @@ export const projectTracker: ProjectTracker = {
           title: "Record reviewed source and deployment receipts",
           status: "done",
           evidence:
-            "Sign-out source e9fb665 and build trigger ab2ac0e on main; owner screenshot reported active Worker d40cf3c5. New dashboard/alibi changes remain a draft pending build/browser and hosted checks.",
+            "Sign-out source e9fb665 and build trigger ab2ac0e on main; owner screenshot reported active Worker d40cf3c5. PR #2 source 39d7170 passed automated build/browser/security checks; main Git delivery remains distinct from hosted owner acceptance. Live schema proposal remains unapplied.",
           next: "",
           kind: "work",
         },
@@ -788,7 +788,7 @@ export const projectTracker: ProjectTracker = {
   changes: [
     {
       title: "Personal dashboard, profile, competitions and private alibis",
-      status: "Draft implementation and persistence proposal; 51 local focused checks passed. Dependency-backed and hosted validation pending; no live schema change applied",
+      status: "Implemented with 55 local focused checks and all GitHub checks passing on source 39d7170, including 66 unit checks, disposable RLS, React/Next.js browsers, scoring regression, typecheck and Worker build. Hosted acceptance pending; private persistence proposal remains unapplied",
       milestone: "M3",
     },
     {
