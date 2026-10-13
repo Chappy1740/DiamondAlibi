@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
       const response = NextResponse.redirect(
-        new URL(resetting ? "/reset-password" : "/club", request.url),
+        new URL(resetting ? "/reset-password" : "/", request.url),
       );
       response.headers.set("Cache-Control", "private, no-store");
       return response;

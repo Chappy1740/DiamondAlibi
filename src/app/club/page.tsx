@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { ClubForm } from "@/components/club-form";
 import { BrandLink } from "@/components/brand-link";
-import { signout } from "@/app/login/actions";
+import { ProfileMenu } from "@/components/profile-menu";
 export const dynamic = "force-dynamic";
 type Team = { id: string; name: string };
 type Membership = {
@@ -25,7 +25,7 @@ type Invite = {
 export default async function ClubPage({
   searchParams,
 }: {
-  searchParams: Promise<{ notice?: string }>;
+  searchParams: Promise<{ notice?: string; team?: string; season?: string }>;
 }) {
   const supabase = await supabaseServer();
   const {
@@ -33,6 +33,7 @@ export default async function ClubPage({
     error: authError,
   } = await supabase.auth.getUser();
   if (authError || !user) redirect("/login");
+  const query = await searchParams;
   const jar = await cookies();
   const [profileResult, teamsResult, membershipResult] = await Promise.all([
     supabase
@@ -51,7 +52,7 @@ export default async function ClubPage({
     profileResult.error || teamsResult.error || membershipResult.error;
   const teams = (teamsResult.data ?? []) as Team[];
   const selected =
-    teams.find((t) => t.id === jar.get("da-team")?.value) ?? teams[0];
+    teams.find((t) => t.id === (query.team ?? jar.get("da-team")?.value)) ?? teams[0];
   const mine = ((membershipResult.data ?? []) as Membership[]).find(
     (m) => m.team_id === selected?.id,
   );
@@ -80,23 +81,21 @@ export default async function ClubPage({
     detailError = Boolean(s.error || p.error || i.error);
   }
   const season =
-    seasons.find((s) => s.id === jar.get("da-season")?.value) ??
+    seasons.find((s) => s.id === (query.season ?? jar.get("da-season")?.value)) ??
     seasons.find((s) => !s.archived) ??
     seasons[0];
-  const { notice } = await searchParams;
+  const { notice } = query;
   return (
     <main className="connected-wrap">
       <header className="connected-header">
         <BrandLink className="header-logo" href="/" variant="primary" />
-        <form action={signout}>
-          <button className="button secondary">Sign out</button>
-        </form>
+        <ProfileMenu />
       </header>
       <div className="page-heading">
         <div>
           <span className="eyebrow">Connected to your clubhouse</span>
-          <h1>Welcome, {nickname}.</h1>
-          <p>Your teams, seasons and scorebook share the same clubhouse.</p>
+          <h1>Team management</h1>
+          <p>{nickname} · Your teams, roster and season history.</p>
         </div>
       </div>
       {(failed || detailError) && (
@@ -213,7 +212,7 @@ export default async function ClubPage({
           <section className="card detail-card">
             <h2>Seasons</h2>
             {season && (
-              <Link className="button primary" href="/club/score">
+              <Link className="button primary" href={`/club/score?${new URLSearchParams({team: selected.id, season: season.id})}`}>
                 Open team scorebook
               </Link>
             )}
@@ -315,7 +314,7 @@ export default async function ClubPage({
         </section>
       </div>
       <Link className="text-link" href="/">
-        Return to the synthetic shell preview
+        Return Home
       </Link>
     </main>
   );

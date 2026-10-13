@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import Link from "next/link";
+import { AlibiEditor } from "./alibi-editor";
 import { BrandLink } from "./brand-link";
 import { usePathname } from "next/navigation";
 import {
@@ -788,122 +789,8 @@ function Seasons() {
     </>
   );
 }
-export function Alibi() {
-  const [category, setCategory] = useState("New Gear");
-  const [alibi, setAlibi] = useState("");
-  const [message, setMessage] = useState("");
-  const [canShare, setCanShare] = useState(false);
-  const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    setCanShare(typeof navigator.share === "function");
-  }, []);
-  const phrases: Record<string, string[]> = {
-    "New Gear": [
-      "No dear, I have had this bat for years.",
-      "What do you mean I have enough bats? Don't you have enough shoes?",
-    ],
-    "At Home": [
-      "I was checking the weather. For the entire game.",
-      "I said one more inning. I never said which inning.",
-    ],
-    "Bad Plays": [
-      "The sun was in my eyes. Yes, under the lights.",
-      "That wasn't a missed catch. It was a ground inspection.",
-    ],
-    "Team Shenanigans": [
-      "That was a team-building exercise with unusually bad timing.",
-      "We were testing the mercy rule. Very thoroughly.",
-    ],
-  };
-  return (
-    <>
-      <PageHeading
-        eyebrow="Your side of the story"
-        title="Alibi Generator"
-        subtitle="The scorebook has facts. You have options."
-      />
-      <section className="card detail-card">
-        <label>
-          Category
-          <select
-            aria-label="Category"
-            value={category}
-            onChange={(e) => {
-              setCategory(e.target.value);
-              setAlibi("");
-              setMessage("");
-            }}
-          >
-            {Object.keys(phrases).map((c) => (
-              <option key={c}>{c}</option>
-            ))}
-          </select>
-        </label>
-        <button
-          className="button primary"
-          onClick={() => {
-            const pool = phrases[category].filter((phrase) => phrase !== alibi);
-            setAlibi(pool[Math.floor(Math.random() * pool.length)]);
-            setMessage("");
-          }}
-        >
-          Plead the Fifth? Nah. Generate an Alibi.
-        </button>
-        {alibi && <blockquote aria-live="polite">“{alibi}”</blockquote>}
-        {alibi && (
-          <div className="action-row">
-            <button
-              className="button secondary"
-              disabled={busy}
-              onClick={async () => {
-                setBusy(true);
-                try {
-                  await navigator.clipboard.writeText(alibi);
-                  setMessage("Alibi copied. Your defense is ready.");
-                } catch {
-                  setMessage(
-                    "Clipboard unavailable. Select the alibi text and copy it manually.",
-                  );
-                } finally {
-                  setBusy(false);
-                }
-              }}
-            >
-              Copy alibi
-            </button>
-            <button
-              className="button secondary"
-              disabled={busy || !canShare}
-              onClick={async () => {
-                setBusy(true);
-                try {
-                  await navigator.share({ text: alibi });
-                  setMessage("Share action handed to your device.");
-                } catch (error) {
-                  setMessage(
-                    error instanceof DOMException && error.name === "AbortError"
-                      ? "Sharing canceled. Your alibi stayed here."
-                      : "Sharing unavailable. Try copying the alibi instead.",
-                  );
-                } finally {
-                  setBusy(false);
-                }
-              }}
-            >
-              Share alibi
-            </button>
-          </div>
-        )}
-        <p role="status">{message}</p>
-        <p className="micro">
-          Prewritten local samples. Additional phrases are draft copy. Copy and
-          device sharing happen only when you press their buttons. If device
-          sharing is unavailable, use Copy alibi.
-        </p>
-      </section>
-    </>
-  );
-}
+export function Alibi() { return <AlibiEditor />; }
+
 function Profile() {
   const p = usePreview();
   return (

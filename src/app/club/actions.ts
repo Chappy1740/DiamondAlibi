@@ -22,7 +22,7 @@ export async function clubAction(
   const team = field(form, "team");
   const name = field(form, "name");
   const nickname = field(form, "nickname");
-  const isTeamAction = !["create-team", "join-team", "profile"].includes(
+  const isTeamAction = !["create-team", "join-team", "profile", "bio"].includes(
     operation,
   );
   if (isTeamAction && !uuid.test(team))
@@ -166,6 +166,12 @@ export async function clubAction(
         p_name: name,
       });
       break;
+    case "bio": {
+      const bio = field(form, "bio");
+      if (bio.length > 400) return { error: "Keep your bio within 400 characters." };
+      response = await supabase.auth.updateUser({ data: { bio } });
+      break;
+    }
     case "profile":
       response = await supabase.rpc("da_save_profile", {
         p_nickname: nickname,
@@ -180,5 +186,6 @@ export async function clubAction(
         "Could not save this change. Check your team access and try again. Names must be valid and season names unique.",
     };
   revalidatePath("/club");
+  revalidatePath("/more/profile");
   return { message: "Saved to your clubhouse." };
 }

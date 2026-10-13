@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { signout } from "@/app/login/actions";
+import { BrandLink } from "@/components/brand-link";
+import { ProfileMenu } from "@/components/profile-menu";
+import { competitionPath, contextQuery } from "@/lib/competitions";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
@@ -14,6 +16,8 @@ export default async function ScorePage({
     season?: string;
     game?: string;
     tournament?: string;
+    league?: string;
+    setup?: string;
   }>;
 }) {
   const query = await searchParams;
@@ -61,19 +65,22 @@ export default async function ScorePage({
       </main>
     );
   const initial = await loadScorebook(team.id, season.id, "Overall");
+  const tournament = initial.status === "ok" ? initial.data.snapshot.tournaments.find((t) => t.id === query.tournament) : undefined;
+  const league = initial.status === "ok" ? initial.data.snapshot.leagues?.find((l) => l.id === query.league) : undefined;
+  const game = initial.status === "ok" ? initial.data.snapshot.games.find((g) => g.game.id === query.game) : undefined;
+  if (initial.status === "ok" && ((query.tournament && !tournament) || (query.league && !league) || (query.game && !game) || (query.league && query.tournament))) {
+    return <main className="connected-wrap"><BrandLink href="/" /><h1>Scorebook unavailable</h1><p>The requested game or competition is not in this team and season.</p><Link href={`/?${contextQuery(team.id, season.id)}`}>Home</Link></main>;
+  }
+  const competitionId = tournament?.id ?? league?.id ?? game?.game.tournament_id ?? game?.game.league_id;
+  const competitionKind = tournament || game?.game.kind === "Tournament" ? "Tournament" : "League";
+  const context = contextQuery(team.id, season.id);
   return (
     <main className="connected-wrap">
       <header className="connected-header" style={{ flexWrap: "wrap" }}>
-        <Link className="compact-brand" href="/">
-          DIAMOND ALIBI<span className="accent">.</span>
-        </Link>
-        <Link className="button secondary" href="/club">
-          My clubhouse
-        </Link>
-        <form action={signout}>
-          <button className="button secondary" type="submit">Sign out</button>
-        </form>
+        <BrandLink href={`/?${context}`} />
+        <ProfileMenu context={context} />
       </header>
+      <Link className="text-link" href={competitionId ? `${competitionPath(competitionKind, competitionId)}?${context}` : `/?${context}`}>{competitionId ? "Competition games & settings" : "Home"}</Link>
       <div className="page-heading">
         <div>
           <span className="eyebrow">Team scorebook</span>
@@ -82,12 +89,14 @@ export default async function ScorePage({
         </div>
       </div>
       <ConnectedScorebook
-        key={`${user.id}-${team.id}-${season.id}-${query.game ?? ""}-${query.tournament ?? ""}`}
+        key={`${user.id}-${team.id}-${season.id}-${query.game ?? ""}-${query.tournament ?? ""}-${query.league ?? ""}-${query.setup ?? ""}`}
         storageKey={`diamond-alibi.pending.${user.id}.${team.id}.${season.id}`}
         teamId={team.id}
         seasonId={season.id}
         initial={initial}
         initialGameId={query.game}
+        initialLeagueId={league?.id}
+        mode={query.setup === "1" || (!query.game && initial.status === "ok" && !initial.data.snapshot.games.length) ? "setup" : "score"}
         initialTournamentId={
           initial.status === "ok" &&
           initial.data.snapshot.tournaments.some(
