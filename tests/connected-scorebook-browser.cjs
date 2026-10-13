@@ -941,12 +941,7 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
       .getByRole("button", { name: "Record plate appearance", exact: true })
       .click();
     await saved();
-    const bandSection = page.locator("section").filter({
-      has: page.getByRole("heading", {
-        name: "Tournament games and Band corrections",
-        exact: true,
-      }),
-    });
+    const bandSection = page.getByText("Tournament games and Band corrections", { exact: true }).locator("..");
     const nextForm = page.getByRole("form", {
       name: "Next game for Synthetic Cup",
       exact: true,

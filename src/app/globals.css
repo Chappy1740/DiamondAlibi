@@ -1779,23 +1779,41 @@ blockquote {
 .alibi-editor blockquote { overflow-wrap: anywhere; white-space: pre-wrap; }
 .team-scorebook > details { min-width: 0; }
 .team-scorebook > details > summary { font-weight: 700; }
-.batting-outcomes { display: grid; gap: 14px; margin: 8px 0 20px; min-width: 0; }
-.batting-outcome-heading { margin: 0 0 8px; color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
-.batting-outcome-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.batting-outcomes { display: grid; gap: 8px; margin: 6px 0 12px; min-width: 0; }
+.batting-outcomes .batting-outcome-heading { margin: 0 0 4px; color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+.batting-outcome-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
 .batting-outcome-group--out .batting-outcome-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .batting-outcome-group--other .batting-outcome-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .batting-outcome-group { --outcome-color: #8ee2c7; --outcome-background: #0d3533; }
 .batting-outcome-group--out { --outcome-color: #ffb5b5; --outcome-background: #35252e; }
 .batting-outcome-group--other { --outcome-color: #b5d3ff; --outcome-background: #172f4a; }
-.batting-outcome-grid button { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px; min-width: 0; min-height: 88px; padding: 10px 6px; border: 1px solid var(--border); border-radius: 10px; background: var(--outcome-background); color: var(--outcome-color); font: inherit; cursor: pointer; overflow-wrap: anywhere; }
-.batting-outcome-grid strong { font-size: clamp(18px, 5vw, 24px); line-height: 1.2; }
-.batting-outcome-grid span { font-size: 12px; line-height: 1.4; }
+.batting-outcome-grid button { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 3px; min-width: 0; min-height: 60px; padding: 6px 4px; border: 1px solid var(--border); border-radius: 10px; background: var(--outcome-background); color: var(--outcome-color); font: inherit; cursor: pointer; overflow-wrap: anywhere; }
+.batting-outcome-grid strong { font-size: 18px; line-height: 1.2; }
+.batting-outcome-grid span { font-size: 11px; line-height: 1.4; }
 .batting-outcome-grid button[aria-pressed="true"] { outline: 2px solid var(--outcome-color); outline-offset: -2px; box-shadow: inset 0 0 0 1px var(--outcome-color); }
-.batting-outcome-grid button::after { content: ""; height: 14px; line-height: 14px; font-size: 11px; font-weight: 700; }
-.batting-outcome-grid button[aria-pressed="true"]::after { content: "Selected"; }
 .batting-outcome-grid button:focus-visible { outline: 3px solid var(--white); outline-offset: 3px; }
 .batting-outcome-grid button:disabled { opacity: .55; cursor: default; }
-@media (max-width: 480px) { .batting-outcome-group--other .batting-outcome-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.scoring-page-heading { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.at-bat-card--compact > h2 { margin: 0; font-size: 20px; }
+.at-bat-card--compact > p { margin: 4px 0 10px; font-size: 12px; color: var(--muted); }
+.connected-wrap .at-bat-card--compact > h3 { margin: 8px 0; font-size: 18px; }
+.at-bat-form { margin: 8px 0 12px; }
+.team-scorebook .at-bat-form fieldset { min-width: 0; gap: 8px; }
+.at-bat-rbi { display: grid; gap: 6px; margin: 0; }
+.at-bat-rbi > span, .at-bat-runs { font-size: 12px; color: var(--muted); }
+.rbi-buttons { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.rbi-buttons button { min-height: 44px; min-width: 0; border: 1px solid var(--border); border-radius: 8px; color: var(--white); background: var(--surface); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.rbi-buttons button[aria-pressed="true"] { border: 2px solid var(--teal); background: #16485d; }
+.rbi-buttons button:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
+.rbi-buttons button:disabled { opacity: .55; cursor: default; }
+.team-scorebook .at-bat-runs { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0; }
+.team-scorebook .at-bat-runs input { width: 80px; margin: 0; min-height: 44px; }
+.at-bat-form .button.primary { width: 100%; min-height: 44px; margin: 0; }
+.team-scorebook--score { gap: 12px; }
+.team-scorebook--score > details { padding: 12px 0; margin: 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; background: transparent; }
+.team-scorebook details:not([open]) > :not(summary) { display: none; }
+.game-management, .at-bat-history, .game-switcher { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.game-management > summary, .at-bat-history > summary, .game-switcher > summary { cursor: pointer; font-size: 13px; }
 .dashboard-context-panel { margin-block: 20px; padding-top: 4px; border-top: 1px solid var(--border); }
 .dashboard-context-panel .dashboard-notice { margin-bottom: 0; }
 .dashboard-select { overflow: hidden; min-width: 0; max-width: 100%; position: relative; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 10px 12px; background: var(--surface); color: var(--white); border: 1px solid var(--border); border-radius: 8px; }

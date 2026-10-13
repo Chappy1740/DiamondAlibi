@@ -603,7 +603,7 @@ export function ConnectedScorebook({
     }
   }
   return (
-    <div className={`team-scorebook${mode === "setup" ? " team-scorebook--setup" : ""}`}>
+    <div className={`team-scorebook${mode === "setup" ? " team-scorebook--setup" : mode === "score" ? " team-scorebook--score" : ""}`}>
       <section className={mode === "full" ? "card detail-card" : `scorebook-status${needsAttention ? " scorebook-status--attention" : ""}`} aria-label="Scorebook connection">
         <div className="scorebook-toolbar">
           {mode === "full" ? <h2>Team scorebook</h2> : <span className="connection-indicator" role="status">
@@ -655,29 +655,68 @@ export function ConnectedScorebook({
       </section>
       {data && (
         <>
-          {mode !== "setup" && <section className="card detail-card">
-            <h2>Games</h2>
-            {games.length ? (
-              <DashboardSelect label="Choose a game" name="game" value={current?.game.id ?? ""} disabled={busy} onChange={setSelected} options={games.map((g) => ({ id: g.game.id, name: `${g.game.completed ? "Final" : "Live"} · ${g.playedOn} · ${g.game.opponent} · ${g.game.kind}` }))} />
-            ) : (
-              <p>No games in this season yet. Set up the first game below.</p>
-            )}
-          </section>}
           {mode !== "setup" && selected && !current && <p role="alert">That game is unavailable in this scorebook. Return to its competition or refresh.</p>}
           {mode !== "setup" && current && (
-            <section className="card detail-card" key={current.game.id}>
+            <section className={`card detail-card at-bat-card${mode === "score" ? " at-bat-card--compact" : ""}`} key={current.game.id}>
               <h2>{current.game.opponent}</h2>
               <p>
-                {current.playedOn} · {current.game.kind} ·{" "}
+                {current.playedOn} · {current.game.kind}{current.game.tournament_game_number ? ` · Game ${current.game.tournament_game_number}` : ""} ·{" "}
                 {current.game.completed
                   ? "Final — corrections remain available"
                   : "Live"}
               </p>
-              {current.game.tournament_game_number && (
-                <p>
-                  Game {current.game.tournament_game_number} in this tournament
-                </p>
+              {!current.game.completed && (
+                <>
+                  <h3>
+                    Next batter:{" "}
+                    {playerName(
+                      current.lineup[current.game.next_batter_position],
+                    )}
+                  </h3>
+                  <form
+                    className="club-form at-bat-form"
+                    onSubmit={(e) => {
+                      formData(e);
+                      void save(
+                        gameRequest(current, {
+                          type: "score",
+                          playId: crypto.randomUUID(),
+                          playerId:
+                            current.lineup[current.game.next_batter_position],
+                          outcome,
+                          runs,
+                          rbi,
+                        }),
+                      );
+                    }}
+                  >
+                    <fieldset disabled={disabled}>
+                      <BattingOutcomePicker value={outcome} disabled={disabled} onChange={(next) => {
+                        setOutcome(next);
+                        const hr = next === "Fence HR" || next === "ITP HR";
+                        setRuns(hr ? 1 : 0);
+                        setRbi(hr ? 1 : 0);
+                      }} />
+                      <div className="at-bat-rbi" role="group" aria-label="RBI on this play">
+                        <span>RBI</span>
+                        <div className="rbi-buttons">
+                          {[0, 1, 2, 3, 4].map((value) => <button key={value} type="button" aria-label={`${value} RBI`} aria-pressed={rbi === value} disabled={disabled} onClick={() => { setRbi(value); setRuns(Math.max(runs, value)); }}>{value} RBI</button>)}
+                        </div>
+                      </div>
+                      <label className="at-bat-runs">
+                        Runs on this play
+                        <input type="number" min={0} max={4} value={runs} onChange={(e) => setRuns(Number(e.target.value))} required />
+                      </label>
+                      <input type="hidden" name="at-bat-rbi" value={rbi} />
+                      <button className="button primary">
+                        Record plate appearance
+                      </button>
+                    </fieldset>
+                  </form>
+                </>
               )}
+              <details className="game-management" open={mode === "full" || current.game.completed}>
+                <summary>Game details & settings</summary>
               <GameScoreboardPanel
                 key={current.game.id}
                 value={connectedScoreboard(current.game)}
@@ -703,65 +742,7 @@ export function ConnectedScorebook({
                   void save(gameRequest(current, { type: "hrLimit", ...value }))
                 }
               />
-              {!current.game.completed && (
-                <>
-                  <h3>
-                    Next batter:{" "}
-                    {playerName(
-                      current.lineup[current.game.next_batter_position],
-                    )}
-                  </h3>
-                  <form
-                    className="club-form"
-                    onSubmit={(e) => {
-                      formData(e);
-                      void save(
-                        gameRequest(current, {
-                          type: "score",
-                          playId: crypto.randomUUID(),
-                          playerId:
-                            current.lineup[current.game.next_batter_position],
-                          outcome,
-                          runs,
-                          rbi,
-                        }),
-                      );
-                    }}
-                  >
-                    <fieldset disabled={disabled}>
-                      <BattingOutcomePicker value={outcome} disabled={disabled} onChange={(next) => {
-                        setOutcome(next);
-                        const hr = next === "Fence HR" || next === "ITP HR";
-                        setRuns(hr ? 1 : 0);
-                        setRbi(hr ? 1 : 0);
-                      }} />
-                      <label>
-                        Runs on this play
-                        <input
-                          type="number"
-                          min={0}
-                          max={4}
-                          value={runs}
-                          onChange={(e) => setRuns(Number(e.target.value))}
-                          required
-                        />
-                      </label>
-                      <label>
-                        RBI on this play
-                        <input
-                          type="number"
-                          min={0}
-                          max={4}
-                          value={rbi}
-                          onChange={(e) => setRbi(Number(e.target.value))}
-                          required
-                        />
-                      </label>
-                      <button className="button primary">
-                        Record plate appearance
-                      </button>
-                    </fieldset>
-                  </form>
+                {!current.game.completed && <>
                   <details>
                     <summary>Change next batter</summary>
                     <form
@@ -824,8 +805,10 @@ export function ConnectedScorebook({
                   >
                     Mark game complete
                   </button>
-                </>
-              )}
+                </>}
+              </details>
+              <details className="at-bat-history" open={mode === "full" || current.game.completed}>
+                <summary>Plate appearances · {current.evaluation.rows.length}</summary>
               <h3>Plate appearances</h3>
               {!current.evaluation.rows.length && (
                 <p>No plate appearances recorded.</p>
@@ -918,8 +901,17 @@ export function ConnectedScorebook({
                   </form>
                 </details>
               ))}
+              </details>
             </section>
           )}
+          {mode !== "setup" && <details className="game-switcher" open={mode === "full"}>
+            <summary>Change game</summary>
+            {games.length ? (
+              <DashboardSelect label="Choose a game" name="game" value={current?.game.id ?? ""} disabled={busy} onChange={setSelected} options={games.map((g) => ({ id: g.game.id, name: `${g.game.completed ? "Final" : "Live"} · ${g.playedOn} · ${g.game.opponent} · ${g.game.kind}` }))} />
+            ) : (
+              <p>No games in this season yet. Set up the first game below.</p>
+            )}
+          </details>}
           {mode !== "setup" && <details className="card detail-card" open={mode === "full"}>
             <summary>Season statistics</summary>
             <div
@@ -1238,8 +1230,8 @@ export function ConnectedScorebook({
               />
             </section>
           )}
-          {mode !== "setup" && (mode === "full" || !!initialTournamentId || !!current?.game.tournament_id) && <section className="card detail-card">
-            <h2>Tournament games and Band corrections</h2>
+          {mode !== "setup" && (mode === "full" || !!initialTournamentId || !!current?.game.tournament_id) && <details className="card detail-card" open={mode === "full" || !!current?.game.completed}>
+            <summary>Tournament games and Band corrections</summary>
             <p className="micro">
               Assignments stay fixed across tournament games. Corrections
               require a reason and recalculate the tournament.
@@ -1403,7 +1395,7 @@ export function ConnectedScorebook({
                 </details>
               </details>
             ))}
-          </section>}
+          </details>}
           {mode !== "setup" && <details className="card detail-card" open={mode === "full"}>
             <summary>Audit history</summary>
             <button
