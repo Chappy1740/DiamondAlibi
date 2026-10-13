@@ -154,16 +154,10 @@ export function PlayerDashboard(p: DashboardProps) {
             <button className="button secondary">Apply context</button>
           </form>
       {!p.sample && <DashboardRefresh />}
-          <p className="connection-notice dashboard-notice">
-            {p.sample
-              ? "Sample history · 12 players · four 16-game league seasons · seven tournaments. These records are separate from your clubhouse."
-              : "Your clubhouse records · everyone on the team can score for everyone."}{" "}
-            {!p.review && (
-              <Link className="text-link" href={p.sample ? "/" : "/?sample=1"}>
-                {p.sample ? "Use my account" : "Explore sample history"}
-              </Link>
-            )}
-          </p>
+      {p.sample && <p className="connection-notice dashboard-notice">
+        Sample history · 12 players · four 16-game league seasons · seven tournaments. These records are separate from your clubhouse.{" "}
+        {!p.review && <Link className="text-link" href="/">Use my account</Link>}
+      </p>}
     </section>
   );
   return (
@@ -268,7 +262,7 @@ export function PlayerDashboard(p: DashboardProps) {
                       <Link className="button primary" href={`/leagues?${query}`}>Leagues</Link>
                       <Link className="button primary" href={`/tournaments?${query}`}>Tournaments</Link>
                     </div>
-                    {view && view.liveGames.length > 0 && (
+                    {p.sample && view && view.liveGames.length > 0 && (
                       <section>
                         <h2>Live now</h2>
                         <div className="dashboard-cards">{gameCards(true)}</div>
@@ -306,22 +300,9 @@ export function PlayerDashboard(p: DashboardProps) {
                           {balance(view?.beverageBalance ?? null)}
                         </strong>
                       </p>
-                      <Link className="text-link" href={href("stats")}>
-                        All player statistics
-                      </Link>
                     </section>
                     {contextControls}
-                    <details className="card detail-card">
-                      <summary>Season activity</summary>
-                      <p>
-                        {loaded.snapshot.games.length} games ·{" "}
-                        {loaded.snapshot.tournaments.length} tournaments ·{" "}
-                        {loaded.roster.length} players
-                      </p>
-                      <Link className="button secondary" href={href("games")}>
-                        View games
-                      </Link>
-                    </details>
+
                   </>
                 )}
                 {p.route === "games" && (
@@ -488,6 +469,7 @@ export function PlayerDashboard(p: DashboardProps) {
               <section className="card detail-card">
                 <h2>Clubhouse tools</h2>
                 <div className="dashboard-cards">
+                  {!p.sample && !p.review && <Link className="button secondary" href="/?sample=1">Explore sample history</Link>}
                   <Link className="button secondary" href="/review/feedback">
                     Challenge the Call · Send feedback
                   </Link>
