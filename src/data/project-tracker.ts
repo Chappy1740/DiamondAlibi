@@ -2,7 +2,7 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 38,
+  revision: 41,
   updatedAt: "2026-10-12",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
@@ -114,8 +114,8 @@ export const projectTracker: ProjectTracker = {
             "Brand account emails and resolve reviewer code-email appearance",
           status: "in_progress",
           evidence:
-            "Local palette/copy preview and locked logo prepared. Will reported saving branded custom SMTP October 12; delivery is not yet verified. Requested password recovery is prepared locally: Forgot password above Sign in, reset-email request, authenticated password update and bounded callback. Synthetic validation and TypeScript pass; publication and live reset acceptance remain open.",
-          next: "Publish the reviewed recovery flow after exact approval; verify the allowed callback URL and reset template, then test email delivery and password recovery on the owner test account. Confirm acceptable Cloudflare code-email appearance separately.",
+            "Password recovery released as db931cf to the protected preview. Synthetic validation, TypeScript, Worker build and local phone-width browser checks pass. Will confirmed the link is visible, supplied a branded reset email screenshot (delivered to Junk), added the allowed recovery callback and saved the hosted Site URL after an initial localhost redirect. A fresh link opened Choose a new password; Will confirmed password change and subsequent sign-in to the clubhouse with the new password October 12. This is owner-reported live acceptance; inbox placement and separate email appearance acceptance remain open.",
+          next: "Will confirmed all six branded Supabase account templates saved October 12. Reset template preview and actual received appearance accepted; other five templates need live delivery/flow checks where supported. Owner inbox delivery passed after a safe-sender addition; message authentication passed, but general reviewer inbox placement remains open. Public hosting of the locked logo and acceptable Cloudflare code-email appearance remain separate decisions. Publish local acceptance/template work only after new approval.",
           kind: "work",
         },
         {
