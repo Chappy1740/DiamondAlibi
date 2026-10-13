@@ -40,10 +40,12 @@ export function BattingOutcomePicker({
   value,
   onChange,
   disabled,
+  onPick,
 }: {
   value: Outcome;
   onChange: (outcome: Outcome) => void;
   disabled: boolean;
+  onPick?: (outcome: Outcome) => void;
 }) {
   return (
     <div className="batting-outcomes" role="group" aria-label="Batting outcome">
@@ -64,7 +66,8 @@ export function BattingOutcomePicker({
                 aria-pressed={value === choice.outcome}
                 disabled={disabled}
                 onClick={() => {
-                  if (value !== choice.outcome) onChange(choice.outcome);
+                  if (onPick) onPick(choice.outcome);
+                  else if (value !== choice.outcome) onChange(choice.outcome);
                 }}
               >
                 <strong aria-hidden="true">{choice.code}</strong>

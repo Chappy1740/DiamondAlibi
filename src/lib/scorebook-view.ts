@@ -19,6 +19,7 @@ export type ConnectedGame = {
     kind: "League" | "Tournament";
     completed: boolean;
     next_batter_position: number;
+    batting_mode?: "ordered" | "manual";
     team_runs?: number | null;
     opponent_runs?: number | null;
     inning?: number | null;
@@ -47,6 +48,7 @@ export type ConnectedGame = {
   };
 };
 export type ScorebookView = {
+  capabilities?: { manualBatting?: boolean };
   teamId: string;
   seasonId: string;
   scope: Scope;

@@ -18,7 +18,7 @@ export function tournamentContinuation(
         b.playedOn.localeCompare(a.playedOn) ||
         b.game.id.localeCompare(a.game.id),
     )[0];
-  if (!game || !game.lineup.length) return null;
+  if (!game || (!game.lineup.length && game.game.batting_mode !== "manual")) return null;
   const columns = {
     strikeout: "strikeout",
     solo: "solo",
@@ -49,7 +49,7 @@ export function tournamentContinuation(
     )
   )
     return null;
-  return { tournament, game, board };
+  return { tournament, game, board, battingMode: game.game.batting_mode ?? "ordered" };
 }
 export type TournamentContinuation = NonNullable<
   ReturnType<typeof tournamentContinuation>

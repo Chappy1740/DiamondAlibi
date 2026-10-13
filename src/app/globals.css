@@ -1814,6 +1814,18 @@ blockquote {
 .team-scorebook details:not([open]) > :not(summary) { display: none; }
 .game-management, .at-bat-history, .game-switcher { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
 .game-management > summary, .at-bat-history > summary, .game-switcher > summary { cursor: pointer; font-size: 13px; }
+.manual-batter h3 { margin: 8px 0; }
+.manual-batter input { margin: 4px 0 8px; }
+.manual-player-buttons { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 6px; margin-bottom: 10px; }
+.manual-player-buttons button, .first-band-choice button { min-height: 44px; min-width: 0; padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--white); font: inherit; overflow-wrap: anywhere; }
+.manual-player-buttons button[aria-pressed="true"], .first-band-choice button[aria-pressed="true"] { border: 2px solid var(--teal); }
+.first-band-choice { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+.voice-play-controls { display: flex; align-items: center; gap: 6px; }
+.team-scorebook .voice-play-controls input { flex: 1; width: 0; min-width: 0; margin: 0; }
+.voice-play-controls .button { flex: none; margin: 0; padding: 6px 8px; font-size: 11px; }
+.at-bat-card .voice-play-note, .at-bat-card .quick-play-hint { font-size: 11px; line-height: 1.4; margin: 6px 0; color: var(--muted); }
+.at-bat-card .entry-error { color: #ffd4bd; font-size: 13px; margin: 8px 0; }
+.game-details-link { display: inline-block; margin-top: 12px; min-height: 44px; padding-block: 12px; }
 .dashboard-context-panel { margin-block: 20px; padding-top: 4px; border-top: 1px solid var(--border); }
 .dashboard-context-panel .dashboard-notice { margin-bottom: 0; }
 .dashboard-select { overflow: hidden; min-width: 0; max-width: 100%; position: relative; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 10px 12px; background: var(--surface); color: var(--white); border: 1px solid var(--border); border-radius: 8px; }
