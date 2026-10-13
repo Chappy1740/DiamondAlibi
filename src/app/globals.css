@@ -1756,3 +1756,46 @@ blockquote {
 .feedback-page .panel { margin-block: 20px; padding: 20px; }
 .feedback-page .feedback-message { white-space: pre-wrap; overflow-wrap: anywhere; }
 .feedback-page nav { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+
+/* Personal Home and competition workflow */
+.profile-menu { position: relative; flex: none; margin-left: auto; }
+.profile-menu > summary { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--border); border-radius: 50%; background: var(--surface); list-style: none; }
+.profile-menu > summary::-webkit-details-marker { display: none; }
+.profile-menu nav { position: absolute; right: 0; top: 52px; z-index: 40; width: min(250px, calc(100vw - 32px)); display: grid; padding: 8px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); box-shadow: 0 12px 32px #0008; }
+.profile-menu nav a, .profile-menu nav button { display: flex; align-items: center; width: 100%; min-height: 44px; padding: 10px 12px; border: 0; background: transparent; text-align: left; color: var(--white); font-size: 14px; border-radius: 6px; }
+.profile-menu nav a:hover, .profile-menu nav button:hover { background: var(--surface-raised); }
+.profile-menu nav form { margin: 0; }
+.competition-entry { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.competition-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 12px; margin: 16px 0; }
+.competition-link { display: grid; gap: 8px; padding: 18px; color: var(--white); }
+.competition-link span { font-size: 13px; color: var(--muted); }
+.competition-page .dashboard-cards .button { margin: 10px 0; }
+.connected-wrap textarea, .alibi-editor textarea, .alibi-editor input, .alibi-editor select { display: block; width: 100%; min-height: 44px; margin: 6px 0 12px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; color: var(--white); background: var(--surface); font: inherit; font-size: 16px; }
+.connected-wrap textarea, .alibi-editor textarea { resize: vertical; }
+.alibi-list { display: grid; gap: 10px; }
+.alibi-saved { display: grid; gap: 6px; text-align: left; color: var(--white); padding: 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+.alibi-saved > span { color: var(--muted); font-size: 12px; }
+.alibi-saved p { overflow-wrap: anywhere; white-space: pre-wrap; }
+.alibi-editor blockquote { overflow-wrap: anywhere; white-space: pre-wrap; }
+.team-scorebook > details { min-width: 0; }
+.team-scorebook > details > summary { font-weight: 700; }
+@media (max-width: 800px) {
+  .dashboard-context { gap: 8px; margin: 12px 0; }
+  .dashboard-context label { flex-basis: calc(50% - 8px); font-size: 12px; }
+  .dashboard-context > button { min-height: 44px; }
+  .dashboard-notice { font-size: 11px; padding: 8px 10px; margin-bottom: 10px; }
+  .dashboard-refresh { gap: 8px; margin-bottom: 12px; font-size: 12px; }
+  .dashboard-cards { gap: 10px; margin: 10px 0; }
+  .dashboard-metrics { gap: 16px; }
+  .content-wrap .detail-card, .connected-wrap .detail-card { padding: 16px; }
+  .content-wrap .page-heading, .connected-wrap .page-heading { margin: 12px 0 16px; }
+  .connected-header { margin-bottom: 12px; }
+  .connected-grid { gap: 12px; margin: 16px 0; }
+  .team-scorebook { gap: 12px; }
+  .team-scorebook fieldset { gap: 10px; }
+  .team-scorebook .detail-card h2 { font-size: 19px; }
+  .connected-header .brand-link--compact { width: auto; max-width: calc(100% - 56px); white-space: normal; }
+  .connected-header .brand-link--primary.header-logo { width: clamp(146px, 46vw, 184px); }
+}
+.club-form fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.team-scorebook label[hidden] { display: none; }

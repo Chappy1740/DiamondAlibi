@@ -1,0 +1,32 @@
+name: Personal workflow validation
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+        id: install
+      - run: npm run typecheck
+      - run: node --experimental-strip-types --test --test-isolation=none tests/*.test.ts tests/signout.cjs
+      - run: node tests/personal-alibis-sql.cjs
+      - run: node tests/dashboard-loader.cjs
+      - run: npx playwright install --with-deps chromium
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+      - run: node tests/personal-workflow-browser.cjs
+      - run: node tests/scorebook-modes-browser.cjs
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+      - run: npm run test:connected-scorebook
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+      - run: npm run build:worker
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+      - run: node tests/personal-pages-browser.cjs
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}

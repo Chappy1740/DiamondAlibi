@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { signout } from "@/app/login/actions";
+import { ProfileMenu } from "./profile-menu";
 import { BrandLink } from "./brand-link";
 import {
   House,
@@ -12,7 +12,7 @@ import { personalDashboard } from "@/lib/personal-dashboard";
 import { emptyTotals, rates, type Scope, type Totals } from "@/lib/scoring";
 import type { LoadedScorebook } from "@/lib/scorebook-view";
 import { DashboardRefresh } from "./dashboard-refresh";
-import { Alibi } from "./workspace";
+import { PersonalAlibis } from "./personal-alibis";
 import { GameScoreboardPanel } from "./game-scoreboard";
 import { connectedScoreboard } from "@/lib/game-scoreboard";
 
@@ -73,7 +73,7 @@ export function PlayerDashboard(p: DashboardProps) {
         : p.review
           ? "/review/scoring"
           : "/practice"
-      : `/club/score?${new URLSearchParams({ team: p.teamId, season: p.seasonId, ...(game ? { game } : {}) })}`;
+      : game ? `/club/score?${new URLSearchParams({ team: p.teamId, season: p.seasonId, game })}` : `/leagues?${query}`;
   const filteredGames =
     loaded?.snapshot.games.filter(
       (g) => p.scope === "Overall" || g.game.kind === p.scope,
@@ -149,22 +149,13 @@ export function PlayerDashboard(p: DashboardProps) {
       </aside>
       <div className="workspace">
         <header className="topbar">
-          <BrandLink className="header-logo" href={href("")} variant="primary" />
-          <Link
-            className="button secondary"
-            href={p.review ? "/review" : "/club"}
-            target={p.review ? "_top" : undefined}
-          >
-            {p.review ? "Review hub" : "My clubhouse"}
-          </Link>
-          {!p.sample && !p.review && p.userId && (
-            <form action={signout}>
-              <button className="button secondary" type="submit">Sign out</button>
-            </form>
-          )}
+          <BrandLink className={p.route.includes("/") ? "" : "header-logo"} href={href("")} variant={p.route.includes("/") ? "compact" : "primary"} />
+          {p.review ? <Link className="button secondary" href="/review" target="_top">Review hub</Link>
+            : <ProfileMenu signedIn={!p.sample && !!p.userId} context={query.toString()} />}
+
         </header>
         <div className="content-wrap">
-          <p className="connection-notice">
+          <p className="connection-notice dashboard-notice">
             {p.sample
               ? "Sample history · 12 players · four 16-game league seasons · seven tournaments. These records are separate from your clubhouse."
               : "Your clubhouse records · everyone on the team can score for everyone."}{" "}
@@ -207,13 +198,13 @@ export function PlayerDashboard(p: DashboardProps) {
               </select>
             </label>
             <label>
-              Statistics view
+              Personal stats
               <select
                 aria-label="Statistics view"
                 name="scope"
                 defaultValue={p.scope}
               >
-                {["League", "Tournament", "Overall"].map((s) => (
+                {["Overall", "League", "Tournament"].map((s) => (
                   <option key={s}>{s}</option>
                 ))}
               </select>
@@ -238,7 +229,7 @@ export function PlayerDashboard(p: DashboardProps) {
           </form>
           {!p.sample && <DashboardRefresh />}
           <main id="main" tabIndex={-1}>
-            <div className="page-heading">
+            {p.route !== "more/alibi" && <div className="page-heading">
               <div>
                 <span className="eyebrow">
                   {team?.name ?? "Your team"} ·{" "}
@@ -252,7 +243,7 @@ export function PlayerDashboard(p: DashboardProps) {
                 </h1>
                 <p>The stats don’t lie. Your teammates might.</p>
               </div>
-            </div>
+            </div>}
             {p.route === "games/live" &&
               p.sample &&
               loaded &&
@@ -315,6 +306,10 @@ export function PlayerDashboard(p: DashboardProps) {
               <>
                 {p.route === "" && (
                   <>
+                    <div className="competition-entry" aria-label="Competitions">
+                      <Link className="button primary" href={`/leagues?${query}`}>Leagues</Link>
+                      <Link className="button primary" href={`/tournaments?${query}`}>Tournaments</Link>
+                    </div>
                     {view && view.liveGames.length > 0 && (
                       <section>
                         <h2>Live now</h2>
@@ -356,8 +351,8 @@ export function PlayerDashboard(p: DashboardProps) {
                         All player statistics
                       </Link>
                     </section>
-                    <section className="card detail-card">
-                      <h2>Season activity</h2>
+                    <details className="card detail-card">
+                      <summary>Season activity</summary>
                       <p>
                         {loaded.snapshot.games.length} games ·{" "}
                         {loaded.snapshot.tournaments.length} tournaments ·{" "}
@@ -366,7 +361,7 @@ export function PlayerDashboard(p: DashboardProps) {
                       <Link className="button secondary" href={href("games")}>
                         View games
                       </Link>
-                    </section>
+                    </details>
                   </>
                 )}
                 {p.route === "games" && (
@@ -376,6 +371,10 @@ export function PlayerDashboard(p: DashboardProps) {
                         ? "Try local scoring"
                         : "Start or manage a game"}
                     </Link>
+                    <div className="competition-entry">
+                      <Link className="button secondary" href={`/leagues?${query}`}>Leagues</Link>
+                      <Link className="button secondary" href={`/tournaments?${query}`}>Tournaments</Link>
+                    </div>
                     <h2>Season games</h2>
                     <div className="dashboard-cards">{gameCards(false)}</div>
                     {loaded.snapshot.games.length === 0 && (
@@ -404,12 +403,12 @@ export function PlayerDashboard(p: DashboardProps) {
                               ? p.review
                                 ? "/review/scoring"
                                 : "/practice"
-                              : `/club/score?${new URLSearchParams({ team: p.teamId, season: p.seasonId, tournament: t.id })}`
+                              : `/tournaments/${encodeURIComponent(t.id)}?${query}`
                           }
                         >
                           {p.sample
                             ? "Practice additional games"
-                            : `Create Game ${loaded.snapshot.games.filter((g) => g.game.tournament_id === t.id).length + 1}`}
+                            : "Open tournament"}
                         </Link>
                         <p className="micro">
                           Game setup remains separate from bracket advancement.
@@ -541,7 +540,7 @@ export function PlayerDashboard(p: DashboardProps) {
                     </Link>
                   )}
                   <Link className="button secondary" href={href("more/alibi")}>
-                    Generate an Alibi
+                    My alibis · Write or generate
                   </Link>
                   <Link
                     className="button secondary"
@@ -552,7 +551,7 @@ export function PlayerDashboard(p: DashboardProps) {
                 </div>
               </section>
             )}
-            {p.route === "more/alibi" && <Alibi />}
+            {p.route === "more/alibi" && <PersonalAlibis connected={!p.sample && !!p.userId} />}
           </main>
         </div>
       </div>

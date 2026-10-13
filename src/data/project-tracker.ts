@@ -2,15 +2,15 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 41,
-  updatedAt: "2026-10-12",
+  revision: 43,
+  updatedAt: "2026-10-13",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
   release: {
-    commit: "5fda987",
-    label: "Challenge the Call and private Booth Reviews",
+    commit: "39d7170",
+    label: "Personal Home, competitions, profiles and alibi editing",
     status:
-      "Feedback deployed; owner and reviewer test submission, owner delivery/readability, reviewed-state persistence and reviewer inbox denial passed",
+      "Sign-out controls added in e9fb665; ab2ac0e triggered the configured main build. Owner screenshot reported active Worker d40cf3c5. Owner accepted dashboard sign-out to login, signed-out Back/refresh and protected /club. Scorebook control visible; its logout flow remains untested. Personal workflow source 39d7170 passed GitHub validation (66 unit checks, disposable alibi RLS, dashboard loader, actual React/browser workflows, full connected scorebook regression, Worker build and built Next.js pages). Preview publication proceeds through the authorized main Git build. Hosted acceptance remains open; private alibi persistence is unapplied.",
   },
   milestones: [
     {
@@ -104,7 +104,7 @@ export const projectTracker: ProjectTracker = {
           status: "in_progress",
           evidence:
             "Phone sample history and isolated twelve-player practice released; five approved reviewers have ongoing One-time PIN access. The saved policy was reopened and verified on October 10 with the existing preview association and 24-hour sessions. Owner confirmed review history and practice scoring passed on phone on October 10; Will confirmed October 12 that the separate reviewer test login on his phone displays sample players and switches seasons. Will then confirmed a synthetic practice plate appearance was recorded and visible in the scorebook. In response to the reload check, Will provided a screenshot showing the recorded synthetic hit still in the scorebook. Owner-controlled reviewer test login, sample history, scoring and reload persistence passed; the five teammates individual results remain pending.",
-          next: "Resolve one reported login-code delivery failure; saved reviewer policy reverified October 11. Each reviewer verifies email-code sign-in, sample history and scoring persistence after reload on their phone.",
+          next: "Resolve Morgan's reported login-code delivery failure; the owner did not report that failure. Saved reviewer policy reverified October 11. This reviewer acceptance issue does not block unrelated implementation. Each reviewer verifies email-code sign-in, sample history and scoring persistence after reload on their phone.",
           kind: "work",
         },
         {
@@ -239,8 +239,8 @@ export const projectTracker: ProjectTracker = {
           title: "Reduce repeated tournament setup and page movement",
           status: "implemented",
           evidence:
-            "Compact next-game UI released as 640fb1c; mobile browser checks passed.",
-          next: "Owner checks Game 2 opponent-only setup, carried settings and stable controls.",
+            "Compact next-game UI released as 640fb1c; earlier automated checks passed. Acceptance is paused and incomplete. Owner's original account is their main account. Owner created a separate app account and reported an empty team list; its email was not verified by the agent. Owner then created M3-5 Synthetic Test, Test Player, M3-5 Synthetic Season and M3-5 Synthetic Cup with a 2-game guarantee and HR limit 2, not zero. No Game 2 acceptance was recorded.",
+          next: "Resume only with isolated synthetic data. Require automated validation and explicit owner acceptance of Game 2 opponent-only setup, retained settings and stable controls. Guide one hosted iPhone step at a time.",
           kind: "work",
         },
         {
@@ -273,6 +273,15 @@ export const projectTracker: ProjectTracker = {
             "Owner confirmed the requested phone checks passed for both My clubhouse and review sample history/practice scoring on October 10, 2026.",
           next: "",
           kind: "acceptance",
+        },
+        {
+          id: "M3-9",
+          group: "Personal workflow redesign",
+          title: "Make Home personal, add profile control and competition pages, compact phone setup",
+          status: "implemented",
+          evidence: "Implementation reuses authorized snapshots and existing scoring commands. Login returns Home; leagues/tournaments have games/settings pages; profile menu includes bio, settings, team management and sign-out. Bio uses existing user metadata only as profile text. 55 focused synthetic checks passed locally. Source 39d7170 passed all GitHub checks: 66 unit checks, typecheck, disposable ownership/RLS SQL, actual React workflows, score/setup modes, complete connected scoring regression, Worker build and built Next.js route/mobile checks. Shell dependency installation remains blocked by its unreachable proxy; CI supplied the dependency-backed validation.",
+          next: "Verify the protected main build and hosted behavior, then guide physical iPhone acceptance one step at a time. Scorebook logout still needs a separate owner check.",
+          kind: "work",
         },
       ],
     },
@@ -317,7 +326,7 @@ export const projectTracker: ProjectTracker = {
           group: "M4.2 Identity/teams",
           title: "Implement sign-in, sign-out and confirmation recovery",
           status: "done",
-          evidence: "Authentication released; owner confirmed login worked.",
+          evidence: "Authentication released. Owner accepted dashboard sign-out to login, signed-out Back/refresh and protected /club after e9fb665/ab2ac0e. Scorebook button visible; its logout flow was not separately accepted.",
           next: "",
           kind: "work",
         },
@@ -554,6 +563,24 @@ export const projectTracker: ProjectTracker = {
           next: "Registration/team/season/game/scoring/correction/stats/Board/alibi walkthrough on phone.",
           kind: "acceptance",
         },
+        {
+          id: "M4-29",
+          group: "M4.5 Social/integration",
+          title: "Write, generate, edit and privately save personal alibis",
+          status: "in_progress",
+          evidence: "Editor and session-verified service implement write/generate/edit/save, reopen/copy/share/edit/delete, revision conflicts and uncertain-save retries. New account-owned persistence SQL passed disposable owner/nonowner/anonymous/forged-owner/retry/conflict/delete/cascade tests in GitHub validation; React editor save/reopen/edit/copy/share/delete tests passed with synthetic transport. No live alibi table exists and no proposal has been applied. Saving stays disabled until setup is available.",
+          next: "Approve the exact reviewed persistence proposal before live application, verify live grants/RLS/advisors with isolated synthetic accounts, and complete cross-device saving/deletion and phone copy/share acceptance.",
+          kind: "work",
+        },
+        {
+          id: "M4-30",
+          group: "M4.5 Social/integration",
+          title: "Approve private alibi persistence and security scope",
+          status: "blocked",
+          evidence: "Proposal specifies account-only RLS and explicit grants, invoker RPCs, no team/game links, ownership immutability, revision checks, deletion semantics and provider backup/privacy limits. Community features remain deferred.",
+          next: "Review supabase/proposals/personal_alibis.sql and README.md plus disposable test results before authorizing the exact live migration.",
+          kind: "decision",
+        },
       ],
     },
     {
@@ -692,7 +719,7 @@ export const projectTracker: ProjectTracker = {
           title: "Record reviewed source and deployment receipts",
           status: "done",
           evidence:
-            "Latest 640fb1c deployed; source and version receipts documented.",
+            "Sign-out source e9fb665 and build trigger ab2ac0e on main; owner screenshot reported active Worker d40cf3c5. PR #2 source 39d7170 passed automated build/browser/security checks; main Git delivery remains distinct from hosted owner acceptance. Live schema proposal remains unapplied.",
           next: "",
           kind: "work",
         },
@@ -759,6 +786,16 @@ export const projectTracker: ProjectTracker = {
     },
   ],
   changes: [
+    {
+      title: "Personal dashboard, profile, competitions and private alibis",
+      status: "Implemented with 55 local focused checks and all GitHub checks passing on source 39d7170, including 66 unit checks, disposable RLS, React/Next.js browsers, scoring regression, typecheck and Worker build. Hosted acceptance pending; private persistence proposal remains unapplied",
+      milestone: "M3",
+    },
+    {
+      title: "Sign-out and paused tournament acceptance corrections",
+      status: "Owner accepted dashboard logout; scorebook logout untested. M3-5 separate-account synthetic setup recorded with 2-game guarantee and HR limit 2; acceptance remains paused and incomplete. Morgan's login-code failure belongs to M2 reviewer acceptance",
+      milestone: "M3",
+    },
     {
       title: "Challenge the Call feedback",
       status:

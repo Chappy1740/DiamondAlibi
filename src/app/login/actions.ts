@@ -18,7 +18,7 @@ export async function login(
       error:
         "Sign-in failed. Check your details and whether your email is confirmed.",
     };
-  redirect("/club");
+  redirect("/");
 }
 export async function signup(
   _previous: AuthResult,
@@ -39,7 +39,7 @@ export async function signup(
     return {
       error: "Account creation could not be completed. Please try again later.",
     };
-  if (data.session) redirect("/club");
+  if (data.session) redirect("/");
   return {
     message:
       "If account creation is available for this address, check your confirmation email. After confirming, return here to sign in.",

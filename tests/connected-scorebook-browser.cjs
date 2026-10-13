@@ -791,9 +791,9 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
     const base = `http://127.0.0.1:${server.address().port}`;
     browser = await chromium.launch({
       headless: true,
-      executablePath:
-        process.env.BROWSER_EXECUTABLE ||
-        "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
+      ...(process.env.BROWSER_EXECUTABLE
+        ? { executablePath: process.env.BROWSER_EXECUTABLE }
+        : {}),
     });
     const context = await browser.newContext({
         viewport: { width: 390, height: 844 },
