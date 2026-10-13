@@ -9,12 +9,14 @@ type Recognition = {
   start(): void; stop(): void; abort(): void;
 };
 type VoiceWindow = Window & { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition };
-export function VoicePlayEntry({ disabled, onResult }: { disabled: boolean; onResult(text: string): Promise<boolean | undefined> }) {
+export function VoicePlayEntry({ disabled, resetKey = 0, onResult }: { disabled: boolean; resetKey?: number; onResult(text: string): Promise<boolean | undefined> }) {
   const [text, setText] = useState(""), [available, setAvailable] = useState(false), [listening, setListening] = useState(false), [error, setError] = useState("");
+  const generation = useRef(0);
   const recognition = useRef<Recognition | null>(null), callback = useRef(onResult), blocked = useRef(disabled), mounted = useRef(true);
   callback.current = onResult; blocked.current = disabled;
-  useEffect(() => { mounted.current = true; const w = window as VoiceWindow; setAvailable(Boolean(w.SpeechRecognition || w.webkitSpeechRecognition)); return () => { mounted.current = false; recognition.current?.abort(); }; }, []);
-  useEffect(() => { if (disabled) { recognition.current?.abort(); setListening(false); } }, [disabled]);
+  useEffect(() => { mounted.current = true; const w = window as VoiceWindow; setAvailable(Boolean(w.SpeechRecognition || w.webkitSpeechRecognition)); return () => { mounted.current = false; generation.current++; recognition.current?.abort(); }; }, []);
+  useEffect(() => { if (disabled) { generation.current++; recognition.current?.abort(); setListening(false); } }, [disabled]);
+  useEffect(() => { generation.current++; recognition.current?.abort(); setListening(false); setText(""); }, [resetKey]);
   async function submit(value: string) {
     if (blocked.current || !mounted.current || !value.trim()) return;
     setText(value);
@@ -24,16 +26,17 @@ export function VoicePlayEntry({ disabled, onResult }: { disabled: boolean; onRe
     if (blocked.current) return;
     const w = window as VoiceWindow, Constructor = w.SpeechRecognition || w.webkitSpeechRecognition;
     if (!Constructor) return;
+    const ticket = ++generation.current;
     const instance = new Constructor(); recognition.current = instance;
     instance.lang = "en-US"; instance.continuous = false; instance.interimResults = false;
     let consumed = false;
     instance.onresult = event => {
-      if (consumed || blocked.current || !mounted.current) return;
+      if (ticket !== generation.current || consumed || blocked.current || !mounted.current) return;
       const result = Array.from(event.results).find(result => result.isFinal);
       if (result) { consumed = true; setListening(false); instance.stop(); void submit(result[0].transcript); }
     };
-    instance.onerror = event => { if (consumed || event?.error === "aborted" || blocked.current) return; if (mounted.current) { setListening(false); setError("Voice couldn’t be read. Type the result or use keyboard dictation."); } };
-    instance.onend = () => { if (mounted.current) setListening(false); };
+    instance.onerror = event => { if (ticket !== generation.current || consumed || event?.error === "aborted" || blocked.current) return; if (mounted.current) { setListening(false); setError("Voice couldn’t be read. Type the result or use keyboard dictation."); } };
+    instance.onend = () => { if (ticket === generation.current && mounted.current) setListening(false); };
     try { setError(""); setListening(true); instance.start(); } catch { instance.onerror(); }
   }
   return <div className="voice-play-entry">

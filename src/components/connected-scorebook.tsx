@@ -111,6 +111,7 @@ export function ConnectedScorebook({
   const [firstBand, setFirstBand] = useState<boolean | null>(null);
   const [entryError, setEntryError] = useState("");
   const countsEdited = useRef(false);
+  const [confirmedPlays, setConfirmedPlays] = useState(0);
   const pendingPlay = useRef<{ playerId: string; outcome: Outcome; runs: number; rbi: number } | null>(null);
   const snapshot = data?.snapshot;
   const allGames = snapshot?.games ?? [];
@@ -338,7 +339,7 @@ export function ConnectedScorebook({
               ? "Previous save confirmed. The change was recorded once."
               : "Saved to the team scorebook.",
         );
-      if (loaded && !conflict && mode === "score" && (request as { change?: { type?: string } }).change?.type === "score") { setOutcome("Hit"); setRuns(0); setRbi(0); countsEdited.current = false; setFirstBand(null); pendingPlay.current = null; setManualPlayer(""); setPlayerSearch(""); }
+      if (loaded && !conflict && mode === "score" && (request as { change?: { type?: string } }).change?.type === "score") { setConfirmedPlays(value => value + 1); setOutcome("Hit"); setRuns(0); setRbi(0); countsEdited.current = false; setFirstBand(null); pendingPlay.current = null; setManualPlayer(""); setPlayerSearch(""); }
       return loaded && !conflict;
     } finally {
       lock.current = false;
@@ -719,7 +720,7 @@ export function ConnectedScorebook({
                       {data?.roster.filter(player => (!manualPlayer || player.id === manualPlayer || playerSearch) && player.display_name.toLocaleLowerCase().includes(playerSearch.toLocaleLowerCase())).slice(0,6).map(player => <button type="button" key={player.id} disabled={disabled} aria-pressed={manualPlayer === player.id} onClick={() => { setManualPlayer(player.id); setPlayerSearch(""); setFirstBand(null); pendingPlay.current = null; setEntryError(""); }}>{player.display_name}</button>)}
                     </div>
                   </div> : <h3>Next batter: {playerName(battingPlayer)}</h3>}
-                  {mode === "score" && <VoicePlayEntry disabled={disabled} onResult={spokenPlay} />}
+                  {mode === "score" && <VoicePlayEntry disabled={disabled} resetKey={confirmedPlays} onResult={spokenPlay} />}
                   {entryError && <p className="entry-error" role="alert">{entryError}</p>}
                   {manual && manualPlayer && current.game.kind === "Tournament" && !data?.bands.some(band => band.tournament_id === current.game.tournament_id && band.player_id === manualPlayer) && <div className="first-band-choice" role="group" aria-label="First tournament Band choice">
                     <span>HR Band for {playerName(manualPlayer)}?</span>
