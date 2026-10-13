@@ -171,6 +171,20 @@ const assert = require("node:assert/strict");
     await next.getByRole("button",{name:"Start Game 2",exact:true}).waitFor();
     assert.equal(await page.getByRole("button",{name:"Record plate appearance",exact:true}).count(),0);
     for(const width of [320,390,800,1440]){await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth),false);}
+    // Capability-gated setup starts with no fake batting order, or an explicit coach order.
+    for(const ordered of [false,true]){
+      await page.goto(`${base}/?page=1&empty=1&manual=1&tournament=synthetic-cup`);
+      const setup=page.getByRole('form',{name:'Set up a game',exact:true});
+      await setup.getByLabel('Opponent',{exact:true}).fill('Synthetic optional lineup opponent');
+      assert.equal(await setup.locator('input[name="player"]:checked').count(),0);
+      if(ordered){await setup.getByText('Add batting order (optional)',{exact:true}).click();await setup.locator('input[name="player"]').first().check();}
+      await page.evaluate(()=>window.__writeResult='uncertain');
+      await setup.getByRole('button',{name:'Start Game 1',exact:true}).click();
+      await page.getByRole('button',{name:'Retry the same change',exact:true}).waitFor();
+      const value=await page.evaluate(()=>window.__writes[0].setup);
+      assert.equal(value.battingMode,ordered?'ordered':'manual');assert.deepEqual(value.lineup,ordered?['synthetic-player']:[]);
+      await page.evaluate(()=>sessionStorage.removeItem('diamond-alibi.pending.synthetic-user.synthetic-team.synthetic-season'));
+    }
     // Actual server-page heading and first tournament setup, with synthetic services.
     await page.setViewportSize({width:390,height:844});
     await page.goto(`${base}/?page=1&empty=1&tournament=synthetic-cup`);

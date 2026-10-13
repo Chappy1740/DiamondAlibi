@@ -1040,7 +1040,7 @@ export function ConnectedScorebook({
                     <input name="opponent" maxLength={200} required />
                   </label>
                   {mode === "setup" && <button className="button primary" type="submit">{setupNumber ? `Start Game ${setupNumber}` : "Start game"}</button>}
-                  {mode === "setup" && <p className="setup-summary">{inheritedLimit != null ? `Fence HR limit: ${inheritedLimit} · ` : ""}Review lineup{kind === "Tournament" ? " and HR Bands" : ""} before starting.</p>}
+                  {mode === "setup" && <p className="setup-summary">{inheritedLimit != null ? `Fence HR limit: ${inheritedLimit} · ` : ""}{snapshot?.capabilities?.manualBatting ? "Batting order is optional; choose players as they bat." : `Review lineup${kind === "Tournament" ? " and HR Bands" : ""} before starting.`}</p>}
                   <details className="setup-details" open={mode === "full" || inheritedLimit == null}>
                     <summary>Date & HR limit</summary>
                   <label>
@@ -1145,7 +1145,7 @@ export function ConnectedScorebook({
                   </p>
                   </details>
                   <details className="setup-details" data-setup-lineup open={mode === "full"}>
-                    <summary>{kind === "Tournament" ? "Lineup & HR Bands" : "Lineup"}</summary>
+                    <summary>{snapshot?.capabilities?.manualBatting ? "Add batting order (optional)" : kind === "Tournament" ? "Lineup & HR Bands" : "Lineup"}</summary>
                   <div key={`${kind}-${tournamentId}`}>
                     {bandFields(kind === "Tournament" ? tournamentId : null)}
                   </div>
