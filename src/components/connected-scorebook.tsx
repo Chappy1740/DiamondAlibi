@@ -5,6 +5,8 @@ import { TournamentNextGame } from "@/components/tournament-next-game";
 import { tournamentContinuation } from "@/lib/tournament-continuation";
 import { ScorebookAudit } from "@/components/scorebook-audit";
 import { GameHrLimitPanel } from "@/components/game-hr-limit";
+import { BattingOutcomePicker } from "./batting-outcome-picker";
+import { DashboardSelect } from "./dashboard-select";
 import { GameScoreboardPanel } from "@/components/game-scoreboard";
 import { connectedScoreboard } from "@/lib/game-scoreboard";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -656,22 +658,7 @@ export function ConnectedScorebook({
           {mode !== "setup" && <section className="card detail-card">
             <h2>Games</h2>
             {games.length ? (
-              <label>
-                Choose a game
-                <select
-                  value={current?.game.id ?? ""}
-                  aria-label="Choose a game"
-                  onChange={(e) => setSelected(e.target.value)}
-                  disabled={busy}
-                >
-                  {games.map((g) => (
-                    <option key={g.game.id} value={g.game.id}>
-                      {g.game.completed ? "Final" : "Live"} · {g.playedOn} ·{" "}
-                      {g.game.opponent} · {g.game.kind}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <DashboardSelect label="Choose a game" name="game" value={current?.game.id ?? ""} disabled={busy} onChange={setSelected} options={games.map((g) => ({ id: g.game.id, name: `${g.game.completed ? "Final" : "Live"} · ${g.playedOn} · ${g.game.opponent} · ${g.game.kind}` }))} />
             ) : (
               <p>No games in this season yet. Set up the first game below.</p>
             )}
@@ -742,24 +729,12 @@ export function ConnectedScorebook({
                     }}
                   >
                     <fieldset disabled={disabled}>
-                      <label>
-                        Batting outcome
-                        <select
-                          value={outcome}
-                          aria-label="Batting outcome"
-                          onChange={(e) => {
-                            const next = e.target.value as Outcome;
-                            setOutcome(next);
-                            const hr = next === "Fence HR" || next === "ITP HR";
-                            setRuns(hr ? 1 : 0);
-                            setRbi(hr ? 1 : 0);
-                          }}
-                        >
-                          {OUTCOMES.map((o) => (
-                            <option key={o}>{o}</option>
-                          ))}
-                        </select>
-                      </label>
+                      <BattingOutcomePicker value={outcome} disabled={disabled} onChange={(next) => {
+                        setOutcome(next);
+                        const hr = next === "Fence HR" || next === "ITP HR";
+                        setRuns(hr ? 1 : 0);
+                        setRbi(hr ? 1 : 0);
+                      }} />
                       <label>
                         Runs on this play
                         <input

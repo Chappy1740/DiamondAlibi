@@ -44,6 +44,44 @@ const assert = require("node:assert/strict");
     assert.equal(await page.getByLabel("Choose a game",{exact:true}).locator("option").count(),1);
     assert.equal(await page.getByRole("region",{name:"Season statistics",exact:true}).isVisible(),false);
     assert.equal(await page.getByRole("button",{name:"Load audit history",exact:true}).isVisible(),false);
+    const picker=page.getByRole("group",{name:"Batting outcome",exact:true});
+    assert.equal(await picker.getByRole("button").count(),9);
+    for(const [name,runs] of [["Fence home run",1],["Inside-the-park HR",1],["Strikeout",0],["Walk",0],["Hit by pitch",0],["Sacrifice fly",0],["Reached on error",0],["Out",0],["Hit",0]]){
+      await picker.getByRole("button",{name,exact:true}).click();
+      assert.equal(await picker.getByRole("button",{name,exact:true}).getAttribute("aria-pressed"),"true");
+      assert.equal(await picker.locator('[aria-pressed="true"]').count(),1);
+      assert.equal(await page.getByLabel("Runs on this play",{exact:true}).inputValue(),String(runs));
+      assert.equal(await page.getByLabel("RBI on this play",{exact:true}).inputValue(),String(runs));
+    }
+    assert.deepEqual(await page.evaluate(()=>window.__writes),[]);
+    const hr=picker.getByRole("button",{name:"Fence home run",exact:true});
+    await hr.focus();await page.keyboard.press("Space");
+    await page.getByLabel("Runs on this play",{exact:true}).fill("2");
+    await page.getByLabel("RBI on this play",{exact:true}).fill("2");
+    await hr.click();
+    assert.equal(await page.getByLabel("Runs on this play",{exact:true}).inputValue(),"2");
+    assert.equal(await page.getByLabel("RBI on this play",{exact:true}).inputValue(),"2");
+    await picker.getByRole("button",{name:"Out",exact:true}).click();await hr.click();
+    for(const width of [320,390,430,800,1440]){
+      await page.setViewportSize({width,height:900});
+      await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+      const layout=await page.evaluate(()=>({width:innerWidth,document:document.documentElement.scrollWidth,outside:Array.from(document.querySelectorAll('body *')).filter(el=>el.getBoundingClientRect().right>innerWidth+1).map(el=>({tag:el.tagName,class:el.className,right:el.getBoundingClientRect().right})).slice(0,12)}));
+      assert.equal(layout.document<=layout.width,true,`${width}px overflow: ${JSON.stringify(layout)}`);
+      assert.equal(await picker.getByRole("button").evaluateAll(buttons=>buttons.every(button=>{
+        const bounds=button.getBoundingClientRect();
+        return bounds.width>=44 && bounds.height>=44 && Array.from(button.querySelectorAll('strong,span')).every(label=>label.scrollWidth<=label.clientWidth && label.scrollHeight<=label.clientHeight);
+      })),true,`Readable outcome labels and touch targets at ${width}px`);
+    }
+    await page.setViewportSize({width:390,height:844});
+    if(process.env.BATTING_SCREENSHOT)await picker.screenshot({path:process.env.BATTING_SCREENSHOT});
+    await page.getByRole("button",{name:"Record plate appearance",exact:true}).click();
+    assert.equal(await page.evaluate(()=>window.__writes.length),1);
+    assert.deepEqual(await page.evaluate(()=>{const c=window.__writes[0].change;return{type:c.type,outcome:c.outcome,runs:c.runs,rbi:c.rbi}}),{type:"score",outcome:"Fence HR",runs:1,rbi:1});
+    await page.goto(`${base}/?mode=score&game=league-game&league=synthetic-league`);
+    await page.getByRole("group",{name:"Batting outcome",exact:true}).waitFor();
+    await page.evaluate(()=>{Object.defineProperty(navigator,'onLine',{configurable:true,value:false});window.dispatchEvent(new Event('offline'))});
+    assert.equal(await page.getByRole("group",{name:"Batting outcome",exact:true}).getByRole("button",{name:"Fence home run",exact:true}).isDisabled(),true);
+    assert.equal(await page.getByRole("button",{name:"Record plate appearance",exact:true}).isDisabled(),true);
     await page.goto(`${base}/?mode=setup&league=synthetic-league`);
     await page.getByRole("form",{name:"Set up a game",exact:true}).waitFor();
     assert.equal(await page.getByRole("button",{name:"Record plate appearance",exact:true}).count(),0);
@@ -127,6 +165,6 @@ const assert = require("node:assert/strict");
     await page.getByText("That game is unavailable in this scorebook.",{exact:false}).waitFor();
     assert.equal(await page.getByRole("button",{name:"Record plate appearance",exact:true}).count(),0);
     assert.deepEqual(await page.evaluate(()=>window.__writes),[]);assert.deepEqual(errors,[]);
-    console.log(`PASS ${process.env.BROWSER_ENGINE || "chromium"} compact setup: actual page heading, first/next-game primary actions above the fold, native date containment, hidden-field validation, preserved HR/Bands payloads and prominent uncertain/offline handling. Score/setup modes: selected competition isolation, no unrelated scoring during setup, inherited zero/2 limits, opponent-only tournament continuation, collapsed statistics/audit, missing-game denial and mobile overflow. Synthetic services only; no hosted writes.`);
+    console.log(`PASS ${process.env.BROWSER_ENGINE || "chromium"} grouped outcome buttons: all nine choices, selected/keyboard state, HR defaults/reset, no write until confirmed, unchanged score payload, offline disabling and readable touch targets at 320–1440px. Compact setup: actual page heading, first/next-game primary actions above the fold, native date containment, hidden-field validation, preserved HR/Bands payloads and prominent uncertain/offline handling. Score/setup modes: selected competition isolation, no unrelated scoring during setup, inherited zero/2 limits, opponent-only tournament continuation, collapsed statistics/audit, missing-game denial and mobile overflow. Synthetic services only; no hosted writes.`);
   } finally{if(browser)await browser.close();if(server)await new Promise(resolve=>server.close(resolve));}
 })().catch(error=>{console.error(error);process.exitCode=1;});
