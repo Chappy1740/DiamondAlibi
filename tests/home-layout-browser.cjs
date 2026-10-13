@@ -53,6 +53,7 @@ const assert = require("node:assert/strict");
     await page.getByLabel("Season", { exact: true }).selectOption("history");
     for (const width of [320,390,430,800,1440]) {
       await page.setViewportSize({ width, height: 900 });
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       const bounds = await page.evaluate(() => ({ viewport: window.innerWidth, document: document.documentElement.scrollWidth, outside: Array.from(document.querySelectorAll('body *')).filter(el => el.getBoundingClientRect().right > window.innerWidth + 1).map(el => ({ tag: el.tagName, class: el.className, width: el.getBoundingClientRect().width, right: el.getBoundingClientRect().right })).slice(0, 15) }));
       assert.equal(bounds.document <= bounds.viewport, true, `${width}px overflow: ${JSON.stringify(bounds)}`);
       assert.equal(await page.locator(".dashboard-select-value").evaluateAll(values => values.every(el => {
