@@ -1,11 +1,12 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { ALIBI_CATEGORIES, ALIBI_PHRASES, type AlibiCategory, type AlibiPage, type AlibiResult, type PersonalAlibi } from "@/lib/personal-alibis";
 
 export function AlibiEditor({ initial = { status: "setup-required" }, saveAction, reloadAction }: {
   initial?: AlibiPage; saveAction?: (input: unknown) => Promise<AlibiResult>;
   reloadAction?: (offset?: number) => Promise<AlibiPage>;
 }) {
+  const editorId = useId();
   const [category, setCategory] = useState<AlibiCategory>("New Gear");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -40,6 +41,9 @@ export function AlibiEditor({ initial = { status: "setup-required" }, saveAction
         if (result.status === "auth-required") setItems([]);
         setMessage("Could not load saved alibis. Your draft stays here; retry after reconnecting or signing in.");
       }
+    } catch {
+      setAvailable(false);
+      setMessage("Could not load saved alibis. Your draft stays here; retry after reconnecting.");
     } finally { locked.current = false; setBusy(false); }
   }
   async function send(request: unknown) {
@@ -79,7 +83,8 @@ export function AlibiEditor({ initial = { status: "setup-required" }, saveAction
         const pool = ALIBI_PHRASES[category].filter((phrase) => phrase !== body);
         setBody(pool[Math.floor(Math.random() * pool.length)]); setMessage("");
       }}>Plead the Fifth? Nah. Generate an Alibi.</button>
-      <label>Your alibi<textarea value={body} onChange={(e) => setBody(e.target.value)} rows={5} maxLength={4000} disabled={disabled} /></label>
+      <label htmlFor={`${editorId}-body`}>Your alibi</label>
+      <textarea id={`${editorId}-body`} value={body} onChange={(e) => setBody(e.target.value)} rows={5} maxLength={4000} disabled={disabled} />
       {body && <blockquote aria-live="polite">“{body}”</blockquote>}
       <div className="action-row">
         <button className="button primary" disabled={disabled || !available || !body.trim()} onClick={() => void send({ action: "save", id: selected?.id ?? crypto.randomUUID(), commandId: crypto.randomUUID(), revision: selected?.revision ?? 0, title, body, category })}>{busy ? "Working…" : "Save alibi"}</button>

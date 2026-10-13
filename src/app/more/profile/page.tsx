@@ -20,7 +20,7 @@ export default async function Page() {
       <h2>Your nickname</h2><p className="micro">Your private profile. Team roster aliases stay with their teams.</p>
       {!profile.error && <ClubForm operation="profile" label="Save nickname"><label>Nickname<input name="nickname" maxLength={40} defaultValue={profile.data?.nickname ?? ""} required /></label></ClubForm>}
       <h2>Your bio</h2>
-      <ClubForm operation="bio" label="Save bio"><label>Bio<textarea name="bio" maxLength={400} rows={4} defaultValue={bio} /></label></ClubForm>
+      <ClubForm operation="bio" label="Save bio"><label htmlFor="profile-bio">Bio</label><textarea id="profile-bio" name="bio" maxLength={400} rows={4} defaultValue={bio} /></ClubForm>
     </section>
   </main>;
 }
