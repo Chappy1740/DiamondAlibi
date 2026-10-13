@@ -2,15 +2,15 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 44,
+  revision: 45,
   updatedAt: "2026-10-13",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
   release: {
-    commit: "ace4ad6",
-    label: "Personal Home, competitions, profiles and alibi editing",
+    commit: "6c03520",
+    label: "Compact tournament game setup",
     status:
-      "Sign-out controls added in e9fb665; ab2ac0e triggered the configured main build. Owner screenshot reported active Worker d40cf3c5. Owner accepted dashboard sign-out to login, signed-out Back/refresh and protected /club. Scorebook control visible; its logout flow remains untested. Personal workflow source 39d7170 passed GitHub validation (66 unit checks, disposable alibi RLS, dashboard loader, actual React/browser workflows, full connected scorebook regression, Worker build and built Next.js pages). Main 97d4251 and redeploy ace4ad6 passed Cloudflare delivery; the latter reported Worker 16aa34b5-4b2b-4772-8752-7584792c897a. Owner reports spacing is much better but not perfect. Compact first/next-game setup is implemented with local typecheck, 22 focused checks, Chromium layout/validation checks, full connected scoring regression and Worker build passing; Safari-engine CI and hosted acceptance remain open. Private alibi persistence is unapplied.",
+      "Sign-out controls added in e9fb665; ab2ac0e triggered the configured main build. Owner screenshot reported active Worker d40cf3c5. Owner accepted dashboard sign-out to login, signed-out Back/refresh and protected /club. Scorebook control visible; its logout flow remains untested. Personal workflow source 39d7170 passed GitHub validation (66 unit checks, disposable alibi RLS, dashboard loader, actual React/browser workflows, full connected scorebook regression, Worker build and built Next.js pages). Main 97d4251 and redeploy ace4ad6 passed Cloudflare delivery; the latter reported Worker 16aa34b5-4b2b-4772-8752-7584792c897a. Owner reports spacing is much better but not perfect. Compact first/next-game setup is implemented with local typecheck, 22 focused checks, Chromium layout/validation checks, full connected scoring regression and Worker build passing; Source 6c03520 passed complete GitHub validation, including mobile WebKit and Chromium setup checks, 66 unit checks, disposable SQL, scoring regression, typecheck, Worker build and built Next.js pages. Hosted acceptance remains open. Private alibi persistence is unapplied.",
   },
   milestones: [
     {
@@ -239,8 +239,8 @@ export const projectTracker: ProjectTracker = {
           title: "Reduce repeated tournament setup and page movement",
           status: "implemented",
           evidence:
-            "Compact next-game UI released as 640fb1c; earlier automated checks passed. Acceptance is paused and incomplete. Owner's original account is their main account. Owner created a separate app account and reported an empty team list; its email was not verified by the agent. Owner then created M3-5 Synthetic Test, Test Player, M3-5 Synthetic Season and M3-5 Synthetic Cup with a 2-game guarantee and HR limit 2, not zero. No Game 2 acceptance was recorded. October 13 owner screenshot confirms the synthetic cup has no games recorded. Add Game 1 opened setup; the owner identified a repeated header, large connection card, excessive spacing and apparent date-field overflow. The walkthrough is paused for that layout fix. Compact first/next-game setup is implemented; Chromium checks verify primary controls, hidden-field validation, date containment, preserved HR/Bands payloads and visible uncertain/offline handling. No personal game records were touched.",
-          next: "Finish Safari-engine validation and release the compact setup fix. Owner first rechecks the Game 1 layout without starting a game; then continue isolated synthetic Game 1/Game 2 acceptance one iPhone step at a time. Require automated validation and explicit owner acceptance before marking complete.",
+            "Compact next-game UI released as 640fb1c; earlier automated checks passed. Acceptance is paused and incomplete. Owner's original account is their main account. Owner created a separate app account and reported an empty team list; its email was not verified by the agent. Owner then created M3-5 Synthetic Test, Test Player, M3-5 Synthetic Season and M3-5 Synthetic Cup with a 2-game guarantee and HR limit 2, not zero. No Game 2 acceptance was recorded. October 13 owner screenshot confirms the synthetic cup has no games recorded. Add Game 1 opened setup; the owner identified a repeated header, large connection card, excessive spacing and apparent date-field overflow. The walkthrough is paused for that layout fix. Compact first/next-game setup is implemented; Chromium checks verify primary controls, hidden-field validation, date containment, preserved HR/Bands payloads and visible uncertain/offline handling. Mobile WebKit and Chromium setup checks, full scoring regression, typecheck/build and the complete GitHub suite passed on source 6c03520. No personal game records were touched.",
+          next: "Release the verified compact setup fix. Owner first rechecks the Game 1 layout without starting a game; then continue isolated synthetic Game 1/Game 2 acceptance one iPhone step at a time. Require automated validation and explicit owner acceptance before marking complete.",
           kind: "work",
         },
         {
@@ -280,7 +280,7 @@ export const projectTracker: ProjectTracker = {
           title: "Make Home personal, add profile control and competition pages, compact phone setup",
           status: "implemented",
           evidence: "Implementation reuses authorized snapshots and existing scoring commands. Login returns Home; leagues/tournaments have games/settings pages; profile menu includes bio, settings, team management and sign-out. Bio uses existing user metadata only as profile text. 55 focused synthetic checks passed locally. Source 39d7170 passed all GitHub checks: 66 unit checks, typecheck, disposable ownership/RLS SQL, actual React workflows, score/setup modes, complete connected scoring regression, Worker build and built Next.js route/mobile checks. Shell dependency installation remains blocked by its unreachable proxy; CI supplied the dependency-backed validation.",
-          next: "Verify the protected main build and hosted behavior, then guide physical iPhone acceptance one step at a time. Owner accepted improved spacing generally, but requested another setup-format pass. Compact first/next-game forms, small connection status, grouped settings and native date containment are implemented; targeted Chromium/scoring/build checks pass. Safari-engine and hosted phone review remain open. Scorebook logout still needs a separate owner check.",
+          next: "Verify the protected main build and hosted behavior, then guide physical iPhone acceptance one step at a time. Owner accepted improved spacing generally, but requested another setup-format pass. Compact first/next-game forms, small connection status, grouped settings and native date containment are implemented; targeted Chromium/scoring/build checks pass. Mobile WebKit validation also passed in GitHub CI on source 6c03520; hosted phone review remains open. Scorebook logout still needs a separate owner check.",
           kind: "work",
         },
       ],
@@ -719,7 +719,7 @@ export const projectTracker: ProjectTracker = {
           title: "Record reviewed source and deployment receipts",
           status: "done",
           evidence:
-            "Sign-out source e9fb665 and build trigger ab2ac0e on main; owner screenshot reported active Worker d40cf3c5. PR #2 source 39d7170 passed automated build/browser/security checks; main Git delivery remains distinct from hosted owner acceptance. Main 97d4251 reported Worker 3a3dcc93-df97-4b18-9ae1-edec2b5ee17b; redeploy ace4ad6 reported Worker 16aa34b5-4b2b-4772-8752-7584792c897a. Live schema proposal remains unapplied.",
+            "Sign-out source e9fb665 and build trigger ab2ac0e on main; owner screenshot reported active Worker d40cf3c5. PR #2 source 39d7170 passed automated build/browser/security checks; main Git delivery remains distinct from hosted owner acceptance. Main 97d4251 reported Worker 3a3dcc93-df97-4b18-9ae1-edec2b5ee17b; redeploy ace4ad6 reported Worker 16aa34b5-4b2b-4772-8752-7584792c897a. Compact setup source 6c03520 passed complete CI including mobile WebKit/Chromium, scoring and Worker build. Live schema proposal remains unapplied.",
           next: "",
           kind: "work",
         },
@@ -788,7 +788,7 @@ export const projectTracker: ProjectTracker = {
   changes: [
     {
       title: "Compact first and next tournament game setup",
-      status: "Implemented after owner phone screenshot: competition/game heading, compact status, opponent/start first, grouped settings and date containment. Local typecheck, 22 focused checks, Chromium layout/validation, scoring regression and Worker build pass. Safari-engine and hosted phone acceptance pending; M3-5 remains incomplete",
+      status: "Implemented after owner phone screenshot: competition/game heading, compact status, opponent/start first, grouped settings and date containment. Local typecheck, 22 focused checks, Chromium layout/validation, scoring regression and Worker build pass. Mobile WebKit and the full GitHub suite also passed on source 6c03520. Hosted phone acceptance pending; M3-5 remains incomplete",
       milestone: "M3",
     },
     {
