@@ -10,10 +10,10 @@ const assert = require("node:assert/strict");
   try {
     const bundle = await esbuild.build({
       stdin: { resolveDir: process.cwd(), loader: "tsx", contents: `
-        import React from 'react';import{createRoot}from'react-dom/client';import{PlayerDashboard}from'./src/components/player-dashboard';
+        import React from 'react';import{createRoot}from'react-dom/client';import{PlayerDashboard}from'./src/components/player-dashboard';import{emptyTotals}from'./src/lib/scoring';
         const long='M3-5 Synthetic Test with an exceptionally long team name';
-        const data={archived:false,roster:[{id:'player',user_id:'synthetic-user',display_name:'Test Player',is_guest:false}],snapshot:{teamId:'team',seasonId:'season',scope:'Overall',games:[],totals:{},board:{player:-2},tournaments:[],leagues:[]}};
-        const p={route:'',sample:false,userId:'synthetic-user',teams:[{id:'team',name:'M3-5 Synthetic Test'},{id:'long',name:long}],seasons:[{id:'season',name:'M3-5 Synthetic Season',archived:false},{id:'history',name:'Synthetic Season with an exceptionally long history name',archived:true}],teamId:'team',seasonId:'season',scope:'Overall',loaded:data};
+        const data={archived:false,roster:[{id:'player',user_id:'synthetic-user',display_name:'Test Player',is_guest:false},{id:'teammate',user_id:'other-user',display_name:'Other Synthetic Player',is_guest:false}],snapshot:{teamId:'team',seasonId:'season',scope:'Overall',games:[{game:{id:'other-game',kind:'League',opponent:'Other synthetic opponent',completed:false,next_batter_position:0},lineup:['teammate'],playedOn:'2026-10-13'}],totals:{player:{...emptyTotals(),PA:4,H:1,HR:1},teammate:{...emptyTotals(),PA:20,H:9,HR:9}},board:{player:-2},tournaments:[],leagues:[]}};
+        const p={route:location.pathname.slice(1),sample:location.search.includes('sample=1'),userId:'synthetic-user',teams:[{id:'team',name:'M3-5 Synthetic Test'},{id:'long',name:long}],seasons:[{id:'season',name:'M3-5 Synthetic Season',archived:false},{id:'history',name:'Synthetic Season with an exceptionally long history name',archived:true}],teamId:'team',seasonId:'season',scope:'Overall',loaded:data};
         createRoot(document.getElementById('app')).render(<PlayerDashboard {...p}/>);` },
       bundle: true, write: false, platform: "browser", jsx: "automatic",
       plugins: [{ name: "synthetic-home", setup(build) {
@@ -41,6 +41,14 @@ const assert = require("node:assert/strict");
     await page.goto(`http://127.0.0.1:${server.address().port}`);
     await page.getByRole("heading", { name: "Your game, Test Player." }).waitFor();
     assert.equal(await page.getByText("2 in credit", { exact: true }).isVisible(), true);
+    assert.equal(await page.locator(".dashboard-notice").count(), 0);
+    assert.equal(await page.getByRole("link", { name: "Explore sample history" }).count(), 0);
+    assert.equal(await page.getByText("Other Synthetic Player", { exact: true }).count(), 0);
+    assert.equal(await page.getByText("Other synthetic opponent", { exact: false }).count(), 0);
+    assert.equal(await page.getByRole("heading", { name: "Team summary" }).count(), 0);
+    assert.equal(await page.getByText("Season activity", { exact: true }).count(), 0);
+    assert.equal(await page.getByRole("link", { name: "All player statistics" }).count(), 0);
+    assert.match(await page.locator(".dashboard-metrics").innerText(), /HR\s+1/);
     assert.equal(await page.evaluate(() => {
       const heading = document.querySelector("h1").getBoundingClientRect();
       const actions = document.querySelector(".competition-entry").getBoundingClientRect();
@@ -72,7 +80,15 @@ const assert = require("node:assert/strict");
     await page.evaluate(() => { Object.defineProperty(navigator, "onLine", { configurable: true, value: false }); window.dispatchEvent(new Event("offline")); });
     await page.getByRole("status").getByText("Offline · displayed records may be out of date", { exact: true }).waitFor();
     assert.equal(await page.getByRole("button", { name: "Refresh records" }).isDisabled(), true);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.locator(".bottom-nav").getByRole("link", { name: "Stats", exact: true }).click();
+    await page.getByRole("heading", { name: "Team summary" }).waitFor();
+    await page.getByRole("region", { name: "Player statistics table" }).getByRole("rowheader", { name: "Other Synthetic Player" }).waitFor();
+    assert.match(await page.locator(".dashboard-metrics").innerText(), /HR\s+10/);
+    await page.locator(".bottom-nav").getByRole("link", { name: "More", exact: true }).click();
+    await page.getByRole("link", { name: "Explore sample history" }).click();
+    await page.locator(".dashboard-notice").getByText("Sample history", { exact: false }).waitFor();
     assert.deepEqual(errors, []);
-    console.log(`PASS ${process.env.BROWSER_ENGINE || "chromium"} Home: heading/actions/summary before controls, complete long selected names at 320–1440px, native keyboard and form selection, unchanged credit and offline refresh handling. Synthetic data only.`);
+    console.log(`PASS ${process.env.BROWSER_ENGINE || "chromium"} Home: heading/actions/summary before controls, complete long selected names at 320–1440px, native keyboard and form selection, own HR/credit only on signed-in Home, no brown notice or team activity, team/roster stats under bottom Stats, sample history under More with its sample notice, and offline refresh handling. Synthetic data only.`);
   } finally { if (browser) await browser.close(); if (server) await new Promise(resolve => server.close(resolve)); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
