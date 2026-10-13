@@ -27,3 +27,5 @@ jobs:
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
       - run: npm run build:worker
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+      - run: node tests/personal-pages-browser.cjs
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}

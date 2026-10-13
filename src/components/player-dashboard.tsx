@@ -229,7 +229,7 @@ export function PlayerDashboard(p: DashboardProps) {
           </form>
           {!p.sample && <DashboardRefresh />}
           <main id="main" tabIndex={-1}>
-            <div className="page-heading">
+            {p.route !== "more/alibi" && <div className="page-heading">
               <div>
                 <span className="eyebrow">
                   {team?.name ?? "Your team"} ·{" "}
@@ -243,7 +243,7 @@ export function PlayerDashboard(p: DashboardProps) {
                 </h1>
                 <p>The stats don’t lie. Your teammates might.</p>
               </div>
-            </div>
+            </div>}
             {p.route === "games/live" &&
               p.sample &&
               loaded &&
