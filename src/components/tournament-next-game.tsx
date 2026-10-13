@@ -64,7 +64,7 @@ export function TournamentNextGame({
     >
       <fieldset disabled={disabled}>
         {!compact && <p>
-          Game {number} · {date} · Reuses the lineup and beverage rules.
+          Game {number} · {date} · {seed.battingMode === "manual" ? "Choose players as needed; Beverage rules retained." : "Reuses the lineup and beverage rules."}
           Tournament HR limit: {template.tournament.fenceLimit}.
         </p>}
         <label>
@@ -78,7 +78,7 @@ export function TournamentNextGame({
           />
         </label>
         <button className="button primary" type="submit">Start Game {number}</button>
-        {compact && <p className="setup-summary">Fence HR limit: {template.tournament.fenceLimit} · Lineup, HR Bands and Beverage rules retained.</p>}
+        {compact && <p className="setup-summary">Fence HR limit: {template.tournament.fenceLimit} · {seed.battingMode === "manual" ? "No batting order needed. HR Bands and Beverage rules retained." : "Lineup, HR Bands and Beverage rules retained."}</p>}
         <details className="setup-details">
           <summary>Edit game settings</summary>
           <div key={seed.game.game.id}>
@@ -120,7 +120,7 @@ export function TournamentNextGame({
                 <input name="overrideReason" maxLength={200} required />
               </label>
             )}
-            <h3>Lineup</h3>
+            <h3>{data.snapshot.capabilities?.manualBatting ? "Batting order (optional)" : "Lineup"}</h3>
             {data.roster.map((p, index) => {
               const fixed = data.bands.find(
                 (b) =>

@@ -7,6 +7,8 @@ import { ScorebookAudit } from "@/components/scorebook-audit";
 import { GameHrLimitPanel } from "@/components/game-hr-limit";
 import { BattingOutcomePicker } from "./batting-outcome-picker";
 import { DashboardSelect } from "./dashboard-select";
+import { VoicePlayEntry } from "./voice-play-entry";
+import { parseNamedPlay } from "@/lib/named-play";
 import { GameScoreboardPanel } from "@/components/game-scoreboard";
 import { connectedScoreboard } from "@/lib/game-scoreboard";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -34,7 +36,8 @@ type Props = {
   initialGameId?: string;
   initialTournamentId?: string;
   initialLeagueId?: string;
-  mode?: "full" | "score" | "setup";
+  mode?: "full" | "score" | "setup" | "manage";
+  managementHref?: string;
   submitAction(input: unknown): Promise<ConnectedResult>;
   reloadAction(
     team: string,
@@ -62,6 +65,7 @@ export function ConnectedScorebook({
   initialTournamentId = "",
   initialLeagueId = "",
   mode = "full",
+  managementHref,
   submitAction,
   reloadAction,
 }: Props) {
@@ -102,6 +106,13 @@ export function ConnectedScorebook({
     pending = useRef<unknown>(null),
     mounted = useRef(true);
   const setupForm = useRef<HTMLFormElement | null>(null);
+  const [manualPlayer, setManualPlayer] = useState("");
+  const [playerSearch, setPlayerSearch] = useState("");
+  const [firstBand, setFirstBand] = useState<boolean | null>(null);
+  const [entryError, setEntryError] = useState("");
+  const countsEdited = useRef(false);
+  const [confirmedPlays, setConfirmedPlays] = useState(0);
+  const pendingPlay = useRef<{ playerId: string; outcome: Outcome; runs: number; rbi: number } | null>(null);
   const snapshot = data?.snapshot;
   const allGames = snapshot?.games ?? [];
   const visibleGames = initialTournamentId ? competitionGames(allGames, "Tournament", initialTournamentId)
@@ -114,6 +125,9 @@ export function ConnectedScorebook({
   );
   // A requested game that vanished must not silently select a different game.
   const current = selected ? games.find((g) => g.game.id === selected) : games[0];
+  const manual = current?.game.batting_mode === "manual";
+  const battingPlayer = manual ? manualPlayer : current?.lineup[current.game.next_batter_position] ?? "";
+  useEffect(() => { setManualPlayer(""); setPlayerSearch(""); setFirstBand(null); setEntryError(""); pendingPlay.current = null; }, [current?.game.id]);
   const playerName = (id: string) =>
     data?.roster.find((p) => p.id === id)?.display_name ??
     "Former roster player";
@@ -325,6 +339,7 @@ export function ConnectedScorebook({
               ? "Previous save confirmed. The change was recorded once."
               : "Saved to the team scorebook.",
         );
+      if (loaded && !conflict && mode === "score" && (request as { change?: { type?: string } }).change?.type === "score") { setConfirmedPlays(value => value + 1); setOutcome("Hit"); setRuns(0); setRbi(0); countsEdited.current = false; setFirstBand(null); pendingPlay.current = null; setManualPlayer(""); setPlayerSearch(""); }
       return loaded && !conflict;
     } finally {
       lock.current = false;
@@ -365,6 +380,35 @@ export function ConnectedScorebook({
     tournamentRevision: g.tournamentRevision,
     change: { ...change, gameId: g.game.id },
   });
+  async function recordPlay(playerId: string, nextOutcome: Outcome, nextRuns: number, nextRbi: number, bandChoice = firstBand) {
+    if (disabled || lock.current || !current || !data || current.game.completed) return false;
+    if (!data.roster.some(player => player.id === playerId)) { setEntryError("Choose the player first."); return false; }
+    if (!manual && playerId !== current.lineup[current.game.next_batter_position]) { setEntryError(`The lineup’s next batter is ${playerName(current.lineup[current.game.next_batter_position])}.`); return false; }
+    if (![nextRuns, nextRbi].every(value => Number.isInteger(value) && value >= 0 && value <= 4) || nextRbi > nextRuns || ((nextOutcome === "Fence HR" || nextOutcome === "ITP HR") && nextRuns < 1)) { setEntryError("RBI cannot exceed runs. A home run must score at least one run."); return false; }
+    const needsBand = manual && current.game.kind === "Tournament" && !data.bands.some(band => band.tournament_id === current.game.tournament_id && band.player_id === playerId);
+    if (needsBand && bandChoice === null) {
+      setManualPlayer(playerId); setEntryError("Choose Band or no Band for this player’s first tournament appearance.");
+      pendingPlay.current = { playerId, outcome: nextOutcome, runs: nextRuns, rbi: nextRbi }; return false;
+    }
+    setEntryError("");
+    const accepted = await save(gameRequest(current, { type: "score", playId: crypto.randomUUID(), playerId, outcome: nextOutcome, runs: nextRuns, rbi: nextRbi, ...(needsBand ? { firstGameBand: bandChoice } : {}) }));
+    if (accepted && mode === "score") { setOutcome("Hit"); setRuns(0); setRbi(0); countsEdited.current = false; setFirstBand(null); pendingPlay.current = null; if (manual) { setManualPlayer(""); setPlayerSearch(""); } }
+    return accepted;
+  }
+  function pickOutcome(next: Outcome) {
+    const hr = next === "Fence HR" || next === "ITP HR";
+    const nextRuns = countsEdited.current ? Math.max(runs, hr ? 1 : 0) : hr ? 1 : 0;
+    const nextRbi = countsEdited.current ? rbi : hr ? 1 : 0;
+    setOutcome(next); setRuns(nextRuns); setRbi(nextRbi);
+    void recordPlay(battingPlayer, next, nextRuns, nextRbi);
+  }
+  async function spokenPlay(text: string) {
+    if (!data || !current || disabled) return false;
+    const result = parseNamedPlay(text, data.roster, battingPlayer);
+    if (result.status !== "ok") { setEntryError(result.message); return false; }
+    setOutcome(result.outcome); setRuns(result.runs); setRbi(result.rbi);
+    return recordPlay(result.playerId, result.outcome, result.runs, result.rbi);
+  }
   function bandFields(tour: string | null, game?: ConnectedGame) {
     return data?.roster.map((p, index) => {
       const fixed = tour
@@ -385,7 +429,7 @@ export function ConnectedScorebook({
             (b) => b.game_id === game.game.id && b.player_id === p.id,
           ),
         );
-      const chosen = !game || game.lineup.includes(p.id);
+      const chosen = game ? game.lineup.includes(p.id) : !snapshot?.capabilities?.manualBatting;
       return (
         <div className="scorebook-player" key={p.id}>
           <label>
@@ -444,7 +488,7 @@ export function ConnectedScorebook({
     chosenLeague: string,
     gameOverride: boolean,
   ) {
-    const selectedLineup = lineup(form);
+    const selectedLineup = snapshot?.capabilities?.manualBatting && !form.getAll("player").length ? [] : lineup(form);
     if (!selectedLineup) return;
     const date = String(form.get("date")),
       existingDay = snapshot?.games.find((g) => g.playedOn === date);
@@ -497,6 +541,7 @@ export function ConnectedScorebook({
             }
           : {}),
         lineup: selectedLineup,
+        ...(snapshot?.capabilities?.manualBatting ? { battingMode: selectedLineup.length ? "ordered" : "manual" } : {}),
         rules: {
           version: `Game rules ${crypto.randomUUID()}`,
           fenceLimit: Number(form.get("limit")),
@@ -516,6 +561,7 @@ export function ConnectedScorebook({
       next = lineup(form);
     if (!next || !data) return;
     const changes: Record<string, unknown> = { type: "lineup", lineup: next };
+    if (g.game.batting_mode === "manual") { changes.battingMode = "ordered"; changes.nextBatter = next[0]; changes.reason = String(form.get("modeReason")).trim() || "Coach-entered batting order before scoring"; }
     if (g.game.kind === "Tournament")
       changes.firstGameBands = Object.fromEntries(
         next
@@ -665,57 +711,53 @@ export function ConnectedScorebook({
                   ? "Final — corrections remain available"
                   : "Live"}
               </p>
-              {!current.game.completed && (
+              {!current.game.completed && mode !== "manage" && (
                 <>
-                  <h3>
-                    Next batter:{" "}
-                    {playerName(
-                      current.lineup[current.game.next_batter_position],
-                    )}
-                  </h3>
+                  {manual ? <div className="manual-batter">
+                    <h3>{manualPlayer ? `Batting: ${playerName(manualPlayer)}` : "Who’s batting?"}</h3>
+                    <input aria-label="Find player" placeholder="Player name" value={playerSearch} disabled={disabled} onChange={event => { setPlayerSearch(event.target.value); setManualPlayer(""); setFirstBand(null); pendingPlay.current = null; }} />
+                    <div className="manual-player-buttons" role="group" aria-label="Choose batting player">
+                      {data?.roster.filter(player => (!manualPlayer || player.id === manualPlayer || playerSearch) && player.display_name.toLocaleLowerCase().includes(playerSearch.toLocaleLowerCase())).slice(0,6).map(player => <button type="button" key={player.id} disabled={disabled} aria-pressed={manualPlayer === player.id} onClick={() => { setManualPlayer(player.id); setPlayerSearch(""); setFirstBand(null); pendingPlay.current = null; setEntryError(""); }}>{player.display_name}</button>)}
+                    </div>
+                  </div> : <h3>Next batter: {playerName(battingPlayer)}</h3>}
+                  {mode === "score" && <VoicePlayEntry disabled={disabled} resetKey={confirmedPlays} onResult={spokenPlay} />}
+                  {entryError && <p className="entry-error" role="alert">{entryError}</p>}
+                  {manual && manualPlayer && current.game.kind === "Tournament" && !data?.bands.some(band => band.tournament_id === current.game.tournament_id && band.player_id === manualPlayer) && <div className="first-band-choice" role="group" aria-label="First tournament Band choice">
+                    <span>HR Band for {playerName(manualPlayer)}?</span>
+                    {[false,true].map(choice => <button key={String(choice)} type="button" disabled={disabled} aria-pressed={firstBand === choice} onClick={() => { setFirstBand(choice); const draft = pendingPlay.current; if (draft) void recordPlay(draft.playerId,draft.outcome,draft.runs,draft.rbi,choice); }}>{choice ? "Has Band" : "No Band"}</button>)}
+                  </div>}
                   <form
                     className="club-form at-bat-form"
                     onSubmit={(e) => {
                       formData(e);
-                      void save(
-                        gameRequest(current, {
-                          type: "score",
-                          playId: crypto.randomUUID(),
-                          playerId:
-                            current.lineup[current.game.next_batter_position],
-                          outcome,
-                          runs,
-                          rbi,
-                        }),
-                      );
+                      void recordPlay(battingPlayer, outcome, runs, rbi);
                     }}
                   >
                     <fieldset disabled={disabled}>
-                      <BattingOutcomePicker value={outcome} disabled={disabled} onChange={(next) => {
+                      <div className="at-bat-rbi" role="group" aria-label="RBI on this play">
+                        <span>RBI</span>
+                        <div className="rbi-buttons">
+                          {[0, 1, 2, 3, 4].map((value) => <button key={value} type="button" aria-label={`${value} RBI`} aria-pressed={rbi === value} disabled={disabled} onClick={() => { countsEdited.current = true; setRbi(value); setRuns(Math.max(runs, value)); }}>{value} RBI</button>)}
+                        </div>
+                      </div>
+                      <label className="at-bat-runs">
+                        Runs on this play
+                        <input type="number" min={0} max={4} value={runs} onChange={(e) => { countsEdited.current = true; setRuns(Number(e.target.value)); }} required />
+                      </label>
+                      <input type="hidden" name="at-bat-rbi" value={rbi} />
+                      {mode === "score" && <p className="quick-play-hint">Set RBI when needed, then tap the result to record.</p>}
+                      <BattingOutcomePicker value={outcome} disabled={disabled} onPick={mode === "score" ? pickOutcome : undefined} onChange={(next) => {
                         setOutcome(next);
                         const hr = next === "Fence HR" || next === "ITP HR";
                         setRuns(hr ? 1 : 0);
                         setRbi(hr ? 1 : 0);
                       }} />
-                      <div className="at-bat-rbi" role="group" aria-label="RBI on this play">
-                        <span>RBI</span>
-                        <div className="rbi-buttons">
-                          {[0, 1, 2, 3, 4].map((value) => <button key={value} type="button" aria-label={`${value} RBI`} aria-pressed={rbi === value} disabled={disabled} onClick={() => { setRbi(value); setRuns(Math.max(runs, value)); }}>{value} RBI</button>)}
-                        </div>
-                      </div>
-                      <label className="at-bat-runs">
-                        Runs on this play
-                        <input type="number" min={0} max={4} value={runs} onChange={(e) => setRuns(Number(e.target.value))} required />
-                      </label>
-                      <input type="hidden" name="at-bat-rbi" value={rbi} />
-                      <button className="button primary">
-                        Record plate appearance
-                      </button>
+                      {mode !== "score" && <button className="button primary">Record plate appearance</button>}
                     </fieldset>
                   </form>
                 </>
               )}
-              <details className="game-management" open={mode === "full" || current.game.completed}>
+              {mode !== "score" && <details className="game-management" open={mode === "full" || mode === "manage" || current.game.completed}>
                 <summary>Game details & settings</summary>
               <GameScoreboardPanel
                 key={current.game.id}
@@ -743,7 +785,7 @@ export function ConnectedScorebook({
                 }
               />
                 {!current.game.completed && <>
-                  <details>
+                  {!manual && <details>
                     <summary>Change next batter</summary>
                     <form
                       className="club-form"
@@ -780,9 +822,9 @@ export function ConnectedScorebook({
                         </button>
                       </fieldset>
                     </form>
-                  </details>
+                  </details>}
                   <details>
-                    <summary>Edit batting order</summary>
+                    <summary>{manual ? "Add coach lineup" : "Edit batting order"}</summary>
                     <form
                       className="club-form"
                       key={JSON.stringify(current.lineup)}
@@ -790,12 +832,17 @@ export function ConnectedScorebook({
                     >
                       <fieldset disabled={disabled}>
                         {bandFields(current.game.tournament_id, current)}
+                        {current.game.batting_mode === "manual" && <label>Batting order change reason<input name="modeReason" required={current.evaluation.rows.length > 0} maxLength={200} /></label>}
+                        {current.game.batting_mode === "manual" && <p>After saving, batting starts at position 1.</p>}
                         <button className="button secondary">
                           Save lineup
                         </button>
                       </fieldset>
                     </form>
                   </details>
+                  {!manual && snapshot?.capabilities?.manualBatting && <form className="club-form" onSubmit={event => { const f = formData(event); void save(gameRequest(current, { type: "lineup", lineup: [], ...(current.game.kind === "Tournament" ? { firstGameBands: {} } : {}), battingMode: "manual", reason: String(f.get("modeReason")).trim() || "Choose batting players before scoring" })); }}>
+                    <fieldset disabled={disabled}><label>Switch to player-by-player scoring reason<input name="modeReason" required={current.evaluation.rows.length > 0} maxLength={200} /></label><button className="button secondary">Choose players as they bat</button></fieldset>
+                  </form>}
                   <button
                     className="button secondary"
                     disabled={disabled}
@@ -806,8 +853,9 @@ export function ConnectedScorebook({
                     Mark game complete
                   </button>
                 </>}
-              </details>
-              <details className="at-bat-history" open={mode === "full" || current.game.completed}>
+              </details>}
+              {mode === "score" && managementHref && <a className="text-link game-details-link" href={`${managementHref}&game=${encodeURIComponent(current.game.id)}`}>Game details</a>}
+              {mode !== "score" && <details className="at-bat-history" open={mode === "full" || current.game.completed}>
                 <summary>Plate appearances · {current.evaluation.rows.length}</summary>
               <h3>Plate appearances</h3>
               {!current.evaluation.rows.length && (
@@ -901,10 +949,10 @@ export function ConnectedScorebook({
                   </form>
                 </details>
               ))}
-              </details>
+              </details>}
             </section>
           )}
-          {mode !== "setup" && <details className="game-switcher" open={mode === "full"}>
+          {(mode === "full" || mode === "manage") && <details className="game-switcher" open={mode === "full"}>
             <summary>Change game</summary>
             {games.length ? (
               <DashboardSelect label="Choose a game" name="game" value={current?.game.id ?? ""} disabled={busy} onChange={setSelected} options={games.map((g) => ({ id: g.game.id, name: `${g.game.completed ? "Final" : "Live"} · ${g.playedOn} · ${g.game.opponent} · ${g.game.kind}` }))} />
@@ -912,7 +960,7 @@ export function ConnectedScorebook({
               <p>No games in this season yet. Set up the first game below.</p>
             )}
           </details>}
-          {mode !== "setup" && <details className="card detail-card" open={mode === "full"}>
+          {(mode === "full" || mode === "manage") && <details className="card detail-card" open={mode === "full"}>
             <summary>Season statistics</summary>
             <div
               className="scorebook-toolbar"
@@ -992,7 +1040,7 @@ export function ConnectedScorebook({
                     <input name="opponent" maxLength={200} required />
                   </label>
                   {mode === "setup" && <button className="button primary" type="submit">{setupNumber ? `Start Game ${setupNumber}` : "Start game"}</button>}
-                  {mode === "setup" && <p className="setup-summary">{inheritedLimit != null ? `Fence HR limit: ${inheritedLimit} · ` : ""}Review lineup{kind === "Tournament" ? " and HR Bands" : ""} before starting.</p>}
+                  {mode === "setup" && <p className="setup-summary">{inheritedLimit != null ? `Fence HR limit: ${inheritedLimit} · ` : ""}{snapshot?.capabilities?.manualBatting ? "Batting order is optional; choose players as they bat." : `Review lineup${kind === "Tournament" ? " and HR Bands" : ""} before starting.`}</p>}
                   <details className="setup-details" open={mode === "full" || inheritedLimit == null}>
                     <summary>Date & HR limit</summary>
                   <label>
@@ -1097,7 +1145,7 @@ export function ConnectedScorebook({
                   </p>
                   </details>
                   <details className="setup-details" data-setup-lineup open={mode === "full"}>
-                    <summary>{kind === "Tournament" ? "Lineup & HR Bands" : "Lineup"}</summary>
+                    <summary>{snapshot?.capabilities?.manualBatting ? "Add batting order (optional)" : kind === "Tournament" ? "Lineup & HR Bands" : "Lineup"}</summary>
                   <div key={`${kind}-${tournamentId}`}>
                     {bandFields(kind === "Tournament" ? tournamentId : null)}
                   </div>
@@ -1230,7 +1278,7 @@ export function ConnectedScorebook({
               />
             </section>
           )}
-          {mode !== "setup" && (mode === "full" || !!initialTournamentId || !!current?.game.tournament_id) && <details className="card detail-card" open={mode === "full" || !!current?.game.completed}>
+          {(mode === "full" || mode === "manage") && (mode === "full" || !!initialTournamentId || !!current?.game.tournament_id) && <details className="card detail-card" open={mode === "full" || !!current?.game.completed}>
             <summary>Tournament games and Band corrections</summary>
             <p className="micro">
               Assignments stay fixed across tournament games. Corrections
@@ -1396,7 +1444,7 @@ export function ConnectedScorebook({
               </details>
             ))}
           </details>}
-          {mode !== "setup" && <details className="card detail-card" open={mode === "full"}>
+          {(mode === "full" || mode === "manage") && <details className="card detail-card" open={mode === "full"}>
             <summary>Audit history</summary>
             <button
               className="button secondary"

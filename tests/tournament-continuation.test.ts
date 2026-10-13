@@ -127,3 +127,8 @@ test("incomplete historical settings retain explicit setup instead of guessing d
     assert.equal(tournamentContinuation(data, "cup"), null);
   }
 });
+
+test("manual continuation keeps an empty order and stable competition settings", () => {
+  const data = fixture(); data.snapshot.games[0].game.batting_mode = "manual"; data.snapshot.games[0].lineup = [];
+  const result = tournamentContinuation(data, "cup"); assert.ok(result); assert.equal(result.battingMode, "manual"); assert.deepEqual(result.game.lineup, []); assert.equal(result.tournament.fenceLimit, 0);
+});

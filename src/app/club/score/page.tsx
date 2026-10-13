@@ -18,6 +18,7 @@ export default async function ScorePage({
     tournament?: string;
     league?: string;
     setup?: string;
+    manage?: string;
   }>;
 }) {
   const query = await searchParams;
@@ -74,6 +75,8 @@ export default async function ScorePage({
   const competitionId = tournament?.id ?? league?.id ?? game?.game.tournament_id ?? game?.game.league_id;
   const competitionKind = tournament || game?.game.kind === "Tournament" ? "Tournament" : "League";
   const context = contextQuery(team.id, season.id);
+  const manageMode = query.manage === "1";
+  if (manageMode && !game) redirect(`/club/score?${context}`);
   const setupMode = query.setup === "1" || (!query.game && initial.status === "ok" && !initial.data.snapshot.games.length);
   const setupNumber = tournament && initial.status === "ok"
     ? initial.data.snapshot.games.filter((g) => g.game.tournament_id === tournament.id).length + 1 : null;
@@ -83,11 +86,11 @@ export default async function ScorePage({
         <BrandLink href={`/?${context}`} />
         <ProfileMenu context={context} />
       </header>
-      <Link className="text-link" href={competitionId ? `${competitionPath(competitionKind, competitionId)}?${context}` : `/?${context}`}>{competitionId ? `Back to ${competitionKind.toLowerCase()}` : "Home"}</Link>
-      <div className={setupMode ? "page-heading" : "scoring-page-heading"}>
+      <Link className="text-link" href={manageMode ? `/club/score?${context}&game=${encodeURIComponent(game!.game.id)}` : competitionId ? `${competitionPath(competitionKind, competitionId)}?${context}` : `/?${context}`}>{manageMode ? "Back to scoring" : competitionId ? `Back to ${competitionKind.toLowerCase()}` : "Home"}</Link>
+      <div className={setupMode || manageMode ? "page-heading" : "scoring-page-heading"}>
         <div>
           <span className="eyebrow">{setupMode ? setupNumber ? `Game ${setupNumber} · Tournament` : query.tournament ? "New tournament game" : "New league game" : ""}</span>
-          <h1>{setupMode ? tournament?.name ?? league?.name ?? "Set up a game" : "Scorebook"}</h1>
+          <h1>{setupMode ? tournament?.name ?? league?.name ?? "Set up a game" : manageMode ? "Game details" : "Scorebook"}</h1>
           <p>{setupMode ? `${team.name} · ${season.name}` : ""}</p>
         </div>
       </div>
@@ -99,7 +102,8 @@ export default async function ScorePage({
         initial={initial}
         initialGameId={query.game}
         initialLeagueId={league?.id}
-        mode={setupMode ? "setup" : "score"}
+        mode={setupMode ? "setup" : manageMode ? "manage" : "score"}
+        managementHref={`/club/score?${context}&manage=1`}
         initialTournamentId={
           initial.status === "ok" &&
           initial.data.snapshot.tournaments.some(
