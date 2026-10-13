@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { signout } from "@/app/login/actions";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
@@ -62,13 +63,16 @@ export default async function ScorePage({
   const initial = await loadScorebook(team.id, season.id, "Overall");
   return (
     <main className="connected-wrap">
-      <header className="connected-header">
+      <header className="connected-header" style={{ flexWrap: "wrap" }}>
         <Link className="compact-brand" href="/">
           DIAMOND ALIBI<span className="accent">.</span>
         </Link>
         <Link className="button secondary" href="/club">
           My clubhouse
         </Link>
+        <form action={signout}>
+          <button className="button secondary" type="submit">Sign out</button>
+        </form>
       </header>
       <div className="page-heading">
         <div>
@@ -98,3 +102,4 @@ export default async function ScorePage({
     </main>
   );
 }
+

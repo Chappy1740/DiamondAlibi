@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { signout } from "@/app/login/actions";
 import { BrandLink } from "./brand-link";
 import {
   House,
@@ -156,6 +157,11 @@ export function PlayerDashboard(p: DashboardProps) {
           >
             {p.review ? "Review hub" : "My clubhouse"}
           </Link>
+          {!p.sample && !p.review && p.userId && (
+            <form action={signout}>
+              <button className="button secondary" type="submit">Sign out</button>
+            </form>
+          )}
         </header>
         <div className="content-wrap">
           <p className="connection-notice">
@@ -556,3 +562,4 @@ export function PlayerDashboard(p: DashboardProps) {
     </>
   );
 }
+
