@@ -2,7 +2,7 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 60,
+  revision: 61,
   updatedAt: "2026-10-13",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
@@ -153,7 +153,7 @@ export const projectTracker: ProjectTracker = {
           title: "Apply season-wide beverage rules, credits and season reset",
           status: "done",
           evidence:
-            "League/tournament combined Board and historical-season isolation tests pass. Owner's October 13 refinement requires finalized team-wide Beverage Rules and self-only future-at-bat opt-out/rejoin; that new persistence/security work is tracked separately under M3-14 and is not yet live.",
+            "League/tournament combined Board and historical-season isolation tests pass. Owner's refinement requires finalized team-wide Beverage Rules and self-only future-at-bat opt-out/rejoin. The specifically approved migration is applied under M3-14; hosted synthetic RPC checks pass while iPhone acceptance remains open.",
           next: "",
           kind: "work",
         },
@@ -323,9 +323,9 @@ export const projectTracker: ProjectTracker = {
           id: "M3-14",
           group: "Beverage participation",
           title: "Finalize team Beverage Rules and let players opt out or rejoin",
-          status: "in_progress",
-          evidence: "Owner requires one finalized team rule set, with a personal participation button; owner explicitly confirmed future at-bats only while retaining existing owed balances and credits. Current main 47812e7 and contribution boundaries were reviewed; no AGENTS.md was present. Concrete executable schema/RPC design is in supabase/proposals/team-beverage-design.md and team_beverage_rules.sql. Local private tables store immutable finalized rules, preference events and stable command receipts; server triggers capture participation at each original play boundary so later toggles/corrections cannot rewrite history. Baseball statistics, HR use, Bands and existing formulas remain. Account-linked players can change only their own choice for the selected team, across devices/seasons. Existing records remain participating; no team values are silently finalized. The local UI adds Opt out/Participate on Beverage and one-time rules finalization in team management; new-game setup uses canonical team values internally and removes the per-game editor when the approved capability exists. Disposable SQL tests pass for credits, future-only changes, stats/HR consumption, corrections/voids/replay, self ownership, team/season isolation, archived history, inactive denial, conflicts/retries and ACL/RLS. Specific live schema approval and hosted acceptance remain outstanding. No live schema, auth, bindings or personal records were changed.",
-          next: "Local transport/SQL, Chromium/mobile WebKit controls and scoring modes, full connected scoring regression, typecheck, Worker build and built Next.js routes pass. Request specific approval for the reviewed team Beverage migration; the capability remains inactive until application. After approval, apply and verify only with rollback-only synthetic RPCs and guide hosted Opt out/Participate acceptance one step at a time. Keep M3-5 incomplete.",
+          status: "implemented",
+          evidence: "Owner requires one finalized team rule set, with a personal participation button; owner explicitly confirmed future at-bats only while retaining existing owed balances and credits. Current main 47812e7 and contribution boundaries were reviewed; no AGENTS.md was present. Concrete executable schema/RPC design is in supabase/proposals/team-beverage-design.md and team_beverage_rules.sql. Local private tables store immutable finalized rules, preference events and stable command receipts; server triggers capture participation at each original play boundary so later toggles/corrections cannot rewrite history. Baseball statistics, HR use, Bands and existing formulas remain. Account-linked players can change only their own choice for the selected team, across devices/seasons. Existing records remain participating; no team values are silently finalized. The local UI adds Opt out/Participate on Beverage and one-time rules finalization in team management; new-game setup uses canonical team values internally and removes the per-game editor when the approved capability exists. Disposable SQL tests pass for credits, future-only changes, stats/HR consumption, corrections/voids/replay, self ownership, team/season isolation, archived history, inactive denial, conflicts/retries and ACL/RLS. Owner explicitly instructed Apply push publish deploy. Canonical migration 20261014022554_team_beverage_rules is applied once and enables the capability. Hosted rollback-only synthetic noncaptain RPC checks pass for finalization, self-only choices, credits, opted-out stats/HR/OLHR, rejoin, stale/late retries, corrections/replay, team/season denial, archived/inactive/anonymous denial. Follow-up reads confirm fixture teams/seasons absent; no personal game records were edited or team rules automatically finalized. Live RLS, anonymous/direct-write denial, fixed search paths and reviewed function hashes pass. Advisor differences are expected private-table/unused-index INFO notices; the prior password warning and five unindexed foreign keys remain. UI 4bd093b is published with Worker 1787c168; phone and cross-device acceptance remain open.",
+          next: "Publish the canonical migration and hosted rollout evidence, confirm Cloudflare deployment, then guide the isolated synthetic account through Beverage participation and one-time team rule finalization. Accept existing balance preservation, future-only opt-out/rejoin, refresh and cross-device behavior on iPhone. M3-14 and M3-5 remain incomplete until explicit owner acceptance.",
           kind: "work",
         },
       ],

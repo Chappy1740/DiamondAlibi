@@ -67,11 +67,26 @@ do $$ begin
  raise exception 'Unexpected live scoring definitions; review before applying'; end if;
 end $$;
 `;
-fs.writeFileSync(
-  "supabase/proposals/team_beverage_rules.sql",
+const sql =
   header +
-    fs.readFileSync("supabase/proposals/team_beverage_base.sql", "utf8") +
-    "\n" +
-    [start, evaluate, snapshot].join("\n\n") +
-    "\ncommit;\n",
-);
+  fs.readFileSync("supabase/proposals/team_beverage_base.sql", "utf8") +
+  "\n" +
+  [start, evaluate, snapshot].join("\n\n") +
+  "\ncommit;\n";
+const canonical = "supabase/migrations/20261014022554_team_beverage_rules.sql";
+if (fs.existsSync(canonical)) {
+  // Applied SQL is immutable. Verify its body instead of regenerating a proposal.
+  const executable = (value) =>
+    value
+      .split("\n")
+      .filter((line) => line.trim() && !line.trimStart().startsWith("--"))
+      .join("\n");
+  assert.equal(
+    executable(fs.readFileSync(canonical, "utf8")),
+    executable(sql),
+    "Canonical migration differs from the reviewed source",
+  );
+  console.log("Canonical team Beverage migration matches reviewed source.");
+} else {
+  fs.writeFileSync("supabase/proposals/team_beverage_rules.sql", sql);
+}

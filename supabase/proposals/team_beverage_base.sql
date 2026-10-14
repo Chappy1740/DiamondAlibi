@@ -1,5 +1,5 @@
--- REVIEW ONLY. Not approved for live application. No team is finalized automatically.
--- Combined with the three reviewed function replacements in team_beverage_rules.sql.
+-- Review source fragments for the approved canonical team Beverage migration.
+-- No team is finalized automatically. The verification script performs no database I/O.
 create function private.valid_beverage_rules(value jsonb) returns boolean
 language sql immutable security invoker set search_path='' as $$
  select value is not null and jsonb_typeof(value)='object'
