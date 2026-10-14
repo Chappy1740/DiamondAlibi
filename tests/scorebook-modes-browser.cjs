@@ -17,8 +17,8 @@ const assert = require("node:assert/strict");
       if(query.has('empty')){data.snapshot.games=data.snapshot.games.filter(g=>!g.game.tournament_id);data.bands=[];}
       if(query.has('manual')){data.snapshot.capabilities={manualBatting:true};data.roster.push({id:'adam-player',display_name:'Adam Jones',is_guest:false});data.snapshot.games.forEach(game=>{game.game.batting_mode='manual';game.lineup=[];});if(query.has('first-band'))data.bands=[];}
       if(query.has('voice'))window.SpeechRecognition=class{start(){window.__recognition=this;}stop(){}abort(){window.__aborted=true;}};
-      window.__fixture=data;
-      if(query.has('page')) ScorePage({searchParams:Promise.resolve({setup:query.has('scoring-page')?undefined:'1',game:query.has('scoring-page')?'cup-game':undefined,tournament:query.get('tournament')||undefined,league:query.get('league')||undefined})}).then(ui=>createRoot(document.getElementById('app')).render(ui));
+      window.__fixture=data;window.__audit=[{action:'hrLimit',reason:'Tournament game history',after:{game:{id:'cup-game'},fenceLimit:2}},{action:'hrLimit',reason:'League game history',after:{game:{id:'league-game'},fenceLimit:0}},{action:'band',tournamentId:'synthetic-cup',reason:'Cup Band history',before:true,after:false},{action:'start',reason:'Other game history',after:{gameId:'other-game'}}];
+      if(query.has('page')) ScorePage({searchParams:Promise.resolve({setup:query.has('scoring-page')||query.has('manage-page')?undefined:'1',manage:query.has('manage-page')?'1':undefined,game:query.has('manage-page')?(query.get('game')||'cup-game'):query.has('scoring-page')?'cup-game':undefined,tournament:query.get('tournament')||undefined,league:query.get('league')||undefined})}).then(ui=>createRoot(document.getElementById('app')).render(ui));
       else
       createRoot(document.getElementById('app')).render(<main className="connected-wrap"><h1>Synthetic scorebook</h1><ConnectedScorebook storageKey="synthetic.mode-test" teamId="synthetic-team" seasonId="synthetic-season" initial={{status:'ok',data}} mode={query.get('mode')||'score'} initialGameId={query.get('game')||''} initialLeagueId={query.get('league')||''} initialTournamentId={query.get('tournament')||''} submitAction={async(input)=>{window.__writes.push(input);return query.has('quick')?{status:'ok',data:{status:'ok'}}:{status:'invalid'}}} reloadAction={async()=>({status:'ok',data})}/></main>);
     `},bundle:true,write:false,platform:"browser",jsx:"automatic",plugins:[{name:"synthetic-page-context",setup(build){
@@ -30,7 +30,7 @@ const assert = require("node:assert/strict");
         args.path === "next/image" ? "import React from 'react';export default function Image({unoptimized,...props}){return <img {...props}/>}" :
         args.path === "@/app/login/actions" ? "export async function signout(){}" :
         args.path === "@/lib/supabase/server" ? "export async function supabaseServer(){return {auth:{getUser:async()=>({data:{user:{id:'synthetic-user'}},error:null})},from:(table)=>({select(){return this},eq(){return this},order(){return Promise.resolve({data:table==='teams'?[{id:'synthetic-team',name:'M3-5 Synthetic Test'}]:[{id:'synthetic-season',name:'M3-5 Synthetic Season',archived:false}]})}})}}" :
-        "export async function loadScorebook(){return window.__reloadStatus==='ok'?{status:'ok',data:window.__fixture}:{status:window.__reloadStatus}};export async function scoringAction(input){window.__writes.push(input);return{status:window.__writeResult,commandId:input.commandId}}"
+        "export async function loadScorebook(){return window.__reloadStatus==='ok'?{status:'ok',data:window.__fixture}:{status:window.__reloadStatus}};export async function scoringAction(input){window.__writes.push(input);if(input.type==='audit')return{status:'ok',data:{events:window.__audit,nextCursor:null}};return{status:window.__writeResult,commandId:input.commandId}}"
       }));
     }}]});
     const css=fs.readFileSync("src/app/globals.css","utf8");
@@ -89,6 +89,38 @@ const assert = require("node:assert/strict");
     await page.getByText('Game details & settings',{exact:true}).waitFor();
     assert.equal(await page.getByRole('group',{name:'Batting outcome',exact:true}).count(),0);
     assert.equal(await page.getByRole('button',{name:'Mark game complete',exact:true}).count(),1);
+    // Actual management route opened by Game details, without a competition query.
+    // Mixed season fixtures must not leak setup, stats or another game into it.
+    for(const game of ['cup-game','league-game']){
+      await page.goto(`${base}/?page=1&manage-page=1&game=${game}`);
+      await page.getByRole('heading',{name:'Game details',exact:true}).waitFor();
+      assert.equal(await page.getByRole('form',{name:'Set up a game',exact:true}).count(),0);
+      assert.equal(await page.getByLabel('Game kind',{exact:true}).count(),0);
+      assert.equal(await page.getByLabel('Opponent',{exact:true}).count(),0);
+      assert.equal(await page.getByLabel('League',{exact:true}).count(),0);
+      assert.equal(await page.getByLabel('Choose a game',{exact:true}).count(),0);
+      assert.equal(await page.getByRole('region',{name:'Season statistics',exact:true}).count(),0);
+      assert.equal(await page.getByRole('button',{name:/Create Game/}).count(),0);
+      assert.equal(await page.getByRole('button',{name:'Mark game complete',exact:true}).count(),1);
+      await page.getByText('Audit history',{exact:true}).click();
+      await page.getByRole('button',{name:'Load audit history',exact:true}).click();
+      await page.locator('.scorebook-audit').waitFor();
+      assert.equal(await page.getByText('Reason: Tournament game history',{exact:true}).count(),game==='cup-game'?1:0);
+      assert.equal(await page.getByText('Reason: League game history',{exact:true}).count(),game==='league-game'?1:0);
+      assert.equal(await page.getByText('Reason: Cup Band history',{exact:true}).count(),game==='cup-game'?1:0);
+      assert.equal(await page.getByText('Reason: Other game history',{exact:true}).count(),0);
+      assert.equal(await page.getByRole('link',{name:'Back to scoring',exact:true}).getAttribute('href').then(h=>h.includes(`game=${game}`)),true);
+      const details=page.locator('.game-management');
+      assert.equal(await details.getByText('Change HR limit for this game',{exact:true}).count(),1);
+      await details.getByText('Change HR limit for this game',{exact:true}).click();
+      assert.equal(await details.getByLabel('HR limit correction reason',{exact:true}).isVisible(),true);
+      for(const width of [320,390,430,800,1440]){
+        await page.setViewportSize({width,height:900});
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${game} management overflow at ${width}`);
+      }
+      assert.deepEqual(await page.evaluate(()=>window.__writes.filter(write=>write.type!=='audit')),[]);
+    }
+    await page.setViewportSize({width:390,height:844});
     await page.goto(`${base}/?mode=full&game=league-game&league=synthetic-league`);
     await page.getByRole("button",{name:"Record plate appearance",exact:true}).waitFor();
     assert.equal(await page.getByRole("heading",{name:"Set up a game",exact:true}).count(),1);

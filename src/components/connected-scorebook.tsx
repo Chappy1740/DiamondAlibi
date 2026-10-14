@@ -3,6 +3,7 @@ import { competitionGames, competitionPath, contextQuery } from "@/lib/competiti
 import { revealInvalidField } from "@/lib/form-details";
 import { TournamentNextGame } from "@/components/tournament-next-game";
 import { tournamentContinuation } from "@/lib/tournament-continuation";
+import { gameAudit } from "@/lib/game-audit";
 import { ScorebookAudit } from "@/components/scorebook-audit";
 import { GameHrLimitPanel } from "@/components/game-hr-limit";
 import { BattingOutcomePicker } from "./batting-outcome-picker";
@@ -125,6 +126,7 @@ export function ConnectedScorebook({
   );
   // A requested game that vanished must not silently select a different game.
   const current = selected ? games.find((g) => g.game.id === selected) : games[0];
+  const visibleAudit = mode === "manage" ? current ? gameAudit(audit?.events ?? [], current.game.id, current.game.tournament_id) : [] : audit?.events ?? [];
   const manual = current?.game.batting_mode === "manual";
   const battingPlayer = manual ? manualPlayer : current?.lineup[current.game.next_batter_position] ?? "";
   useEffect(() => { setManualPlayer(""); setPlayerSearch(""); setFirstBand(null); setEntryError(""); pendingPlay.current = null; }, [current?.game.id]);
@@ -952,7 +954,7 @@ export function ConnectedScorebook({
               </details>}
             </section>
           )}
-          {(mode === "full" || mode === "manage") && <details className="game-switcher" open={mode === "full"}>
+          {mode === "full" && <details className="game-switcher" open={mode === "full"}>
             <summary>Change game</summary>
             {games.length ? (
               <DashboardSelect label="Choose a game" name="game" value={current?.game.id ?? ""} disabled={busy} onChange={setSelected} options={games.map((g) => ({ id: g.game.id, name: `${g.game.completed ? "Final" : "Live"} · ${g.playedOn} · ${g.game.opponent} · ${g.game.kind}` }))} />
@@ -960,7 +962,7 @@ export function ConnectedScorebook({
               <p>No games in this season yet. Set up the first game below.</p>
             )}
           </details>}
-          {(mode === "full" || mode === "manage") && <details className="card detail-card" open={mode === "full"}>
+          {mode === "full" && <details className="card detail-card" open>
             <summary>Season statistics</summary>
             <div
               className="scorebook-toolbar"
@@ -1030,7 +1032,7 @@ export function ConnectedScorebook({
               </table>
             </div>
           </details>}
-          {!continuation && mode !== "score" && (
+          {!continuation && (mode === "setup" || mode === "full") && (
             <section className="card detail-card game-setup-card">
               {mode === "full" && <h2 id="new-game-setup" tabIndex={-1}>Set up a game</h2>}
               <form className="club-form game-setup-form" aria-label="Set up a game" ref={setupForm} onSubmit={start} onInvalidCapture={(e) => revealInvalidField(e.target)}>
@@ -1279,7 +1281,7 @@ export function ConnectedScorebook({
             </section>
           )}
           {(mode === "full" || mode === "manage") && (mode === "full" || !!initialTournamentId || !!current?.game.tournament_id) && <details className="card detail-card" open={mode === "full" || !!current?.game.completed}>
-            <summary>Tournament games and Band corrections</summary>
+            <summary>{mode === "manage" ? "Tournament HR Bands" : "Tournament games and Band corrections"}</summary>
             <p className="micro">
               Assignments stay fixed across tournament games. Corrections
               require a reason and recalculate the tournament.
@@ -1349,6 +1351,7 @@ export function ConnectedScorebook({
                   }{" "}
                   games recorded. Guarantee is a minimum, not a cap.
                 </p>
+                {mode === "full" && <>
                 <button
                   className="button secondary"
                   disabled={disabled}
@@ -1399,6 +1402,7 @@ export function ConnectedScorebook({
                       }}
                     />
                   )}
+                </>}
                 <details>
                   <summary>Correct tournament Bands</summary>
                   {data.bands
@@ -1456,12 +1460,12 @@ export function ConnectedScorebook({
             {audit && (
               <>
                 <p>
-                  {audit.events.length} history entries loaded.
+                  {visibleAudit.length} {mode === "manage" ? "entries for this game" : "history entries"} loaded.
                   {auditStale
                     ? " New changes are available; load history to refresh."
                     : ""}
                 </p>
-                <ScorebookAudit entries={audit.events} roster={data.roster} />
+                <ScorebookAudit entries={visibleAudit} roster={data.roster} />
                 {audit.nextCursor && (
                   <button
                     className="button secondary"

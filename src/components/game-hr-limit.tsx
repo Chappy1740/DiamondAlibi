@@ -13,7 +13,7 @@ export function GameHrLimitPanel({
       <summary>Change HR limit for this game</summary>
       <p>
         This recalculates every play, player statistic and beverage adjustment
-        in this game. The league or tournament default and other games stay
+        in this game. The competition default and other games stay
         unchanged.
       </p>
       <form
