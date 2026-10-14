@@ -2,7 +2,7 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 59,
+  revision: 60,
   updatedAt: "2026-10-13",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
@@ -153,7 +153,7 @@ export const projectTracker: ProjectTracker = {
           title: "Apply season-wide beverage rules, credits and season reset",
           status: "done",
           evidence:
-            "League/tournament combined Board and historical-season isolation tests pass.",
+            "League/tournament combined Board and historical-season isolation tests pass. Owner's October 13 refinement requires finalized team-wide Beverage Rules and self-only future-at-bat opt-out/rejoin; that new persistence/security work is tracked separately under M3-14 and is not yet live.",
           next: "",
           kind: "work",
         },
@@ -317,6 +317,15 @@ export const projectTracker: ProjectTracker = {
           status: "implemented",
           evidence: "Owner requested tournament leaderboards and explicitly chose the team's players using existing tournament statistics. The leaderboard aggregates only selected-tournament authoritative game totals; league/other-tournament totals are excluded. Existing corrections, voids, HR limits, Bands, rules and rates are reused. Hits, HR and RBI ranking controls share ranks for ties. Server rendering passes only the selected tournament player rows to the interactive leaderboard. Unit and Chromium/mobile WebKit tests verify isolation, ties, metrics, immutable source data, effective HR/void/correction totals, existing OBP, long names and 320–1440px layout. Worker build and actual built Next.js tournament pages, including ranking controls, pass. It requires no new schema or public cross-team standings. Owner screenshot confirms the tournament leaderboard is visible, showing Test Player with 9 PA, 8 Hits, 6 HR, 11 RBI and OBP 0.889; the agent has not reconciled all intervening synthetic plays. Owner requests tournament Beverage statistics there too. Each row now displays its tournament-only net Beverage amount as owed, in credit, or Even, using the existing effective game totals and preserving negative credits. Focused units and Chromium/mobile WebKit checks verify tournament-only charges, negative credit, corrections/voids, ranking changes and 320–1440px readability. Typecheck, Worker build and built Next.js routes pass. Season/league balances and accounting remain unchanged. Owner also reported that Game 3 began with HR limit 2 and zero used, then counted two scored HRs. M3-5 and hosted Beverage/leaderboard acceptance remain incomplete.",
           next: "Verify the selected synthetic cup's player totals and ranking on iPhone after publication; require explicit owner acceptance before completion.",
+          kind: "work",
+        },
+        {
+          id: "M3-14",
+          group: "Beverage participation",
+          title: "Finalize team Beverage Rules and let players opt out or rejoin",
+          status: "in_progress",
+          evidence: "Owner requires one finalized team rule set, with a personal participation button; owner explicitly confirmed future at-bats only while retaining existing owed balances and credits. Current main 47812e7 and contribution boundaries were reviewed; no AGENTS.md was present. Concrete executable schema/RPC design is in supabase/proposals/team-beverage-design.md and team_beverage_rules.sql. Local private tables store immutable finalized rules, preference events and stable command receipts; server triggers capture participation at each original play boundary so later toggles/corrections cannot rewrite history. Baseball statistics, HR use, Bands and existing formulas remain. Account-linked players can change only their own choice for the selected team, across devices/seasons. Existing records remain participating; no team values are silently finalized. The local UI adds Opt out/Participate on Beverage and one-time rules finalization in team management; new-game setup uses canonical team values internally and removes the per-game editor when the approved capability exists. Disposable SQL tests pass for credits, future-only changes, stats/HR consumption, corrections/voids/replay, self ownership, team/season isolation, archived history, inactive denial, conflicts/retries and ACL/RLS. Specific live schema approval and hosted acceptance remain outstanding. No live schema, auth, bindings or personal records were changed.",
+          next: "Local transport/SQL, Chromium/mobile WebKit controls and scoring modes, full connected scoring regression, typecheck, Worker build and built Next.js routes pass. Request specific approval for the reviewed team Beverage migration; the capability remains inactive until application. After approval, apply and verify only with rollback-only synthetic RPCs and guide hosted Opt out/Participate acceptance one step at a time. Keep M3-5 incomplete.",
           kind: "work",
         },
       ],

@@ -1,4 +1,5 @@
 import type { Outcome, Scope, Totals } from "./scoring";
+import type { BeverageState } from "./team-beverage";
 export type ScoreRow = {
   id: string;
   playerId: string;
@@ -8,6 +9,7 @@ export type ScoreRow = {
   voided: boolean;
   official: string;
   delta: number;
+  beverageParticipating?: boolean;
 };
 export type ConnectedGame = {
   game: {
@@ -48,7 +50,8 @@ export type ConnectedGame = {
   };
 };
 export type ScorebookView = {
-  capabilities?: { manualBatting?: boolean };
+  capabilities?: { manualBatting?: boolean; teamBeverage?: boolean };
+  beverage?: BeverageState;
   teamId: string;
   seasonId: string;
   scope: Scope;

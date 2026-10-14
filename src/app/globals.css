@@ -1905,3 +1905,9 @@ blockquote {
 
 .leaderboard-beverage { color: var(--silver); font-size: .85rem; }
 .leaderboard-beverage[data-credit="true"] { color: var(--teal); }
+.beverage-controls { min-width: 0; }
+.beverage-controls p { overflow-wrap: anywhere; }
+.beverage-rule-list { margin: 0; }
+.beverage-rule-list > div { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; padding: .45rem 0; }
+.beverage-rule-list dt { overflow-wrap: anywhere; }
+.beverage-rule-list dd { margin: 0; font-weight: 700; }

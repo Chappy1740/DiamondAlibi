@@ -15,6 +15,7 @@ const assert = require("node:assert/strict");
       const data={archived:false,roster:[{id:'synthetic-player',display_name:'Synthetic Player',is_guest:false}],bands:[{player_id:'synthetic-player',tournament_id:'synthetic-cup',has_band:true}],participation:[],leagueBands:[],snapshot:{teamId:'synthetic-team',seasonId:'synthetic-season',scope:'Overall',totals:{},board:{'synthetic-player':-2},leagues:[{id:'synthetic-league',name:'Synthetic league',fenceLimit:0},{id:'other-league',name:'Other synthetic league',fenceLimit:5}],tournaments:[{id:'synthetic-cup',name:'M3-5 Synthetic Cup',revision:1,fenceLimit:2,guaranteedGames:2}],games:[g('league-game','League','synthetic-league','League opponent'),g('other-game','League','other-league','Other opponent'),g('cup-game','Tournament','synthetic-cup','Cup opponent')]}};
       const query=new URLSearchParams(location.search);window.__writes=[];window.__writeResult='invalid';window.__reloadStatus='ok';
       if(query.has('empty')){data.snapshot.games=data.snapshot.games.filter(g=>!g.game.tournament_id);data.bands=[];}
+      if(query.has('team-beverage')){data.snapshot.capabilities={manualBatting:true,teamBeverage:true};data.snapshot.beverage={teamId:'synthetic-team',revision:1,finalized:!query.has('unfinalized'),rules:query.has('unfinalized')?null:{...DEFAULT_BOARD,solo:2},canToggle:true,participating:true};}
       if(query.has('manual')){data.snapshot.capabilities={manualBatting:true};data.roster.push({id:'adam-player',display_name:'Adam Jones',is_guest:false});data.snapshot.games.forEach(game=>{game.game.batting_mode='manual';game.lineup=[];});if(query.has('first-band'))data.bands=[];}
       if(query.has('voice'))window.SpeechRecognition=class{start(){window.__recognition=this;}stop(){}abort(){window.__aborted=true;}};
       window.__fixture=data;window.__audit=[{action:'hrLimit',reason:'Tournament game history',after:{game:{id:'cup-game'},fenceLimit:2}},{action:'hrLimit',reason:'League game history',after:{game:{id:'league-game'},fenceLimit:0}},{action:'band',tournamentId:'synthetic-cup',reason:'Cup Band history',before:true,after:false},{action:'start',reason:'Other game history',after:{gameId:'other-game'}}];
@@ -299,6 +300,29 @@ const assert = require("node:assert/strict");
     assert.equal(await page.getByRole("button",{name:"Retry the same change",exact:true}).isDisabled(),true);
     // Start an independent synthetic scenario; real uncertain saves remain retained.
     await page.evaluate(()=>sessionStorage.removeItem("diamond-alibi.pending.synthetic-user.synthetic-team.synthetic-season"));
+    // Team rules are finalized once, never edited again during setup.
+    await page.goto(`${base}/?page=1&team-beverage=1&unfinalized=1&tournament=synthetic-cup`);
+    await page.getByRole('link',{name:'Set team Beverage Rules',exact:true}).waitFor();
+    assert.equal(await page.getByRole('button',{name:'Start Game 2',exact:true}).count(),0);
+    assert.equal(await page.locator('input[name^="board-"]').count(),0);
+    await page.goto(`${base}/?page=1&team-beverage=1&league=synthetic-league`);
+    const teamRuleSetup=page.getByRole('form',{name:'Set up a game',exact:true});
+    await teamRuleSetup.getByLabel('Opponent',{exact:true}).fill('Synthetic finalized rules opponent');
+    assert.equal(await teamRuleSetup.getByText('Beverage rules for this game',{exact:true}).count(),0);
+    assert.equal(await teamRuleSetup.locator('input[name^="board-"]').count(),0);
+    await page.evaluate(()=>window.__writeResult='uncertain');
+    await teamRuleSetup.getByRole('button',{name:'Start game',exact:true}).click();
+    await page.getByRole('button',{name:'Retry the same change',exact:true}).waitFor();
+    assert.equal(await page.evaluate(()=>window.__writes[0].setup.rules.board.solo),2,'uses canonical team rules instead of per-game defaults');
+    await page.evaluate(()=>sessionStorage.removeItem('diamond-alibi.pending.synthetic-user.synthetic-team.synthetic-season'));
+    await page.goto(`${base}/?page=1&team-beverage=1&tournament=synthetic-cup`);
+    const finalizedNext=page.getByRole('form',{name:'Next game for M3-5 Synthetic Cup',exact:true});
+    await finalizedNext.getByLabel('Opponent',{exact:true}).fill('Synthetic finalized continuation');
+    await page.evaluate(()=>window.__writeResult='uncertain');
+    await finalizedNext.getByRole('button',{name:'Start Game 2',exact:true}).click();
+    await page.getByRole('button',{name:'Retry the same change',exact:true}).waitFor();
+    assert.equal(await page.evaluate(()=>window.__writes[0].setup.rules.board.solo),2,'continuation also uses canonical team rules');
+    await page.evaluate(()=>sessionStorage.removeItem('diamond-alibi.pending.synthetic-user.synthetic-team.synthetic-season'));
     // Continuing a tournament asks only for its opponent. Frozen rules/date/order
     // are submitted from the retained template, not editable settings.
     await page.goto(`${base}/?page=1&tournament=synthetic-cup`);

@@ -136,6 +136,7 @@ export function ConnectedScorebook({
   const disabled =
     busy || !online || paused || review || uncertain || !data || data.archived;
   const base = { teamId, seasonId };
+  const needsBeverageRules = Boolean(snapshot?.capabilities?.teamBeverage && !snapshot.beverage?.finalized);
   const continuation =
     kind === "Tournament" ? tournamentContinuation(data, tournamentId) : null;
   const inheritedLimit =
@@ -490,6 +491,7 @@ export function ConnectedScorebook({
     chosenLeague: string,
     gameOverride: boolean,
   ) {
+    if (needsBeverageRules) { setMessage("Finalize your team’s Beverage Rules in team management before starting a game."); return false; }
     const selectedLineup = snapshot?.capabilities?.manualBatting && !form.getAll("player").length ? [] : lineup(form);
     if (!selectedLineup) return;
     const date = String(form.get("date")),
@@ -513,7 +515,7 @@ export function ConnectedScorebook({
         )
         .map((id) => [id, Boolean(tour) && form.has(`band-${id}`)]),
     );
-    const board = Object.fromEntries(
+    const board = snapshot?.beverage?.finalized ? snapshot.beverage.rules : Object.fromEntries(
       Object.keys(DEFAULT_BOARD).map((key) => [
         key,
         Number(form.get(`board-${key}`)),
@@ -1032,7 +1034,8 @@ export function ConnectedScorebook({
               </table>
             </div>
           </details>}
-          {!continuation && (mode === "setup" || mode === "full") && (
+          {needsBeverageRules && (mode === "setup" || mode === "full") && <section className="card detail-card"><h2>Team Beverage Rules</h2><p>Finalize your team’s rules once before adding games.</p><a className="button primary" href={`/club?${contextQuery(teamId, seasonId)}#beverage-rules`}>Set team Beverage Rules</a></section>}
+          {!needsBeverageRules && !continuation && (mode === "setup" || mode === "full") && (
             <section className="card detail-card game-setup-card">
               {mode === "full" && <h2 id="new-game-setup" tabIndex={-1}>Set up a game</h2>}
               <form className="club-form game-setup-form" aria-label="Set up a game" ref={setupForm} onSubmit={start} onInvalidCapture={(e) => revealInvalidField(e.target)}>
@@ -1152,7 +1155,7 @@ export function ConnectedScorebook({
                     {bandFields(kind === "Tournament" ? tournamentId : null)}
                   </div>
                   </details>
-                  <details className="setup-details">
+                  {snapshot?.capabilities?.teamBeverage ? <p className="micro">Your team’s finalized Beverage Rules apply.</p> : <details className="setup-details">
                     <summary>Beverage rules for this game</summary>
                     {Object.entries(DEFAULT_BOARD).map(([key, value]) => (
                       <label
@@ -1170,7 +1173,7 @@ export function ConnectedScorebook({
                         />
                       </label>
                     ))}
-                  </details>
+                  </details>}
                   {mode === "full" && <button className="button primary">Start game</button>}
                 </fieldset>
               </form>
@@ -1267,7 +1270,7 @@ export function ConnectedScorebook({
               </>}
             </section>
           )}
-          {mode === "setup" && continuation && (
+          {!needsBeverageRules && mode === "setup" && continuation && (
             <section className="card detail-card game-setup-card">
               <TournamentNextGame
                 template={continuation}

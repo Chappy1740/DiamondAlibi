@@ -16,6 +16,7 @@ import { DashboardSelect } from "./dashboard-select";
 import { PersonalAlibis } from "./personal-alibis";
 import { GameScoreboardPanel } from "./game-scoreboard";
 import { connectedScoreboard } from "@/lib/game-scoreboard";
+import { BeverageControls } from "./beverage-controls";
 
 type Option = { id: string; name: string };
 export type DashboardProps = {
@@ -446,6 +447,7 @@ export function PlayerDashboard(p: DashboardProps) {
                           {balance(view?.beverageBalance ?? null)}
                         </strong>
                       </p>
+                      {!p.sample && !p.review && <BeverageControls teamId={p.teamId} />}
                     </section>
                     <div className="card leaderboard">
                       {loaded.roster.map((r) => (

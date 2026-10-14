@@ -1,0 +1,117 @@
+// Entirely disposable PostgreSQL and synthetic identities. Never contacts Supabase.
+const {PGlite} = require('@electric-sql/pglite');
+const fs = require('node:fs');
+const assert = require('node:assert/strict');
+const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
+(async()=>{
+ const db=new PGlite();
+ try {
+ // Reuse the reviewed scoring schema fixture; add the actual account linkage.
+ const existing=fs.readFileSync('tests/optional-lineups-sql.cjs','utf8');
+ const fixture=existing.slice(existing.indexOf('await db.exec(`')+15,existing.indexOf('`);\n for(const name'));
+ const rendered=fixture.replaceAll(/\$\{id\((\d+)\)\}/g,(_,n)=>id(Number(n)));
+ await db.exec(rendered);
+ await db.exec(`alter table public.team_players add column user_id uuid references auth.users(id);
+ update public.team_players set user_id='${id(1)}' where id='${id(101)}';
+ update public.team_players set user_id='${id(2)}' where id='${id(102)}';
+ insert into public.team_memberships values('${id(10)}','${id(2)}',true);
+ insert into public.team_seasons values('${id(10)}','${id(12)}',false);
+ update public.team_players set user_id='${id(1)}' where id='${id(201)}';
+ insert into public.team_memberships values('${id(20)}','${id(1)}',true);`);
+ for(const name of ['20261009192021_m43_tournament_season_scoring.sql','20261009210007_tournament_games_guaranteed.sql','20261009203125_tournament_only_bands.sql','20261009224553_game_scoreboard_tournament_numbers.sql','20261009234045_competition_hr_limits.sql','20261013235234_optional_lineups.sql']) await db.exec(fs.readFileSync('supabase/migrations/'+name,'utf8'));
+ await db.exec(`select set_config('request.jwt.claim.sub','${id(1)}',false);set role authenticated;`);
+ const rpc=async(name,args)=>{const r=await db.query(`select public.${name}(${args.map((_,i)=>'$'+(i+1)).join(',')}) result`,args);return r.rows[0].result};
+ const board={strikeout:1,solo:1,bandSolo:-1,grandSlam:-1,overLimit:1,insidePark:-1,multiRun:0};
+ let seq=1000;const uuid=()=>id(++seq);
+ const read=(team=id(10),season=id(11))=>rpc('da_read_scoring_season',[team,season,'Overall']);
+ const pref=(team=id(10))=>rpc('da_read_team_beverage',[team]);
+ const beverage=async(change,{team=id(10),command=uuid(),revision}={})=>rpc('da_change_team_beverage',[team,command,revision??(await pref(team)).revision,JSON.stringify(change)]);
+ const latest=async g=>(await read()).games.find(x=>x.game.id===g.game.id);
+ const start=async({kind='Tournament',values=board,date='2026-10-13'}={})=>{
+   const view=await read(),d=view.games.find(g=>g.playedOn===date),t=view.tournaments.find(t=>t.id===id(13)),game=uuid();
+   const result=await rpc('da_start_scoring_game',[id(10),id(11),d?.game.day_id??uuid(),date,kind==='Tournament'?id(13):null,uuid(),d?.dayRevision??0,kind==='Tournament'?t.revision:null,JSON.stringify({type:'start',gameId:game,opponent:'Synthetic opponent',kind,battingMode:'manual',lineup:[],rules:{version:'Synthetic '+game,fenceLimit:2,board:values},bands:{}})]);
+   assert.equal(result.status,'accepted');return (await read()).games.find(g=>g.game.id===game);
+ };
+ const change=async(g,cmd,command=uuid())=>rpc('da_apply_scoring_game_change',[id(10),id(11),g.game.day_id,g.game.id,command,g.dayRevision,g.tournamentRevision,JSON.stringify({...cmd,gameId:g.game.id})]);
+ const score=async(g,outcome,extra={})=>{const result=await change(await latest(g),{type:'score',playId:uuid(),playerId:id(101),outcome,runs:outcome.includes('HR')?1:0,rbi:outcome.includes('HR')?1:0,...extra});assert.equal(result.status,'accepted');return latest(g)};
+ await rpc('da_create_scoring_competition',[id(10),id(11),id(13),'Tournament','Synthetic Beverage Cup',2,2]);
+ let legacy=await start(); legacy=await score(legacy,'Fence HR',{firstGameBand:true});
+ assert.equal(legacy.evaluation.totals[id(101)].board,-1);
+ // Existing negative balances remain identical across installation.
+ await db.exec('reset role');
+ await db.exec(fs.readFileSync('supabase/proposals/team_beverage_rules.sql','utf8'));
+ await db.exec('set role authenticated');
+ assert.equal((await latest(legacy)).evaluation.totals[id(101)].board,-1);
+ assert.equal((await latest(legacy)).evaluation.rows[0].beverageParticipating,true);
+ assert.equal((await pref()).participating,true);
+ assert.equal((await pref()).finalized,false);
+ await assert.rejects(()=>start(),/Finalize team Beverage/);
+ await assert.rejects(()=>beverage({type:'finalize',rules:{...board,solo:2}}),/Complete games with different/);
+ assert.equal((await pref()).revision,0,'failed finalization is atomic');
+ for(const values of [{...board,bogus:1},{...board,solo:1.5},{...board,solo:101},{...board,solo:'1'},null]) await assert.rejects(()=>beverage({type:'finalize',rules:values}));
+ const finalizeCommand=uuid();
+ assert.equal((await beverage({type:'finalize',rules:board},{command:finalizeCommand})).status,'accepted');
+ assert.equal((await beverage({type:'finalize',rules:board},{command:finalizeCommand,revision:0})).duplicate,true);
+ await assert.rejects(()=>beverage({type:'finalize',rules:board}),/already finalized/);
+ await assert.rejects(()=>start({values:{...board,solo:2}}),/finalized team Beverage/);
+ assert.deepEqual((await read()).beverage.rules,board);
+ assert.equal((await read()).capabilities.teamBeverage,true);
+ // New games use the same team rules; a new season does not reset participation.
+ let game=await start();
+ const optedOutCommand=uuid(),out={type:'participation',participating:false};
+ assert.equal((await beverage(out,{command:optedOutCommand})).status,'accepted');
+ assert.equal((await beverage(out,{command:optedOutCommand,revision:1})).duplicate,true);
+ assert.equal((await pref()).participating,false);
+ assert.equal((await read(id(10),id(12))).beverage.participating,false);
+ assert.equal((await pref(id(20))).participating,true,'second team isolated');
+ assert.equal((await read()).board[id(101)],-1,'opt-out does not erase legacy credit');
+ await assert.rejects(()=>beverage({...out,playerId:id(102)}),/explicitly/);
+ await assert.rejects(()=>beverage({...out,actor:id(2)}),/explicitly/);
+ await assert.rejects(()=>beverage({...out,at:'2020-01-01'}),/explicitly/);
+ await assert.rejects(()=>beverage({...out,participating:true},{command:optedOutCommand}),/reused/);
+ assert.equal((await beverage({type:'participation',participating:true},{revision:0})).status,'conflict');
+ game=await score(game,'K');assert.equal(game.evaluation.rows.at(-1).delta,0);assert.equal(game.evaluation.totals[id(101)].K,1);
+ game=await score(game,'Fence HR');game=await score(game,'Fence HR');game=await score(game,'Fence HR');
+ assert.equal(game.evaluation.fenceUsed,2);assert.equal(game.evaluation.rows.at(-1).official,'OLHR');assert.equal(game.evaluation.totals[id(101)].board,0);
+ assert.equal(game.evaluation.totals[id(101)].HR,2,'opted-out HR still consumes team HR limit');
+ assert.equal(game.evaluation.totals[id(101)].H,2);assert.equal(game.evaluation.totals[id(101)].PA,4);
+ assert.equal((await beverage({type:'participation',participating:true})).status,'accepted');
+ // Late retry cannot reapply a now-obsolete opt-out.
+ assert.equal((await beverage(out,{command:optedOutCommand})).duplicate,true);assert.equal((await pref()).participating,true);
+ game=await score(game,'K');assert.equal(game.evaluation.rows.at(-1).delta,1);
+ assert.equal(game.evaluation.totals[id(101)].board,1);assert.equal((await read()).board[id(101)],0,'prior credit still counts');
+ const optedOutPlay=game.evaluation.rows[0];
+ assert.equal((await change(game,{type:'correct',playId:optedOutPlay.id,playerId:id(101),outcome:'ITP HR',runs:1,rbi:1,voided:false,reason:'Synthetic correction'})).status,'accepted');
+ game=await latest(game);assert.equal(game.evaluation.rows[0].delta,0,'correction retains original participation');
+ assert.equal((await change(game,{type:'hrLimit',fenceLimit:0,reason:'Synthetic replay'})).status,'accepted');
+ game=await latest(game);assert.equal(game.evaluation.totals[id(101)].board,1,'HR replay cannot add charges while opted out');
+ // A historical batter correction uses that batter's participation at the original play boundary.
+ game=await score(game,'Hit',{playerId:id(102),firstGameBand:false});
+ assert.equal((await change(game,{type:'correct',playId:optedOutPlay.id,playerId:id(102),outcome:'K',runs:0,rbi:0,voided:false,reason:'Synthetic batter correction'})).status,'accepted');
+ game=await latest(game);assert.equal(game.evaluation.rows[0].delta,1,'other player was participating then');
+ await db.exec(`select set_config('request.jwt.claim.sub','${id(2)}',false)`);
+ await assert.rejects(()=>beverage(out,{command:optedOutCommand}),/reused/);
+ await assert.rejects(()=>pref(id(999)),/access denied/);
+ assert.equal((await pref(id(20))).canToggle,false,'membership alone does not grant another player\u2019s toggle');
+ await assert.rejects(()=>beverage(out,{team:id(20)}),/account-linked player/);
+ await beverage(out);
+ await db.exec(`select set_config('request.jwt.claim.sub','${id(1)}',false)`);
+ game=await latest(game);assert.equal(game.evaluation.rows[0].delta,1,'other player opting out later does not alter a corrected past play');
+ assert.equal((await change(game,{type:'correct',playId:optedOutPlay.id,playerId:id(102),outcome:'K',runs:0,rbi:0,voided:true,reason:'Synthetic void'})).status,'accepted');
+ game=await latest(game);assert.equal(game.evaluation.rows[0].delta,0);
+ await beverage(out);
+ let backdated=await start({date:'2026-10-01',kind:'League'});
+ backdated=await score(backdated,'K');assert.equal(backdated.evaluation.rows[0].delta,0,'saved now uses current preference, not the editable game date');
+ await assert.rejects(()=>db.exec(`update public.scoring_plays set beverage_revision=0`),/permission denied/);
+ await assert.rejects(()=>db.exec(`select * from private.beverage_participation_events`),/permission denied/);
+ await db.exec(`reset role;update public.team_memberships set active=false where team_id='${id(10)}' and user_id='${id(1)}';set role authenticated;`);
+ await assert.rejects(()=>pref(),/access denied/);await assert.rejects(()=>beverage(out),/access denied/);
+ await db.exec(`reset role;set role anon;`);
+ await assert.rejects(()=>pref(),/permission denied/);
+ await assert.rejects(()=>beverage(out,{revision:0}),/permission denied/);
+ await db.exec('reset role');
+ const grants=await db.query(`select has_function_privilege('anon','public.da_change_team_beverage(uuid,uuid,bigint,jsonb)','execute') as anon,has_table_privilege('authenticated','private.beverage_participation_events','select,insert,update,delete') as direct, (select bool_and(relrowsecurity) from pg_class where oid in ('private.team_beverage_settings'::regclass,'private.beverage_commands'::regclass,'private.beverage_participation_events'::regclass)) as rls`);
+ assert.deepEqual(grants.rows[0],{anon:false,direct:false,rls:true});
+ console.log('Team Beverage proposal: immutable team rules, future-only participation, legacy credits, HR/stats, corrections/voids, isolation, self ownership, conflicts, retries and ACL/RLS passed.');
+ } finally {await db.close()}
+})().catch(error=>{console.error(error);process.exitCode=1});

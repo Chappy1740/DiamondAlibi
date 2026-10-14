@@ -5,6 +5,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { ClubForm } from "@/components/club-form";
 import { BrandLink } from "@/components/brand-link";
 import { ProfileMenu } from "@/components/profile-menu";
+import { BeverageControls } from "@/components/beverage-controls";
 export const dynamic = "force-dynamic";
 type Team = { id: string; name: string };
 type Membership = {
@@ -208,6 +209,7 @@ export default async function ClubPage({
             </ClubForm>
           </section>
         )}
+        {selected && <div id="beverage-rules"><BeverageControls teamId={selected.id} teamSettings /></div>}
         {selected && (
           <section className="card detail-card">
             <h2>Seasons</h2>
