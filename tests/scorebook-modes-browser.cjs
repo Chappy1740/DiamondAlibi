@@ -53,24 +53,31 @@ const assert = require("node:assert/strict");
     await page.goto(`${base}/?leaderboard=1`);
     const leaders=page.getByRole('region',{name:'Tournament player leaderboard',exact:true});await leaders.waitFor();
     assert.equal(await leaders.locator('.leaderboard-players li').count(),2);
+    assert.deepEqual(await leaders.getByRole('group',{name:'Rank players by',exact:true}).getByRole('button').allTextContents(),['OBP%','Hits','HR','RBI','Beverages']);
+    async function onlyMetric(label,values){
+      await leaders.getByRole('button',{name:label,exact:true}).click();
+      assert.equal(await leaders.getByRole('button',{name:label,exact:true}).getAttribute('aria-pressed'),'true');
+      assert.deepEqual(await leaders.locator('.leaderboard-counts strong').allTextContents(),values);
+      assert.equal(await leaders.locator('.leaderboard-counts > span').count(),2,'one selected statistic per player');
+      assert.equal(await leaders.locator('.leaderboard-player .micro').count(),0,'no unrelated PA/OBP statistics');
+      for(const text of await leaders.locator('.leaderboard-counts').allTextContents())assert(text.includes(label));
+      assert.equal(await leaders.locator('.leaderboard-beverage').count(),label==='Beverages'?2:0);
+    }
+    await onlyMetric('OBP%',['66.7%','66.7%']);
     assert.deepEqual(await leaders.locator('.leaderboard-rank').allTextContents(),['1','1']);
-    assert.deepEqual(await leaders.locator('.leaderboard-beverage').evaluateAll(cells=>cells.map(cell=>cell.getAttribute('aria-label'))),['Beverage: 2 owed','Beverage: 1 in credit']);
-    assert.deepEqual(await leaders.locator('.leaderboard-counts strong').allTextContents(),['2','0','2','2','2','1','1','1']);
-    await leaders.getByRole('button',{name:'HR',exact:true}).click();
+    await onlyMetric('Hits',['2','2']);
+    await onlyMetric('HR',['1','0']);
     assert.equal(await leaders.locator('.leaderboard-player strong').first().textContent(),'Synthetic Player');
-    assert.equal(await leaders.locator('.leaderboard-beverage').first().getAttribute('aria-label'),'Beverage: 1 in credit');
-    await leaders.getByRole('button',{name:'RBI',exact:true}).click();
+    await onlyMetric('RBI',['2','1']);
     assert.match(await leaders.locator('.leaderboard-player strong').first().textContent(),/Synthetic Blair/);
-    await leaders.getByRole('button',{name:'Beverage',exact:true}).click();
-    assert.equal(await leaders.getByRole('button',{name:'Beverage',exact:true}).getAttribute('aria-pressed'),'true');
-    assert.match(await leaders.locator('.leaderboard-player strong').first().textContent(),/Synthetic Blair/);
+    await onlyMetric('Beverages',['2','1']);
+    assert.deepEqual(await leaders.locator('.leaderboard-beverage').evaluateAll(cells=>cells.map(cell=>cell.getAttribute('aria-label'))),['Beverage: 2 owed','Beverage: 1 in credit']);
     assert.deepEqual(await leaders.locator('.leaderboard-rank').allTextContents(),['1','2']);
-    assert.deepEqual(await leaders.locator('.leaderboard-beverage strong').allTextContents(),['2','1']);
     await leaders.getByText('Most owed first',{exact:false}).waitFor();
     assert.equal(await page.locator('.tournament-date').textContent(),'2026-10-13');
     assert.equal(await page.locator('.dashboard-cards .eyebrow').textContent().then(t=>t.includes('2026-10-13')),false);
     if(process.env.TOURNAMENT_SCREENSHOT)await page.screenshot({path:process.env.TOURNAMENT_SCREENSHOT,fullPage:true});
-    for(const width of [320,390,430,800,1440]){await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.equal(await leaders.getByRole('button').evaluateAll(buttons=>buttons.every(button=>button.getBoundingClientRect().height>=44)),true);}
+    for(const width of [320,390,430,800,1440]){await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.equal(await leaders.getByRole('button').evaluateAll(buttons=>buttons.every(button=>button.getBoundingClientRect().height>=44&&button.getBoundingClientRect().width>=44)),true);}
     await page.goto(`${base}/?leaderboard=1&nine-games=1`);
     await page.getByRole('link',{name:'Add Game 10',exact:true}).waitFor();
     assert.equal(await page.locator('.dashboard-cards article').count(),9);

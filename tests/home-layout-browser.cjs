@@ -12,7 +12,7 @@ const assert = require("node:assert/strict");
       stdin: { resolveDir: process.cwd(), loader: "tsx", contents: `
         import React from 'react';import{createRoot}from'react-dom/client';import{PlayerDashboard}from'./src/components/player-dashboard';import{BottomNavigationView}from'./src/components/bottom-navigation';import{emptyTotals}from'./src/lib/scoring';
         const long='M3-5 Synthetic Test with an exceptionally long team name';
-        const data={archived:false,roster:[{id:'player',user_id:'synthetic-user',display_name:'Test Player',is_guest:false},{id:'teammate',user_id:'other-user',display_name:'Other Synthetic Player',is_guest:false}],snapshot:{teamId:'team',seasonId:'season',scope:'Overall',games:[{game:{id:'other-game',kind:'League',opponent:'Other synthetic opponent',completed:false,next_batter_position:0},lineup:['teammate'],playedOn:'2026-10-13'}],totals:{player:{...emptyTotals(),PA:4,H:1,HR:1},teammate:{...emptyTotals(),PA:20,H:9,HR:9}},board:{player:-2},tournaments:[],leagues:[]}};
+        const data={archived:false,roster:[{id:'player',user_id:'synthetic-user',display_name:'Test Player',is_guest:false},{id:'teammate',user_id:'other-user',display_name:'Other Synthetic Player',is_guest:false}],snapshot:{teamId:'team',seasonId:'season',scope:'Overall',games:[{game:{id:'other-game',kind:'League',opponent:'Other synthetic opponent',completed:false,next_batter_position:0},lineup:['teammate'],playedOn:'2026-10-13'}],totals:{player:{...emptyTotals(),PA:4,AB:4,H:1,HR:1,RBI:3},teammate:{...emptyTotals(),PA:20,AB:20,H:9,HR:9,RBI:9}},board:{player:-2},tournaments:[],leagues:[]}};
         const p={route:location.pathname.slice(1),sample:location.search.includes('sample=1'),userId:'synthetic-user',teams:[{id:'team',name:'M3-5 Synthetic Test'},{id:'long',name:long}],seasons:[{id:'season',name:'M3-5 Synthetic Season',archived:false},{id:'history',name:'Synthetic Season with an exceptionally long history name',archived:true}],teamId:'team',seasonId:'season',scope:'Overall',loaded:data};
         const context=new URLSearchParams({team:p.teamId,season:p.seasonId,scope:p.scope,...(p.sample?{sample:'1',player:p.userId}:{})}).toString();
         createRoot(document.getElementById('app')).render(<><PlayerDashboard {...p}/><BottomNavigationView pathname={location.pathname} context={context}/></>);` },
@@ -51,6 +51,9 @@ const assert = require("node:assert/strict");
     assert.equal(await page.getByText("Season activity", { exact: true }).count(), 0);
     assert.equal(await page.getByRole("link", { name: "All player statistics" }).count(), 0);
     assert.match(await page.locator(".dashboard-metrics").innerText(), /HR\s+1/);
+    assert.match(await page.locator(".dashboard-metrics").innerText(), /OBP%\s+25\.0%/);
+    assert.match(await page.locator(".dashboard-metrics").innerText(), /Hits\s+1/);
+    assert.match(await page.locator(".dashboard-metrics").innerText(), /RBI\s+3/);
     assert.equal(await page.evaluate(() => {
       const heading = document.querySelector("h1").getBoundingClientRect();
       const actions = document.querySelector(".competition-entry").getBoundingClientRect();

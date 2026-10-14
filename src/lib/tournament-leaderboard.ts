@@ -1,7 +1,7 @@
 import { competitionView } from "./competitions.ts";
 import { emptyTotals, rates, type Totals } from "./scoring.ts";
 import type { LoadedScorebook } from "./scorebook-view.ts";
-export type LeaderboardMetric = "H" | "HR" | "RBI" | "board";
+export type LeaderboardMetric = "OBP" | "H" | "HR" | "RBI" | "board";
 export type TournamentPlayer = {
   id: string;
   name: string;
@@ -12,17 +12,18 @@ export function rankTournamentPlayers(
   players: readonly TournamentPlayer[],
   metric: LeaderboardMetric = "H",
 ) {
+  const value = (row: TournamentPlayer) =>
+    metric === "OBP" ? row.rates.OBP : row.totals[metric];
   const rows = [...players].sort(
     (a, b) =>
-      b.totals[metric] - a.totals[metric] ||
+      (value(b) ?? -Infinity) - (value(a) ?? -Infinity) ||
       a.name.localeCompare(b.name) ||
       a.id.localeCompare(b.id),
   );
   let rank = 0;
   return rows.map((row, index) => {
-    if (!index || row.totals[metric] !== rows[index - 1].totals[metric])
-      rank = index + 1;
-    return { ...row, rank };
+    if (!index || value(row) !== value(rows[index - 1])) rank = index + 1;
+    return { ...row, rank: value(row) == null ? null : rank };
   });
 }
 export function tournamentLeaderboard(

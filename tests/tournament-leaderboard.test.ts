@@ -1,10 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { tournamentLeaderboard } from "../src/lib/tournament-leaderboard.ts";
+import {
+  rankTournamentPlayers,
+  tournamentLeaderboard,
+} from "../src/lib/tournament-leaderboard.ts";
 import {
   DEFAULT_BOARD,
   emptyTotals,
   evaluateGame,
+  rates,
   type Game,
   type Play,
 } from "../src/lib/scoring.ts";
@@ -128,6 +132,63 @@ test("leaderboard uses only selected tournament effective totals, corrections/vo
     ["b", "a", "guest"],
   );
   assert.equal(JSON.stringify(data), before);
+});
+
+test("OBP ranks by the existing unrounded rate descending, ties share ranks and undefined rates stay unranked", () => {
+  const player = (id: string, AB: number, H: number, BB = 0) => {
+    const totals = { ...emptyTotals(), PA: AB + BB, AB, H, BB };
+    return { id, name: id, totals, rates: rates(totals) };
+  };
+  const players = [
+    player("undefined", 0, 0),
+    player("zero", 1, 0),
+    player("half", 2, 1),
+    player("walk", 1, 0, 1),
+    player("higher", 3, 2),
+    player("perfect", 1, 1),
+  ];
+  const before = JSON.stringify(players);
+  assert.deepEqual(
+    rankTournamentPlayers(players, "OBP").map((row) => [row.id, row.rank]),
+    [
+      ["perfect", 1],
+      ["higher", 2],
+      ["half", 3],
+      ["walk", 3],
+      ["zero", 5],
+      ["undefined", null],
+    ],
+  );
+  assert.equal(JSON.stringify(players), before);
+  const data = fixture();
+  assert.deepEqual(
+    tournamentLeaderboard(data, "team", "season", "cup", "OBP").map(
+      (row) => row.id,
+    ),
+    ["b", "guest", "a"],
+  );
+});
+
+test("HR leaderboard includes inside-the-park and legal fence HRs but excludes over-limit and voided HRs", () => {
+  const data = fixture();
+  data.snapshot.games = [
+    game("both-hrs", "cup", 1, [
+      play("fence", "a", "Fence HR", 1, 1),
+      play("inside", "a", "ITP HR", 1, 1),
+      play("over", "b", "Fence HR", 1, 1),
+      play("void", "b", "ITP HR", 1, 1, true),
+    ]),
+  ];
+  assert.deepEqual(
+    tournamentLeaderboard(data, "team", "season", "cup", "HR").map((row) => [
+      row.id,
+      row.totals.HR,
+    ]),
+    [
+      ["a", 2],
+      ["b", 0],
+    ],
+  );
 });
 test("leaderboard rejects mixed team/season/unknown competition and updates from corrected authoritative totals", () => {
   const data = fixture();

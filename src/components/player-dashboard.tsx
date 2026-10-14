@@ -275,7 +275,10 @@ export function PlayerDashboard(p: DashboardProps) {
                       {view?.statistics ? (
                         <div className="dashboard-metrics">
                           <span>
-                            OBP <strong>{rate(view.statistics.OBP)}</strong>
+                            OBP% <strong>{view.statistics.OBP == null ? "—" : `${(view.statistics.OBP * 100).toFixed(1)}%`}</strong>
+                          </span>
+                          <span>
+                            Hits <strong>{view.statistics.H}</strong>
                           </span>
                           <span>
                             Reach Base %{" "}
@@ -283,6 +286,9 @@ export function PlayerDashboard(p: DashboardProps) {
                           </span>
                           <span>
                             HR <strong>{view.statistics.HR}</strong>
+                          </span>
+                          <span>
+                            RBI <strong>{view.statistics.RBI}</strong>
                           </span>
                           <span>
                             PA <strong>{view.statistics.PA}</strong>

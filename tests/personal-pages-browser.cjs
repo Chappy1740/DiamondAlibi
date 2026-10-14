@@ -65,11 +65,20 @@ const assert = require("node:assert/strict");
     assert.equal(contextAfter.searchParams.get('season'),savedContext.searchParams.get('season'));
     await page.goBack();await page.getByRole('heading',{name:'Games',exact:true}).waitFor();
     await checkNavigation('Games');
-    await page.getByRole("region",{name:"Tournament player leaderboard",exact:true}).waitFor();
+    const leaderboard=page.getByRole('region',{name:'Tournament player leaderboard',exact:true});
+    await leaderboard.waitFor();
+    for(const metric of ['OBP%','Hits','HR','RBI','Beverages']){
+      await leaderboard.getByRole('button',{name:metric,exact:true}).click();
+      const rows=await leaderboard.locator('.leaderboard-players li').count();
+      assert(rows>0);
+      assert.equal(await leaderboard.locator('.leaderboard-counts > span').count(),rows);
+      for(const text of await leaderboard.locator('.leaderboard-counts').allTextContents())assert(text.includes(metric));
+      assert.equal(await leaderboard.locator('.leaderboard-beverage').count(),metric==='Beverages'?rows:0);
+    }
     await page.getByRole("group",{name:"Rank players by",exact:true}).getByRole("button",{name:"HR",exact:true}).click();
     assert.equal(await page.getByRole("group",{name:"Rank players by",exact:true}).getByRole("button",{name:"HR",exact:true}).getAttribute("aria-pressed"),"true");
-    await page.getByRole('group',{name:'Rank players by',exact:true}).getByRole('button',{name:'Beverage',exact:true}).click();
-    assert.equal(await page.getByRole('group',{name:'Rank players by',exact:true}).getByRole('button',{name:'Beverage',exact:true}).getAttribute('aria-pressed'),'true');
+    await page.getByRole('group',{name:'Rank players by',exact:true}).getByRole('button',{name:'Beverages',exact:true}).click();
+    assert.equal(await page.getByRole('group',{name:'Rank players by',exact:true}).getByRole('button',{name:'Beverages',exact:true}).getAttribute('aria-pressed'),'true');
     assert(await page.locator('.leaderboard-beverage strong').count()>0);
     assert(await page.locator('.leaderboard-beverage').first().getAttribute('aria-label'));
     assert.equal(await page.getByRole("link",{name:/Add Game/}).count(),0);
