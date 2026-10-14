@@ -165,7 +165,7 @@ export function TournamentNextGame({
                 </div>
               );
             })}
-            <details>
+            {data.snapshot.capabilities?.teamBeverage ? <p className="micro">Your team’s current Beverage Rules apply to this new game.</p> : <details>
               <summary>Beverage rules for this game</summary>
               {Object.entries(seed.board).map(([key, value]) => (
                 <label key={key}>
@@ -180,7 +180,7 @@ export function TournamentNextGame({
                   />
                 </label>
               ))}
-            </details>
+            </details>}
           </div>
           <button
             className="button secondary"

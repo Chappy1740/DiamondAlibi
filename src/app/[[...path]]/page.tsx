@@ -14,6 +14,7 @@ const routes = [
   "more/team",
   "more/seasons",
   "more/alibi",
+  "more/beverage-rules",
   "more/profile",
   "more/settings",
 ];
@@ -31,7 +32,7 @@ export default async function Page({
   if (query.shell === "1")
     return <Workspace route={route} otherGame={query.game === "second"} />;
   if (
-    ["", "games", "stats", "beverages", "more", "more/alibi"].includes(route) ||
+    ["", "games", "stats", "beverages", "more", "more/alibi", "more/beverage-rules"].includes(route) ||
     (route === "games/live" && query.sample === "1")
   )
     return <PlayerDashboard {...await dashboardProps(route, query)} />;

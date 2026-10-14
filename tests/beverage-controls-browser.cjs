@@ -15,13 +15,13 @@ const esbuild = require("esbuild"),
  import React from 'react';import{createRoot}from'react-dom/client';import{BeverageControls}from'./src/components/beverage-controls';import{DEFAULT_BOARD}from'./src/lib/scoring';
  const q=new URLSearchParams(location.search),teamId='00000000-0000-4000-8000-000000000010';
  window.__writes=[];window.__commits=0;window.__responses=new Map();window.__nextResult='accepted';
- window.__state={teamId,revision:0,finalized:!q.has('draft'),rules:q.has('draft')?null:DEFAULT_BOARD,canToggle:!q.has('guest'),participating:true};
+ window.__state={teamId,revision:0,finalized:!q.has('draft'),rules:q.has('draft')?null:DEFAULT_BOARD,canToggle:!q.has('guest'),participating:true,management:q.has('legacy')?undefined:{canEdit:!q.has('member'),lockedBy:q.has('draft')?null:'Synthetic Manager',lockedAt:q.has('draft')?null:'2026-10-14T11:00:00Z'}};
  window.__action=async request=>{
   if(request.type==='read')return q.has('unsupported')?{status:'unsupported'}:{status:'ok',data:{...window.__state}};
   window.__writes.push(request);await new Promise(r=>setTimeout(r,25));
   if(window.__responses.has(request.commandId))return{status:'accepted',duplicate:true};
   if(window.__nextResult==='conflict'){window.__nextResult='accepted';window.__state={...window.__state,revision:window.__state.revision+1,participating:false};return{status:'conflict'}};
-  window.__state={...window.__state,revision:window.__state.revision+1,...(request.change.type==='finalize'?{finalized:true,rules:request.change.rules}:{participating:request.change.participating})};
+  window.__state={...window.__state,revision:window.__state.revision+1,...(['finalize','replace'].includes(request.change.type)?{finalized:true,rules:request.change.rules,management:{canEdit:true,lockedBy:'Synthetic Manager',lockedAt:'2026-10-14T11:05:00Z'}}:{participating:request.change.participating})};
   window.__commits++;window.__responses.set(request.commandId,true);
   if(window.__nextResult==='uncertain'){window.__nextResult='accepted';return{status:'uncertain',commandId:request.commandId}};
   return{status:'accepted',duplicate:false};
@@ -159,6 +159,7 @@ const esbuild = require("esbuild"),
       true,
     );
     await page.goto(base + "?team&draft");
+    await page.getByRole('button',{name:'Set Rules',exact:true}).click();
     await page
       .getByRole("button", {
         name: "Finalize team Beverage Rules",
@@ -184,6 +185,30 @@ const esbuild = require("esbuild"),
       0,
     );
     assert.equal(await page.locator(".beverage-rule-list dd").count(), 7);
+    await page.getByText('Locked by Synthetic Manager',{exact:false}).waitFor();
+    await page.getByRole('button',{name:'Change',exact:true}).click();
+    await page.getByLabel('Strikeout',{exact:true}).fill('4');
+    await page.getByRole('button',{name:'Save Beverage Rules',exact:true}).click();
+    await page.getByRole('button',{name:'Change',exact:true}).waitFor();
+    assert.equal(await page.evaluate(()=>window.__writes.at(-1).change.type),'replace');
+    assert.equal(await page.evaluate(()=>window.__writes.at(-1).change.rules.strikeout),4);
+    assert.equal(await page.locator('input').count(),0);
+    for(const width of [320,390,800,1440]){
+      await page.setViewportSize({width,height:900});
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+    }
+    await page.getByRole('button',{name:'Change',exact:true}).click();
+    assert.equal(await page.getByLabel('Strikeout',{exact:true}).inputValue(),'4');
+    await page.getByRole('button',{name:'Cancel',exact:true}).click();
+    await page.goto(base+'?team&member');
+    await page.getByText('Locked by Synthetic Manager',{exact:false}).waitFor();
+    assert.equal(await page.getByRole('button',{name:'Change',exact:true}).count(),0,'member cannot edit');
+    assert.equal(await page.locator('input').count(),0);
+    assert.equal(await page.locator('.beverage-rule-list dd').count(),7);
+    await page.goto(base+'?team&legacy');
+    await page.locator('.beverage-rule-list').waitFor();
+    assert.equal(await page.getByRole('button',{name:'Change',exact:true}).count(),0,'missing manager capability fails closed');
+
     await page.goto(base + "?guest");
     await page
       .getByText(

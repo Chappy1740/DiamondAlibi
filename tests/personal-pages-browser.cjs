@@ -87,6 +87,12 @@ const assert = require("node:assert/strict");
     assert.equal(await page.locator('.connected-header img').getAttribute("src"),"/brand/diamond-alibi-icon-64.png");
     await page.locator(".profile-menu > summary").click();
     await page.getByRole("navigation",{name:"Profile",exact:true}).getByRole("link",{name:"Sign in",exact:true}).waitFor();
+    await page.goto(base+'/more?sample=1');
+    await page.getByRole('link',{name:'Beverage Rules',exact:true}).click();
+    await page.getByRole('heading',{name:'Beverage Rules',level:1,exact:true}).waitFor();
+    await page.getByText('Sign in and select your team to view its current rules.',{exact:true}).waitFor();
+    await checkNavigation('More');
+    assert.equal(await page.getByRole('button',{name:'Change',exact:true}).count(),0,'samples have no fake manager action');
     await page.goto(base+"/more/alibi?sample=1");
     await page.getByRole("heading",{name:"My alibis",exact:true}).waitFor();
     await page.getByLabel("Your alibi",{exact:true}).fill("Synthetic unsaved draft");
@@ -94,7 +100,7 @@ const assert = require("node:assert/strict");
     await checkNavigation('More');
     await page.getByRole('button',{name:'Save alibi',exact:true}).evaluate(el=>el.scrollIntoView({block:'end'}));
     assert.equal(await page.getByRole('button',{name:'Save alibi',exact:true}).evaluate(el=>el.getBoundingClientRect().bottom<=document.querySelector('.app-bottom-nav').getBoundingClientRect().top),true,'last controls scroll above menu');
-    for(const [path,active] of [['/games?sample=1','Games'],['/stats?sample=1','Stats'],['/beverages?sample=1','Beverage'],['/more?sample=1','More'],['/practice','Games'],['/review','More'],['/review/scoring','Games'],['/status','More'],['/login','More'],['/forgot-password','More'],['/review/history?route=stats','Stats'],['/not-a-real-route','']]) {
+    for(const [path,active] of [['/games?sample=1','Games'],['/stats?sample=1','Stats'],['/beverages?sample=1','Beverage'],['/more?sample=1','More'],['/more/beverage-rules?sample=1','More'],['/practice','Games'],['/review','More'],['/review/scoring','Games'],['/status','More'],['/login','More'],['/forgot-password','More'],['/review/history?route=stats','Stats'],['/not-a-real-route','']]) {
       await page.waitForLoadState('networkidle');
       await page.goto(base+path);
       if(active)await checkNavigation(active);

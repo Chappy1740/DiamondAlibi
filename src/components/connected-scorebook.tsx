@@ -491,7 +491,7 @@ export function ConnectedScorebook({
     chosenLeague: string,
     gameOverride: boolean,
   ) {
-    if (needsBeverageRules) { setMessage("Finalize your team’s Beverage Rules in team management before starting a game."); return false; }
+    if (needsBeverageRules) { setMessage("Finalize your team’s Beverage Rules under More before starting a game."); return false; }
     const selectedLineup = snapshot?.capabilities?.manualBatting && !form.getAll("player").length ? [] : lineup(form);
     if (!selectedLineup) return;
     const date = String(form.get("date")),
@@ -1034,7 +1034,7 @@ export function ConnectedScorebook({
               </table>
             </div>
           </details>}
-          {needsBeverageRules && (mode === "setup" || mode === "full") && <section className="card detail-card"><h2>Team Beverage Rules</h2><p>Finalize your team’s rules once before adding games.</p><a className="button primary" href={`/club?${contextQuery(teamId, seasonId)}#beverage-rules`}>Set team Beverage Rules</a></section>}
+          {needsBeverageRules && (mode === "setup" || mode === "full") && <section className="card detail-card"><h2>Team Beverage Rules</h2><p>Finalize your team’s rules once before adding games.</p><a className="button primary" href={`/more/beverage-rules?${contextQuery(teamId, seasonId)}`}>Set team Beverage Rules</a></section>}
           {!needsBeverageRules && !continuation && (mode === "setup" || mode === "full") && (
             <section className="card detail-card game-setup-card">
               {mode === "full" && <h2 id="new-game-setup" tabIndex={-1}>Set up a game</h2>}

@@ -184,7 +184,7 @@ export function PlayerDashboard(p: DashboardProps) {
                 <h1>
                   {p.route === ""
                     ? `Your game, ${view?.player?.name ?? "Player"}.`
-                    : (tabs.find((t) => t.path === p.route)?.label ??
+                    : p.route === "more/beverage-rules" ? "Beverage Rules" : (tabs.find((t) => t.path === p.route)?.label ??
                       "Clubhouse")}
                 </h1>
                 <p>The stats don’t lie. Your teammates might.</p>
@@ -407,6 +407,7 @@ export function PlayerDashboard(p: DashboardProps) {
               <section className="card detail-card">
                 <h2>Clubhouse tools</h2>
                 <div className="dashboard-cards">
+                  <Link className="button secondary" href={href("more/beverage-rules")}>Beverage Rules</Link>
                   {!p.sample && !p.review && <Link className="button secondary" href="/?sample=1">Explore sample history</Link>}
                   <Link className="button secondary" href="/review/feedback">
                     Challenge the Call · Send feedback
@@ -431,6 +432,7 @@ export function PlayerDashboard(p: DashboardProps) {
                 </div>
               </section>
             )}
+            {p.route === "more/beverage-rules" && (p.sample || !p.userId ? <section className="card detail-card"><h2>Beverage Rules</h2><p>Sign in and select your team to view its current rules.</p></section> : p.teamId ? <BeverageControls key={p.teamId} teamId={p.teamId} teamSettings /> : <p>Select a team to view Beverage Rules.</p>)}
             {p.route === "more/alibi" && <PersonalAlibis connected={!p.sample && !!p.userId} />}
           </main>
         </div>

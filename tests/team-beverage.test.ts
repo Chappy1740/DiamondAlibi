@@ -158,3 +158,78 @@ test("Beverage saves retain retry identifiers, distinguish conflicts and require
   );
   assert.equal(noAuth.calls.length, 0);
 });
+
+test("manager capability and locker metadata must be authoritative and valid; legacy reads cannot grant editing", async () => {
+  const value = {
+    teamId,
+    revision: 1,
+    finalized: true,
+    rules: DEFAULT_BOARD,
+    participating: true,
+    canToggle: true,
+    management: {
+      canEdit: false,
+      lockedBy: "Synthetic Manager",
+      lockedAt: "2026-10-14T11:00:00Z",
+    },
+  };
+  const result = await teamBeverage(fixture(value).client, {
+    type: "read",
+    teamId,
+  });
+  assert.equal(result.status, "ok");
+  if (result.status === "ok")
+    assert.equal(result.data.management?.canEdit, false);
+  for (const management of [
+    { ...value.management, canEdit: "true" },
+    { ...value.management, lockedAt: "yesterday" },
+    { ...value.management, lockedBy: null },
+    { ...value.management, actor: "invented-manager" },
+  ])
+    assert.equal(
+      (
+        await teamBeverage(fixture({ ...value, management }).client, {
+          type: "read",
+          teamId,
+        })
+      ).status,
+      "unavailable",
+    );
+  const legacy = await teamBeverage(
+    fixture({ ...value, management: undefined }).client,
+    { type: "read", teamId },
+  );
+  assert.equal(legacy.status, "ok");
+  if (legacy.status === "ok") assert.equal(legacy.data.management, undefined);
+});
+
+test("rule replacement submits exact amounts without claimed manager/locker identities", async () => {
+  const f = fixture();
+  const rules = { ...DEFAULT_BOARD, strikeout: 4 };
+  assert.equal(
+    (
+      await teamBeverage(f.client, {
+        ...input,
+        change: { type: "replace", rules },
+      })
+    ).status,
+    "accepted",
+  );
+  assert.deepEqual(f.calls[0].args.p_change, { type: "replace", rules });
+  for (const extra of [
+    { actor: "manager" },
+    { manager: true },
+    { lockedBy: "manager" },
+    { lockedAt: "today" },
+  ])
+    assert.equal(
+      (
+        await teamBeverage(f.client, {
+          ...input,
+          change: { type: "replace", rules, ...extra },
+        })
+      ).status,
+      "invalid",
+    );
+  assert.equal(f.calls.length, 1);
+});

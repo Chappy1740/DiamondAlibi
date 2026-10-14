@@ -7,6 +7,11 @@ export type BeverageState = {
   rules: Rules["board"] | null;
   canToggle: boolean;
   participating: boolean;
+  management?: {
+    canEdit: boolean;
+    lockedBy: string | null;
+    lockedAt: string | null;
+  };
 };
 export type BeverageRequest =
   | { type: "read"; teamId: string }
@@ -17,7 +22,7 @@ export type BeverageRequest =
       expectedRevision: number;
       change:
         | { type: "participation"; participating: boolean }
-        | { type: "finalize"; rules: Rules["board"] };
+        | { type: "finalize" | "replace"; rules: Rules["board"] };
     };
 export type BeverageResult =
   | { status: "ok"; data: BeverageState }
@@ -61,6 +66,19 @@ function state(v: unknown, team: string): v is BeverageState {
     typeof v.finalized === "boolean" &&
     typeof v.canToggle === "boolean" &&
     typeof v.participating === "boolean" &&
+    (v.management === undefined ||
+      (object(v.management) &&
+        fields(v.management, ["canEdit", "lockedBy", "lockedAt"]) &&
+        typeof v.management.canEdit === "boolean" &&
+        (v.finalized
+          ? typeof v.management.lockedBy === "string" &&
+            v.management.lockedBy.length > 0 &&
+            v.management.lockedBy.length <= 40 &&
+            typeof v.management.lockedAt === "string" &&
+            /^\d{4}-\d{2}-\d{2}T/.test(v.management.lockedAt) &&
+            Number.isFinite(Date.parse(v.management.lockedAt))
+          : v.management.lockedBy === null &&
+            v.management.lockedAt === null))) &&
     (v.finalized ? validRules(v.rules) : v.rules === null)
   );
 }
@@ -100,7 +118,7 @@ export async function teamBeverage(
       change.type === "participation"
         ? !fields(change, ["type", "participating"]) ||
           typeof change.participating !== "boolean"
-        : change.type === "finalize"
+        : change.type === "finalize" || change.type === "replace"
           ? !fields(change, ["type", "rules"]) || !validRules(change.rules)
           : true
     )

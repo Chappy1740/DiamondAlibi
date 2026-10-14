@@ -1,0 +1,3 @@
+-- Owner approved and applied on 2026-10-14.
+-- Canonical executable SQL: ../migrations/20261014115637_manager_beverage_rules.sql
+-- See manager-beverage-design.md for review, scope and verification.

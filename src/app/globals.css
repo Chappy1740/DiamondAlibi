@@ -1930,3 +1930,8 @@ blockquote {
 .beverage-rule-list > div { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; padding: .45rem 0; }
 .beverage-rule-list dt { overflow-wrap: anywhere; }
 .beverage-rule-list dd { margin: 0; font-weight: 700; }
+
+.beverage-rules-heading { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; }
+.beverage-rules-heading h2 { margin: 0; }
+.beverage-rules-heading .button { min-height: 44px; padding: .5rem .8rem; }
+.beverage-rules-actions { display: flex; gap: .6rem; flex-wrap: wrap; }

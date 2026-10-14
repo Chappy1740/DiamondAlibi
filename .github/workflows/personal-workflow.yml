@@ -19,6 +19,7 @@ jobs:
       - run: node --experimental-strip-types --test --test-isolation=none tests/*.test.ts tests/signout.cjs
       - run: node tests/optional-lineups-sql.cjs
       - run: node tests/team-beverage-sql.cjs
+      - run: node tests/manager-beverage-sql.cjs
       - run: node tests/personal-alibis-sql.cjs
       - run: node tests/dashboard-loader.cjs
       - run: npx playwright install --with-deps chromium webkit

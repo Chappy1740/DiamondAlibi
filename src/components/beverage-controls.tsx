@@ -24,6 +24,7 @@ export function BeverageControls({
   const [busy, setBusy] = useState(false);
   const [online, setOnline] = useState(true);
   const [uncertain, setUncertain] = useState(false);
+  const [editing, setEditing] = useState(false);
   const generation = useRef(0),
     lock = useRef(false),
     pending = useRef<BeverageRequest | null>(null);
@@ -32,6 +33,7 @@ export function BeverageControls({
     setValue(null);
     setMessage("");
     setUncertain(false);
+    setEditing(false);
     setBusy(false);
     lock.current = false;
     pending.current = null;
@@ -70,6 +72,8 @@ export function BeverageControls({
       const current = await beverageAction({ type: "read", teamId });
       if (run !== generation.current) return;
       if (current.status === "ok") setValue(current.data);
+      if (result.status === "accepted" || result.status === "conflict")
+        setEditing(false);
       setMessage(
         result.status === "accepted"
           ? current.status === "ok"
@@ -99,7 +103,7 @@ export function BeverageControls({
       teamId,
       commandId: crypto.randomUUID(),
       expectedRevision: value.revision,
-      change: { type: "finalize", rules },
+      change: { type: value.finalized ? "replace" : "finalize", rules },
     });
   }
   if (!value && !message) return null;
@@ -117,12 +121,26 @@ export function BeverageControls({
     >
       {teamSettings ? (
         <>
-          <h2>Beverage Rules</h2>
+          <div className="beverage-rules-heading">
+            <h2>Current rules</h2>
+            {value?.management?.canEdit && !editing && (
+              <button
+                className="button secondary"
+                type="button"
+                disabled={disabled}
+                onClick={() => setEditing(true)}
+              >
+                {value.finalized ? "Change" : "Set Rules"}
+              </button>
+            )}
+          </div>
           {value?.finalized ? (
             <>
-              <p>
-                Your team’s finalized rules apply to league and tournament
-                games.
+              <p className="micro">
+                Locked by {value.management?.lockedBy ?? "Team member"}
+                {value.management?.lockedAt && (
+                  <> · {new Date(value.management.lockedAt).toLocaleString()}</>
+                )}
               </p>
               <dl className="beverage-rule-list">
                 {Object.entries(value.rules!).map(([key, amount]) => (
@@ -135,13 +153,22 @@ export function BeverageControls({
             </>
           ) : (
             value && (
-              <form className="club-form" onSubmit={finalize}>
-                <p>
-                  Agree on these rules with your team, then finalize them once.
-                  Existing game history is retained.
-                </p>
-                <fieldset disabled={disabled}>
-                  {Object.entries(DEFAULT_BOARD).map(([key, amount]) => (
+              <p>The team manager hasn’t locked in Beverage Rules yet.</p>
+            )
+          )}
+          {value?.management?.canEdit && editing && (
+            <form
+              key={`${teamId}:${value.revision}`}
+              className="club-form"
+              onSubmit={finalize}
+            >
+              <p>
+                Changes apply to new games. Existing games keep their saved
+                rules and balances.
+              </p>
+              <fieldset disabled={disabled}>
+                {Object.entries(value.rules ?? DEFAULT_BOARD).map(
+                  ([key, amount]) => (
                     <label key={key}>
                       {labels[key as keyof typeof labels]}
                       <input
@@ -154,13 +181,24 @@ export function BeverageControls({
                         required
                       />
                     </label>
-                  ))}
+                  ),
+                )}
+                <div className="beverage-rules-actions">
                   <button className="button primary" type="submit">
-                    Finalize team Beverage Rules
+                    {value.finalized
+                      ? "Save Beverage Rules"
+                      : "Finalize team Beverage Rules"}
                   </button>
-                </fieldset>
-              </form>
-            )
+                  <button
+                    className="button secondary"
+                    type="button"
+                    onClick={() => setEditing(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </fieldset>
+            </form>
           )}
         </>
       ) : (
