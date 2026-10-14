@@ -499,9 +499,6 @@ export function PlayerDashboard(p: DashboardProps) {
           </main>
         </div>
       </div>
-      <nav className="bottom-nav" aria-label="Mobile primary">
-        {navigation}
-      </nav>
     </>
   );
 }

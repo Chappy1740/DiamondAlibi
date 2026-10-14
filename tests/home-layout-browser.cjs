@@ -10,19 +10,21 @@ const assert = require("node:assert/strict");
   try {
     const bundle = await esbuild.build({
       stdin: { resolveDir: process.cwd(), loader: "tsx", contents: `
-        import React from 'react';import{createRoot}from'react-dom/client';import{PlayerDashboard}from'./src/components/player-dashboard';import{emptyTotals}from'./src/lib/scoring';
+        import React from 'react';import{createRoot}from'react-dom/client';import{PlayerDashboard}from'./src/components/player-dashboard';import{BottomNavigationView}from'./src/components/bottom-navigation';import{emptyTotals}from'./src/lib/scoring';
         const long='M3-5 Synthetic Test with an exceptionally long team name';
         const data={archived:false,roster:[{id:'player',user_id:'synthetic-user',display_name:'Test Player',is_guest:false},{id:'teammate',user_id:'other-user',display_name:'Other Synthetic Player',is_guest:false}],snapshot:{teamId:'team',seasonId:'season',scope:'Overall',games:[{game:{id:'other-game',kind:'League',opponent:'Other synthetic opponent',completed:false,next_batter_position:0},lineup:['teammate'],playedOn:'2026-10-13'}],totals:{player:{...emptyTotals(),PA:4,H:1,HR:1},teammate:{...emptyTotals(),PA:20,H:9,HR:9}},board:{player:-2},tournaments:[],leagues:[]}};
         const p={route:location.pathname.slice(1),sample:location.search.includes('sample=1'),userId:'synthetic-user',teams:[{id:'team',name:'M3-5 Synthetic Test'},{id:'long',name:long}],seasons:[{id:'season',name:'M3-5 Synthetic Season',archived:false},{id:'history',name:'Synthetic Season with an exceptionally long history name',archived:true}],teamId:'team',seasonId:'season',scope:'Overall',loaded:data};
-        createRoot(document.getElementById('app')).render(<PlayerDashboard {...p}/>);` },
+        const context=new URLSearchParams({team:p.teamId,season:p.seasonId,scope:p.scope,...(p.sample?{sample:'1',player:p.userId}:{})}).toString();
+        createRoot(document.getElementById('app')).render(<><PlayerDashboard {...p}/><BottomNavigationView pathname={location.pathname} context={context}/></>);` },
       bundle: true, write: false, platform: "browser", jsx: "automatic",
       plugins: [{ name: "synthetic-home", setup(build) {
-        build.onResolve({ filter: /^(next\/(navigation|link|image)|@\/app\/login\/actions|\.\/personal-alibis)$/ }, args => ({ path: args.path, namespace: "synthetic" }));
+        build.onResolve({ filter: /^(next\/(navigation|link|image)|@\/app\/(login\/actions|club\/beverage-actions)|\.\/personal-alibis)$/ }, args => ({ path: args.path, namespace: "synthetic" }));
         build.onLoad({ filter: /.*/, namespace: "synthetic" }, args => ({ loader: "tsx", resolveDir: process.cwd(), contents:
-          args.path === "next/navigation" ? "export const useRouter=()=>({refresh(){}});" :
+          args.path === "next/navigation" ? "export const useRouter=()=>({refresh(){}});export const usePathname=()=>location.pathname;export const useSearchParams=()=>new URLSearchParams(location.search);" :
           args.path === "next/link" ? "import React from 'react';export default function Link({children,...props}){return <a {...props}>{children}</a>}" :
           args.path === "next/image" ? "import React from 'react';export default function Image({unoptimized,...props}){return <img {...props}/>}" :
           args.path === "./personal-alibis" ? "export function PersonalAlibis(){return null}" :
+          args.path === "@/app/club/beverage-actions" ? "export async function beverageAction(){return {status:'unsupported'}}" :
           "export async function signout(){}"
         }));
       }}],

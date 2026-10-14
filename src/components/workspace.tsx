@@ -1127,22 +1127,6 @@ export function Workspace({
           </footer>
         </div>
       </div>
-      <nav className="bottom-nav" aria-label="Mobile primary">
-        {navigation.map((item) => (
-          <Link
-            href={item.href}
-            key={item.href}
-            aria-current={
-              (item.href === "/" ? tab === "home" : item.href === `/${tab}`)
-                ? "page"
-                : undefined
-            }
-          >
-            <item.icon size={21} aria-hidden />
-            <span>{item.label}</span>
-          </Link>
-        ))}
-      </nav>
       {controls && <PreviewDialog close={() => setControls(false)} />}
     </>
   );

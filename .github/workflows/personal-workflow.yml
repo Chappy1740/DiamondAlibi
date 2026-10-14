@@ -38,3 +38,5 @@ jobs:
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
       - run: node tests/personal-pages-browser.cjs
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+      - run: BROWSER_ENGINE=webkit node tests/personal-pages-browser.cjs
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}

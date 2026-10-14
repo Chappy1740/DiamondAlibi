@@ -5,6 +5,8 @@ import "@fontsource/inter/600.css";
 import "@fontsource/inter/700.css";
 import "./globals.css";
 import { PreviewProvider } from "@/components/workspace";
+import { Suspense } from "react";
+import { BottomNavigation, BottomNavigationView } from "@/components/bottom-navigation";
 export const metadata: Metadata = {
   title: "Diamond Alibi · Development preview",
   applicationName: "Diamond Alibi",
@@ -37,6 +39,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <PreviewProvider>{children}</PreviewProvider>
+        <Suspense fallback={<BottomNavigationView />}><BottomNavigation /></Suspense>
       </body>
     </html>
   );
