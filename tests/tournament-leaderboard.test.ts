@@ -31,3 +31,14 @@ test("leaderboard rejects mixed team/season/unknown competition and updates from
   data.snapshot.games[1].evaluation.totals.a = emptyTotals();
   assert.equal(tournamentLeaderboard(data, "team", "season", "cup")[0].id, "b");
 });
+
+test("tournament Beverage totals preserve credit, charges and voids without using season or other-competition balances", () => {
+  const data = fixture();
+  data.snapshot.board = { a: 500, b: -500 };
+  data.snapshot.games = [game("beverages", "cup", 2, [play("credit", "a", "Fence HR", 1, 1), play("charge", "b", "K"), play("void-credit", "a", "Fence HR", 1, 1, true)]), game("other", "other-cup", 2, [play("excluded-credit", "a", "Fence HR", 1, 1)])];
+  const rows = tournamentLeaderboard(data, "team", "season", "cup");
+  assert.equal(rows.find(row => row.id === "a")?.totals.board, -1);
+  assert.equal(rows.find(row => row.id === "b")?.totals.board, 1);
+  data.snapshot.games[0].evaluation.totals.a.board = -3;
+  assert.equal(tournamentLeaderboard(data, "team", "season", "cup").find(row => row.id === "a")?.totals.board, -3);
+});

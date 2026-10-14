@@ -14,7 +14,7 @@ export function TournamentLeaderboard({ players }: { players: TournamentPlayer[]
     {!rows.length ? <p>No recorded plate appearances in this tournament yet.</p> : <ol className="leaderboard-players">
       {rows.map(row => <li key={row.id}>
         <span className="leaderboard-rank" aria-label={`Rank ${row.rank}`}>{row.rank}</span>
-        <div className="leaderboard-player"><strong>{row.name}</strong><span className="micro">{row.totals.PA} PA · OBP {row.rates.OBP == null ? "—" : row.rates.OBP.toFixed(3)}</span></div>
+        <div className="leaderboard-player"><strong>{row.name}</strong><span className="micro">{row.totals.PA} PA · OBP {row.rates.OBP == null ? "—" : row.rates.OBP.toFixed(3)}</span><span className="leaderboard-beverage" data-credit={row.totals.board < 0}>Beverage: {row.totals.board < 0 ? `${Math.abs(row.totals.board)} in credit` : row.totals.board > 0 ? `${row.totals.board} owed` : "Even"}</span></div>
         <div className="leaderboard-counts"><span><strong>{row.totals.H}</strong>Hits</span><span><strong>{row.totals.HR}</strong>HR</span><span><strong>{row.totals.RBI}</strong>RBI</span></div>
       </li>)}
     </ol>}

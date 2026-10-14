@@ -20,8 +20,8 @@ const assert = require("node:assert/strict");
       window.__fixture=data;window.__audit=[{action:'hrLimit',reason:'Tournament game history',after:{game:{id:'cup-game'},fenceLimit:2}},{action:'hrLimit',reason:'League game history',after:{game:{id:'league-game'},fenceLimit:0}},{action:'band',tournamentId:'synthetic-cup',reason:'Cup Band history',before:true,after:false},{action:'start',reason:'Other game history',after:{gameId:'other-game'}}];
       if(query.has('leaderboard')){
         data.roster.push({id:'other-player',display_name:'Synthetic Blair with a very long roster nickname',is_guest:true});
-        const cupGame=data.snapshot.games.find(g=>g.game.id==='cup-game');cupGame.evaluation.totals={'synthetic-player':{...emptyTotals(),PA:3,AB:3,H:2,HR:1,RBI:1,board:-1},'other-player':{...emptyTotals(),PA:3,AB:3,H:2,HR:0,RBI:2}};
-        data.snapshot.games.find(g=>g.game.id==='league-game').evaluation.totals={'synthetic-player':{...emptyTotals(),PA:99,H:99,HR:99,RBI:99}};
+        const cupGame=data.snapshot.games.find(g=>g.game.id==='cup-game');cupGame.evaluation.totals={'synthetic-player':{...emptyTotals(),PA:3,AB:3,H:2,HR:1,RBI:1,board:-1},'other-player':{...emptyTotals(),PA:3,AB:3,H:2,HR:0,RBI:2,board:2}};
+        data.snapshot.games.find(g=>g.game.id==='league-game').evaluation.totals={'synthetic-player':{...emptyTotals(),PA:99,H:99,HR:99,RBI:99,board:50}};
         if(query.has('nine-games')){data.snapshot.games=data.snapshot.games.filter(g=>g.game.kind==='League').concat(Array.from({length:9},(_,i)=>({...structuredClone(cupGame),game:{...cupGame.game,id:'cup-game-'+i,tournament_game_number:i+1}})));}
         createRoot(document.getElementById('app')).render(<CompetitionPage kind={query.has('league-page')?'League':'Tournament'} id={query.has('league-page')?'synthetic-league':'synthetic-cup'} data={{route:'tournaments',sample:false,userId:'synthetic-user',teams:[{id:'synthetic-team',name:'Synthetic Team'}],seasons:[{id:'synthetic-season',name:'Synthetic Season',archived:false}],teamId:'synthetic-team',seasonId:'synthetic-season',scope:'Overall',loaded:data}}/>);
       }else if(query.has('page')) ScorePage({searchParams:Promise.resolve({setup:query.has('scoring-page')||query.has('manage-page')?undefined:'1',manage:query.has('manage-page')?'1':undefined,game:query.has('manage-page')?(query.get('game')||'cup-game'):query.has('scoring-page')?'cup-game':undefined,tournament:query.get('tournament')||undefined,league:query.get('league')||undefined})}).then(ui=>createRoot(document.getElementById('app')).render(ui));
@@ -52,9 +52,11 @@ const assert = require("node:assert/strict");
     const leaders=page.getByRole('region',{name:'Tournament player leaderboard',exact:true});await leaders.waitFor();
     assert.equal(await leaders.locator('.leaderboard-players li').count(),2);
     assert.deepEqual(await leaders.locator('.leaderboard-rank').allTextContents(),['1','1']);
+    assert.deepEqual(await leaders.locator('.leaderboard-beverage').allTextContents(),['Beverage: 2 owed','Beverage: 1 in credit']);
     assert.deepEqual(await leaders.locator('.leaderboard-counts strong').allTextContents(),['2','0','2','2','1','1']);
     await leaders.getByRole('button',{name:'HR',exact:true}).click();
     assert.equal(await leaders.locator('.leaderboard-player strong').first().textContent(),'Synthetic Player');
+    assert.equal(await leaders.locator('.leaderboard-beverage').first().textContent(),'Beverage: 1 in credit');
     await leaders.getByRole('button',{name:'RBI',exact:true}).click();
     assert.match(await leaders.locator('.leaderboard-player strong').first().textContent(),/Synthetic Blair/);
     assert.equal(await page.locator('.tournament-date').textContent(),'2026-10-13');

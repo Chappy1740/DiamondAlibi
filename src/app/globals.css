@@ -1902,3 +1902,6 @@ blockquote {
 .leaderboard-counts { display: flex; gap: .6rem; flex-shrink: 0; }
 .leaderboard-counts span { display: grid; text-align: center; font-size: .75rem; color: var(--muted); }
 .leaderboard-counts strong { font-size: 1rem; color: var(--white); }
+
+.leaderboard-beverage { color: var(--silver); font-size: .85rem; }
+.leaderboard-beverage[data-credit="true"] { color: var(--teal); }
