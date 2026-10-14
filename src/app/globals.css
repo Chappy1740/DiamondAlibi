@@ -1905,8 +1905,8 @@ blockquote {
 }
 
 .tournament-leaderboard { margin-block: 1.25rem; }
-.leaderboard-metrics { display: flex; gap: .5rem; }
-.leaderboard-metrics button { min-width: 60px; min-height: 44px; border: 1px solid var(--border); border-radius: .6rem; background: var(--surface); color: var(--white); font-weight: 700; padding: .5rem .85rem; }
+.leaderboard-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); max-width: 460px; gap: .5rem; }
+.leaderboard-metrics button { min-width: 0; min-height: 44px; border: 1px solid var(--border); border-radius: .6rem; background: var(--surface); color: var(--white); font-weight: 700; padding: .5rem .4rem; overflow-wrap: anywhere; }
 .leaderboard-metrics button[aria-pressed="true"] { border-color: var(--teal); background: #163c4d; }
 .leaderboard-players { list-style: none; padding: 0; margin: 0; }
 .leaderboard-players li { display: flex; align-items: center; gap: .6rem; padding-block: .8rem; border-bottom: 1px solid var(--border); min-width: 0; }
@@ -1916,8 +1916,16 @@ blockquote {
 .leaderboard-counts span { display: grid; text-align: center; font-size: .75rem; color: var(--muted); }
 .leaderboard-counts strong { font-size: 1rem; color: var(--white); }
 
-.leaderboard-beverage { color: var(--silver); font-size: .85rem; }
-.leaderboard-beverage[data-credit="true"] { color: var(--teal); }
+.leaderboard-counts .leaderboard-beverage { color: var(--silver); }
+.leaderboard-counts .leaderboard-beverage[data-credit="true"], .leaderboard-beverage[data-credit="true"] strong { color: var(--teal); }
+.leaderboard-beverage small { font-size: .7rem; }
+@media (max-width: 600px) {
+  .leaderboard-players li { display: grid; grid-template-columns: 1.25rem minmax(0, 1fr); }
+  .leaderboard-rank { grid-column: 1; grid-row: 1 / span 2; align-self: start; }
+  .leaderboard-player, .leaderboard-counts { grid-column: 2; }
+  .leaderboard-counts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .4rem; margin-top: .25rem; }
+  .leaderboard-counts span { min-width: 0; overflow-wrap: anywhere; }
+}
 .beverage-controls { min-width: 0; }
 .beverage-controls p { overflow-wrap: anywhere; }
 .beverage-rule-list { margin: 0; }
