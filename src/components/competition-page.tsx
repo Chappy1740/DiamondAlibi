@@ -56,7 +56,7 @@ export function CompetitionPage({ data: p, kind, id }: { data: DashboardProps; k
         </article>; })}
       </div>
       {!selected.games.length && <p>No games recorded. Add the first game to choose a lineup and start scoring.</p>}
-      {kind === "Tournament" && p.loaded && <TournamentLeaderboard players={tournamentLeaderboard(p.loaded, p.teamId, p.seasonId, id!)} />}
+      {kind === "Tournament" && p.loaded && <TournamentLeaderboard key={`${p.teamId}:${p.seasonId}:${id}`} players={tournamentLeaderboard(p.loaded, p.teamId, p.seasonId, id!)} />}
       {!p.sample && <details className="card detail-card"><summary>{kind === "Tournament" ? "Tournament settings" : "League settings"}</summary>
         <CompetitionForm team={p.teamId} season={p.seasonId} kind={kind} existing={selected.competition} archived={!!p.loaded?.archived} />
       </details>}

@@ -55,14 +55,17 @@ const assert = require("node:assert/strict");
         .count(),
       0,
     );
+    // Bring the embedded phone's footer above the outer page's shared menu.
+    await page.locator("iframe").evaluate(el => el.scrollIntoView({ block: "end" }));
     await frame
       .getByRole("navigation", { name: "Mobile primary" })
       .getByRole("link", { name: "Stats", exact: true })
       .click();
     await frame
-      .getByRole("heading", { name: "Team summary", exact: true })
+      .getByRole("heading", { name: "Team leaders", exact: true })
       .waitFor();
-    assert.equal(await frame.locator("tbody tr").count(), 12);
+    await frame.getByRole('region',{name:'Team player leaderboard',exact:true}).getByRole('button',{name:'View Hits rankings',exact:true}).click();
+    assert.equal(await frame.locator('.leaderboard-players li').count(), 12);
     const forged = await page.request.get(
       base + "/review/history?team=forged-real-team&sample=0",
     );

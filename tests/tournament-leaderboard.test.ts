@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   rankTournamentPlayers,
+  teamLeaderboard,
   tournamentLeaderboard,
 } from "../src/lib/tournament-leaderboard.ts";
 import {
@@ -265,5 +266,46 @@ test("Beverage ranking uses signed tournament net totals, shared ranks and effec
   assert.equal(
     tournamentLeaderboard(data, "team", "season", "cup", "board")[0].id,
     "guest",
+  );
+});
+
+test("team leaders use only the selected team, season and scope, including scoped Beverage totals", () => {
+  const data = fixture();
+  data.snapshot.scope = "League";
+  data.snapshot.totals = {
+    a: { ...emptyTotals(), PA: 2, AB: 2, H: 1, HR: 1, RBI: 3, board: -2 },
+    b: { ...emptyTotals(), PA: 1, AB: 1, H: 1, board: 1 },
+    noPlays: emptyTotals(),
+  };
+  // Separate season balances must never leak into a filtered leaderboard.
+  data.snapshot.board = { a: 999, b: -999 };
+  const before = JSON.stringify(data);
+  const rows = teamLeaderboard(data, "team", "season", "League");
+  assert.deepEqual(
+    rows.map((row) => [row.id, row.totals.board]),
+    [
+      ["a", -2],
+      ["b", 1],
+    ],
+  );
+  assert.deepEqual(
+    rankTournamentPlayers(rows, "OBP").map((row) => row.id),
+    ["b", "a"],
+  );
+  for (const [team, season, scope] of [
+    ["other", "season", "League"],
+    ["team", "old", "League"],
+    ["team", "season", "Overall"],
+    ["team", "season", "Tournament"],
+  ] as const)
+    assert.deepEqual(teamLeaderboard(data, team, season, scope), []);
+  assert.equal(JSON.stringify(data), before);
+  // Rows are a plain independent projection safe to pass to the client UI.
+  rows[0].totals.board = 123;
+  assert.equal(data.snapshot.totals.a.board, -2);
+  data.snapshot.totals.a.RBI = 0;
+  assert.equal(
+    teamLeaderboard(data, "team", "season", "League")[0].totals.RBI,
+    0,
   );
 });

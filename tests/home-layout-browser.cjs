@@ -87,9 +87,20 @@ const assert = require("node:assert/strict");
     assert.equal(await page.getByRole("button", { name: "Refresh records" }).isDisabled(), true);
     await page.setViewportSize({ width: 390, height: 844 });
     await page.locator(".bottom-nav").getByRole("link", { name: "Stats", exact: true }).click();
-    await page.getByRole("heading", { name: "Team summary" }).waitFor();
-    await page.getByRole("region", { name: "Player statistics table" }).getByRole("rowheader", { name: "Other Synthetic Player" }).waitFor();
-    assert.match(await page.locator(".dashboard-metrics").innerText(), /HR\s+10/);
+    await page.getByRole("heading", { name: "Team leaders" }).waitFor();
+    const leaders=page.getByRole('region',{name:'Team player leaderboard',exact:true});
+    assert.equal(await leaders.locator('.leaderboard-summary button').count(),5);
+    assert.equal(await page.locator('.dashboard-table').count(),0,'leaders replace the mixed statistics table');
+    assert.equal(await leaders.locator('.leaderboard-scope').textContent(),'M3-5 Synthetic Test · M3-5 Synthetic Season · Overall');
+    await leaders.getByRole('button',{name:'View HR rankings',exact:true}).click();
+    assert.deepEqual(await leaders.locator('.leaderboard-player strong').allTextContents(),['Other Synthetic Player','Test Player']);
+    assert.deepEqual(await leaders.locator('.leaderboard-counts strong').allTextContents(),['9','1']);
+    await leaders.getByRole('button',{name:'← Back to leaders',exact:true}).click();
+    for(const width of [320,390,800,1440]){
+      await page.setViewportSize({width,height:900});
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+      assert(await leaders.getByRole('button').evaluateAll(buttons=>buttons.every(button=>button.getBoundingClientRect().height>=44&&button.getBoundingClientRect().width>=44)));
+    }
     await page.locator(".bottom-nav").getByRole("link", { name: "More", exact: true }).click();
     await page.getByRole("link", { name: "Explore sample history" }).click();
     await page.locator(".dashboard-notice").getByText("Sample history", { exact: false }).waitFor();

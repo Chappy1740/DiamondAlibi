@@ -52,28 +52,37 @@ const assert = require("node:assert/strict");
     // repeated dates, supports tied ranks, readable names and ninth-game Add.
     await page.goto(`${base}/?leaderboard=1`);
     const leaders=page.getByRole('region',{name:'Tournament player leaderboard',exact:true});await leaders.waitFor();
-    assert.equal(await leaders.locator('.leaderboard-players li').count(),2);
-    assert.deepEqual(await leaders.getByRole('group',{name:'Rank players by',exact:true}).getByRole('button').allTextContents(),['OBP%','Hits','HR','RBI','Beverages']);
+    assert.equal(await leaders.locator('.leaderboard-summary button').count(),5);
+    assert.deepEqual(await leaders.locator('.leaderboard-summary .leaderboard-player strong').allTextContents(),['2 tied','2 tied','Synthetic Player','Synthetic Blair with a very long roster nickname','Synthetic Blair with a very long roster nickname']);
+    assert.deepEqual(await leaders.locator('.leaderboard-summary .leaderboard-counts strong').allTextContents(),['66.7%','2','1','2','2']);
+    assert.equal(await leaders.locator('.leaderboard-players').count(),0,'leaders first, not the full ranking');
     async function onlyMetric(label,values){
-      await leaders.getByRole('button',{name:label,exact:true}).click();
-      assert.equal(await leaders.getByRole('button',{name:label,exact:true}).getAttribute('aria-pressed'),'true');
+      await leaders.getByRole('button',{name:'View '+label+' rankings',exact:true}).click();
+      await leaders.getByRole('heading',{name:label+' rankings',exact:true}).waitFor();
+      assert.equal(await leaders.getByRole('button',{name:'← Back to leaders',exact:true}).evaluate(el=>el===document.activeElement),true);
+      assert.equal(await leaders.locator('.leaderboard-summary').count(),0);
       assert.deepEqual(await leaders.locator('.leaderboard-counts strong').allTextContents(),values);
       assert.equal(await leaders.locator('.leaderboard-counts > span').count(),2,'one selected statistic per player');
       assert.equal(await leaders.locator('.leaderboard-player .micro').count(),0,'no unrelated PA/OBP statistics');
       for(const text of await leaders.locator('.leaderboard-counts').allTextContents())assert(text.includes(label));
       assert.equal(await leaders.locator('.leaderboard-beverage').count(),label==='Beverages'?2:0);
     }
+    async function back(label){
+      await leaders.getByRole('button',{name:'← Back to leaders',exact:true}).click();
+      assert.equal(await leaders.getByRole('button',{name:'View '+label+' rankings',exact:true}).evaluate(el=>el===document.activeElement),true);
+    }
     await onlyMetric('OBP%',['66.7%','66.7%']);
     assert.deepEqual(await leaders.locator('.leaderboard-rank').allTextContents(),['1','1']);
-    await onlyMetric('Hits',['2','2']);
-    await onlyMetric('HR',['1','0']);
+    await back('OBP%');await onlyMetric('Hits',['2','2']);
+    await back('Hits');await onlyMetric('HR',['1','0']);
     assert.equal(await leaders.locator('.leaderboard-player strong').first().textContent(),'Synthetic Player');
-    await onlyMetric('RBI',['2','1']);
+    await back('HR');await onlyMetric('RBI',['2','1']);
     assert.match(await leaders.locator('.leaderboard-player strong').first().textContent(),/Synthetic Blair/);
-    await onlyMetric('Beverages',['2','1']);
+    await back('RBI');await onlyMetric('Beverages',['2','1']);
     assert.deepEqual(await leaders.locator('.leaderboard-beverage').evaluateAll(cells=>cells.map(cell=>cell.getAttribute('aria-label'))),['Beverage: 2 owed','Beverage: 1 in credit']);
     assert.deepEqual(await leaders.locator('.leaderboard-rank').allTextContents(),['1','2']);
     await leaders.getByText('Most owed first',{exact:false}).waitFor();
+    await back('Beverages');
     assert.equal(await page.locator('.tournament-date').textContent(),'2026-10-13');
     assert.equal(await page.locator('.dashboard-cards .eyebrow').textContent().then(t=>t.includes('2026-10-13')),false);
     if(process.env.TOURNAMENT_SCREENSHOT)await page.screenshot({path:process.env.TOURNAMENT_SCREENSHOT,fullPage:true});

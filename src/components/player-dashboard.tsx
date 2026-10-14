@@ -9,7 +9,9 @@ import {
   Ellipsis,
 } from "lucide-react";
 import { personalDashboard } from "@/lib/personal-dashboard";
-import { emptyTotals, rates, type Scope, type Totals } from "@/lib/scoring";
+import { type Scope } from "@/lib/scoring";
+import { teamLeaderboard } from "@/lib/tournament-leaderboard";
+import { PlayerLeaderboard } from "./tournament-leaderboard";
 import type { LoadedScorebook } from "@/lib/scorebook-view";
 import { DashboardRefresh } from "./dashboard-refresh";
 import { DashboardSelect } from "./dashboard-select";
@@ -80,14 +82,6 @@ export function PlayerDashboard(p: DashboardProps) {
     loaded?.snapshot.games.filter(
       (g) => p.scope === "Overall" || g.game.kind === p.scope,
     ) ?? [];
-  const teamTotals = loaded
-    ? Object.values(loaded.snapshot.totals).reduce((sum, t) => {
-        for (const key of Object.keys(sum) as (keyof Totals)[])
-          sum[key] += t[key];
-        return sum;
-      }, emptyTotals())
-    : null;
-  const teamRates = teamTotals ? rates(teamTotals) : null;
   const navigation = (
     <>
       {tabs.map((t) => (
@@ -366,77 +360,13 @@ export function PlayerDashboard(p: DashboardProps) {
                   </>
                 )}
                 {p.route === "stats" && (
-                  <>
-                    <section className="card detail-card">
-                      <h2>Team summary</h2>
-                      <p>
-                        {filteredGames.length} {p.scope.toLowerCase()} games in{" "}
-                        {season?.name}
-                      </p>
-                      <div className="dashboard-metrics">
-                        <span>
-                          OBP <strong>{rate(teamRates?.OBP ?? null)}</strong>
-                        </span>
-                        <span>
-                          HR <strong>{teamTotals?.HR ?? "—"}</strong>
-                        </span>
-                        <span>
-                          PA <strong>{teamTotals?.PA ?? "—"}</strong>
-                        </span>
-                      </div>
-                    </section>
-                    <div
-                      className="dashboard-table"
-                      tabIndex={0}
-                      role="region"
-                      aria-label="Player statistics table"
-                    >
-                      <table>
-                        <caption>
-                          Player statistics · {season?.name} · {p.scope}
-                        </caption>
-                        <thead>
-                          <tr>
-                            {[
-                              "Player",
-                              "PA",
-                              "H",
-                              "HR",
-                              "RBI",
-                              "OBP",
-                              "Reach Base %",
-                            ].map((h) => (
-                              <th key={h} scope="col">
-                                {h}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {loaded.roster.map((r) => {
-                            const t = loaded.snapshot.totals[r.id];
-                            const calculated = t ? rates(t) : null;
-                            return (
-                              <tr key={r.id}>
-                                <th scope="row">{r.display_name}</th>
-                                <td>{t?.PA ?? "—"}</td>
-                                <td>{t?.H ?? "—"}</td>
-                                <td>{t?.HR ?? "—"}</td>
-                                <td>{t?.RBI ?? "—"}</td>
-                                <td>{rate(calculated?.OBP ?? null)}</td>
-                                <td>{rate(calculated?.Reach ?? null)}</td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                    <p>
-                      Overall combines league and tournament play in this
-                      selected season. Prior seasons remain selectable; career
-                      totals are not inferred.
-                    </p>
-                  </>
+                  <PlayerLeaderboard
+                    key={`${p.teamId}:${p.seasonId}:${p.scope}`}
+                    title="Team leaders"
+                    regionLabel="Team player leaderboard"
+                    scopeLabel={`${team?.name ?? "Your team"} · ${season?.name ?? "Selected season"} · ${p.scope}`}
+                    players={teamLeaderboard(loaded, p.teamId, p.seasonId, p.scope)}
+                  />
                 )}
                 {p.route === "beverages" && (
                   <>

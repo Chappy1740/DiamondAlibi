@@ -1905,9 +1905,14 @@ blockquote {
 }
 
 .tournament-leaderboard { margin-block: 1.25rem; }
-.leaderboard-metrics { display: flex; flex-wrap: wrap; max-width: 560px; gap: .5rem; }
-.leaderboard-metrics button { flex: 1 0 auto; min-width: 44px; min-height: 44px; border: 1px solid var(--border); border-radius: .6rem; background: var(--surface); color: var(--white); font-size: .8rem; font-weight: 700; padding: .5rem .45rem; }
-.leaderboard-metrics button[aria-pressed="true"] { border-color: var(--teal); background: #163c4d; }
+.leaderboard-summary button { display: flex; align-items: center; gap: .65rem; width: 100%; min-width: 0; min-height: 64px; padding: .65rem 0; border: 0; border-bottom: 1px solid var(--border); background: transparent; color: var(--white); text-align: left; cursor: pointer; }
+.leaderboard-summary button:disabled { cursor: default; }
+.leaderboard-summary button:focus-visible, .leaderboard-back:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
+.leaderboard-summary .leaderboard-player > strong { font-size: 1rem; }
+.leaderboard-badge { display: flex; align-items: center; justify-content: center; flex: 0 0 44px; height: 44px; border-radius: 50%; background: var(--teal); color: var(--background); font-weight: 800; font-size: .8rem; }
+.leaderboard-arrow { color: var(--teal); font-size: 1.25rem; }
+.leaderboard-back { min-width: 44px; min-height: 44px; padding: .4rem .6rem; border: 1px solid var(--border); border-radius: .5rem; background: var(--surface); color: var(--teal); cursor: pointer; }
+.leaderboard-scope { overflow-wrap: anywhere; }
 .leaderboard-players { list-style: none; padding: 0; margin: 0; }
 .leaderboard-players li { display: flex; align-items: center; gap: .6rem; padding-block: .8rem; border-bottom: 1px solid var(--border); min-width: 0; }
 .leaderboard-rank { color: var(--teal); font-weight: 700; min-width: 1.25rem; }
