@@ -71,6 +71,15 @@ const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
  await change(game,{type:'lineup',lineup:[],battingMode:'manual',reason:'Synthetic return to manual',firstGameBands:{}});game=await latest(game);assert.equal(game.game.batting_mode,'manual');
  await change(game,{type:'complete'});game=await latest(game);await assert.rejects(()=>change(game,{type:'score',playId:uuid(),playerId:id(101),outcome:'Hit',runs:0,rbi:0}),/Game complete/);
  await change(game,{type:'correct',playId:play,playerId:id(102),outcome:'Hit',runs:0,rbi:0,voided:false,reason:'Synthetic completed correction'});
+ // A guarantee is a minimum: the actual RPC accepts nine games in one tournament/day.
+ const longCup=uuid(),longDay=uuid();await rpc('da_create_scoring_competition',[id(10),id(11),longCup,'Tournament','Synthetic Nine Game Cup',2,2]);
+ for(let number=1;number<=9;number++){
+  const current=await read(),cup=current.tournaments.find(t=>t.id===longCup),day=current.games.find(g=>g.playedOn==='2026-10-20');
+  const result=await rpc('da_start_scoring_game',[id(10),id(11),day?.game.day_id||longDay,'2026-10-20',longCup,uuid(),day?.dayRevision||0,cup.revision,JSON.stringify({type:'start',gameId:uuid(),opponent:'Synthetic opponent '+number,kind:'Tournament',battingMode:'manual',lineup:[],rules:{version:'Synthetic same-day game '+number,fenceLimit:2,board},bands:{}})]);
+  assert.equal(result.status,'accepted');
+ }
+ const longGames=(await read()).games.filter(g=>g.game.tournament_id===longCup);
+ assert.deepEqual(longGames.map(g=>g.game.tournament_game_number).sort((a,b)=>a-b),[1,2,3,4,5,6,7,8,9]);assert.equal(longGames.every(g=>g.playedOn==='2026-10-20'),true);
  await db.exec(`select set_config('request.jwt.claim.sub','${id(2)}',false);`);await assert.rejects(read,/Team access denied/);
  await db.exec(`select set_config('request.jwt.claim.sub','${id(1)}',false);`);
  await assert.rejects(()=>rpc('da_read_scoring_season',[id(10),id(21),'Overall']),/Season context/);

@@ -9,7 +9,7 @@ const assert = require("node:assert/strict");
   const errors=[];
   try {
     const bundle=await esbuild.build({stdin:{resolveDir:process.cwd(),loader:"tsx",contents:`
-      import React from 'react';import{createRoot}from'react-dom/client';import{ConnectedScorebook}from'./src/components/connected-scorebook';import{DEFAULT_BOARD}from'./src/lib/scoring';import ScorePage from'./src/app/club/score/page';
+      import React from 'react';import{createRoot}from'react-dom/client';import{ConnectedScorebook}from'./src/components/connected-scorebook';import{DEFAULT_BOARD}from'./src/lib/scoring';import ScorePage from'./src/app/club/score/page';import{CompetitionPage}from'./src/components/competition-page';import{emptyTotals}from'./src/lib/scoring';
       const rules={version_label:'Synthetic rules',fence_limit:9,strikeout:DEFAULT_BOARD.strikeout,solo:DEFAULT_BOARD.solo,band_solo:DEFAULT_BOARD.bandSolo,grand_slam:DEFAULT_BOARD.grandSlam,over_limit:DEFAULT_BOARD.overLimit,inside_park:DEFAULT_BOARD.insidePark,multi_run:DEFAULT_BOARD.multiRun};
       const g=(id,kind,competition,opponent)=>({game:{id,kind,league_id:kind==='League'?competition:null,tournament_id:kind==='Tournament'?competition:null,day_id:'synthetic-day',opponent,completed:false,next_batter_position:0},playedOn:'2026-10-13',dayRevision:1,tournamentRevision:kind==='Tournament'?1:null,lineup:['synthetic-player'],rules,evaluation:{rows:[],fenceUsed:0,totals:{}}});
       const data={archived:false,roster:[{id:'synthetic-player',display_name:'Synthetic Player',is_guest:false}],bands:[{player_id:'synthetic-player',tournament_id:'synthetic-cup',has_band:true}],participation:[],leagueBands:[],snapshot:{teamId:'synthetic-team',seasonId:'synthetic-season',scope:'Overall',totals:{},board:{'synthetic-player':-2},leagues:[{id:'synthetic-league',name:'Synthetic league',fenceLimit:0},{id:'other-league',name:'Other synthetic league',fenceLimit:5}],tournaments:[{id:'synthetic-cup',name:'M3-5 Synthetic Cup',revision:1,fenceLimit:2,guaranteedGames:2}],games:[g('league-game','League','synthetic-league','League opponent'),g('other-game','League','other-league','Other opponent'),g('cup-game','Tournament','synthetic-cup','Cup opponent')]}};
@@ -18,14 +18,20 @@ const assert = require("node:assert/strict");
       if(query.has('manual')){data.snapshot.capabilities={manualBatting:true};data.roster.push({id:'adam-player',display_name:'Adam Jones',is_guest:false});data.snapshot.games.forEach(game=>{game.game.batting_mode='manual';game.lineup=[];});if(query.has('first-band'))data.bands=[];}
       if(query.has('voice'))window.SpeechRecognition=class{start(){window.__recognition=this;}stop(){}abort(){window.__aborted=true;}};
       window.__fixture=data;window.__audit=[{action:'hrLimit',reason:'Tournament game history',after:{game:{id:'cup-game'},fenceLimit:2}},{action:'hrLimit',reason:'League game history',after:{game:{id:'league-game'},fenceLimit:0}},{action:'band',tournamentId:'synthetic-cup',reason:'Cup Band history',before:true,after:false},{action:'start',reason:'Other game history',after:{gameId:'other-game'}}];
-      if(query.has('page')) ScorePage({searchParams:Promise.resolve({setup:query.has('scoring-page')||query.has('manage-page')?undefined:'1',manage:query.has('manage-page')?'1':undefined,game:query.has('manage-page')?(query.get('game')||'cup-game'):query.has('scoring-page')?'cup-game':undefined,tournament:query.get('tournament')||undefined,league:query.get('league')||undefined})}).then(ui=>createRoot(document.getElementById('app')).render(ui));
+      if(query.has('leaderboard')){
+        data.roster.push({id:'other-player',display_name:'Synthetic Blair with a very long roster nickname',is_guest:true});
+        const cupGame=data.snapshot.games.find(g=>g.game.id==='cup-game');cupGame.evaluation.totals={'synthetic-player':{...emptyTotals(),PA:3,AB:3,H:2,HR:1,RBI:1,board:-1},'other-player':{...emptyTotals(),PA:3,AB:3,H:2,HR:0,RBI:2}};
+        data.snapshot.games.find(g=>g.game.id==='league-game').evaluation.totals={'synthetic-player':{...emptyTotals(),PA:99,H:99,HR:99,RBI:99}};
+        if(query.has('nine-games')){data.snapshot.games=data.snapshot.games.filter(g=>g.game.kind==='League').concat(Array.from({length:9},(_,i)=>({...structuredClone(cupGame),game:{...cupGame.game,id:'cup-game-'+i,tournament_game_number:i+1}})));}
+        createRoot(document.getElementById('app')).render(<CompetitionPage kind={query.has('league-page')?'League':'Tournament'} id={query.has('league-page')?'synthetic-league':'synthetic-cup'} data={{route:'tournaments',sample:false,userId:'synthetic-user',teams:[{id:'synthetic-team',name:'Synthetic Team'}],seasons:[{id:'synthetic-season',name:'Synthetic Season',archived:false}],teamId:'synthetic-team',seasonId:'synthetic-season',scope:'Overall',loaded:data}}/>);
+      }else if(query.has('page')) ScorePage({searchParams:Promise.resolve({setup:query.has('scoring-page')||query.has('manage-page')?undefined:'1',manage:query.has('manage-page')?'1':undefined,game:query.has('manage-page')?(query.get('game')||'cup-game'):query.has('scoring-page')?'cup-game':undefined,tournament:query.get('tournament')||undefined,league:query.get('league')||undefined})}).then(ui=>createRoot(document.getElementById('app')).render(ui));
       else
       createRoot(document.getElementById('app')).render(<main className="connected-wrap"><h1>Synthetic scorebook</h1><ConnectedScorebook storageKey="synthetic.mode-test" teamId="synthetic-team" seasonId="synthetic-season" initial={{status:'ok',data}} mode={query.get('mode')||'score'} initialGameId={query.get('game')||''} initialLeagueId={query.get('league')||''} initialTournamentId={query.get('tournament')||''} submitAction={async(input)=>{window.__writes.push(input);return query.has('quick')?{status:'ok',data:{status:'ok'}}:{status:'invalid'}}} reloadAction={async()=>({status:'ok',data})}/></main>);
     `},bundle:true,write:false,platform:"browser",jsx:"automatic",plugins:[{name:"synthetic-page-context",setup(build){
       build.onResolve({filter:/^(next\/(headers|navigation|link|image)|@\/lib\/supabase\/server|@\/app\/(club\/scoring-actions|login\/actions))$/},args=>({path:args.path,namespace:"synthetic"}));
       build.onLoad({filter:/.*/,namespace:"synthetic"},args=>({loader:"tsx",resolveDir:process.cwd(),contents:
         args.path === "next/headers" ? "export async function cookies(){return {get(){return undefined}}}" :
-        args.path === "next/navigation" ? "export function redirect(path){throw Error('Synthetic redirect: '+path)}" :
+        args.path === "next/navigation" ? "export function redirect(path){throw Error('Synthetic redirect: '+path)};export function useRouter(){return{push(){},refresh(){}}}" :
         args.path === "next/link" ? "import React from 'react';export default function Link({children,...props}){return <a {...props}>{children}</a>}" :
         args.path === "next/image" ? "import React from 'react';export default function Image({unoptimized,...props}){return <img {...props}/>}" :
         args.path === "@/app/login/actions" ? "export async function signout(){}" :
@@ -40,6 +46,28 @@ const assert = require("node:assert/strict");
     const engine=process.env.BROWSER_ENGINE === "webkit" ? webkit : chromium;
     browser=await engine.launch({headless:true,...(engine === chromium && process.env.BROWSER_EXECUTABLE?{executablePath:process.env.BROWSER_EXECUTABLE}:{})});
     const page=await browser.newPage({viewport:{width:390,height:844},...(engine === webkit ? {isMobile:true,hasTouch:true} : {})});page.on("pageerror",error=>errors.push(error.message));
+    // Actual tournament page: player leaderboard excludes league totals and
+    // repeated dates, supports tied ranks, readable names and ninth-game Add.
+    await page.goto(`${base}/?leaderboard=1`);
+    const leaders=page.getByRole('region',{name:'Tournament player leaderboard',exact:true});await leaders.waitFor();
+    assert.equal(await leaders.locator('.leaderboard-players li').count(),2);
+    assert.deepEqual(await leaders.locator('.leaderboard-rank').allTextContents(),['1','1']);
+    assert.deepEqual(await leaders.locator('.leaderboard-counts strong').allTextContents(),['2','0','2','2','1','1']);
+    await leaders.getByRole('button',{name:'HR',exact:true}).click();
+    assert.equal(await leaders.locator('.leaderboard-player strong').first().textContent(),'Synthetic Player');
+    await leaders.getByRole('button',{name:'RBI',exact:true}).click();
+    assert.match(await leaders.locator('.leaderboard-player strong').first().textContent(),/Synthetic Blair/);
+    assert.equal(await page.locator('.tournament-date').textContent(),'2026-10-13');
+    assert.equal(await page.locator('.dashboard-cards .eyebrow').textContent().then(t=>t.includes('2026-10-13')),false);
+    if(process.env.TOURNAMENT_SCREENSHOT)await page.screenshot({path:process.env.TOURNAMENT_SCREENSHOT,fullPage:true});
+    for(const width of [320,390,430,800,1440]){await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.equal(await leaders.getByRole('button').evaluateAll(buttons=>buttons.every(button=>button.getBoundingClientRect().height>=44)),true);}
+    await page.goto(`${base}/?leaderboard=1&nine-games=1`);
+    await page.getByRole('link',{name:'Add Game 10',exact:true}).waitFor();
+    assert.equal(await page.locator('.dashboard-cards article').count(),9);
+    await page.goto(`${base}/?leaderboard=1&league-page=1`);
+    await page.getByRole('heading',{name:'Synthetic league',exact:true}).waitFor();
+    assert.equal(await page.getByRole('region',{name:'Tournament player leaderboard',exact:true}).count(),0);
+    await page.setViewportSize({width:390,height:844});
     // Quick taps and typed/native voice contracts; all writes remain local synthetic mocks.
     await page.goto(`${base}/?mode=score&quick=1&game=league-game`);
     await page.getByRole("group",{name:"Batting outcome",exact:true}).waitFor();
@@ -198,8 +226,10 @@ const assert = require("node:assert/strict");
     await page.goto(`${base}/?mode=setup&tournament=synthetic-cup`);
     const next=page.getByRole("form",{name:"Next game for M3-5 Synthetic Cup",exact:true});await next.waitFor();
     assert.equal(await next.getByLabel("Opponent",{exact:true}).isVisible(),true);
-    assert.equal(await next.getByLabel("Game date",{exact:true}).isVisible(),false);
-    assert.equal(await next.getByLabel("Fence HR limit for this game",{exact:true}).inputValue(),"2");
+    assert.equal(await next.locator("input").count(),1);
+    assert.equal(await next.getByLabel("Game date",{exact:true}).count(),0);
+    assert.equal(await next.getByText("Beverage rules for this game",{exact:true}).count(),0);
+    assert.equal(await next.getByText("Set up a different league or tournament",{exact:true}).count(),0);
     await next.getByRole("button",{name:"Start Game 2",exact:true}).waitFor();
     assert.equal(await page.getByRole("button",{name:"Record plate appearance",exact:true}).count(),0);
     for(const width of [320,390,800,1440]){await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth),false);}
@@ -267,21 +297,34 @@ const assert = require("node:assert/strict");
     assert.equal(await page.getByRole("button",{name:"Retry the same change",exact:true}).isDisabled(),true);
     // Start an independent synthetic scenario; real uncertain saves remain retained.
     await page.evaluate(()=>sessionStorage.removeItem("diamond-alibi.pending.synthetic-user.synthetic-team.synthetic-season"));
-    // Continuation uses the same compact page and exposes nested invalid settings.
+    // Continuing a tournament asks only for its opponent. Frozen rules/date/order
+    // are submitted from the retained template, not editable settings.
     await page.goto(`${base}/?page=1&tournament=synthetic-cup`);
     await page.getByText("Game 2 · Tournament",{exact:true}).waitFor();
     const carried=page.getByRole("form",{name:"Next game for M3-5 Synthetic Cup",exact:true});
     await carried.getByRole("button",{name:"Start Game 2",exact:true}).waitFor();
-    assert.equal(await page.getByRole("heading",{name:"Tournament games and Band corrections",exact:true}).count(),0);
-    assert.equal(await carried.getByRole("button",{name:"Start Game 2",exact:true}).evaluate(el=>el.getBoundingClientRect().bottom<600),true);
-    await carried.getByLabel("Opponent",{exact:true}).fill("Synthetic Game 2 opponent");
-    await carried.getByText("Edit game settings",{exact:true}).click();
-    await carried.getByText("Beverage rules for this game",{exact:true}).click();
-    await carried.locator('input[name="board-strikeout"]').fill("");
-    await carried.getByText("Edit game settings",{exact:true}).click();
-    await carried.getByRole("button",{name:"Start Game 2",exact:true}).click();
-    assert.equal(await carried.locator('input[name="board-strikeout"]').isVisible(),true);
-    assert.deepEqual(await page.evaluate(()=>window.__writes),[]);
+    assert.equal(await carried.locator('input').count(),1);
+    assert.equal(await carried.getByText('Edit game settings',{exact:true}).count(),0);
+    assert.equal(await carried.getByRole('button',{name:'Start Game 2',exact:true}).evaluate(el=>el.getBoundingClientRect().bottom<600),true);
+    await carried.getByLabel('Opponent',{exact:true}).fill('Synthetic Game 2 opponent');
+    if(process.env.NEXT_GAME_SCREENSHOT)await page.screenshot({path:process.env.NEXT_GAME_SCREENSHOT,fullPage:true});
+    await page.evaluate(()=>window.__writeResult='uncertain');
+    await carried.getByRole('button',{name:'Start Game 2',exact:true}).click();
+    await page.getByRole('button',{name:'Retry the same change',exact:true}).waitFor();
+    const retained=await page.evaluate(()=>window.__writes[0]);
+    assert.equal(retained.playedOn,'2026-10-13');assert.equal(retained.tournamentId,'synthetic-cup');
+    assert.deepEqual(retained.setup.lineup,['synthetic-player']);assert.equal(retained.setup.rules.fenceLimit,2);
+    assert.deepEqual(retained.setup.bands,{});assert.equal(retained.setup.rules.board.bandSolo,-1);
+    await page.getByRole('button',{name:'Retry the same change',exact:true}).click();
+    assert.deepEqual(await page.evaluate(()=>window.__writes[0]),await page.evaluate(()=>window.__writes[1]));
+    await page.evaluate(()=>sessionStorage.removeItem('diamond-alibi.pending.synthetic-user.synthetic-team.synthetic-season'));
+    await page.goto(`${base}/?page=1&manual=1&tournament=synthetic-cup`);
+    const noOrder=page.getByRole('form',{name:'Next game for M3-5 Synthetic Cup',exact:true});
+    await noOrder.getByLabel('Opponent',{exact:true}).fill('Synthetic manual continuation');
+    await page.evaluate(()=>window.__writeResult='uncertain');await noOrder.getByRole('button',{name:'Start Game 2',exact:true}).click();
+    await page.getByRole('button',{name:'Retry the same change',exact:true}).waitFor();
+    const manualStart=await page.evaluate(()=>window.__writes[0]);assert.equal(manualStart.setup.battingMode,'manual');assert.deepEqual(manualStart.setup.lineup,[]);assert.equal(manualStart.playedOn,'2026-10-13');
+    await page.evaluate(()=>sessionStorage.removeItem('diamond-alibi.pending.synthetic-user.synthetic-team.synthetic-season'));
     await page.goto(`${base}/?mode=score&game=missing`);
     await page.getByText("That game is unavailable in this scorebook.",{exact:false}).waitFor();
     assert.equal(await page.getByRole("button",{name:"Record plate appearance",exact:true}).count(),0);

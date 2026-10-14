@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { BrandLink } from "./brand-link";
 import { ProfileMenu } from "./profile-menu";
+import { tournamentLeaderboard } from "@/lib/tournament-leaderboard";
+import { TournamentLeaderboard } from "./tournament-leaderboard";
 import { CompetitionForm } from "./competition-form";
 import { GameScoreboardPanel } from "./game-scoreboard";
 import { connectedScoreboard } from "@/lib/game-scoreboard";
@@ -13,6 +15,7 @@ export function CompetitionPage({ data: p, kind, id }: { data: DashboardProps; k
   const options = kind === "League" ? p.loaded?.snapshot.leagues ?? [] : p.loaded?.snapshot.tournaments ?? [];
   const home = `/?${context}`;
   const list = `${competitionPath(kind)}?${context}`;
+  const dates = [...new Set(selected?.games.map(game => game.playedOn) ?? [])].sort();
   const setup = `/club/score?${context}&${kind === "League" ? "league" : "tournament"}=${encodeURIComponent(id ?? "")}&setup=1`;
   return <main className="connected-wrap competition-page">
     <header className="connected-header">
@@ -23,6 +26,7 @@ export function CompetitionPage({ data: p, kind, id }: { data: DashboardProps; k
     <div className="page-heading"><div>
       <span className="eyebrow">{p.teams.find((t) => t.id === p.teamId)?.name ?? "Your team"} · {p.seasons.find((s) => s.id === p.seasonId)?.name ?? "Choose a season"}</span>
       <h1>{id ? selected?.competition.name ?? "Competition unavailable" : kind === "League" ? "Leagues" : "Tournaments"}</h1>
+      {selected && kind === "Tournament" && dates.length > 0 && <p className="tournament-date">{dates[0]}{dates.length > 1 ? ` – ${dates[dates.length - 1]}` : ""}</p>}
     </div></div>
     {p.sample && <p className="connection-notice">Sample history. <Link href="/login">Sign in to manage your competitions.</Link></p>}
     {p.error && <p role="alert" className="form-error">{p.error}</p>}
@@ -44,15 +48,16 @@ export function CompetitionPage({ data: p, kind, id }: { data: DashboardProps; k
       {p.loaded?.archived && <p className="connection-notice">Archived season · read only</p>}
       <h2>Games</h2>
       <div className="dashboard-cards">
-        {selected.games.map((g) => <article className="card detail-card" key={g.game.id}>
-          <span className="eyebrow">{g.game.completed ? "Final" : "Live"} · {g.playedOn}{g.game.tournament_game_number ? ` · Game ${g.game.tournament_game_number}` : ""}</span>
+        {selected.games.map((g) => { const score = connectedScoreboard(g.game); return <article className="card detail-card" key={g.game.id}>
+          <span className="eyebrow">{g.game.completed ? "Final" : "Live"}{kind === "League" || dates.length > 1 ? ` · ${g.playedOn}` : ""}{g.game.tournament_game_number ? ` · Game ${g.game.tournament_game_number}` : ""}</span>
           <h3>vs. {g.game.opponent}</h3>
           {!p.sample && <Link className="button primary" href={`/club/score?${context}&game=${encodeURIComponent(g.game.id)}`}>{g.game.completed ? "Open scorebook" : "Score game"}</Link>}
-          <GameScoreboardPanel value={connectedScoreboard(g.game)} />
-        </article>)}
+          {kind === "League" ? <GameScoreboardPanel value={score} /> : score && <p className="micro">Our team {score.teamRuns} · Opponent {score.opponentRuns}</p>}
+        </article>; })}
       </div>
       {!selected.games.length && <p>No games recorded. Add the first game to choose a lineup and start scoring.</p>}
-      {!p.sample && <details className="card detail-card"><summary>Competition settings</summary>
+      {kind === "Tournament" && p.loaded && <TournamentLeaderboard players={tournamentLeaderboard(p.loaded, p.teamId, p.seasonId, id!)} />}
+      {!p.sample && <details className="card detail-card"><summary>{kind === "Tournament" ? "Tournament settings" : "League settings"}</summary>
         <CompetitionForm team={p.teamId} season={p.seasonId} kind={kind} existing={selected.competition} archived={!!p.loaded?.archived} />
       </details>}
     </>}

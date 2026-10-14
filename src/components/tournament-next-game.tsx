@@ -13,10 +13,6 @@ const labels = {
   insidePark: "Inside-the-park HR",
   multiRun: "Other multi-run HR",
 };
-function today() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
 export function TournamentNextGame({
   template,
   data,
@@ -38,7 +34,7 @@ export function TournamentNextGame({
   const [seed, setSeed] = useState(template);
   const [accepted, setAccepted] = useState(false);
   const [opponent, setOpponent] = useState("");
-  const [date, setDate] = useState(today);
+  const [date, setDate] = useState(template.game.playedOn);
   const [override, setOverride] = useState(false);
   const [limit, setLimit] = useState(String(template.tournament.fenceLimit));
   useEffect(() => {
@@ -56,7 +52,14 @@ export function TournamentNextGame({
       onSubmit={async (e) => {
         e.preventDefault();
         const form = e.currentTarget;
-        if (await submit(new FormData(form))) {
+        const values = new FormData(form);
+        if (compact) {
+          values.set("date", seed.game.playedOn);
+          values.set("limit", String(seed.tournament.fenceLimit));
+          seed.game.lineup.forEach((id, index) => { values.append("player", id); values.set(`order-${id}`, String(index + 1)); });
+          Object.entries(seed.board).forEach(([key, value]) => values.set(`board-${key}`, String(value)));
+        }
+        if (await submit(values)) {
           setOpponent("");
           setAccepted(true);
         }
@@ -79,7 +82,7 @@ export function TournamentNextGame({
         </label>
         <button className="button primary" type="submit">Start Game {number}</button>
         {compact && <p className="setup-summary">Fence HR limit: {template.tournament.fenceLimit} · {seed.battingMode === "manual" ? "No batting order needed. HR Bands and Beverage rules retained." : "Lineup, HR Bands and Beverage rules retained."}</p>}
-        <details className="setup-details">
+        {!compact && <details className="setup-details">
           <summary>Edit game settings</summary>
           <div key={seed.game.game.id}>
             <label>
@@ -186,7 +189,7 @@ export function TournamentNextGame({
           >
             Set up a different league or tournament
           </button>
-        </details>
+        </details>}
       </fieldset>
     </form>
   );
