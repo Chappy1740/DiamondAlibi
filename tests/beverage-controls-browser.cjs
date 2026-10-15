@@ -20,6 +20,7 @@ const esbuild = require("esbuild"),
   if(request.type==='read')return q.has('unsupported')?{status:'unsupported'}:{status:'ok',data:{...window.__state}};
   window.__writes.push(request);await new Promise(r=>setTimeout(r,25));
   if(window.__responses.has(request.commandId))return{status:'accepted',duplicate:true};
+  if(request.change.type==='replace'&&Object.keys(DEFAULT_BOARD).every(key=>request.change.rules[key]===window.__state.rules?.[key]))return{status:'invalid'};
   if(window.__nextResult==='conflict'){window.__nextResult='accepted';window.__state={...window.__state,revision:window.__state.revision+1,participating:false};return{status:'conflict'}};
   window.__state={...window.__state,revision:window.__state.revision+1,...(['finalize','replace'].includes(request.change.type)?{finalized:true,rules:request.change.rules,management:{canEdit:true,lockedBy:'Synthetic Manager',lockedAt:'2026-10-14T11:05:00Z'}}:{participating:request.change.participating})};
   window.__commits++;window.__responses.set(request.commandId,true);
@@ -152,6 +153,11 @@ const esbuild = require("esbuild"),
       });
       window.dispatchEvent(new Event("offline"));
     });
+    await page.waitForFunction(() =>
+      [...document.querySelectorAll("button")].some(
+        (button) => button.textContent === "Participate" && button.disabled,
+      ),
+    );
     assert.equal(
       await page
         .getByRole("button", { name: "Participate", exact: true })
@@ -186,6 +192,29 @@ const esbuild = require("esbuild"),
     );
     assert.equal(await page.locator(".beverage-rule-list dd").count(), 7);
     await page.getByText('Locked by Synthetic Manager',{exact:false}).waitFor();
+    async function unchangedSave(label, numericFormatting = false) {
+      const before = await page.evaluate(() => ({
+        state: structuredClone(window.__state),
+        writes: window.__writes.length,
+        commits: window.__commits,
+      }));
+      await page.getByRole('button',{name:'Change',exact:true}).click();
+      if (numericFormatting)
+        await page.getByLabel('Strikeout',{exact:true}).fill('01');
+      await page.getByRole('button',{name:'Save Beverage Rules',exact:true}).click();
+      await page.getByText('No changes to save.',{exact:true}).waitFor();
+      await page.getByRole('button',{name:'Change',exact:true}).waitFor();
+      assert.equal(await page.locator('input').count(),0,label+': returns to current rules');
+      const after = await page.evaluate(() => ({
+        state: structuredClone(window.__state),
+        writes: window.__writes.length,
+        commits: window.__commits,
+      }));
+      assert.deepEqual(after,before,label+': no write, revision, rules or attribution change');
+      assert.equal(await page.getByText('Could not save. Refresh and check your team access.',{exact:true}).count(),0);
+    }
+    await unchangedSave('unchanged defaults');
+    await unchangedSave('same numeric amounts with different formatting', true);
     await page.getByRole('button',{name:'Change',exact:true}).click();
     await page.getByLabel('Strikeout',{exact:true}).fill('4');
     await page.getByRole('button',{name:'Save Beverage Rules',exact:true}).click();
@@ -193,12 +222,34 @@ const esbuild = require("esbuild"),
     assert.equal(await page.evaluate(()=>window.__writes.at(-1).change.type),'replace');
     assert.equal(await page.evaluate(()=>window.__writes.at(-1).change.rules.strikeout),4);
     assert.equal(await page.locator('input').count(),0);
+    await unchangedSave('saved non-default amounts');
+    await page.getByRole('button',{name:'Change',exact:true}).click();
+    await page.getByLabel('Strikeout',{exact:true}).fill('7');
+    await page.getByLabel('Strikeout',{exact:true}).fill('4');
+    await page.getByRole('button',{name:'Save Beverage Rules',exact:true}).click();
+    await page.getByText('No changes to save.',{exact:true}).waitFor();
+    await page.getByRole('button',{name:'Change',exact:true}).waitFor();
+    assert.equal(await page.evaluate(()=>window.__writes.length),2,'changed then restored amount is not submitted');
+    await page.getByRole('button',{name:'Change',exact:true}).click();
+    await page.getByLabel('Strikeout',{exact:true}).fill('6');
+    await page.evaluate(() => (window.__nextResult = 'uncertain'));
+    await page.getByRole('button',{name:'Save Beverage Rules',exact:true}).click();
+    await page.getByRole('button',{name:'Retry the same change',exact:true}).waitFor();
+    assert.equal(await page.getByRole('button',{name:'Save Beverage Rules',exact:true}).isDisabled(),true);
+    await page.getByRole('button',{name:'Retry the same change',exact:true}).click();
+    await page.getByRole('button',{name:'Change',exact:true}).waitFor();
+    assert.equal(await page.evaluate(()=>window.__writes.at(-1).commandId===window.__writes.at(-2).commandId),true,'replacement retry keeps its command');
+    assert.equal(await page.evaluate(()=>window.__commits),3,'replacement retry commits once');
+    await unchangedSave('saved amounts after uncertain replacement retry');
     for(const width of [320,390,800,1440]){
       await page.setViewportSize({width,height:900});
+      await page.evaluate(() => new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve)),
+      ));
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
     }
     await page.getByRole('button',{name:'Change',exact:true}).click();
-    assert.equal(await page.getByLabel('Strikeout',{exact:true}).inputValue(),'4');
+    assert.equal(await page.getByLabel('Strikeout',{exact:true}).inputValue(),'6');
     await page.getByRole('button',{name:'Cancel',exact:true}).click();
     await page.goto(base+'?team&member');
     await page.getByText('Locked by Synthetic Manager',{exact:false}).waitFor();
@@ -235,7 +286,7 @@ const esbuild = require("esbuild"),
     assert.equal(await page.evaluate(() => window.__commits), 0);
     assert.deepEqual(errors, []);
     console.log(
-      "Beverage controls: one-click opt-out/rejoin, duplicate protection, same-ID retry, offline/conflict, finalized read-only rules, ownership fallback and 320–1440px passed.",
+      "Beverage controls: unchanged saves make no write (defaults, numeric formatting, saved custom values and reverted edits); actual replacement, opt-out/rejoin, duplicate protection, same-ID retry, offline/conflict, creator/member fallback and 320–1440px passed.",
     );
   } finally {
     if (browser) await browser.close();

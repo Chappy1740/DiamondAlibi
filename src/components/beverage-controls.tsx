@@ -93,11 +93,27 @@ export function BeverageControls({
   }
   function finalize(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!value) return;
+    if (
+      !value ||
+      !value.management?.canEdit ||
+      lock.current ||
+      pending.current ||
+      !online
+    )
+      return;
     const form = new FormData(event.currentTarget);
+    const ruleKeys = Object.keys(DEFAULT_BOARD) as (keyof typeof DEFAULT_BOARD)[];
     const rules = Object.fromEntries(
-      Object.keys(DEFAULT_BOARD).map((key) => [key, Number(form.get(key))]),
+      ruleKeys.map((key) => [key, Number(form.get(key))]),
     ) as typeof DEFAULT_BOARD;
+    if (
+      value.finalized &&
+      ruleKeys.every((key) => rules[key] === value.rules?.[key])
+    ) {
+      setEditing(false);
+      setMessage("No changes to save.");
+      return;
+    }
     void save({
       type: "change",
       teamId,
