@@ -14,6 +14,12 @@ const assert = require("node:assert/strict");
         const long='M3-5 Synthetic Test with an exceptionally long team name';
         const data={archived:false,roster:[{id:'player',user_id:'synthetic-user',display_name:'Test Player',is_guest:false},{id:'teammate',user_id:'other-user',display_name:'Other Synthetic Player',is_guest:false}],snapshot:{teamId:'team',seasonId:'season',scope:'Overall',games:[{game:{id:'other-game',kind:'League',opponent:'Other synthetic opponent',completed:false,next_batter_position:0},lineup:['teammate'],playedOn:'2026-10-13'}],totals:{player:{...emptyTotals(),PA:4,AB:4,H:1,HR:1,RBI:3},teammate:{...emptyTotals(),PA:20,AB:20,H:9,HR:9,RBI:9}},board:{player:-2},tournaments:[],leagues:[]}};
         const p={route:location.pathname.slice(1),sample:location.search.includes('sample=1'),userId:'synthetic-user',teams:[{id:'team',name:'M3-5 Synthetic Test'},{id:'long',name:long}],seasons:[{id:'season',name:'M3-5 Synthetic Season',archived:false},{id:'history',name:'Synthetic Season with an exceptionally long history name',archived:true}],teamId:'team',seasonId:'season',scope:'Overall',loaded:data};
+        const fixtureQuery=new URLSearchParams(location.search);
+        if(fixtureQuery.has('owed'))data.snapshot.board.player=4;
+        if(fixtureQuery.has('settled'))data.snapshot.board.player=0;
+        if(fixtureQuery.has('missing-balance'))delete data.snapshot.board.player;
+        if(fixtureQuery.has('no-stats'))delete data.snapshot.totals.player;
+        if(fixtureQuery.has('unlinked'))data.roster[0].user_id='unlinked-user';
         const context=new URLSearchParams({team:p.teamId,season:p.seasonId,scope:p.scope,...(p.sample?{sample:'1',player:p.userId}:{})}).toString();
         createRoot(document.getElementById('app')).render(<><PlayerDashboard {...p}/><BottomNavigationView pathname={location.pathname} context={context}/></>);` },
       bundle: true, write: false, platform: "browser", jsx: "automatic",
@@ -47,7 +53,7 @@ const assert = require("node:assert/strict");
     });
     await page.goto(`http://127.0.0.1:${server.address().port}`);
     await page.getByRole("heading", { name: "Your game, Test Player." }).waitFor();
-    assert.equal(await page.getByText("2 in credit", { exact: true }).isVisible(), true);
+    assert.match(await page.locator('.home-stat').last().innerText(),/Beverages\s+2\s+in credit/);
     assert.equal(await page.locator(".dashboard-notice").count(), 0);
     assert.equal(await page.getByRole("link", { name: "Explore sample history" }).count(), 0);
     assert.equal(await page.getByText("Other Synthetic Player", { exact: true }).count(), 0);
@@ -55,8 +61,8 @@ const assert = require("node:assert/strict");
     assert.equal(await page.getByRole("heading", { name: "Team summary" }).count(), 0);
     assert.equal(await page.getByText("Season activity", { exact: true }).count(), 0);
     assert.equal(await page.getByRole("link", { name: "All player statistics" }).count(), 0);
-    assert.match(await page.locator(".dashboard-metrics").innerText(), /HR\s+1/);
-    assert.match(await page.locator(".dashboard-metrics").innerText(), /OBP%\s+\.250/);
+    assert.match(await page.locator(".dashboard-metrics").innerText(), /Home runs\s+1/);
+    assert.match(await page.locator(".dashboard-metrics").innerText(), /OBP\s+\.250/);
     assert.match(await page.locator(".dashboard-metrics").innerText(), /Hits\s+1/);
     assert.match(await page.locator(".dashboard-metrics").innerText(), /RBI\s+3/);
     assert.equal(await page.evaluate(() => {
@@ -66,10 +72,13 @@ const assert = require("node:assert/strict");
       const controls = document.querySelector(".dashboard-context-panel").getBoundingClientRect();
       return heading.bottom <= actions.top && actions.bottom <= summary.top && summary.bottom <= controls.top && actions.bottom < 600;
     }), true);
+    await page.addScriptTag({path:require.resolve('axe-core')});
+    assert.deepEqual(await page.evaluate(async()=> (await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)}))),[]);
     if (process.env.LAYOUT_SCREENSHOT) {
       // A tall capture keeps fixed navigation below the controls being reviewed.
       await page.setViewportSize({width:390,height:1200});
       await page.screenshot({path:process.env.LAYOUT_SCREENSHOT,fullPage:true});
+      if(process.env.SUMMARY_SCREENSHOT)await page.locator('.home-season-card').screenshot({path:process.env.SUMMARY_SCREENSHOT});
       if(process.env.CONTEXT_SCREENSHOT)await page.locator('.dashboard-context-panel').screenshot({path:process.env.CONTEXT_SCREENSHOT});
       await page.setViewportSize({width:390,height:844});
     }
@@ -79,6 +88,10 @@ const assert = require("node:assert/strict");
       await page.setViewportSize({ width, height: 900 });
       await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       const bounds = await page.evaluate(() => ({ viewport: window.innerWidth, document: document.documentElement.scrollWidth, outside: Array.from(document.querySelectorAll('body *')).filter(el => el.getBoundingClientRect().right > window.innerWidth + 1).map(el => ({ tag: el.tagName, class: el.className, width: el.getBoundingClientRect().width, right: el.getBoundingClientRect().right })).slice(0, 15) }));
+      const rows=await page.locator('.home-stat-row').evaluateAll(rows=>rows.map(row=>Array.from(row.children).map(tile=>{const r=tile.getBoundingClientRect();const label=tile.querySelector('dt'),value=tile.querySelector('strong');const lr=label.getBoundingClientRect(),vr=value.getBoundingClientRect();return{label:label.textContent,left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height,labelCenter:(lr.left+lr.right)/2,valueCenter:(vr.left+vr.right)/2,center:(r.left+r.right)/2}})));
+      assert.deepEqual(rows.map(row=>row.map(tile=>tile.label)),[['OBP','Reach Base %'],['Hits','RBI','Home runs','Beverages']]);
+      for(const row of rows)assert(row.every(tile=>Math.abs(tile.top-row[0].top)<1&&Math.abs(tile.width-row[0].width)<1&&Math.abs(tile.height-row[0].height)<1&&Math.abs(tile.labelCenter-tile.center)<1&&Math.abs(tile.valueCenter-tile.center)<1),'Equal centered statistic tiles at '+width+'px: '+JSON.stringify(rows));
+      assert(rows[0][0].bottom<rows[1][0].top,'Rates stay on the first row');
       const controls=await page.locator('.dashboard-context-panel--home .dashboard-select, .dashboard-context-action > button').evaluateAll(elements=>elements.map(el=>{const r=el.getBoundingClientRect();return{width:r.width,height:r.height}}));
       assert.equal(controls.length,4);
       assert(controls.every(box=>Math.abs(box.width-controls[0].width)<1 && Math.abs(box.height-controls[0].height)<1 && box.height>=44), 'Four matching controls at '+width+'px: '+JSON.stringify(controls));
@@ -139,7 +152,16 @@ const assert = require("node:assert/strict");
     assert.equal(await page.getByRole('button',{name:'Refresh records',exact:true}).count(),0);
     await page.setViewportSize({width:320,height:844});
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'Sample Home still fits');
+    for(const [query,value,note] of [['owed','4','owed'],['settled','0','settled'],['missing-balance','—','No balance']]){
+      await page.goto('http://127.0.0.1:'+server.address().port+'/?'+query+'=1');
+      const beverage=page.locator('.home-stat-row--counts .home-stat').last();
+      await beverage.waitFor();assert.equal(await beverage.locator('strong').innerText(),value);assert.equal(await beverage.locator('.home-stat-note').innerText(),note);
+    }
+    for(const [query,message] of [['no-stats','No recorded plate appearances in this view.'],['unlinked','No player record is linked to this account. Guest history is not claimed automatically.']]){
+      await page.goto('http://127.0.0.1:'+server.address().port+'/?'+query+'=1');await page.getByText(message,{exact:true}).waitFor();
+      assert.equal(await page.locator('.home-stat-row').count(),0,'Missing player statistics are never shown as zero');
+    }
     assert.deepEqual(errors, []);
-    console.log(`PASS ${process.env.BROWSER_ENGINE || "chromium"} Home: heading/actions/summary before controls, complete long selected names at 320–1440px, native keyboard and form selection, own HR/credit only on signed-in Home, no brown notice or team activity, team/roster stats under bottom Stats, sample history under More with its sample notice, matching four-control grid, decimal OBP, no Home polling, quiet return/reconnect refresh and offline refresh handling. Synthetic data only.`);
+    console.log(`PASS ${process.env.BROWSER_ENGINE || "chromium"} Home: heading/actions/summary before controls, complete long selected names at 320–1440px, native keyboard and form selection, own HR/credit only on signed-in Home, no brown notice or team activity, team/roster stats under bottom Stats, sample history under More with its sample notice, two rate tiles above four equal centered total/balance tiles, owed/credit/settled/missing balance and unlinked/empty states, automated accessibility, matching four-control grid, decimal OBP, no Home polling, quiet return/reconnect refresh and offline refresh handling. Synthetic data only.`);
   } finally { if (browser) await browser.close(); if (server) await new Promise(resolve => server.close(resolve)); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
