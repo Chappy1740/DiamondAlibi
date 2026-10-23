@@ -13,12 +13,13 @@ const assert = require("node:assert/strict");
       const rules={version_label:'Synthetic rules',fence_limit:9,strikeout:DEFAULT_BOARD.strikeout,solo:DEFAULT_BOARD.solo,band_solo:DEFAULT_BOARD.bandSolo,grand_slam:DEFAULT_BOARD.grandSlam,over_limit:DEFAULT_BOARD.overLimit,inside_park:DEFAULT_BOARD.insidePark,multi_run:DEFAULT_BOARD.multiRun};
       const g=(id,kind,competition,opponent)=>({game:{id,kind,league_id:kind==='League'?competition:null,tournament_id:kind==='Tournament'?competition:null,day_id:'synthetic-day',opponent,completed:false,next_batter_position:0},playedOn:'2026-10-13',dayRevision:1,tournamentRevision:kind==='Tournament'?1:null,lineup:['synthetic-player'],rules,evaluation:{rows:[],fenceUsed:0,totals:{}}});
       const data={archived:false,roster:[{id:'synthetic-player',display_name:'Synthetic Player',is_guest:false}],bands:[{player_id:'synthetic-player',tournament_id:'synthetic-cup',has_band:true}],participation:[],leagueBands:[],snapshot:{teamId:'synthetic-team',seasonId:'synthetic-season',scope:'Overall',totals:{},board:{'synthetic-player':-2},leagues:[{id:'synthetic-league',name:'Synthetic league',fenceLimit:0},{id:'other-league',name:'Other synthetic league',fenceLimit:5}],tournaments:[{id:'synthetic-cup',name:'M3-5 Synthetic Cup',revision:1,fenceLimit:2,guaranteedGames:2}],games:[g('league-game','League','synthetic-league','League opponent'),g('other-game','League','other-league','Other opponent'),g('cup-game','Tournament','synthetic-cup','Cup opponent')]}};
-      const query=new URLSearchParams(location.search);window.__writes=[];window.__writeResult='invalid';window.__reloadStatus='ok';
+      const query=new URLSearchParams(location.search);window.__writes=[];window.__reloads=0;window.__writeResult='invalid';window.__reloadStatus='ok';
       const footer=document.createElement('div');document.body.append(footer);createRoot(footer).render(<BottomNavigationView pathname={query.has('leaderboard')?'/tournaments/synthetic-cup':'/club/score'} context='team=synthetic-team&season=synthetic-season'/>);
       if(query.has('empty')){data.snapshot.games=data.snapshot.games.filter(g=>!g.game.tournament_id);data.bands=[];}
       if(query.has('team-beverage')){data.snapshot.capabilities={manualBatting:true,teamBeverage:true};data.snapshot.beverage={teamId:'synthetic-team',revision:1,finalized:!query.has('unfinalized'),rules:query.has('unfinalized')?null:{...DEFAULT_BOARD,solo:2},canToggle:true,participating:true};}
       if(query.has('manual')){data.snapshot.capabilities={manualBatting:true};data.roster.push({id:'adam-player',display_name:'Adam Jones',is_guest:false});data.snapshot.games.forEach(game=>{game.game.batting_mode='manual';game.lineup=[];});if(query.has('first-band'))data.bands=[];}
       if(query.has('voice'))window.SpeechRecognition=class{start(){window.__recognition=this;}stop(){}abort(){window.__aborted=true;}};
+      if(query.has('completed'))data.snapshot.games.forEach(g=>g.game.completed=true);if(query.has('archived'))data.archived=true;
       window.__fixture=data;window.__audit=[{action:'hrLimit',reason:'Tournament game history',after:{game:{id:'cup-game'},fenceLimit:2}},{action:'hrLimit',reason:'League game history',after:{game:{id:'league-game'},fenceLimit:0}},{action:'band',tournamentId:'synthetic-cup',reason:'Cup Band history',before:true,after:false},{action:'start',reason:'Other game history',after:{gameId:'other-game'}}];
       if(query.has('leaderboard')){
         data.roster.push({id:'other-player',display_name:'Synthetic Blair with a very long roster nickname',is_guest:true});
@@ -28,7 +29,7 @@ const assert = require("node:assert/strict");
         createRoot(document.getElementById('app')).render(<CompetitionPage kind={query.has('league-page')?'League':'Tournament'} id={query.has('league-page')?'synthetic-league':'synthetic-cup'} data={{route:'tournaments',sample:false,userId:'synthetic-user',teams:[{id:'synthetic-team',name:'Synthetic Team'}],seasons:[{id:'synthetic-season',name:'Synthetic Season',archived:false}],teamId:'synthetic-team',seasonId:'synthetic-season',scope:'Overall',loaded:data}}/>);
       }else if(query.has('page')) ScorePage({searchParams:Promise.resolve({setup:query.has('scoring-page')||query.has('manage-page')?undefined:'1',manage:query.has('manage-page')?'1':undefined,game:query.has('manage-page')?(query.get('game')||'cup-game'):query.has('scoring-page')?'cup-game':undefined,tournament:query.get('tournament')||undefined,league:query.get('league')||undefined})}).then(ui=>createRoot(document.getElementById('app')).render(ui));
       else
-      createRoot(document.getElementById('app')).render(<main className="connected-wrap"><h1>Synthetic scorebook</h1><ConnectedScorebook storageKey="synthetic.mode-test" teamId="synthetic-team" seasonId="synthetic-season" initial={{status:'ok',data}} mode={query.get('mode')||'score'} initialGameId={query.get('game')||''} initialLeagueId={query.get('league')||''} initialTournamentId={query.get('tournament')||''} submitAction={async(input)=>{window.__writes.push(input);return query.has('quick')?{status:'ok',data:{status:'ok'}}:{status:'invalid'}}} reloadAction={async()=>({status:'ok',data})}/></main>);
+      createRoot(document.getElementById('app')).render(<main className="connected-wrap"><h1>Synthetic scorebook</h1><ConnectedScorebook storageKey="synthetic.mode-test" teamId="synthetic-team" seasonId="synthetic-season" initial={{status:'ok',data}} mode={query.get('mode')||'score'} initialGameId={query.get('game')||''} initialLeagueId={query.get('league')||''} initialTournamentId={query.get('tournament')||''} submitAction={async(input)=>{window.__writes.push(input);return query.has('quick')?{status:'ok',data:{status:'ok'}}:{status:'invalid'}}} reloadAction={async()=>{window.__reloads++;return{status:'ok',data:structuredClone(data)}}}/></main>);
     `},bundle:true,write:false,platform:"browser",jsx:"automatic",plugins:[{name:"synthetic-page-context",setup(build){
       build.onResolve({filter:/^(next\/(headers|navigation|link|image)|@\/lib\/supabase\/server|@\/app\/(club\/scoring-actions|login\/actions))$/},args=>({path:args.path,namespace:"synthetic"}));
       build.onLoad({filter:/.*/,namespace:"synthetic"},args=>({loader:"tsx",resolveDir:process.cwd(),contents:
@@ -48,13 +49,41 @@ const assert = require("node:assert/strict");
     const engine=process.env.BROWSER_ENGINE === "webkit" ? webkit : chromium;
     browser=await engine.launch({headless:true,...(engine === chromium && process.env.BROWSER_EXECUTABLE?{executablePath:process.env.BROWSER_EXECUTABLE}:{})});
     const page=await browser.newPage({viewport:{width:390,height:844},...(engine === webkit ? {isMobile:true,hasTouch:true} : {})});page.on("pageerror",error=>errors.push(error.message));
+    await page.addInitScript(()=>{
+      window.__polls=new Map();let id=-1000;
+      const original=window.setInterval,clear=window.clearInterval;
+      window.setInterval=(fn,delay,...args)=>{if(delay!==15000)return original(fn,delay,...args);window.__polls.set(--id,fn);return id};
+      window.clearInterval=timer=>{if(!window.__polls.delete(timer))clear(timer)};
+    });
+    // Controlled polling: exercise real effects without waiting for wall-clock intervals.
+    for(const query of ['mode=setup','mode=manage&game=league-game','mode=score&game=league-game&completed=1','mode=full&game=league-game&archived=1','mode=score&game=missing']){
+      await page.goto(base+'/?'+query);await page.locator('.team-scorebook').waitFor();
+      await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+      assert.equal(await page.evaluate(()=>window.__polls.size),0,'No polling: '+query);
+    }
+    await page.goto(base+'/?mode=score&game=league-game');
+    await page.waitForFunction(()=>window.__polls.size===1);
+    await page.evaluate(()=>{for(const tick of window.__polls.values()){tick();tick()}});
+    await page.waitForFunction(()=>window.__reloads===1 && !document.querySelector('.batting-outcomes button').disabled);
+    assert.equal(await page.evaluate(()=>window.__reloads),1,'Concurrent refreshes share the save/read lock');
+    await page.evaluate(()=>{Object.defineProperty(document,'visibilityState',{configurable:true,value:'hidden'});document.dispatchEvent(new Event('visibilitychange'));for(const tick of window.__polls.values())tick()});
+    assert.equal(await page.evaluate(()=>window.__reloads),1,'Hidden game does not poll');
+    await page.evaluate(()=>{Object.defineProperty(document,'visibilityState',{configurable:true,value:'visible'});document.dispatchEvent(new Event('visibilitychange'))});
+    await page.waitForFunction(()=>window.__reloads===2 && !document.querySelector('.batting-outcomes button').disabled);
+    await page.evaluate(()=>{Object.defineProperty(navigator,'onLine',{configurable:true,value:false});window.dispatchEvent(new Event('offline'));for(const tick of window.__polls.values())tick()});
+    assert.equal(await page.evaluate(()=>window.__reloads),2,'Offline game does not poll');
+    await page.evaluate(()=>{Object.defineProperty(navigator,'onLine',{configurable:true,value:true});window.dispatchEvent(new Event('online'))});
+    await page.waitForFunction(()=>window.__reloads===3 && !document.querySelector('.batting-outcomes button').disabled);
+    await page.evaluate(()=>{window.__fixture.snapshot.games.find(g=>g.game.id==='league-game').game.completed=true;for(const tick of window.__polls.values())tick()});
+    await page.waitForFunction(()=>window.__polls.size===0);
+    assert.equal(await page.evaluate(()=>window.__writes.length),0,'Read updates never record a play');
     // Actual tournament page: player leaderboard excludes league totals and
     // repeated dates, supports tied ranks, readable names and ninth-game Add.
     await page.goto(`${base}/?leaderboard=1`);
     const leaders=page.getByRole('region',{name:'Tournament player leaderboard',exact:true});await leaders.waitFor();
     assert.equal(await leaders.locator('.leaderboard-summary button').count(),5);
     assert.deepEqual(await leaders.locator('.leaderboard-summary .leaderboard-player strong').allTextContents(),['2 tied','2 tied','Synthetic Player','Synthetic Blair with a very long roster nickname','Synthetic Blair with a very long roster nickname']);
-    assert.deepEqual(await leaders.locator('.leaderboard-summary .leaderboard-counts strong').allTextContents(),['66.7%','2','1','2','2']);
+    assert.deepEqual(await leaders.locator('.leaderboard-summary .leaderboard-counts strong').allTextContents(),['.667','2','1','2','2']);
     assert.equal(await leaders.locator('.leaderboard-players').count(),0,'leaders first, not the full ranking');
     async function onlyMetric(label,values){
       await leaders.getByRole('button',{name:'View '+label+' rankings',exact:true}).click();
@@ -71,7 +100,7 @@ const assert = require("node:assert/strict");
       await leaders.getByRole('button',{name:'← Back to leaders',exact:true}).click();
       assert.equal(await leaders.getByRole('button',{name:'View '+label+' rankings',exact:true}).evaluate(el=>el===document.activeElement),true);
     }
-    await onlyMetric('OBP%',['66.7%','66.7%']);
+    await onlyMetric('OBP%',['.667','.667']);
     assert.deepEqual(await leaders.locator('.leaderboard-rank').allTextContents(),['1','1']);
     await back('OBP%');await onlyMetric('Hits',['2','2']);
     await back('Hits');await onlyMetric('HR',['1','0']);
@@ -383,6 +412,6 @@ const assert = require("node:assert/strict");
     await page.getByText("That game is unavailable in this scorebook.",{exact:false}).waitFor();
     assert.equal(await page.getByRole("button",{name:"Record plate appearance",exact:true}).count(),0);
     assert.deepEqual(await page.evaluate(()=>window.__writes),[]);assert.deepEqual(errors,[]);
-    console.log(`PASS ${process.env.BROWSER_ENGINE || "chromium"} compact at-bat: RBI before instant results; settings/history absent from scorer, separate game-details link. Legacy draft selection/save preserved; actual page primary controls within 900px. Grouped outcome buttons: all nine choices, selected/keyboard state, HR defaults/reset, no write until confirmed, unchanged score payload, offline disabling and readable touch targets at 320–1440px. Compact setup: actual page heading, first/next-game primary actions above the fold, native date containment, hidden-field validation, preserved HR/Bands payloads and prominent uncertain/offline handling. Score/setup modes: selected competition isolation, no unrelated scoring during setup, inherited zero/2 limits, opponent-only tournament continuation, collapsed statistics/audit, missing-game denial and mobile overflow. Synthetic services only; no hosted writes.`);
+    console.log(`PASS ${process.env.BROWSER_ENGINE || "chromium"} compact at-bat: RBI before instant results; settings/history absent from scorer, separate game-details link. Legacy draft selection/save preserved; actual page primary controls within 900px. Grouped outcome buttons: all nine choices, selected/keyboard state, HR defaults/reset, no write until confirmed, unchanged score payload, offline disabling and readable touch targets at 320–1440px. Compact setup: actual page heading, first/next-game primary actions above the fold, native date containment, hidden-field validation, preserved HR/Bands payloads and prominent uncertain/offline handling. Score/setup modes: selected competition isolation, no unrelated scoring during setup, inherited zero/2 limits, opponent-only tournament continuation, collapsed statistics/audit, missing-game denial and mobile overflow. Live polling only for active, visible, online games; completed/setup/manage/archived/missing games do not poll. Hidden/offline reads are skipped and returning/reconnecting refreshes without recording plays. Decimal leaderboard rates. Synthetic services only; no hosted writes.`);
   } finally{if(browser)await browser.close();if(server)await new Promise(resolve=>server.close(resolve));}
 })().catch(error=>{console.error(error);process.exitCode=1;});

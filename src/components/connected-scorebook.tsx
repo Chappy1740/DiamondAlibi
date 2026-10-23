@@ -1,4 +1,5 @@
 "use client";
+import { formatBaseballRate as rate } from "@/lib/baseball-rate";
 import { competitionGames, competitionPath, contextQuery } from "@/lib/competitions";
 import { revealInvalidField } from "@/lib/form-details";
 import { TournamentNextGame } from "@/components/tournament-next-game";
@@ -47,8 +48,6 @@ type Props = {
     scope: Scope,
   ): Promise<ScorebookLoadResult>;
 };
-const rate = (value: number | null) =>
-  value === null ? "—" : value.toFixed(3).replace(/^0/, "");
 const boardLabels: Record<keyof typeof DEFAULT_BOARD, string> = {
   strikeout: "Strikeout",
   solo: "Solo fence HR",
@@ -128,6 +127,7 @@ export function ConnectedScorebook({
   // A requested game that vanished must not silently select a different game.
   const current = selected ? games.find((g) => g.game.id === selected) : games[0];
   const visibleAudit = mode === "manage" ? current ? gameAudit(audit?.events ?? [], current.game.id, current.game.tournament_id) : [] : audit?.events ?? [];
+  const liveUpdates = Boolean((mode === "score" || mode === "full") && current && !current.game.completed && !data?.archived);
   const manual = current?.game.batting_mode === "manual";
   const battingPlayer = manual ? manualPlayer : current?.lineup[current.game.next_batter_position] ?? "";
   useEffect(() => { setManualPlayer(""); setPlayerSearch(""); setFirstBand(null); setEntryError(""); pendingPlay.current = null; }, [current?.game.id]);
@@ -235,23 +235,29 @@ export function ConnectedScorebook({
     if (!navigator.onLine) offline();
     window.addEventListener("offline", offline);
     window.addEventListener("online", reconnect);
-    const timer = window.setInterval(() => {
-      if (
-        document.visibilityState === "visible" &&
-        navigator.onLine &&
-        !lock.current
-      )
-        void refresh();
-    }, 15000);
     return () => {
       mounted.current = false;
-      window.clearInterval(timer);
       window.removeEventListener("offline", offline);
       window.removeEventListener("online", reconnect);
     };
-    // Recreate polling when the selected statistics scope changes.
+    // Keep retry recovery and connectivity handlers independent of live polling.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId, seasonId, scope, storageKey]);
+  useEffect(() => {
+    if (!liveUpdates) return;
+    const update = () => {
+      if (document.visibilityState === "visible" && navigator.onLine && !lock.current)
+        void refresh();
+    };
+    const timer = window.setInterval(update, 15000);
+    document.addEventListener("visibilitychange", update);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", update);
+    };
+    // Refresh keeps the current scope; save/retry locking remains authoritative.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamId, seasonId, scope, storageKey, liveUpdates, current?.game.id]);
   async function save(request: unknown, retry = false) {
     if (lock.current || !navigator.onLine || (!retry && disabled)) return;
     lock.current = true;
@@ -678,7 +684,7 @@ export function ConnectedScorebook({
           {data?.archived
             ? "Archived season · read only"
             : "Changes require a confirmed save"}
-          . Automatic refresh every 15 seconds while this page is visible.
+          .{liveUpdates ? " Live game updates while this page is visible." : ""}
         </p>}
         {uncertain && (
           <button

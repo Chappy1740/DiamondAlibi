@@ -1,4 +1,5 @@
 "use client";
+import { formatBaseballRate as rate } from "@/lib/baseball-rate";
 import Link from "next/link";
 import { sampleRoster } from "@/lib/sample-seasons";
 import { GameScoreboardPanel } from "@/components/game-scoreboard";
@@ -64,8 +65,6 @@ function replayLegacy(journal: LegacyJournal) {
   for (const r of journal.requests) b = applyCommand(b, r);
   return b;
 }
-const rate = (value: number | null) =>
-  value === null ? "—" : value.toFixed(3);
 export function PracticeScorebook({
   review = false,
 }: { review?: boolean } = {}) {

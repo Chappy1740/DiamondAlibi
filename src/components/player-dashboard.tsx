@@ -1,3 +1,4 @@
+import { formatBaseballRate as rate } from "@/lib/baseball-rate";
 import Link from "next/link";
 import { ProfileMenu } from "./profile-menu";
 import { BrandLink } from "./brand-link";
@@ -42,8 +43,6 @@ const tabs = [
   { path: "beverages", label: "Beverage", icon: CupSoda },
   { path: "more", label: "More", icon: Ellipsis },
 ];
-const rate = (value: number | null) =>
-  value === null ? "—" : value.toFixed(3).replace(/^0/, "");
 const balance = (value: number | null) =>
   value === null
     ? "No recorded balance"
@@ -134,7 +133,7 @@ export function PlayerDashboard(p: DashboardProps) {
         </article>
       ));
   const contextControls = (
-    <section className="dashboard-context-panel" aria-label="Team, season and statistics controls">
+    <section className={`dashboard-context-panel${p.route === "" ? " dashboard-context-panel--home" : ""}`} aria-label="Team, season and statistics controls">
           <form
             className="dashboard-context"
             method="get"
@@ -146,7 +145,7 @@ export function PlayerDashboard(p: DashboardProps) {
             <DashboardSelect label="Season" name="season" value={p.seasonId} options={p.seasons.map((s) => ({ id: s.id, name: `${s.name}${s.archived ? " · history" : ""}` }))} />
             <DashboardSelect label="Personal stats" accessibleLabel="Statistics view" name="scope" value={p.scope} options={["Overall", "League", "Tournament"].map((name) => ({ id: name, name }))} />
             {p.sample && <DashboardSelect label="Sample player" name="player" value={p.userId} options={loaded?.roster.map((r) => ({ id: r.user_id ?? "", name: r.display_name })) ?? []} />}
-            <button className="button secondary">Apply context</button>
+            {p.route === "" ? <div className="dashboard-context-action"><span aria-hidden="true">Update view</span><button className="button secondary">Apply context</button></div> : <button className="button secondary">Apply context</button>}
           </form>
       {!p.sample && <DashboardRefresh />}
       {p.sample && <p className="connection-notice dashboard-notice">
@@ -269,7 +268,7 @@ export function PlayerDashboard(p: DashboardProps) {
                       {view?.statistics ? (
                         <div className="dashboard-metrics">
                           <span>
-                            OBP% <strong>{view.statistics.OBP == null ? "—" : `${(view.statistics.OBP * 100).toFixed(1)}%`}</strong>
+                            OBP% <strong>{rate(view.statistics.OBP)}</strong>
                           </span>
                           <span>
                             Hits <strong>{view.statistics.H}</strong>
