@@ -66,7 +66,10 @@ The owner separately approved changing only its non-main command from
 survived reload and Preview URLs remain disabled. Uploading an inactive version
 does not create an isolated test database or establish hosted acceptance. The
 old build's Retry action retained its original command; that retry was stopped.
-A fresh build using the saved command still requires verification.
+A fresh push also retained the old command because this existing branch has
+its own build override. The same approved upload-only command was therefore
+saved on `codex/readiness-safeguards` as well as Previews Base. A fresh build
+using that branch override still requires verification.
 
 A push trigger alone does not stop Cloudflare deploying concurrently. Before
 relying on this as a release gate:
