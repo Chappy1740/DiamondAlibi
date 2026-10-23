@@ -262,44 +262,33 @@ export function PlayerDashboard(p: DashboardProps) {
                         <div className="dashboard-cards">{gameCards(true)}</div>
                       </section>
                     )}
-                    <section className="card detail-card">
+                    <section className="card detail-card home-season-card">
                       <h2>My season</h2>
                       <p className="dashboard-selected-context">{team?.name} · {season?.name} · {p.scope}</p>
                       {view?.statistics ? (
-                        <div className="dashboard-metrics">
-                          <span>
-                            OBP% <strong>{rate(view.statistics.OBP)}</strong>
-                          </span>
-                          <span>
-                            Hits <strong>{view.statistics.H}</strong>
-                          </span>
-                          <span>
-                            Reach Base %{" "}
-                            <strong>{rate(view.statistics.Reach)}</strong>
-                          </span>
-                          <span>
-                            HR <strong>{view.statistics.HR}</strong>
-                          </span>
-                          <span>
-                            RBI <strong>{view.statistics.RBI}</strong>
-                          </span>
-                          <span>
-                            PA <strong>{view.statistics.PA}</strong>
-                          </span>
+                        <div className="dashboard-metrics home-season-stats">
+                          <dl className="home-stat-row home-stat-row--rates" aria-label="On-base rates">
+                            <div className="home-stat"><dt>OBP</dt><dd><strong>{rate(view.statistics.OBP)}</strong></dd></div>
+                            <div className="home-stat"><dt>Reach Base %</dt><dd><strong>{rate(view.statistics.Reach)}</strong></dd></div>
+                          </dl>
+                          <dl className="home-stat-row home-stat-row--counts" aria-label="Personal season totals">
+                            {[
+                              { label: "Hits", value: view.statistics.H, note: "" },
+                              { label: "RBI", value: view.statistics.RBI, note: "" },
+                              { label: "Home runs", value: view.statistics.HR, note: "" },
+                              { label: "Beverages", value: view.beverageBalance === null ? "—" : Math.abs(view.beverageBalance), note: view.beverageBalance === null ? "No balance" : view.beverageBalance < 0 ? "in credit" : view.beverageBalance > 0 ? "owed" : "settled" },
+                            ].map((stat) => <div className="home-stat" key={stat.label}>
+                              <dt>{stat.label}</dt>
+                              <dd><strong>{stat.value}</strong><span className="home-stat-note" aria-hidden={stat.note ? undefined : true}>{stat.note || "\u00a0"}</span></dd>
+                            </div>)}
+                          </dl>
                         </div>
                       ) : (
-                        <p>
-                          {view?.player
-                            ? "No recorded plate appearances in this view."
-                            : "No player record is linked to this account. Guest history is not claimed automatically."}
-                        </p>
+                        <>
+                          <p>{view?.player ? "No recorded plate appearances in this view." : "No player record is linked to this account. Guest history is not claimed automatically."}</p>
+                          <p>Beverage Board: <strong>{balance(view?.beverageBalance ?? null)}</strong></p>
+                        </>
                       )}
-                      <p>
-                        Beverage Board:{" "}
-                        <strong>
-                          {balance(view?.beverageBalance ?? null)}
-                        </strong>
-                      </p>
                     </section>
                     {contextControls}
 

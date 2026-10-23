@@ -1,6 +1,6 @@
 # 01 — Home: Screen handoff
 
-**Status:** Locally verified; owner authorized commit, push and deployment. **Owner's requested change:** Three-decimal baseball rates everywhere, four matching Home context controls, and quiet refresh with recurring updates restricted to active games.
+**Status:** Home refinement locally verified; continuing the owner-authorized commit, push and deployment flow. **Owner's requested change:** Three-decimal baseball rates everywhere, four matching Home context controls, and quiet refresh with recurring updates restricted to active games.
 **Current screen only:** Home.
 **Route/view:** `/`
 **Related tracker IDs:** M3-9. Verify current canonical evidence before closing any item.
@@ -101,3 +101,14 @@ A green build or inactive upload is not a live release. Preserve required checks
 ### Delivery authorization — October 23, 2026
 
 After the local review receipt, the owner explicitly instructed: "Yes. I have stated, push commit and deploy". This authorizes delivery of this Home/rate/refresh diff through the existing protected PR, checks and deployment flow. Release is in progress at this source checkpoint; exact commit, checks, merge, provider version and hosted readback will be recorded in the linked PR release receipt. No new service, security weakening, spending, schema change or hosted write test is authorized by this UI release.
+
+### Home summary refinement — October 23, 2026
+
+The owner confirmed the deployed decimal formatting through an iPhone screenshot and requested: top row OBP / Reach Base %, second row Hits / RBI / Home runs / Beverages owed or credit, all centered and evenly spaced in boxes. This continues the active Home screen and its existing commit/push/deploy authorization; no repeated permission request is needed for this refinement.
+
+- Baseline is deployed PR #13, main 3d9b45cc5ddcec5963c36b2f46cd9ad5a93673a6 / Worker version 1f61fa24. Previous delivery checks and 100% traffic were recorded in PR #13.
+- Reuse: existing account-linked personal projection, decimal formatter and signed Beverage balance; native definition lists and CSS Grid provide two equal rate tiles above four equal total tiles. No new library, model, service or query is needed.
+- Layout: centered My season heading, selected-context text, tile labels, values and balance qualifier. PA is removed from this compact Home summary to match the requested six metrics; its underlying data and full statistics elsewhere remain unchanged. Beverage amount uses an absolute display value with an explicit owed/in-credit/settled qualifier; unknown balance is an em dash with No balance. No-player/no-statistics messages and the previously visible fallback balance remain truthful.
+- Scope: Home markup and Home-specific CSS, expanded existing Home browser regression, and this handoff. Other screens, refresh, formulas, saved data, rules, authorization, security settings and dependencies are unchanged.
+- Local verification: typecheck; Chromium and WebKit at 320–1440px verify exact 2+4 order, row placement, equal per-row tile dimensions and centered labels/values, context controls, personal-only data, balance states, empty/unlinked cases and refresh behavior. Production CI and exact-source provider upload must still pass before activation.
+- Owner review: supplied iPhone image is the brief and confirms the prior decimal fix, not physical-device acceptance of this refinement. Home remains active; M3-9 is not closed by local checks. Final source, checks, version/traffic and hosted readback will be recorded in the refinement PR receipt.
