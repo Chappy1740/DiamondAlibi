@@ -1021,6 +1021,8 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
       });
     assert.equal(await row.getByRole("cell").last().innerText(), "2");
     await page.getByRole("button", { name: "League", exact: true }).click();
+    // Scope is accepted after the asynchronous snapshot returns, not at click time.
+    await page.waitForFunction(() => [...document.querySelectorAll("button")].some(el => el.textContent === "League" && el.getAttribute("aria-pressed") === "true"));
     await page
       .getByRole("button", { name: "League", exact: true })
       .evaluate((el) => {
