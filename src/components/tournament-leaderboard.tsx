@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { formatBaseballRate } from "@/lib/baseball-rate";
 import {
   rankTournamentPlayers,
   type TournamentPlayer,
@@ -43,9 +44,7 @@ function MetricValue({
     <span>
       <strong>
         {metric === "OBP"
-          ? row.rates.OBP == null
-            ? "—"
-            : `${(row.rates.OBP * 100).toFixed(1)}%`
+          ? formatBaseballRate(row.rates.OBP)
           : row.totals[metric]}
       </strong>
       {showLabel && labels[metric]}

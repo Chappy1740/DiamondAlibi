@@ -1,6 +1,6 @@
 # 01 — Home: Screen handoff
 
-**Status:** Ready for owner brief. **Owner's requested change:** Not yet supplied.
+**Status:** Locally verified; owner authorized commit, push and deployment. **Owner's requested change:** Three-decimal baseball rates everywhere, four matching Home context controls, and quiet refresh with recurring updates restricted to active games.
 **Current screen only:** Home.
 **Route/view:** `/`
 **Related tracker IDs:** M3-9. Verify current canonical evidence before closing any item.
@@ -23,7 +23,7 @@ Shared contracts: team/season/game isolation; established scoring/credits/rule v
 
 ## Version and review target
 
-Baseline source: main `4790f19b7fec25971dfd9490675c3f56905dbdf6` / PR #11, verified October 23, 2026. Recheck the current branch, working tree and remote main before edits.
+Current implementation baseline: main `61def28c4f8d42369d66db342b72cc9f74dfaf65` / PR #12, verified October 23, 2026. Recheck branch, status and remote main before subsequent edits.
 
 Record whether the owner is reviewing a local preview, inactive candidate or live site. PR #11's last receipt says its candidate is inactive; this pack did not refresh provider traffic. The live screen may differ from merged code. Keep Error 1102/capacity work distinct from visual acceptance.
 
@@ -49,15 +49,15 @@ Also apply the working standard's relevant empty/loading/error/offline/permissio
 
 Inspect each script's actual coverage and execution target first. These references do not claim all acceptance is already covered. Reuse focused checks; add a new regression only for meaningful uncovered changed behavior. Complete required CI before specifically approved delivery. Do not install or upgrade dependencies just to review the screen.
 
-## Brief to complete with the owner
+## Agreed brief
 
-- Requested change, in their words: **Pending**.
-- Desired visible result / screenshot reference: **Pending**.
+- Requested change: OBP `75.0%` must read `.750` everywhere; all four Home context controls must be evenly spaced with the same appearance; refresh should be quiet and limited to active games.
+- Desired result: owner’s two supplied iPhone screenshots, with rate values in baseball notation and Team / Season / Personal stats / Apply context in a matching two-column grid.
 - Existing behavior to retain: the screen contract and preservation rules above.
-- Data or policy decisions needed: inspect first; flag only real dependencies.
-- Review device: identify computer, real iPhone or both.
-- Review version and navigation entry/exit: record explicitly.
-- Scope exclusions or adjacent changes: state before implementation if material.
+- Data or policy decisions needed: none for this display and refresh scope.
+- Review device: owner supplied real iPhone screenshots; local checks use desktop Chromium and WebKit. Updated physical iPhone acceptance remains pending.
+- Review version: local build described below; Home entry, context submission and bottom-navigation return checked.
+- Adjacent scope: shared baseball-rate presentation and refresh, as expressly requested. No other screen redesign, scoring formula, saved data or feature-policy change.
 
 Do not invent preferences or adopt a larger feature proposal merely to fill this brief.
 
@@ -81,4 +81,23 @@ A green build or inactive upload is not a live release. Preserve required checks
 8. Scoped revert/rollback and stop conditions.
 9. Owner acceptance or explicit hold; agreed next screen.
 
-**Current outcome:** Documentation prepared only. No screen implementation, new acceptance pass or live release is claimed by this work package.
+**Current outcome (October 23, 2026):** Local Home implementation and focused verification completed. Owner review and delivery approval remain pending. No commit, push, upload, deployment or hosted acceptance is claimed for this change.
+
+### Local completion receipt
+
+- **Scope:** Home layout; owner explicitly requested baseball-rate formatting everywhere and a shared refresh adjustment. No other screen redesign or new feature policy.
+- **Source:** branch `codex/home-only`, based on main `61def28c4f8d42369d66db342b72cc9f74dfaf65` (merged PR #12). Existing laptop changes were copied with hash verification before using a separate, clean, current checkout; original files remain untouched.
+- **Result:** shared `formatBaseballRate` produces `.750`, `.000`, `1.000` or an em dash for missing rates. Home, team/tournament leaders, connected statistics and practice statistics use it. Only display formatting changed; rankings still use unrounded values and counts remain counts.
+- **Home controls:** native selects and a submit button retain their semantics; equal-width/equal-height cells, matching borders/fill/type, 12px gaps and complete wrapping selected names. Styles apply only to Home. Sample history retains its extra player selector.
+- **Refresh:** Home and other dashboard views have no recurring timer or 15-second copy. Manual refresh remains, with quiet refresh on visible return/reconnection and explicit offline/loading feedback. Connected scoring polls every 15 seconds only for the selected active game in score/full mode, while visible and online. Completed, archived, setup, management and unavailable-game views do not poll. Existing save/read locking and uncertain-save recovery remain in place.
+- **Files:** `src/lib/baseball-rate.ts`; `src/components/player-dashboard.tsx`, `dashboard-refresh.tsx`, `tournament-leaderboard.tsx`, `connected-scorebook.tsx`, `practice-scorebook.tsx`; Home-scoped additions in `src/app/globals.css`; `tests/baseball-rate.test.ts`, `tests/home-layout-browser.cjs`, `tests/scorebook-modes-browser.cjs`; this handoff.
+- **Reuse decision (EYD-ARCH-001):** retain native controls and existing scorebook rate semantics, use a small shared presentation helper and the browser visibility API. Existing components/platform features cover the need; no dependency or service added.
+- **Checks passed:** 85 local unit tests; typecheck; production Next build with hosted credentials disabled; diff whitespace check; Home and scorebook modes in Chromium and WebKit; authorized-context loader checks; connected save/correction/offline/retry checks against a disposable local database; both local practice suites; built Home native form submission, 320–1440px layout and automated accessibility. A test selector was corrected and the WebKit reconnect assertion now waits for the React transition to settle; reruns passed.
+- **Review target:** loopback-only built app at `http://127.0.0.1:3130/?sample=1`, synthetic sample data. Separate synthetic signed-in Home captures show the four-control layout without an extra sample selector. This local URL works on the laptop; it is not a phone-hosted release.
+- **Evidence limits:** automated desktop Chromium and Safari-engine WebKit are local evidence. No physical iPhone test, hosted write, capacity/Error 1102 acceptance, live authentication acceptance or new release claim. No live game/account/rule data changed; no email sent.
+- **Delivery:** uncommitted local diff only. No new PR/candidate/version/traffic change. Owner acceptance pending; Home remains the active screen. Canonical M3-9 is unchanged and is not closed by these checks.
+- **Rollback:** restore only this documented Home/rate/refresh diff in its isolated checkout, preserving the laptop’s earlier local files. Stop publication if isolation, duplicate/lost-save, misleading Saved state or security/capacity failures appear; investigate without changing live data or protections.
+
+### Delivery authorization — October 23, 2026
+
+After the local review receipt, the owner explicitly instructed: "Yes. I have stated, push commit and deploy". This authorizes delivery of this Home/rate/refresh diff through the existing protected PR, checks and deployment flow. Release is in progress at this source checkpoint; exact commit, checks, merge, provider version and hosted readback will be recorded in the linked PR release receipt. No new service, security weakening, spending, schema change or hosted write test is authorized by this UI release.

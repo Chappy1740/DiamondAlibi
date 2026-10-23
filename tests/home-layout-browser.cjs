@@ -20,7 +20,7 @@ const assert = require("node:assert/strict");
       plugins: [{ name: "synthetic-home", setup(build) {
         build.onResolve({ filter: /^(next\/(navigation|link|image)|@\/app\/(login\/actions|club\/beverage-actions)|\.\/personal-alibis)$/ }, args => ({ path: args.path, namespace: "synthetic" }));
         build.onLoad({ filter: /.*/, namespace: "synthetic" }, args => ({ loader: "tsx", resolveDir: process.cwd(), contents:
-          args.path === "next/navigation" ? "export const useRouter=()=>({refresh(){}});export const usePathname=()=>location.pathname;export const useSearchParams=()=>new URLSearchParams(location.search);" :
+          args.path === "next/navigation" ? "const router={refresh(){window.__refreshes=(window.__refreshes||0)+1}};export const useRouter=()=>router;export const usePathname=()=>location.pathname;export const useSearchParams=()=>new URLSearchParams(location.search);" :
           args.path === "next/link" ? "import React from 'react';export default function Link({children,...props}){return <a {...props}>{children}</a>}" :
           args.path === "next/image" ? "import React from 'react';export default function Image({unoptimized,...props}){return <img {...props}/>}" :
           args.path === "./personal-alibis" ? "export function PersonalAlibis(){return null}" :
@@ -40,6 +40,11 @@ const assert = require("node:assert/strict");
     browser = await engine.launch({ headless: true, ...(engine === chromium && process.env.BROWSER_EXECUTABLE ? { executablePath: process.env.BROWSER_EXECUTABLE } : {}) });
     const page = await browser.newPage({ viewport: { width: 390, height: 844 }, ...(engine === webkit ? { isMobile: true, hasTouch: true } : {}) });
     page.on("pageerror", error => errors.push(error.message));
+    await page.addInitScript(() => {
+      window.__refreshes=0;window.__polls=0;
+      const original=window.setInterval;
+      window.setInterval=(fn,delay,...args)=>{if(delay===15000)window.__polls++;return original(fn,delay,...args)};
+    });
     await page.goto(`http://127.0.0.1:${server.address().port}`);
     await page.getByRole("heading", { name: "Your game, Test Player." }).waitFor();
     assert.equal(await page.getByText("2 in credit", { exact: true }).isVisible(), true);
@@ -51,7 +56,7 @@ const assert = require("node:assert/strict");
     assert.equal(await page.getByText("Season activity", { exact: true }).count(), 0);
     assert.equal(await page.getByRole("link", { name: "All player statistics" }).count(), 0);
     assert.match(await page.locator(".dashboard-metrics").innerText(), /HR\s+1/);
-    assert.match(await page.locator(".dashboard-metrics").innerText(), /OBP%\s+25\.0%/);
+    assert.match(await page.locator(".dashboard-metrics").innerText(), /OBP%\s+\.250/);
     assert.match(await page.locator(".dashboard-metrics").innerText(), /Hits\s+1/);
     assert.match(await page.locator(".dashboard-metrics").innerText(), /RBI\s+3/);
     assert.equal(await page.evaluate(() => {
@@ -61,13 +66,22 @@ const assert = require("node:assert/strict");
       const controls = document.querySelector(".dashboard-context-panel").getBoundingClientRect();
       return heading.bottom <= actions.top && actions.bottom <= summary.top && summary.bottom <= controls.top && actions.bottom < 600;
     }), true);
-    if (process.env.LAYOUT_SCREENSHOT) await page.screenshot({ path: process.env.LAYOUT_SCREENSHOT, fullPage: true });
+    if (process.env.LAYOUT_SCREENSHOT) {
+      // A tall capture keeps fixed navigation below the controls being reviewed.
+      await page.setViewportSize({width:390,height:1200});
+      await page.screenshot({path:process.env.LAYOUT_SCREENSHOT,fullPage:true});
+      if(process.env.CONTEXT_SCREENSHOT)await page.locator('.dashboard-context-panel').screenshot({path:process.env.CONTEXT_SCREENSHOT});
+      await page.setViewportSize({width:390,height:844});
+    }
     await page.getByLabel("Team", { exact: true }).selectOption("long");
     await page.getByLabel("Season", { exact: true }).selectOption("history");
     for (const width of [320,390,430,800,1440]) {
       await page.setViewportSize({ width, height: 900 });
       await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       const bounds = await page.evaluate(() => ({ viewport: window.innerWidth, document: document.documentElement.scrollWidth, outside: Array.from(document.querySelectorAll('body *')).filter(el => el.getBoundingClientRect().right > window.innerWidth + 1).map(el => ({ tag: el.tagName, class: el.className, width: el.getBoundingClientRect().width, right: el.getBoundingClientRect().right })).slice(0, 15) }));
+      const controls=await page.locator('.dashboard-context-panel--home .dashboard-select, .dashboard-context-action > button').evaluateAll(elements=>elements.map(el=>{const r=el.getBoundingClientRect();return{width:r.width,height:r.height}}));
+      assert.equal(controls.length,4);
+      assert(controls.every(box=>Math.abs(box.width-controls[0].width)<1 && Math.abs(box.height-controls[0].height)<1 && box.height>=44), 'Four matching controls at '+width+'px: '+JSON.stringify(controls));
       assert.equal(bounds.document <= bounds.viewport, true, `${width}px overflow: ${JSON.stringify(bounds)}`);
       assert.equal(await page.locator(".dashboard-select-value").evaluateAll(values => values.every(el => {
         const text = document.createRange(); text.selectNodeContents(el);
@@ -82,9 +96,24 @@ const assert = require("node:assert/strict");
     assert.equal(await page.getByLabel("Statistics view", { exact: true }).inputValue(), "League");
     assert.equal(await page.locator(".dashboard-select-value").nth(2).innerText(), "League");
     assert.equal(await page.locator("form.dashboard-context").evaluate(form => new FormData(form).get("team")), "long");
+    assert.equal(await page.evaluate(()=>window.__polls),0,'Home never starts recurring polling');
+    assert.equal(await page.getByText('refreshes every 15 seconds',{exact:false}).count(),0);
+    await page.getByRole('button',{name:'Refresh records',exact:true}).click();
+    assert.equal(await page.evaluate(()=>window.__refreshes),1,'Manual refresh still works');
+    await page.evaluate(()=>{Object.defineProperty(document,'visibilityState',{configurable:true,value:'hidden'});document.dispatchEvent(new Event('visibilitychange'))});
+    assert.equal(await page.evaluate(()=>window.__refreshes),1,'Hidden Home does not fetch');
+    await page.evaluate(()=>{Object.defineProperty(document,'visibilityState',{configurable:true,value:'visible'});document.dispatchEvent(new Event('visibilitychange'));document.dispatchEvent(new Event('visibilitychange'))});
+    await page.waitForFunction(()=>window.__refreshes===2);
+    assert.equal(await page.evaluate(()=>window.__refreshes),2,'Return refresh events are coalesced');
     await page.evaluate(() => { Object.defineProperty(navigator, "onLine", { configurable: true, value: false }); window.dispatchEvent(new Event("offline")); });
     await page.getByRole("status").getByText("Offline · displayed records may be out of date", { exact: true }).waitFor();
     assert.equal(await page.getByRole("button", { name: "Refresh records" }).isDisabled(), true);
+    await page.waitForTimeout(1100);
+    await page.evaluate(()=>{Object.defineProperty(document,'visibilityState',{configurable:true,value:'hidden'});Object.defineProperty(navigator,'onLine',{configurable:true,value:true});window.dispatchEvent(new Event('online'))});
+    assert.equal(await page.evaluate(()=>window.__refreshes),2,'Reconnect stays quiet while hidden');
+    await page.evaluate(()=>{Object.defineProperty(document,'visibilityState',{configurable:true,value:'visible'});document.dispatchEvent(new Event('visibilitychange'))});
+    await page.waitForFunction(()=>window.__refreshes===3);
+    await page.waitForFunction(()=>Array.from(document.querySelectorAll('button')).some(button=>button.textContent==='Refresh records'&&!button.disabled));
     await page.setViewportSize({ width: 390, height: 844 });
     await page.locator(".bottom-nav").getByRole("link", { name: "Stats", exact: true }).click();
     await page.getByRole("heading", { name: "Team leaders" }).waitFor();
@@ -104,7 +133,13 @@ const assert = require("node:assert/strict");
     await page.locator(".bottom-nav").getByRole("link", { name: "More", exact: true }).click();
     await page.getByRole("link", { name: "Explore sample history" }).click();
     await page.locator(".dashboard-notice").getByText("Sample history", { exact: false }).waitFor();
+    await page.locator('.bottom-nav').getByRole('link',{name:'Home',exact:true}).click();
+    await page.getByRole('heading',{name:'Your game, Test Player.',exact:true}).waitFor();
+    assert.equal(await page.getByLabel('Sample player',{exact:true}).count(),1);
+    assert.equal(await page.getByRole('button',{name:'Refresh records',exact:true}).count(),0);
+    await page.setViewportSize({width:320,height:844});
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'Sample Home still fits');
     assert.deepEqual(errors, []);
-    console.log(`PASS ${process.env.BROWSER_ENGINE || "chromium"} Home: heading/actions/summary before controls, complete long selected names at 320–1440px, native keyboard and form selection, own HR/credit only on signed-in Home, no brown notice or team activity, team/roster stats under bottom Stats, sample history under More with its sample notice, and offline refresh handling. Synthetic data only.`);
+    console.log(`PASS ${process.env.BROWSER_ENGINE || "chromium"} Home: heading/actions/summary before controls, complete long selected names at 320–1440px, native keyboard and form selection, own HR/credit only on signed-in Home, no brown notice or team activity, team/roster stats under bottom Stats, sample history under More with its sample notice, matching four-control grid, decimal OBP, no Home polling, quiet return/reconnect refresh and offline refresh handling. Synthetic data only.`);
   } finally { if (browser) await browser.close(); if (server) await new Promise(resolve => server.close(resolve)); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
