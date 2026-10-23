@@ -36,6 +36,7 @@ export function TeamReview() {
             : "Your own practice scorebook. Changes stay in this browser and do not sync with teammates or affect real games."}
         </p>
       </header>
+      <p><Link className="button secondary" href="/review/next">Review what’s next</Link></p>
       <iframe
         key={mode}
         title={

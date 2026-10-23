@@ -5,6 +5,7 @@ import { TournamentNextGame } from "@/components/tournament-next-game";
 import { tournamentContinuation } from "@/lib/tournament-continuation";
 import { gameAudit } from "@/lib/game-audit";
 import { ScorebookAudit } from "@/components/scorebook-audit";
+import { SavedGameRules } from "./saved-game-rules";
 import { GameHrLimitPanel } from "@/components/game-hr-limit";
 import { BattingOutcomePicker } from "./batting-outcome-picker";
 import { DashboardSelect } from "./dashboard-select";
@@ -780,6 +781,7 @@ export function ConnectedScorebook({
                   ? "Bands remain fixed throughout the tournament."
                   : "HR Bands apply only to tournaments."}
               </p>
+              <SavedGameRules rules={current.rules} />
               <GameHrLimitPanel
                 key={`hr-limit-${current.game.id}`}
                 limit={current.rules.fence_limit}
