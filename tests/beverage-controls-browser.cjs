@@ -85,6 +85,8 @@ const esbuild = require("esbuild"),
     );
     for (const width of [320, 375, 390, 768, 1440]) {
       await page.setViewportSize({ width, height: 844 });
+      // WebKit applies viewport layout on the next frames; inspect the settled width.
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       assert.equal(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth,
