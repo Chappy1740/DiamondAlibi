@@ -47,22 +47,35 @@ or message contents into this public-safe runbook.
 
 ## Release validation
 
-The existing workflow now has proposed triggers for pull requests, pushes to
+The workflow in draft PR #9 has triggers for pull requests, pushes to
 `main`, merge-queue groups and manual runs. It retains its scoring, disposable
 SQL, browser and Worker-build checks, adding the existing mocked password-reset
 and feedback API/SQL checks. These additions use synthetic data; they must not
 be replaced with `tests/m42-connected.cjs`, which needs hosted accounts and
 writes data.
 
-These workflow edits are local until separately authorized publication. A push
-trigger alone does not stop Cloudflare deploying concurrently. Before relying
-on this as a release gate:
+Owner approved publication to `codex/readiness-safeguards`; PR #9 remains
+unmerged. Full GitHub Actions validation passed for `daaa0b22` in run
+39944611698, including Chromium/WebKit and the Worker build. This is automated
+evidence, not phone or hosted authentication acceptance.
 
-1. Review and approve the exact patch, then separately authorize publication.
-   A push may trigger the existing protected-preview delivery.
-2. The October 22 connector read returned no repository rulesets; its classic
-   branch-protection read returned 403 (integration permission), so that
-   protection is unknown. Inspect the actual GitHub ruleset/branch protection. Require pull requests
+October 23 dashboard review found no classic branch protection rules and no
+repository rulesets. Cloudflare's production command remains `npx wrangler deploy`.
+The owner separately approved changing only its non-main command from
+`npx wrangler preview` to `npx wrangler versions upload`; the saved setting
+survived reload and Preview URLs remain disabled. Uploading an inactive version
+does not create an isolated test database or establish hosted acceptance. The
+old build's Retry action retained its original command; that retry was stopped.
+A fresh build using the saved command still requires verification.
+
+A push trigger alone does not stop Cloudflare deploying concurrently. Before
+relying on this as a release gate:
+
+1. Review the exact candidate and retain its publication approval. A main merge
+   can trigger automatic delivery; merge/release approval remains separate.
+2. The October 23 authenticated dashboard review resolves the earlier connector
+   permission limitation: neither classic protection nor rulesets are configured.
+   With owner approval, require pull requests
    and the validation job's observed check context on `main`; confirm the check
    name from a real run and ensure the check applies to the reviewed candidate.
    Do not claim these settings exist from the workflow file.
@@ -76,8 +89,9 @@ on this as a release gate:
    deployment receipt and hosted acceptance separately. A build is not release
    approval. Do not advance M6-5/M6-7 without their own evidence.
 
-Rollback for this unpublished patch is to discard only its workflow/tracker/
-runbook diff. If published later, use a reviewed revert. Never disable a required
+Rollback for the published patch requires a reviewed revert. For the approved
+non-main command change, restore the previous command only with owner approval;
+that reintroduces the known preview-configuration failure. Never disable a required
 check or restore an obsolete workflow merely to obtain a green release.
 
 ## M5-7: leaked-password protection acceptance
