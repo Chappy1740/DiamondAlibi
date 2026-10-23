@@ -1935,3 +1935,25 @@ blockquote {
 .beverage-rules-heading h2 { margin: 0; }
 .beverage-rules-heading .button { min-height: 44px; padding: .5rem .8rem; }
 .beverage-rules-actions { display: flex; gap: .6rem; flex-wrap: wrap; }
+
+
+/* Saved snapshots and the owner's single feature review screen. */
+.saved-game-rules { margin-block: .8rem; min-width: 0; }
+.saved-game-rules > summary { min-height: 44px; display: list-item; padding-block: .65rem; cursor: pointer; color: var(--teal); font-weight: 600; }
+.saved-game-rules:focus-within { outline-offset: 4px; }
+.saved-game-rules .micro { overflow-wrap: anywhere; }
+.game-day-review { max-width: 900px; padding-bottom: 110px; }
+.game-day-review h1 { font-size: clamp(1.8rem, 6vw, 2.6rem); line-height: 1.15; }
+.game-day-review p { line-height: 1.6; overflow-wrap: anywhere; }
+.game-day-review section { margin-block: 1.4rem; }
+.game-day-review .detail-card { min-width: 0; }
+.review-notice { padding: 1rem; border-left: 3px solid var(--teal); background: var(--surface); }
+.review-options { display: grid; gap: .8rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+.review-options .detail-card { margin: 0; }
+.review-choice { font-size: 1rem; display: flex; align-items: center; gap: .8rem; min-height: 48px; cursor: pointer; font-weight: 700; }
+.review-choice input { width: 24px; height: 24px; flex: 0 0 24px; accent-color: var(--teal); }
+.review-receipt { border: 1px solid var(--teal); border-radius: .5rem; padding: 1rem; margin-top: 1rem; }
+.review-summary-label { display: grid; gap: .5rem; }
+.review-summary-label textarea { width: 100%; box-sizing: border-box; resize: vertical; min-height: 110px; padding: .8rem; font: inherit; color: var(--white); background: var(--background); border: 1px solid var(--border); border-radius: .5rem; }
+.game-day-review button { min-height: 44px; }
+.game-day-review :is(a, button, input, textarea, summary):focus-visible { outline: 2px solid var(--teal); outline-offset: 4px; }

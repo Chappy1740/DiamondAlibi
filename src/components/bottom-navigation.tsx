@@ -47,6 +47,8 @@ export function BottomNavigation() {
   useEffect(() => {
     setPrevious(context);
   }, [context]);
+  // The owner review is a standalone proposal page with its own return link.
+  if (pathname === "/review/next") return null;
   return (
     <BottomNavigationView
       pathname={pathname}

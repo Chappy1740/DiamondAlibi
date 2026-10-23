@@ -44,6 +44,10 @@ jobs:
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
       - run: npm run build:worker
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+      - run: node tests/game-day-review-browser.cjs
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+      - run: BROWSER_ENGINE=webkit node tests/game-day-review-browser.cjs
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
       - run: node tests/personal-pages-browser.cjs
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
       - run: BROWSER_ENGINE=webkit node tests/personal-pages-browser.cjs
