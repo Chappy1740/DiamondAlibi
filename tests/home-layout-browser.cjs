@@ -35,7 +35,8 @@ const assert = require("node:assert/strict");
         }));
       }}],
     });
-    const css = fs.readFileSync("src/app/globals.css", "utf8");
+    const fonts=[400,700].map(weight=>'@font-face{font-family:Inter;font-style:normal;font-weight:'+weight+';font-display:swap;src:url(data:font/woff2;base64,'+fs.readFileSync('node_modules/@fontsource/inter/files/inter-latin-'+weight+'-normal.woff2').toString('base64')+') format("woff2")}').join('');
+    const css = fonts+fs.readFileSync("src/app/globals.css", "utf8");
     server = http.createServer((req, res) => {
       if (req.url.startsWith("/brand/")) { res.setHeader("content-type", "image/webp"); res.end(fs.readFileSync("public/brand/diamond-alibi-primary.webp")); return; }
       res.setHeader("content-type", req.url === "/bundle.js" ? "text/javascript" : "text/html");
@@ -53,6 +54,7 @@ const assert = require("node:assert/strict");
     });
     await page.goto(`http://127.0.0.1:${server.address().port}`);
     await page.getByRole("heading", { name: "Your game, Test Player." }).waitFor();
+    await page.evaluate(()=>document.fonts.ready);
     assert.match(await page.locator('.home-stat').last().innerText(),/Beverages\s+2\s+in credit/);
     assert.equal(await page.locator(".dashboard-notice").count(), 0);
     assert.equal(await page.getByRole("link", { name: "Explore sample history" }).count(), 0);
@@ -92,6 +94,7 @@ const assert = require("node:assert/strict");
       assert.deepEqual(rows.map(row=>row.map(tile=>tile.label)),[['OBP','Reach Base %'],['Hits','RBI','Home runs','Beverages']]);
       for(const row of rows)assert(row.every(tile=>Math.abs(tile.top-row[0].top)<1&&Math.abs(tile.width-row[0].width)<1&&Math.abs(tile.height-row[0].height)<1&&Math.abs(tile.labelCenter-tile.center)<1&&Math.abs(tile.valueCenter-tile.center)<1),'Equal centered statistic tiles at '+width+'px: '+JSON.stringify(rows));
       assert(rows[0][0].bottom<rows[1][0].top,'Rates stay on the first row');
+      assert.equal(await page.locator('.home-stat-row--counts dt').last().evaluate(el=>{const range=document.createRange();range.selectNodeContents(el);return range.getClientRects().length}),1,'Beverages stays on one line with the real Inter font at '+width+'px');
       const controls=await page.locator('.dashboard-context-panel--home .dashboard-select, .dashboard-context-action > button').evaluateAll(elements=>elements.map(el=>{const r=el.getBoundingClientRect();return{width:r.width,height:r.height}}));
       assert.equal(controls.length,4);
       assert(controls.every(box=>Math.abs(box.width-controls[0].width)<1 && Math.abs(box.height-controls[0].height)<1 && box.height>=44), 'Four matching controls at '+width+'px: '+JSON.stringify(controls));

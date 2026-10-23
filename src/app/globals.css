@@ -1975,11 +1975,11 @@ blockquote {
 .home-stat-row { display: grid; gap: 8px; margin: 0; min-width: 0; }
 .home-stat-row--rates { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .home-stat-row--counts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.home-stat { min-width: 0; display: grid; grid-template-rows: auto 1fr; gap: 6px; padding: 12px 2px; border: 1px solid var(--border); border-radius: 8px; background: var(--background); text-align: center; }
-.home-stat dt { min-width: 0; min-height: 2.5em; display: flex; align-items: center; justify-content: center; padding-inline: 2px; font-size: 12px; line-height: 1.25; color: var(--muted); overflow-wrap: anywhere; }
+.home-stat { min-width: 0; display: grid; grid-template-rows: auto 1fr; gap: 6px; padding: 12px 0; border: 1px solid var(--border); border-radius: 8px; background: var(--background); text-align: center; }
+.home-stat dt { min-width: 0; min-height: 2.5em; display: flex; align-items: center; justify-content: center; font-size: 12px; line-height: 1.25; color: var(--muted); overflow-wrap: anywhere; }
 .home-stat dd { min-width: 0; display: grid; justify-items: center; align-content: center; gap: 4px; margin: 0; }
 .home-season-stats .home-stat strong { max-width: 100%; font-size: clamp(22px, 7vw, 28px); line-height: 1.15; overflow-wrap: anywhere; }
 .home-season-stats .home-stat-note { min-height: 16px; max-width: 100%; font-size: 11px; line-height: 16px; text-align: center; overflow-wrap: anywhere; }
 .home-stat-row--rates dt { min-height: 1.5em; font-size: 14px; }
 .home-season-stats .home-stat-row--rates strong { font-size: 32px; }
-@media (max-width: 360px) { .home-stat-row--counts dt { font-size: 11px; } }
+@media (max-width: 360px) { .home-season-card { padding: 8px; } .home-stat-row { gap: 4px; } .home-stat-row--counts dt { font-size: 11px; } }
