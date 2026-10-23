@@ -116,3 +116,14 @@ The owner confirmed the deployed decimal formatting through an iPhone screenshot
 ### Hosted caption verification follow-up
 
 PR #14 merged as 3d623f0b2800c63a34a98162ecba4d141fd7ce7d after exact-head and merged-main checks passed, then version 64df5b18 was activated. Hosted verification confirmed the 2+4 layout but exposed a final-letter wrap in Beverages with the actual Inter font at phone width. The same Home refinement includes removing redundant tile/label horizontal padding and giving 320–360px cards more usable space. The existing browser test now embeds the app's installed Inter font, waits for font readiness and requires the full Beverages caption on one line at 320–1440px. No new dependency or policy change. Deliver this caption follow-up through the same approved protected release process before final Home acceptance.
+
+
+### Home compact labels and signed BVGs — October 23, 2026
+
+- Owner brief: bottom-row labels must read Hits, RBIs, HRs, BVGs. BVGs displays the signed number only: positive owed, negative credit, zero settled. No visible owed/in-credit qualifier. Missing balance remains an em dash, never an invented zero.
+- Scope: Home-only presentation using the existing signed personal balance; retain the 2+4 equal centered tile grid, decimal rates, personal data isolation and existing refresh. No Explore implementation, scoring/rule change, dependency, API/database or authentication change.
+- Reuse decision (EYD-ARCH-001): existing personal projection, native definition lists and CSS Grid suffice; no package or new formatter required.
+- Preparation: local branch codex/home-metric-abbreviations, baseline tree matching main e310641ca83ab216830faa35c2b437c4bfbe5024. Existing laptop changes remain untouched. Verification and owner review are pending at this entry.
+
+- Local verification passed: typecheck; diff whitespace; existing Chromium and WebKit Home regression at 320–1440px with the installed Inter font, equal centered rows, accessibility, personal-only totals, negative credit/positive owed/zero/missing BVGs and existing navigation/refresh cases. The supplied new screenshot is the brief; updated physical iPhone acceptance remains pending. Local synthetic preview captured outside the repository.
+- Delivery continues under the owner's existing Home commit/push/deploy approval. The Explore addendum remains an audit only: no Explore implementation, payment work, new service, security-setting change or hosted data-write test. Exact CI/merge/version/traffic and hosted readback will be recorded in this change's PR release receipt before claiming live delivery. Home remains active; no canonical milestone is closed.

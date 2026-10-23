@@ -273,13 +273,13 @@ export function PlayerDashboard(p: DashboardProps) {
                           </dl>
                           <dl className="home-stat-row home-stat-row--counts" aria-label="Personal season totals">
                             {[
-                              { label: "Hits", value: view.statistics.H, note: "" },
-                              { label: "RBI", value: view.statistics.RBI, note: "" },
-                              { label: "Home runs", value: view.statistics.HR, note: "" },
-                              { label: "Beverages", value: view.beverageBalance === null ? "—" : Math.abs(view.beverageBalance), note: view.beverageBalance === null ? "No balance" : view.beverageBalance < 0 ? "in credit" : view.beverageBalance > 0 ? "owed" : "settled" },
+                              { label: "Hits", value: view.statistics.H },
+                              { label: "RBIs", value: view.statistics.RBI },
+                              { label: "HRs", value: view.statistics.HR },
+                              { label: "BVGs", value: view.beverageBalance ?? "—" },
                             ].map((stat) => <div className="home-stat" key={stat.label}>
-                              <dt>{stat.label}</dt>
-                              <dd><strong>{stat.value}</strong><span className="home-stat-note" aria-hidden={stat.note ? undefined : true}>{stat.note || "\u00a0"}</span></dd>
+                              <dt title={stat.label === "BVGs" ? "Beverages" : undefined}>{stat.label}</dt>
+                              <dd><strong>{stat.value}</strong></dd>
                             </div>)}
                           </dl>
                         </div>
