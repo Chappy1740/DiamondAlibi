@@ -2,7 +2,7 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 72,
+  revision: 73,
   updatedAt: "2026-10-23",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
@@ -817,8 +817,8 @@ export const projectTracker: ProjectTracker = {
           title: "Prepare release/rollback/runbook and support process",
           status: "in_progress",
           evidence:
-            "October 23: owner-approved readiness package is published in unmerged draft PR #9. Full GitHub Actions validation passed for daaa0b22 (run 39944611698), including Chromium/WebKit and Worker build. Authenticated GitHub dashboard review found no classic branch protections or rulesets. The owner-approved Cloudflare non-main command is now versions upload with Preview URLs disabled; fresh-build verification remains pending. RELEASE-READINESS.md retains security, recovery, pilot, stop/rollback and support acceptance gaps.",
-          next: "Verify a fresh non-main build uses the saved upload-only command; obtain scoped approval for required validation and delivery-order enforcement before merge/release. Confirm support ownership and recovery/pilot decisions. A push-triggered check alone does not stop concurrent Cloudflare delivery.",
+            "October 23 pre-merge checkpoint: owner approved bounded completion of PR #9 with no live release. Full validation passed for 9bf13f4 (run 39953093040). Active main-validation ruleset 25721453 requires PRs, resolved discussions, up-to-date code and GitHub Actions validate, with no bypass and force-push/deletion blocked. Saved Cloudflare main command uploads inactive versions; Previews Base and this PR branch use dry-run validation with Preview URLs disabled. A branch upload attempt failed destination validation after compilation; no check was bypassed. RELEASE-READINESS.md preserves hosted, security, recovery, capacity and support gaps.",
+          next: "Verify final PR-head checks, approved merge, merged-main checks and inactive upload receipt; record them in the PR handoff. Keep live traffic unchanged. Complete separately approved fail-closed rehearsal, hosted acceptance, support ownership and recovery/pilot decisions before requesting an exact-version live release.",
           kind: "work",
         },
         {

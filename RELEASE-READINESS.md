@@ -59,43 +59,45 @@ unmerged. Full GitHub Actions validation passed for `daaa0b22` in run
 39944611698, including Chromium/WebKit and the Worker build. This is automated
 evidence, not phone or hosted authentication acceptance.
 
-October 23 dashboard review found no classic branch protection rules and no
-repository rulesets. Cloudflare's production command remains `npx wrangler deploy`.
-The owner separately approved changing only its non-main command from
-`npx wrangler preview` to `npx wrangler versions upload`; the saved setting
-survived reload and Preview URLs remain disabled. Uploading an inactive version
-does not create an isolated test database or establish hosted acceptance. The
-old build's Retry action retained its original command; that retry was stopped.
-A fresh push also retained the old command because this existing branch has
-its own build override. The same approved upload-only command was therefore
-saved on `codex/readiness-safeguards` as well as Previews Base. A fresh build
-using that branch override still requires verification.
+October 23 pre-merge checkpoint: the owner approved bounded completion with
+no live release. Active GitHub ruleset `main-validation` (25721453) targets
+only `refs/heads/main`, with no bypass actors. API readback confirms PRs,
+resolved review discussions, up-to-date branches and the `validate` check
+from GitHub Actions (integration 15368) are required. Force pushes and deletion
+are blocked. Required approving reviews are zero for this solo repository;
+chat approval is not an independent GitHub review.
 
-A push trigger alone does not stop Cloudflare deploying concurrently. Before
-relying on this as a release gate:
+Cloudflare settings were saved and reloaded: main uses
+`npx wrangler versions upload`; Previews Base and this PR's existing branch
+override use `npx wrangler deploy --dry-run`. Preview URLs remain disabled.
+Main builds may upload inactive versions concurrently with validation, but
+these commands cannot activate live traffic. A separate exact-version release
+decision is required. Other existing branch overrides were not changed and
+must be reviewed before reuse.
 
-1. Review the exact candidate and retain its publication approval. A main merge
-   can trigger automatic delivery; merge/release approval remains separate.
-2. The October 23 authenticated dashboard review resolves the earlier connector
-   permission limitation: neither classic protection nor rulesets are configured.
-   With owner approval, require pull requests
-   and the validation job's observed check context on `main`; confirm the check
-   name from a real run and ensure the check applies to the reviewed candidate.
-   Do not claim these settings exist from the workflow file.
-3. Approve a delivery gate: either run the same complete validation before the
-   Cloudflare deploy command, or stop automatic `main` delivery and deploy only
-   the explicitly approved validated commit. Configure neither during planning.
-4. Verify fail-closed behavior on a disposable candidate: a failing validation
-   prevents merge/release, and an older successful commit cannot authorize a
-   newer source. Never inject a failure into production to prove this.
-5. Record the exact candidate SHA, validation run, schema compatibility,
-   deployment receipt and hosted acceptance separately. A build is not release
-   approval. Do not advance M6-5/M6-7 without their own evidence.
+Diagnostic history: `wrangler preview` required a missing `previews` block.
+The branch upload-only attempt compiled successfully, then Cloudflare rejected
+its destination with a Worker-name mismatch (build 694ad863). No destination
+check was bypassed. The owner chose validation-only branch builds instead of
+provisioning a hosted branch preview. Passing them does not prove a functioning
+hosted preview or an isolated test database. The old build's Retry action reused
+its old command; that retry was stopped.
 
-Rollback for the published patch requires a reviewed revert. For the approved
-non-main command change, restore the previous command only with owner approval;
-that reintroduces the known preview-configuration failure. Never disable a required
-check or restore an obsolete workflow merely to obtain a green release.
+Before any live release:
+
+1. Verify checks on the final PR head, then checks on merged main and its
+   inactive-version upload receipt. This checkpoint precedes final verification;
+   record the results in the PR handoff.
+2. Prove fail-closed behavior on an approved disposable candidate: failed checks
+   prevent merge/release and an older success cannot authorize newer source.
+   No deliberately failing candidate was executed in this task.
+3. Record exact source, matching validation, schema compatibility, approved
+   version activation, prior compatible version and hosted acceptance separately.
+   An upload is not release approval. Keep M6-5/M6-7 open without their evidence.
+
+Rollback of published code requires a reviewed revert. Retain required checks
+and the no-activation policy during remediation; automatic live deployment
+requires its own approval. Never weaken required checks to obtain a green build.
 
 ## M5-7: leaked-password protection acceptance
 
