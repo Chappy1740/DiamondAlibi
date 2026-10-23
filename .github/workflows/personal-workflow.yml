@@ -1,6 +1,10 @@
 name: Personal workflow validation
 on:
   pull_request:
+  push:
+    branches: [main]
+  merge_group:
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
@@ -22,6 +26,9 @@ jobs:
       - run: node tests/manager-beverage-sql.cjs
       - run: node tests/personal-alibis-sql.cjs
       - run: node tests/dashboard-loader.cjs
+      - run: node tests/password-reset.cjs
+      - run: node tests/feedback-api.cjs
+      - run: node tests/feedback-sql.cjs
       - run: npx playwright install --with-deps chromium webkit
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
       - run: node tests/personal-workflow-browser.cjs
