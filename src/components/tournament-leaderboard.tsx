@@ -30,7 +30,7 @@ function MetricValue({
       data-credit={row.totals.board < 0}
       aria-label={`Beverage: ${row.totals.board < 0 ? `${Math.abs(row.totals.board)} in credit` : row.totals.board > 0 ? `${row.totals.board} owed` : "Even"}`}
     >
-      <strong>{Math.abs(row.totals.board)}</strong>
+      <strong>{row.totals.board}</strong>
       {showLabel && labels[metric]}
       <small>
         {row.totals.board < 0
@@ -139,7 +139,7 @@ export function PlayerLeaderboard({
           </button>
           <p className="micro">
             {metric === "board"
-              ? "Most owed first · Net balance includes credits"
+              ? "Most owed first · Highest BEVs leads"
               : "Highest to lowest"}{" "}
             · Ties share a rank
           </p>
