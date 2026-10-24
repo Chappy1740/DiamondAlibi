@@ -52,6 +52,12 @@ const assert = require("node:assert/strict");
         data.snapshot.games=[...league,...tournament,...friday];
         data.snapshot.tournaments[0].name='Riverside Classic';
         data.snapshot.tournaments.push({id:'friday-cup',name:'Friday Night Lights',revision:1,guaranteedGames:2},{id:'empty-cup',name:'Upcoming Cup',revision:1,guaranteedGames:2});
+        if(c==='card-long'){
+          league[0].game.opponent=tournament[0].game.opponent='The Extra Innings Softball Club '+('Championship'.repeat(5));
+          league[0].game.team_runs=tournament[0].game.team_runs=123;
+          league[0].game.opponent_runs=tournament[0].game.opponent_runs=119;
+          data.snapshot.tournaments[0].name='The Extra Innings Invitational '+('Championship'.repeat(5));
+        }
         if(c==='no-league')data.snapshot.games=[...tournament,...friday];
         if(c==='empty'){data.snapshot.games=[];data.snapshot.tournaments=[];}
         if(c==='missing-score')delete league[0].game.team_runs;
@@ -143,10 +149,25 @@ const assert = require("node:assert/strict");
       await page.addScriptTag({path:require.resolve('axe-core')});
       assert.deepEqual(await page.evaluate(async()=>(await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)}))),[]);
     }
+    async function comfortableCards(){
+      const problems=await page.locator('.game-entry-row,.tournament-entry').evaluateAll(cards=>cards.flatMap(card=>{
+        const bounds=card.getBoundingClientRect(),name=card.querySelector('.game-entry-name')||card.querySelector('strong'),score=card.querySelector('.game-entry-score'),button=card.querySelector('.button');
+        const errors=[];
+        for(const element of [name,score,button].filter(Boolean)){
+          const box=element.getBoundingClientRect();
+          if(box.left<bounds.left+15||box.right>bounds.right-15||box.top<bounds.top+15||box.bottom>bounds.bottom-15||element.scrollWidth>element.clientWidth+1)errors.push('Content must fit with inner spacing');
+        }
+        if(name&&score&&name.getBoundingClientRect().bottom+4>score.getBoundingClientRect().top)errors.push('Team name and score need separate lines');
+        if(button&&name){const a=name.getBoundingClientRect(),b=button.getBoundingClientRect();if(a.bottom>b.top&&a.top<b.bottom&&a.right+12>b.left)errors.push('Enter overlaps the name');}
+        return errors;
+      }));
+      assert.deepEqual(problems,[],'Game and tournament card information stays comfortably inside its box');
+    }
     async function sizes(){
       for(const width of [320,390,430,800,1440]){
         await page.setViewportSize({width,height:900});
         assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`No overflow at ${width}px on ${page.url()}`);
+        await comfortableCards();
         for(const button of await page.locator('.games-entry .button,.game-entry-row .button,.competition-link').all()){
           const b=await button.boundingBox();assert(b&&b.width>=44&&b.height>=44,'Touch targets');
         }
@@ -154,6 +175,15 @@ const assert = require("node:assert/strict");
       await page.setViewportSize({width:390,height:844});
     }
     async function capture(name){if(process.env.GAMES_SCREENSHOTS){
+      const boxPreview={ 'games-simple-league':'league-game-boxes', 'games-simple-tournament-games':'tournament-game-boxes', 'games-simple-tournaments':'tournament-cards' }[name];
+      if(boxPreview){
+        await page.setViewportSize({width:390,height:1200});
+        await page.evaluate(()=>scrollTo(0,0));
+        const box=await page.locator(name==='games-simple-tournaments'?'.competition-list':'.game-entry-list').boundingBox();
+        assert(box&&box.y+box.height+16<1200,'Review capture includes full boxes above the fixed menu');
+        await page.screenshot({path:path.join(process.env.GAMES_SCREENSHOTS,boxPreview+'.png'),clip:{x:0,y:0,width:390,height:Math.ceil(box.y+box.height+16)}});
+        await page.setViewportSize({width:390,height:844});
+      }
       // Tall review captures keep the fixed menu below the full tournament panel.
       if(name.endsWith('-tournament-games')||name.endsWith('-league-stats'))await page.setViewportSize({width:390,height:1800});
       await page.screenshot({path:path.join(process.env.GAMES_SCREENSHOTS,name+'.png'),fullPage:true});
@@ -244,8 +274,8 @@ const assert = require("node:assert/strict");
     assert.equal(await page.locator('.game-entry-row').count(),3,'Only League games, regardless of personal stats scope');
     assert.deepEqual(await page.locator('.game-entry-status').allTextContents(),['Final','Live','Final']);
     assert.equal(await page.getByText('Your team’s score first.',{exact:true}).count(),1);
-    assert.match(await page.locator('.game-entry-row').first().innerText(),/Pitch Please\s+— 12–8\s+Enter/);
-    assert.match(await page.locator('.game-entry-row').nth(1).innerText(),/Base Invaders\s+— 0–0/,'Recorded zero is valid');
+    assert.match(await page.locator('.game-entry-row').first().innerText(),/Pitch Please\s+12–8\s+Enter/);
+    assert.match(await page.locator('.game-entry-row').nth(1).innerText(),/Base Invaders\s+0–0/,'Recorded zero is valid');
     assert.equal(await page.getByText('Diamond Dogs',{exact:false}).count(),0);
     for(const link of await page.locator('.game-entry-row a').all()){
       const url=new URL(await link.getAttribute('href'),base);assert.equal(url.pathname,'/club/score');
@@ -449,6 +479,18 @@ const assert = require("node:assert/strict");
       await page.goto(`${base}/leagues/${tail}`);await ready();
       assert.equal(await page.locator('.league-season-stats,.game-entry-row').count(),0,'Unknown or mismatched league context fails closed');
       await page.getByRole('alert').waitFor();
+    }
+    for(const route of ['/leagues?view=games','/tournaments/sample-tournament-7','/tournaments?from=games']){
+      await page.goto(`${base}${route}&case=card-long`);await ready();
+      await sizes();
+      await page.setViewportSize({width:320,height:700});
+      await page.locator('.game-entry-row,.tournament-entry').evaluateAll(cards=>{
+        const elements=cards.flatMap(card=>[card,...card.querySelectorAll('*')]);
+        const sizes=elements.map(element=>parseFloat(getComputedStyle(element).fontSize)*2);
+        elements.forEach((element,i)=>element.style.fontSize=sizes[i]+'px');
+      });
+      await comfortableCards();
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'Enlarged card text stays within a narrow phone');
     }
     assert.deepEqual(writes,[],'No network mutations');assert.deepEqual(errors,[]);
     console.log(`Games flow passed (${engine===webkit?'WebKit':'Chromium'}): choice gate, compact scores, tournament/create paths, context, isolation, empty/archived/read-only states, mobile layout, accessibility. No backend writes.`);
