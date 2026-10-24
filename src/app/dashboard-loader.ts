@@ -9,6 +9,8 @@ import {
 } from "@/lib/sample-seasons";
 import type { DashboardProps } from "@/components/player-dashboard";
 import type { Scope } from "@/lib/scoring";
+import { scoringMetadataPages } from "@/lib/scoring-metadata-pages";
+import type { GameContextTeam } from "@/components/game-context-picker";
 
 export type DashboardQuery = {
   sample?: string;
@@ -18,6 +20,7 @@ export type DashboardQuery = {
   scope?: string;
   game?: string;
   shell?: string;
+  league?: string;
 };
 export async function dashboardProps(
   route: string,
@@ -54,6 +57,35 @@ export async function dashboardProps(
       teamId: "sample-team",
       seasonId: chosen.snapshot.seasonId,
       loaded: sampleScope(chosen, scope),
+      ...(route === "games"
+        ? {
+            leagueId: chosen.snapshot.leagues?.find(
+              (league) => league.id === query.league,
+            )?.id,
+            gameContexts: [
+              {
+                id: "sample-team",
+                name: "Sample Northwest Alibis",
+                seasons: [...sampleSeasons].reverse().map((season) => ({
+                  ...season,
+                  leagues:
+                    books.find((book) => book.snapshot.seasonId === season.id)
+                      ?.snapshot.leagues ?? [],
+                })),
+              },
+            ],
+            ...(query.league &&
+            !chosen.snapshot.leagues?.some(
+              (league) => league.id === query.league,
+            )
+              ? {
+                  loaded: null,
+                  error:
+                    "That league is not available in this team and season.",
+                }
+              : {}),
+          }
+        : {}),
     };
   };
   if (query.sample === "1") return sample();
@@ -95,6 +127,66 @@ export async function dashboardProps(
       };
     const ids = new Set((memberships.data ?? []).map((m) => m.team_id));
     const options = (teams.data ?? []).filter((t) => ids.has(t.id));
+    // Only Games needs the lightweight chooser directory. RLS and the active
+    // membership intersection both apply; no other teams' scorebooks are loaded.
+    let picker: {
+      gameContexts?: GameContextTeam[];
+      gameContextError?: string;
+    } = {};
+    if (route === "games") {
+      if (!options.length) picker = { gameContexts: [] };
+      else {
+        const teamIds = options.map((option) => option.id);
+        const [allSeasons, allLeagues] = await Promise.all([
+          scoringMetadataPages((start, end) =>
+            client
+              .from("team_seasons")
+              .select("id,team_id,name,archived")
+              .in("team_id", teamIds)
+              .order("created_at", { ascending: false })
+              .order("id")
+              .range(start, end),
+          ),
+          scoringMetadataPages((start, end) =>
+            client
+              .from("scoring_leagues")
+              .select("id,team_id,season_id,name")
+              .in("team_id", teamIds)
+              .order("name")
+              .order("id")
+              .range(start, end),
+          ),
+        ]);
+        picker =
+          allSeasons.error || allLeagues.error
+            ? {
+                gameContexts: [],
+                gameContextError: "Could not load your teams and leagues.",
+              }
+            : {
+                gameContexts: options.map((option) => ({
+                  ...option,
+                  seasons: allSeasons.data
+                    .filter((season) => season.team_id === option.id)
+                    .map((season) => ({
+                      id: season.id,
+                      name: season.name,
+                      archived: season.archived,
+                      leagues: allLeagues.data
+                        .filter(
+                          (league) =>
+                            league.team_id === option.id &&
+                            league.season_id === season.id,
+                        )
+                        .map((league) => ({
+                          id: league.id,
+                          name: league.name,
+                        })),
+                    })),
+                })),
+              };
+      }
+    }
     const requestedTeam = query.team ?? jar.get("da-team")?.value;
     const team =
       options.find((t) => t.id === requestedTeam) ??
@@ -104,6 +196,7 @@ export async function dashboardProps(
         ...empty,
         userId: user.id,
         teams: options,
+        ...picker,
         ...(query.team
           ? { error: "That team is not available to this account." }
           : {}),
@@ -117,6 +210,7 @@ export async function dashboardProps(
       ...empty,
       userId: user.id,
       teams: options,
+      ...picker,
       teamId: team.id,
       seasons: seasons.data ?? [],
     };
@@ -133,9 +227,29 @@ export async function dashboardProps(
       base.seasons[0];
     if (!season) return base;
     const loaded = await loadScorebook(team.id, season.id, scope);
+    if (
+      route === "games" &&
+      query.league &&
+      loaded.status === "ok" &&
+      !loaded.data.snapshot.leagues?.some(
+        (league) => league.id === query.league,
+      )
+    )
+      return {
+        ...base,
+        seasonId: season.id,
+        error: "That league is not available in this team and season.",
+      };
     return {
       ...base,
       seasonId: season.id,
+      ...(route === "games" && loaded.status === "ok"
+        ? {
+            leagueId: loaded.data.snapshot.leagues?.find(
+              (league) => league.id === query.league,
+            )?.id,
+          }
+        : {}),
       loaded: loaded.status === "ok" ? loaded.data : null,
       ...(loaded.status !== "ok"
         ? {

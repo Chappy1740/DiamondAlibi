@@ -18,8 +18,8 @@ export function CompetitionPage({ data: p, kind, id, gamesOnly = false, fromGame
   const context = query.toString();
   // Presentation query flags never grant access or change the loaded data scope.
   const matching = p.loaded?.snapshot.teamId === p.teamId && p.loaded?.snapshot.seasonId === p.seasonId;
-  const leagueGames = matching ? p.loaded!.snapshot.games.filter(g => g.game.kind === "League") : [];
-  const leagueGameList = kind === "League" && gamesOnly && !id;
+  const leagueGames = matching ? p.loaded!.snapshot.games.filter(g => g.game.kind === "League" && (!id || g.game.league_id === id)) : [];
+  const leagueGameList = kind === "League" && gamesOnly;
   const settingsView = kind === "Tournament" && !!id && settings;
   const createView = kind === "Tournament" && creating && !id;
   const gameHref = (game: string) => `${p.sample ? "/games/live" : "/club/score"}?${context}&game=${encodeURIComponent(game)}`;
@@ -28,7 +28,7 @@ export function CompetitionPage({ data: p, kind, id, gamesOnly = false, fromGame
   const home = `/?${context}`;
   const list = `${competitionPath(kind)}?${context}${fromGames ? "&from=games" : ""}`;
   const detail = `${competitionPath(kind, id)}?${context}${fromGames ? "&from=games" : ""}`;
-  const gamesHome = `/games?${context}`;
+  const gamesHome = `/games?${context}${leagueGameList && id ? `&league=${encodeURIComponent(id)}` : ""}`;
   const dates = [...new Set(selected?.games.map(game => game.playedOn) ?? [])].sort();
   const setup = `/club/score?${context}&${kind === "League" ? "league" : "tournament"}=${encodeURIComponent(id ?? "")}&setup=1`;
   return <main className="connected-wrap competition-page">
@@ -36,7 +36,7 @@ export function CompetitionPage({ data: p, kind, id, gamesOnly = false, fromGame
       <BrandLink href={home} variant={id ? "compact" : "primary"} className="header-logo" />
       <ProfileMenu signedIn={!p.sample && !!p.userId} context={context} />
     </header>
-    <Link className="text-link" href={settingsView ? detail : id || createView ? list : leagueGameList || fromGames ? gamesHome : home}>{settingsView ? "Back to tournament" : createView ? "All tournaments" : id ? `All ${kind === "League" ? "leagues" : "tournaments"}` : leagueGameList || fromGames ? "Games" : "Home"}</Link>
+    <Link className="text-link" href={settingsView ? detail : leagueGameList ? gamesHome : id || createView ? list : fromGames ? gamesHome : home}>{settingsView ? "Back to tournament" : createView ? "All tournaments" : leagueGameList ? "Games" : id ? `All ${kind === "League" ? "leagues" : "tournaments"}` : leagueGameList || fromGames ? "Games" : "Home"}</Link>
     <div className="page-heading"><div>
       <span className="eyebrow">{p.teams.find((t) => t.id === p.teamId)?.name ?? "Your team"} · {p.seasons.find((s) => s.id === p.seasonId)?.name ?? "Choose a season"}</span>
       <h1>{id ? selected ? settingsView ? "Tournament settings" : selected.competition.name : "Competition unavailable" : createView ? "Create tournament" : leagueGameList ? "League" : kind === "League" ? "Leagues" : "Tournaments"}</h1>
@@ -47,10 +47,10 @@ export function CompetitionPage({ data: p, kind, id, gamesOnly = false, fromGame
     {!p.loaded && !p.error && <section className="card detail-card"><h2>Select your team and season</h2><Link className="button primary" href="/club">Team management</Link></section>}
     {p.loaded && !matching && <p role="alert">That season is not in the selected team.</p>}
     {p.loaded && matching && leagueGameList && <>
-      <CompactGameList games={leagueGames} gameHref={gameHref} />
+      {id && !selected ? <p role="alert">That league is not in the selected team and season.</p> : <CompactGameList games={leagueGames} gameHref={gameHref} />}
       {!leagueGames.length && <p>No league games recorded this season.</p>}
       {p.loaded.archived && <p className="connection-notice">Archived season · read only</p>}
-      {!p.sample && <details className="games-context"><summary>League setup</summary><Link className="button secondary" href={list}>Manage leagues and add games</Link></details>}
+      {!p.sample && <details className="games-context"><summary>League setup</summary><Link className="button secondary" href={id ? detail : list}>Manage leagues and add games</Link></details>}
     </>}
     {p.loaded && matching && !id && !leagueGameList && <>
       {!createView && <div className="competition-list">
@@ -72,7 +72,7 @@ export function CompetitionPage({ data: p, kind, id, gamesOnly = false, fromGame
       {kind === "Tournament" && !createView && <TournamentSeasonStats data={p.loaded} team={p.teamId}
         season={p.seasonId} seasonName={p.seasons.find(s => s.id === p.seasonId)?.name ?? "Selected season"} />}
     </>}
-    {id && p.loaded && !selected && <p role="alert">That competition is not in the selected team and season.</p>}
+    {id && p.loaded && !selected && !leagueGameList && <p role="alert">That competition is not in the selected team and season.</p>}
     {selected && settingsView && <section className="card detail-card">
       <h2>{selected.competition.name}</h2>
       {p.loaded?.archived && <p className="connection-notice">Archived season · read only</p>}
@@ -85,7 +85,7 @@ export function CompetitionPage({ data: p, kind, id, gamesOnly = false, fromGame
         </dl>
       </> : <CompetitionForm team={p.teamId} season={p.seasonId} kind="Tournament" existing={selected.competition} archived={!!p.loaded?.archived} />}
     </section>}
-    {selected && !settingsView && <>
+    {selected && !settingsView && !leagueGameList && <>
       <div className="competition-actions">
         {!p.sample && !p.loaded?.archived && <Link className="button primary" href={setup}>Add {kind === "Tournament" ? `Game ${selected.games.length + 1}` : "a game"}</Link>}
         {kind === "Tournament" && <Link className="button secondary" href={`${detail}&settings=1`}>Tournament settings</Link>}
