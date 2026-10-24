@@ -96,9 +96,12 @@ const assert = require("node:assert/strict");
       for(const row of rows)assert(row.every(tile=>Math.abs(tile.top-row[0].top)<1&&Math.abs(tile.width-row[0].width)<1&&Math.abs(tile.height-row[0].height)<1&&Math.abs(tile.labelCenter-tile.center)<1&&Math.abs(tile.valueCenter-tile.center)<1),'Equal centered statistic tiles at '+width+'px: '+JSON.stringify(rows));
       assert(rows[0][0].bottom<rows[1][0].top,'Rates stay on the first row');
       assert.equal(await page.locator('.home-stat-row--counts dt').last().evaluate(el=>{const range=document.createRange();range.selectNodeContents(el);return range.getClientRects().length}),1,'BEVs stays on one line with the real Inter font at '+width+'px');
-      const controls=await page.locator('.dashboard-context-panel--home .dashboard-select, .dashboard-context-action > button').evaluateAll(elements=>elements.map(el=>{const r=el.getBoundingClientRect();return{width:r.width,height:r.height}}));
+      const controls=await page.locator('.dashboard-context-panel--home .dashboard-select, .dashboard-context-action > button').evaluateAll(elements=>elements.map(el=>{const r=el.getBoundingClientRect();return{left:r.left,top:r.top,bottom:r.bottom,width:r.width,height:r.height}}));
       assert.equal(controls.length,4);
-      assert(controls.every(box=>Math.abs(box.width-controls[0].width)<1 && Math.abs(box.height-controls[0].height)<1 && box.height>=44), 'Four matching controls at '+width+'px: '+JSON.stringify(controls));
+      assert(controls.every(box=>Math.abs(box.width-controls[0].width)<1 && box.height>=48), 'Two equal columns with accessible controls at '+width+'px: '+JSON.stringify(controls));
+      for(const start of [0,2])assert(Math.abs(controls[start].top-controls[start+1].top)<1 && Math.abs(controls[start].height-controls[start+1].height)<1,'Controls align within each row at '+width+'px');
+      assert(Math.abs(controls[0].left-controls[2].left)<1 && Math.abs(controls[1].left-controls[3].left)<1 && controls[2].top>controls[0].bottom,'Context stays in two columns at '+width+'px');
+      if(width<=430)assert(controls[2].height<controls[0].height,'Short options and action do not inherit the long-name row height at '+width+'px');
       assert.equal(bounds.document <= bounds.viewport, true, `${width}px overflow: ${JSON.stringify(bounds)}`);
       assert.equal(await page.locator(".dashboard-select-value").evaluateAll(values => values.every(el => {
         const text = document.createRange(); text.selectNodeContents(el);
@@ -166,6 +169,6 @@ const assert = require("node:assert/strict");
       assert.equal(await page.locator('.home-stat-row').count(),0,'Missing player statistics are never shown as zero');
     }
     assert.deepEqual(errors, []);
-    console.log(`PASS ${process.env.BROWSER_ENGINE || "chromium"} Home: heading/actions/summary before controls, complete long selected names at 320–1440px, native keyboard and form selection, own HR/credit only on signed-in Home, no brown notice or team activity, team/roster stats under bottom Stats, sample history under More with its sample notice, two rate tiles above four equal centered total/balance tiles, owed/credit/settled/missing balance and unlinked/empty states, automated accessibility, matching four-control grid, decimal OBP, no Home polling, quiet return/reconnect refresh and offline refresh handling. Synthetic data only.`);
+    console.log(`PASS ${process.env.BROWSER_ENGINE || "chromium"} Home: heading/actions/summary before controls, complete long selected names at 320–1440px, native keyboard and form selection, own HR/credit only on signed-in Home, no brown notice or team activity, team/roster stats under bottom Stats, sample history under More with its sample notice, two rate tiles above four equal centered total/balance tiles, owed/credit/settled/missing balance and unlinked/empty states, automated accessibility, two-column content-sized controls, decimal OBP, no Home polling, quiet return/reconnect refresh and offline refresh handling. Synthetic data only.`);
   } finally { if (browser) await browser.close(); if (server) await new Promise(resolve => server.close(resolve)); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

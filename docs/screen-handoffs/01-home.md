@@ -131,3 +131,7 @@ PR #14 merged as 3d623f0b2800c63a34a98162ecba4d141fd7ce7d after exact-head and m
 ### Home abbreviation correction — October 23, 2026
 
 The owner corrected BVGs to **BEVs**. Change only the Home caption and its existing regression expectations; preserve Hits / RBIs / HRs, signed positive/negative/zero balance, missing-value dash, layout, rates and approved Stats presentation. Reuse the existing display; no dependency or data/API/auth change. Continue the existing Home delivery approval; exact validation and release receipt belong in the PR. Home remains active.
+
+### Home context auto-fit — October 23, 2026
+
+Owner screenshot requests the four Home controls to auto-fit in two columns. Retain two equal-width columns and complete wrapping names, but size each row to its own content rather than matching every row to the longest team/season. Reduce the minimum control height to 48px; keep 16px selected text, native selection, matching controls within each row, keyboard/focus and existing GET submission. Reuse Home-scoped CSS Grid and DashboardSelect with no package, data, auth, formula, Stats or Explore change. Update the existing Home geometry regression to verify per-row alignment and compact short-value/action row. This continues the existing Home delivery approval; exact check/version/traffic evidence belongs in the PR. Home remains active pending owner phone review.
