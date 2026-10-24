@@ -68,7 +68,17 @@ const assert = require("node:assert/strict");
         const scope=q.get('scope')==='League'?'League':q.get('scope')==='Tournament'?'Tournament':'Overall';
         data=sampleScope(data,scope);data.archived=c==='archived';
         const sample=q.get('sample')==='1';
-        const p={route:'games',sample,userId:q.get('player')||'sample-user-1',teams:[{id:'sample-team',name:'Riverside Rascals'}],seasons:[{id:'sample-season-2026',name:'Fall 2026',archived:data.archived}],teamId:q.get('team')||'sample-team',seasonId:q.get('season')||'sample-season-2026',scope,loaded:data};
+        const gameContexts=[{id:'sample-team',name:'Riverside Rascals',seasons:[{id:'sample-season-2026',name:'Fall 2026',archived:data.archived,leagues:[{id:'thursday-league',name:'Thursday League'},{id:'sunday-league',name:'Sunday League'}]},{id:'old-season',name:'Fall 2025',archived:true,leagues:[]}]},{id:'west-team',name:'Westside Wolves with a very long team name for mobile selection',seasons:[{id:'west-season',name:'Summer 2027',archived:false,leagues:[{id:'west-league',name:'Westside League'}]}]},{id:'new-team',name:'New team without a season',seasons:[]}];
+        data.snapshot.leagues=[{id:'thursday-league',name:'Thursday League',fenceLimit:2},{id:'sunday-league',name:'Sunday League',fenceLimit:1}];
+        league.forEach((g,i)=>g.game.league_id=i<2?'thursday-league':'sunday-league');
+        if(q.get('team')==='west-team'){data.snapshot.teamId='west-team';data.snapshot.seasonId='west-season';data.snapshot.games=[];data.snapshot.leagues=[{id:'west-league',name:'Westside League',fenceLimit:1}];data.snapshot.tournaments=[];}
+        if(c==='picker-many')for(let i=1;i<=24;i++)gameContexts.push({id:'extra-team-'+i,name:'Fictional long-name team '+i+' '+('Softball'.repeat(8)),seasons:[{id:'extra-season-'+i,name:'Fall 2026',archived:false,leagues:[]}]});
+        const p={route:'games',sample,userId:q.get('player')||'sample-user-1',teams:gameContexts.map(({id,name})=>({id,name})),gameContexts,
+          seasons:q.get('team')==='west-team'?gameContexts[1].seasons:gameContexts[0].seasons,teamId:q.get('team')||'sample-team',seasonId:q.get('season')||'sample-season-2026',scope,loaded:data,
+          leagueId:data.snapshot.leagues.find(league=>league.id===q.get('league'))?.id};
+        if(q.get('league')&&!p.leagueId){p.loaded=null;p.error='That league is not available in this team and season.';}
+        if(c==='picker-error'){p.gameContexts=[];p.gameContextError='Could not load your teams and leagues.';}
+
         if(c==='denied'){p.loaded=null;p.error='Could not verify access to this season.';}
         const parts=location.pathname.split('/').filter(Boolean),context=new URLSearchParams({team:p.teamId,season:p.seasonId,scope,...(sample?{sample:'1',player:p.userId}:{})}).toString();
         let screen;
@@ -144,7 +154,82 @@ const assert = require("node:assert/strict");
     assert.deepEqual(await page.locator('.games-entry a').allTextContents(),['League','Tournament']);
     assert.equal(await page.locator('.game-entry-row,.competition-link').count(),0,'Games hidden before choosing type');
     assert.equal(await page.getByText('Pitch Please',{exact:false}).count(),0);
-    assert.equal(await page.locator('.games-context').getAttribute('open'),null,'Context starts tucked away');
+    const pickerButton=page.getByRole('button',{name:'Choose team or league',exact:true});
+    assert.equal(await pickerButton.count(),1,'Clear button replaces the disclosure');
+    assert.equal(await page.getByRole('dialog').count(),0,'Picker starts closed');
+    await pickerButton.click();
+    const picker=page.getByRole('dialog',{name:'Choose team or league',exact:true});
+    await picker.waitFor();
+    assert.equal(await picker.getByRole('radio').count(),3,'All available teams are listed');
+    await accessible();await sizes();
+    await capture('games-team-league-picker');
+    await picker.getByLabel('League',{exact:true}).selectOption('thursday-league');
+    await picker.getByRole('radio',{name:'Westside Wolves with a very long team name for mobile selection',exact:true}).check();
+    assert.equal(await picker.getByLabel('Season',{exact:true}).inputValue(),'west-season');
+    assert.equal(await picker.getByLabel('League',{exact:true}).inputValue(),'','Changing team clears old league');
+    assert.deepEqual(await picker.getByLabel('League',{exact:true}).locator('option').allTextContents(),['All leagues','Westside League']);
+    await picker.getByRole('radio',{name:'New team without a season',exact:true}).check();
+    assert.equal(await picker.getByRole('button',{name:'Use selection',exact:true}).isDisabled(),true);
+    await picker.getByRole('button',{name:'Cancel',exact:true}).click();
+    assert.equal(await page.getByRole('dialog').count(),0);
+    await page.waitForFunction(el=>document.activeElement===el,await pickerButton.elementHandle());
+    assert.equal(new URL(page.url()).searchParams.get('team'),'sample-team','Cancel does not change context');
+    await pickerButton.click();
+    await page.keyboard.press('Escape');
+    assert.equal(await page.getByRole('dialog').count(),0,'Escape closes without applying');
+    await pickerButton.click();
+    await picker.getByLabel('League',{exact:true}).selectOption('thursday-league');
+    await Promise.all([page.waitForURL(url=>url.searchParams.get('league')==='thursday-league'),picker.getByRole('button',{name:'Use selection',exact:true}).click()]);await ready();
+    assert.equal(new URL(page.url()).pathname,'/games','Apply returns to Games, not creation');
+    assert.equal(new URL(page.url()).searchParams.get('league'),'thursday-league');
+    assert.equal(await page.locator('.game-entry-row').count(),0);
+    await page.getByRole('link',{name:'League',exact:true}).click();await ready();
+    assert.equal(new URL(page.url()).pathname,'/leagues/thursday-league');
+    assert.equal(await page.locator('.game-entry-row').count(),2,'Selected league excludes other leagues');
+    await page.getByRole('main').getByRole('link',{name:'Games',exact:true}).click();await ready();
+    assert.equal(new URL(page.url()).searchParams.get('league'),'thursday-league','Back retains selected league');
+    await page.getByRole('button',{name:'Choose team or league',exact:true}).click();
+    await picker.getByRole('radio',{name:'Westside Wolves with a very long team name for mobile selection',exact:true}).check();
+    await picker.getByLabel('League',{exact:true}).selectOption('west-league');
+    await Promise.all([page.waitForURL(url=>url.searchParams.get('team')==='west-team'),picker.getByRole('button',{name:'Use selection',exact:true}).click()]);await ready();
+    const changed=new URL(page.url());assert.equal(changed.searchParams.get('team'),'west-team');assert.equal(changed.searchParams.get('season'),'west-season');assert.equal(changed.searchParams.get('league'),'west-league');assert.equal(changed.searchParams.get('scope'),'Tournament');
+    assert.equal(await page.locator('.games-entry a').count(),2);
+    assert.equal(await page.getByRole('link',{name:'Tournament',exact:true}).getAttribute('href').then(h=>new URL(h,base).searchParams.get('team')),'west-team');
+    await page.goto(`${base}/games?${context}&case=picker-error`);await ready();
+    await page.getByRole('button',{name:'Choose team or league',exact:true}).click();
+    assert.equal(await picker.getByRole('button',{name:'Use selection',exact:true}).isDisabled(),true);
+    await picker.getByRole('alert').waitFor();
+    // Long directories and enlarged text must keep every choice and action reachable.
+    // This doubles computed modal font sizes; it is not physical-iPhone Dynamic Type evidence.
+    for(const viewport of [{width:320,height:568},{width:640,height:320}]){
+      await page.setViewportSize(viewport);
+      await page.goto(`${base}/games?${context}&case=picker-many`);await ready();
+      await pickerButton.click();await picker.waitFor();
+      assert.equal(await picker.getByRole('radio').count(),27);
+      await picker.evaluate(el=>{
+        const elements=[el,...el.querySelectorAll('*')];
+        const sizes=elements.map(node=>parseFloat(getComputedStyle(node).fontSize)*2);
+        elements.forEach((node,i)=>node.style.fontSize=sizes[i]+'px');
+      });
+      const lastTeam=picker.getByRole('radio').last();
+      await lastTeam.focus();await page.keyboard.press('Space');
+      assert.equal(await lastTeam.isChecked(),true,'Last team can be selected by keyboard');
+      assert.equal(await picker.getByLabel('Season',{exact:true}).inputValue(),'extra-season-24');
+      const overflow=await picker.evaluate(el=>({dialog:el.scrollWidth>el.clientWidth+1,list:el.querySelector('.games-picker-teams > div').scrollWidth>el.querySelector('.games-picker-teams > div').clientWidth+1}));
+      assert.deepEqual(overflow,{dialog:false,list:false},'Enlarged text and long names do not overflow horizontally');
+      for(const name of ['Use selection','Cancel']){
+        const button=picker.getByRole('button',{name,exact:true});
+        await button.scrollIntoViewIfNeeded();
+        const b=await button.boundingBox(),d=await picker.boundingBox();
+        assert(b&&d&&b.width>=44&&b.height>=44&&b.x>=d.x&&b.x+b.width<=d.x+d.width+1&&b.y>=d.y&&b.y+b.height<=d.y+d.height+1,'Action remains reachable inside the scrollable modal');
+      }
+      await picker.getByRole('button',{name:'Cancel',exact:true}).click();
+      // Native dialog close dispatches its focus-restoration event asynchronously in WebKit.
+      await page.waitForFunction(el=>document.activeElement===el,await pickerButton.elementHandle());
+      assert.equal(new URL(page.url()).searchParams.get('team'),'sample-team','Long-list Cancel preserves context');
+    }
+    await page.setViewportSize({width:390,height:844});
+    await page.goto(`${base}/games?${context}`);await ready();
     await sizes();await accessible();await capture('games-simple-landing');
     await page.getByRole('link',{name:'League',exact:true}).click();await ready();
     assert.equal(await page.locator('.game-entry-row').count(),3,'Only League games, regardless of personal stats scope');

@@ -101,3 +101,15 @@ Games entry uses native links and a closed context selector. Shared CompactGameL
 | Create/edit competition | Not Suitable for Demo | Keep authenticated production form | Mutations must remain denied by API/database in Explore Mode | Explain the read-only limit without a false save |
 
 Sequence: establish isolated fictional read access and authoritative mutation denial; reuse these production views with complete fictional data; add one-tap entry, labeling and exit; verify anonymous mobile navigation and rejected commands before February 1, 2027. Beverage Board and Alibi Generator still need their own screen audits. This receipt covers only the current Games-related screens, not the entire app audit. Proposed $19.99/team/season remains unvalidated; no payments are implemented.
+
+## Team/league picker refinement — October 24, 2026
+
+Status: implementation and focused verification complete; owner authorized commit, push and PR publication for this refinement. Merge and deployment remain separate. Baseline is released main `044b5e230383ba542c73d0ee46426d6bda772795` / PR #19 / active version efc53693. Preserve that release while reviewing this change.
+
+Replace the Games team/season disclosure with a clear Choose team or league button. Its native modal lists active-membership teams and their seasons/leagues. Use selection returns to Games; the owner then chooses League or Tournament. Cancel/Escape does not apply drafts. Switching teams/seasons clears the previous league. A selected league narrows the compact League list; Tournament retains the chosen team/season and its existing flow. No game or competition is created by selecting context.
+
+Reuse decision: existing authorized dashboard loader, paginated metadata reader, DashboardSelect, native dialog pattern and CompetitionPage. Two lightweight, membership-filtered metadata reads supply the Games-only chooser; other teams' scorebooks are not loaded. No new package, API, schema/RLS/auth policy or save workflow. Invalid team/league selection and failed directory reads fail closed.
+
+Passed locally: Worker build/typecheck; authorized-loader regression including active/foreign/inactive teams, mixed metadata and read errors; Chromium/WebKit Games modal, context and League filtering; shared Home, scorebook and built sample-route regressions. Synthetic data only. Physical iPhone and connected hosted acceptance are pending for this refinement. Explore Mode classification remains Needs Demo Data; no Explore implementation or payment work.
+
+Additional local acceptance: a 27-team synthetic directory, long unbroken names, and doubled modal text remain horizontally contained at 320×568 and 640×320. Keyboard selection reaches the last team; both actions remain reachable by scrolling; Cancel preserves context and restores focus. Chromium and WebKit passed. Focus assertions now wait for the native dialog close event. This simulated text enlargement is not physical-iPhone Dynamic Type acceptance. No production component changes were needed for these additional cases.
