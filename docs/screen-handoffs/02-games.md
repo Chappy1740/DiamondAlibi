@@ -1,6 +1,6 @@
 # 02 — Games: Screen handoff
 
-**Status:** Ready for owner brief. **Owner's requested change:** Not yet supplied.
+**Status:** Games layout locally reviewed; publication preparation complete. **Requested change:** Games begins with League and Tournament choices; records appear only after a choice.
 **Current screen only:** Games.
 **Route/view:** `/games`
 **Related tracker IDs:** M3-5, M3-9. Verify current canonical evidence before closing any item.
@@ -79,4 +79,25 @@ A green build or inactive upload is not a live release. Preserve required checks
 8. Scoped revert/rollback and stop conditions.
 9. Owner acceptance or explicit hold; agreed next screen.
 
-**Current outcome:** Documentation prepared only. No screen implementation, new acceptance pass or live release is claimed by this work package.
+**Current outcome:** The receipt below supersedes the initial preparation status. No hosted release is claimed.
+
+## Delivery receipt — October 24, 2026
+
+Games entry uses native links and a closed context selector. Shared CompactGameList shows opponent, saved team-first score, Live/Final and Enter. Missing scores stay unavailable. Existing creation, scoring, navigation and authorization are reused.
+
+- Baseline: main `42ecc95a75622a47dbf03ffd8dd88c1ecb877715`; delivery branch `codex/games-simple-preview`. Commit/push and owner email are authorized. Merge, upload and activation remain separate approval steps.
+- Verification: production Worker build and isolated unit/SQL/browser checks. Chromium and automated WebKit cover Games, Home, shared scorebook, beverage controls and built sample-route navigation, including 320–1440px, context, signed values, keyboard/touch and accessibility. All test writes use disposable databases or synthetic transports.
+- Limits: no hosted data mutation, schema/auth/access change, Explore Mode implementation or payment integration. Automated WebKit does not establish physical iPhone acceptance. Connected multi-device acceptance and Error 1102/capacity remain open; no tracker milestone was closed.
+- Reuse: existing route adapters, CompetitionPage/Form, authoritative scoring totals, baseball-rate formatter and PlayerLeaderboard. A small CompactGameList and summary projection avoid duplicating save/auth logic or adding a UI dependency.
+- Review/revert: inspect the branch PR before merge; revert only this scoped change if needed. Preserve unrelated local work. No database rollback is needed.
+
+## Explore Mode audit continuation (design only)
+
+| Screen | Classification | Reuse / fictional records | Anonymous and mutation boundary | Navigation gaps |
+|---|---|---|---|---|
+| Games choice | Needs Demo Data | Existing dashboard/context; fictional team and season | Existing sample rendering is anonymous; full Explore API/database denial still unverified | One-tap Try the Demo, persistent Demo Mode identity and Exit Demo pending |
+| League list | Needs Demo Data | Compact game list; final/live/empty records and saved scores | Existing sample history is read-only; dedicated command-denial acceptance needed | Preserve demo/team/season/game context |
+| Tournament list/detail | Needs Demo Data | Existing cards, game list, summary and player rankings; distinct tournaments and realistic stats | Static sample settings; disabled creation is not proof of every API mutation boundary | Consistent demo label, exit and hierarchy needed |
+| Create/edit competition | Not Suitable for Demo | Keep authenticated production form | Mutations must remain denied by API/database in Explore Mode | Explain the read-only limit without a false save |
+
+Sequence: establish isolated fictional read access and authoritative mutation denial; reuse these production views with complete fictional data; add one-tap entry, labeling and exit; verify anonymous mobile navigation and rejected commands before February 1, 2027. Beverage Board and Alibi Generator still need their own screen audits. This receipt covers only the current Games-related screens, not the entire app audit. Proposed $19.99/team/season remains unvalidated; no payments are implemented.

@@ -1,6 +1,6 @@
 # 06 — Tournament details: Screen handoff
 
-**Status:** Ready for owner brief. **Owner's requested change:** Not yet supplied.
+**Status:** Tournament detail changes locally verified; final owner/device acceptance pending. **Requested change:** Tournament-only stats matching the overall layout, and a separate Tournament settings button.
 **Current screen only:** Tournament details.
 **Route/view:** `/tournaments/<existing-tournament-id>`
 **Related tracker IDs:** M3-5, M3-13, M4-26. Verify current canonical evidence before closing any item.
@@ -80,4 +80,14 @@ A green build or inactive upload is not a live release. Preserve required checks
 8. Scoped revert/rollback and stop conditions.
 9. Owner acceptance or explicit hold; agreed next screen.
 
-**Current outcome:** Documentation prepared only. No screen implementation, new acceptance pass or live release is claimed by this work package.
+**Current outcome:** The receipt below supersedes the initial preparation status. No hosted release is claimed.
+
+## Delivery receipt — October 24, 2026
+
+The selected tournament shows its own compact games, team totals and player leaders. Tournament settings opens a separate view using the existing connected form; sample settings are static read-only metadata. Gross BEVs owed and negative credits are calculated from effective recorded plays; incomplete detail stays unavailable. Different fictional tournaments contain different coherent plays and totals.
+
+- Baseline: main `42ecc95a75622a47dbf03ffd8dd88c1ecb877715`; delivery branch `codex/games-simple-preview`. Commit/push and owner email are authorized. Merge, upload and activation remain separate approval steps.
+- Verification: production Worker build and isolated unit/SQL/browser checks. Chromium and automated WebKit cover Games, Home, shared scorebook, beverage controls and built sample-route navigation, including 320–1440px, context, signed values, keyboard/touch and accessibility. All test writes use disposable databases or synthetic transports.
+- Limits: no hosted data mutation, schema/auth/access change, Explore Mode implementation or payment integration. Automated WebKit does not establish physical iPhone acceptance. Connected multi-device acceptance and Error 1102/capacity remain open; no tracker milestone was closed.
+- Reuse: existing route adapters, CompetitionPage/Form, authoritative scoring totals, baseball-rate formatter and PlayerLeaderboard. A small CompactGameList and summary projection avoid duplicating save/auth logic or adding a UI dependency.
+- Review/revert: inspect the branch PR before merge; revert only this scoped change if needed. Preserve unrelated local work. No database rollback is needed.

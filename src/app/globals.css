@@ -1781,7 +1781,7 @@ blockquote {
 .competition-entry { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
 .competition-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 12px; margin: 16px 0; }
 .competition-link { display: grid; gap: 8px; padding: 18px; color: var(--white); }
-.competition-link span { font-size: 13px; color: var(--muted); }
+.competition-link span:not(.button) { font-size: 13px; color: var(--muted); }
 .competition-page .dashboard-cards .button { margin: 10px 0; }
 .connected-wrap textarea, .alibi-editor textarea, .alibi-editor input, .alibi-editor select { display: block; width: 100%; min-height: 44px; margin: 6px 0 12px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; color: var(--white); background: var(--surface); font: inherit; font-size: 16px; }
 .connected-wrap textarea, .alibi-editor textarea { resize: vertical; }
@@ -1958,15 +1958,15 @@ blockquote {
 .game-day-review button { min-height: 44px; }
 .game-day-review :is(a, button, input, textarea, summary):focus-visible { outline: 2px solid var(--teal); outline-offset: 4px; }
 
-/* Home context controls: equal columns, content-sized rows and complete names. */
-.dashboard-context-panel--home .dashboard-context { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: auto; align-items: stretch; gap: 12px; }
-.dashboard-context-panel--home .dashboard-context > label,
-.dashboard-context-panel--home .dashboard-context-action { display: grid; grid-template-rows: auto 1fr; gap: 6px; min-width: 0; margin: 0; font-size: 14px; color: var(--muted); }
-.dashboard-context-panel--home .dashboard-select,
-.dashboard-context-panel--home .dashboard-context-action > button { min-height: 48px; height: 100%; box-sizing: border-box; padding: 10px 12px; margin: 0; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--white); font-size: 16px; font-weight: 400; line-height: 1.5; text-align: left; }
-.dashboard-context-panel--home .dashboard-context-action > button { display: flex; align-items: center; justify-content: flex-start; cursor: pointer; }
-.dashboard-context-panel--home .dashboard-context-action > button:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
-.dashboard-context-panel--home .dashboard-context-action > button:hover { border-color: var(--teal); }
+/* Reused context controls: equal columns, content-sized rows and complete names. */
+:is(.dashboard-context-panel--home, .dashboard-context-panel--compact) .dashboard-context { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: auto; align-items: stretch; gap: 12px; }
+:is(.dashboard-context-panel--home, .dashboard-context-panel--compact) .dashboard-context > label,
+:is(.dashboard-context-panel--home, .dashboard-context-panel--compact) .dashboard-context-action { display: grid; grid-template-rows: auto 1fr; gap: 6px; min-width: 0; margin: 0; font-size: 14px; color: var(--muted); }
+:is(.dashboard-context-panel--home, .dashboard-context-panel--compact) .dashboard-select,
+:is(.dashboard-context-panel--home, .dashboard-context-panel--compact) .dashboard-context-action > button { min-height: 48px; height: 100%; box-sizing: border-box; padding: 10px 12px; margin: 0; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--white); font-size: 16px; font-weight: 400; line-height: 1.5; text-align: left; }
+:is(.dashboard-context-panel--home, .dashboard-context-panel--compact) .dashboard-context-action > button { display: flex; align-items: center; justify-content: flex-start; cursor: pointer; }
+:is(.dashboard-context-panel--home, .dashboard-context-panel--compact) .dashboard-context-action > button:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
+:is(.dashboard-context-panel--home, .dashboard-context-panel--compact) .dashboard-context-action > button:hover { border-color: var(--teal); }
 
 
 /* Personal Home summary: two rate tiles, then four equal count/balance tiles. */
@@ -1983,3 +1983,39 @@ blockquote {
 .home-stat-row--rates dt { min-height: 1.5em; font-size: 14px; }
 .home-season-stats .home-stat-row--rates strong { font-size: 32px; }
 @media (max-width: 360px) { .home-season-card { padding: 8px; } .home-stat-row { gap: 4px; } .home-stat-row--counts dt { font-size: 11px; } }
+
+/* Games: choose a competition before showing any games. */
+.games-entry .button { min-height: 52px; }
+.games-context { margin-block: 20px; }
+.games-context > summary { min-height: 44px; padding-block: 12px; cursor: pointer; color: var(--muted); }
+.games-context .dashboard-context-panel { margin-top: 12px; }
+.game-entry-list { display: grid; gap: 12px; list-style: none; padding: 0; margin-block: 16px; }
+.game-entry-row,
+.tournament-entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 16px; }
+.game-entry-row p { margin: 0; overflow-wrap: anywhere; line-height: 1.6; }
+.game-entry-row .button,
+.tournament-entry .button { min-height: 48px; margin: 0; padding-inline: 18px; }
+.competition-link strong { overflow-wrap: anywhere; }
+
+.game-score-key { margin: 12px 0 0; color: var(--muted); font-size: 13px; }
+.game-entry-details { display: grid; gap: 4px; min-width: 0; }
+.game-entry-status { color: var(--muted); font-size: 12px; line-height: 1.5; }
+.game-entry-status--live { color: var(--teal); font-weight: 700; }
+
+/* Tournament cards reuse the approved game-row spacing and Enter treatment. */
+.tournament-entry { text-decoration: none; }
+.tournament-entry:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
+
+.tournament-season-stats { max-width: 720px; margin: 24px auto; }
+.tournament-team-summary .micro,
+.tournament-season-stats > .tournament-leaderboard > h2,
+.tournament-season-stats .leaderboard-scope { text-align: center; }
+
+.competition-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-block: 16px; }
+
+.tournament-bev-activity { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; text-align: center; }
+.tournament-bev-activity > div { min-width: 0; padding: 12px 8px; border-top: 1px solid var(--border); }
+.tournament-bev-activity dt { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+.tournament-bev-activity dd { margin: 6px 0 0; font-size: 22px; font-weight: 700; }
+
+.tournament-team-summary [data-credit="true"] { color: var(--teal); }
