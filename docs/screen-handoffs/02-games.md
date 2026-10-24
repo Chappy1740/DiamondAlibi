@@ -113,3 +113,14 @@ Reuse decision: existing authorized dashboard loader, paginated metadata reader,
 Passed locally: Worker build/typecheck; authorized-loader regression including active/foreign/inactive teams, mixed metadata and read errors; Chromium/WebKit Games modal, context and League filtering; shared Home, scorebook and built sample-route regressions. Synthetic data only. Physical iPhone and connected hosted acceptance are pending for this refinement. Explore Mode classification remains Needs Demo Data; no Explore implementation or payment work.
 
 Additional local acceptance: a 27-team synthetic directory, long unbroken names, and doubled modal text remain horizontally contained at 320×568 and 640×320. Keyboard selection reaches the last team; both actions remain reachable by scrolling; Cancel preserves context and restores focus. Chromium and WebKit passed. Focus assertions now wait for the native dialog close event. This simulated text enlargement is not physical-iPhone Dynamic Type acceptance. No production component changes were needed for these additional cases.
+
+
+## Game-box spacing refinement — October 24, 2026
+
+Owner requested all game information fit comfortably in its boxes, with team name then score, consistently for League and Tournament views. Baseline: released main 8fbf2dbb2357ad0fa511d9139bf9d74389121734 / PR #21 / version 03c88f77. Delivery branch: codex/game-card-spacing. Owner explicitly authorized commit, push, merge and deployment of this box-layout refinement; verify matching checks and release build before activation.
+
+Reuse CompactGameList and the existing tournament entry card styles. Team/opponent name and saved score now have separate lines, readable type, increased inner padding and content-sized height. The Enter control wraps below the text when space is limited. Tournament list cards use matching padding and wrapping. No new package, data reads/writes, scoring formula, context or authentication change; recorded zero and unavailable scores retain their meaning.
+
+Verification: typecheck and Worker build; Chromium/WebKit Games/League/Tournament flows, accessibility and context checks; text/button containment with inner spacing at 320–1440px, long unbroken names, three-digit scores and doubled card text. Built Next.js route/navigation checks also passed in Chromium and WebKit. Synthetic preview only; physical iPhone/hosted acceptance pending. Publication and deployment are owner-authorized; final delivery receipts remain required.
+
+Review artifacts include complete League game boxes, Tournament game boxes and Tournament list cards. Existing signed BEVs/statistics and immutable rule behavior are unchanged. No milestone closed.

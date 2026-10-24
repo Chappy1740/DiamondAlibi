@@ -1991,14 +1991,17 @@ blockquote {
 .games-context .dashboard-context-panel { margin-top: 12px; }
 .game-entry-list { display: grid; gap: 12px; list-style: none; padding: 0; margin-block: 16px; }
 .game-entry-row,
-.tournament-entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 16px; }
-.game-entry-row p { margin: 0; overflow-wrap: anywhere; line-height: 1.6; }
+.tournament-entry { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 20px; min-width: 0; }
+.game-entry-row p { margin: 0; overflow-wrap: anywhere; line-height: 1.4; }
+.game-entry-name { font-size: 1rem; }
+.game-entry-score { font-size: 1.375rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .game-entry-row .button,
-.tournament-entry .button { min-height: 48px; margin: 0; padding-inline: 18px; }
+.tournament-entry .button { flex: 0 1 auto; max-width: 100%; min-height: 48px; margin: 0 0 0 auto; padding-inline: 18px; font-size: 1rem; white-space: normal; overflow-wrap: anywhere; }
+.tournament-entry > strong { flex: 1 1 12rem; min-width: 0; font-size: 1rem; line-height: 1.4; }
 .competition-link strong { overflow-wrap: anywhere; }
 
 .game-score-key { margin: 12px 0 0; color: var(--muted); font-size: 13px; }
-.game-entry-details { display: grid; gap: 4px; min-width: 0; }
+.game-entry-details { display: grid; gap: 8px; min-width: 0; flex: 1 1 12rem; }
 .game-entry-status { color: var(--muted); font-size: 12px; line-height: 1.5; }
 .game-entry-status--live { color: var(--teal); font-weight: 700; }
 

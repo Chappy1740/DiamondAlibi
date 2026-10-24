@@ -91,3 +91,6 @@ The selected tournament shows its own compact games, team totals and player lead
 - Limits: no hosted data mutation, schema/auth/access change, Explore Mode implementation or payment integration. Automated WebKit does not establish physical iPhone acceptance. Connected multi-device acceptance and Error 1102/capacity remain open; no tracker milestone was closed.
 - Reuse: existing route adapters, CompetitionPage/Form, authoritative scoring totals, baseball-rate formatter and PlayerLeaderboard. A small CompactGameList and summary projection avoid duplicating save/auth logic or adding a UI dependency.
 - Review/revert: inspect the branch PR before merge; revert only this scoped change if needed. Preserve unrelated local work. No database rollback is needed.
+
+
+Game-box spacing follow-up (October 24): the owner requested the team name and score fit on separate lines with comfortable inner spacing, matching League games. The shared CompactGameList refinement and its current local verification are recorded in [02-games.md](02-games.md#game-box-spacing-refinement--october-24-2026). Tournament stats, settings and game-entry destinations are preserved; the owner authorized publication and deployment after local review; record final matching check and activation receipts separately.
