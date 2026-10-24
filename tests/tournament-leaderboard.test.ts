@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  competitionStats,
   rankTournamentPlayers,
   overallTournamentLeaderboard,
   overallTournamentStats,
@@ -420,4 +421,48 @@ test("BEV leaders show largest positive debt first, then settled, then credits; 
     [8, 1], [1, 2], [0, 3], [-2, 4], [-5, 5], [-5, 5],
   ]);
   assert.equal(JSON.stringify(players), before);
+});
+
+
+test("league summaries isolate each league and kind, reuse weighted rates and keep signed activity and leaders", () => {
+  const data = fixture();
+  function leagueGame(id: string, league: string, plays: Play[]) {
+    const row = game(id, "one", 2, plays);
+    row.game.kind = "League";
+    row.game.league_id = league;
+    row.evaluation = evaluateGame({ id, opponent: "Synthetic opponent", kind: "League", lineup: ["a", "b"], next: 0, complete: false,
+      rules: { version: "Synthetic", fenceLimit: 2, board: DEFAULT_BOARD }, plays }, []);
+    return row;
+  }
+  data.snapshot.leagues = [{ id: "one", name: "Thursday League", fenceLimit: 2 }, { id: "two", name: "Sunday League", fenceLimit: 2 }, { id: "empty", name: "Upcoming League", fenceLimit: 2 }];
+  data.snapshot.games = [
+    leagueGame("one-a", "one", [play("hit", "a", "Hit"), play("out", "b", "Out"), play("k", "b", "K"), play("credit", "a", "ITP HR", 1, 1), play("void", "b", "ITP HR", 1, 1, true)]),
+    leagueGame("one-b", "one", [play("walk", "a", "BB"), play("rbi", "b", "Hit", 1, 1)]),
+    leagueGame("two", "two", [play("solo", "a", "Fence HR", 1, 1), play("charge", "b", "K")]),
+    game("tournament-same-id", "one", 100, [play("excluded", "b", "Fence HR", 4, 4)]),
+  ];
+  data.snapshot.scope = "Tournament";
+  data.snapshot.board = { a: 999, b: -999 };
+  const before = JSON.stringify(data);
+  const one = competitionStats(data, "team", "season", "League", "one")!;
+  const two = competitionStats(data, "team", "season", "League", "two")!;
+  const overall = competitionStats(data, "team", "season", "League")!;
+  assert.deepEqual([one.totals.PA, one.totals.H, one.totals.HR, one.totals.RBI, one.totals.board], [6, 3, 1, 2, 0]);
+  assert.equal(one.rates.OBP, 4 / 6);
+  assert.deepEqual(one.beverageActivity, { earned: 1, owed: 1 });
+  assert.deepEqual(rankTournamentPlayers(one.players, "board").map(row => [row.id, row.totals.board]), [["b", 1], ["a", -1]]);
+  assert.deepEqual([two.totals.PA, two.totals.H, two.totals.HR, two.totals.RBI, two.totals.board], [2, 1, 1, 1, 2]);
+  assert.equal(two.rates.OBP, .5);
+  assert.deepEqual(two.beverageActivity, { earned: 0, owed: 2 });
+  assert.deepEqual([overall.totals.PA, overall.totals.H, overall.totals.HR, overall.totals.RBI, overall.totals.board], [8, 4, 2, 3, 2]);
+  assert.equal(overall.rates.OBP, 5 / 8);
+  assert.deepEqual(overall.beverageActivity, { earned: 1, owed: 3 });
+  assert.equal(JSON.stringify(data), before);
+  for (const [team, season, id] of [["foreign", "season", "one"], ["team", "foreign", "one"], ["team", "season", "missing"], ["team", "season", "cup"]])
+    assert.equal(competitionStats(data, team, season, "League", id), null);
+  const empty = competitionStats(data, "team", "season", "League", "empty")!;
+  assert.equal(empty.totals.PA, 0); assert.equal(empty.rates.OBP, null); assert.deepEqual(empty.players, []);
+  data.snapshot.games[0].evaluation.totals.a.board = -4;
+  assert.equal(competitionStats(data, "team", "season", "League", "one")!.players.find(row => row.id === "a")!.totals.board, -4);
+  assert.equal(competitionStats(data, "team", "season", "League", "one")!.beverageActivity, null, "inconsistent historical detail stays unknown");
 });

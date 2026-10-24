@@ -1,4 +1,4 @@
-import { competitionView } from "./competitions.ts";
+import { competitionView, type CompetitionKind } from "./competitions.ts";
 import { emptyTotals, rates, type Scope, type Totals } from "./scoring.ts";
 import type { ConnectedGame, LoadedScorebook } from "./scorebook-view.ts";
 export type LeaderboardMetric = "OBP" | "H" | "HR" | "RBI" | "board";
@@ -86,14 +86,21 @@ export function overallTournamentLeaderboard(
 }
 
 export function overallTournamentStats(data: LoadedScorebook, team: string, season: string) {
-  if (data.snapshot.teamId !== team || data.snapshot.seasonId !== season) return null;
-  return statsForGames(data, data.snapshot.games.filter(({ game }) => game.kind === "Tournament"));
+  return competitionStats(data, team, season, "Tournament");
 }
 
 export function tournamentStats(data: LoadedScorebook, team: string, season: string, tournament: string) {
-  const selected = competitionView(data, team, season, "Tournament", tournament);
-  if (!selected) return null;
-  return statsForGames(data, selected.games);
+  return competitionStats(data, team, season, "Tournament", tournament);
+}
+
+/** Reuses authorized game evaluations for either a single competition or its season-wide kind. */
+export function competitionStats(data: LoadedScorebook, team: string, season: string, kind: CompetitionKind, id?: string) {
+  if (data.snapshot.teamId !== team || data.snapshot.seasonId !== season) return null;
+  if (id !== undefined) {
+    const selected = competitionView(data, team, season, kind, id);
+    return selected ? statsForGames(data, selected.games) : null;
+  }
+  return statsForGames(data, data.snapshot.games.filter(({ game }) => game.kind === kind));
 }
 
 function statsForGames(data: LoadedScorebook, games: readonly ConnectedGame[]) {

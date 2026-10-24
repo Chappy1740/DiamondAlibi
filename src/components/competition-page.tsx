@@ -5,7 +5,7 @@ import { CompetitionForm } from "./competition-form";
 import { GameScoreboardPanel } from "./game-scoreboard";
 import { connectedScoreboard } from "@/lib/game-scoreboard";
 import { competitionPath, competitionView, contextQuery, type CompetitionKind } from "@/lib/competitions";
-import { TournamentSeasonStats } from "./tournament-season-stats";
+import { LeagueSeasonStats, TournamentSeasonStats } from "./tournament-season-stats";
 import { CompactGameList } from "./compact-game-list";
 import type { DashboardProps } from "./player-dashboard";
 
@@ -50,6 +50,8 @@ export function CompetitionPage({ data: p, kind, id, gamesOnly = false, fromGame
       {id && !selected ? <p role="alert">That league is not in the selected team and season.</p> : <CompactGameList games={leagueGames} gameHref={gameHref} />}
       {!leagueGames.length && <p>No league games recorded this season.</p>}
       {p.loaded.archived && <p className="connection-notice">Archived season · read only</p>}
+      {(!id || selected) && <LeagueSeasonStats data={p.loaded} team={p.teamId} season={p.seasonId}
+        seasonName={p.seasons.find(s => s.id === p.seasonId)?.name ?? "Selected season"} leagueId={id} leagueName={selected?.competition.name} />}
       {!p.sample && <details className="games-context"><summary>League setup</summary><Link className="button secondary" href={id ? detail : list}>Manage leagues and add games</Link></details>}
     </>}
     {p.loaded && matching && !id && !leagueGameList && <>
@@ -103,6 +105,8 @@ export function CompetitionPage({ data: p, kind, id, gamesOnly = false, fromGame
       {!selected.games.length && <p>No games recorded.{!p.sample && !p.loaded?.archived && " Add the first game to choose a lineup and start scoring."}</p>}
       {kind === "Tournament" && p.loaded && <TournamentSeasonStats data={p.loaded} team={p.teamId} season={p.seasonId}
         seasonName={p.seasons.find(s => s.id === p.seasonId)?.name ?? "Selected season"} tournamentId={id} tournamentName={selected.competition.name} />}
+      {kind === "League" && p.loaded && <LeagueSeasonStats data={p.loaded} team={p.teamId} season={p.seasonId}
+        seasonName={p.seasons.find(s => s.id === p.seasonId)?.name ?? "Selected season"} leagueId={id} leagueName={selected.competition.name} />}
       {!p.sample && kind === "League" && <details className="card detail-card"><summary>League settings</summary>
         <CompetitionForm team={p.teamId} season={p.seasonId} kind={kind} existing={selected.competition} archived={!!p.loaded?.archived} />
       </details>}

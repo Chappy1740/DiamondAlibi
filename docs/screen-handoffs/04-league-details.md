@@ -1,6 +1,6 @@
 # 04 — League details: Screen handoff
 
-**Status:** Ready for owner brief. **Owner's requested change:** Not yet supplied.
+**Status:** Locally verified; owner authorized commit, push, merge and deployment of this League stats refinement. **Owner's requested change:** Apply the tournament stats presentation to each League, showing that League's team stats and player leaders.
 **Current screen only:** League details.
 **Route/view:** `/leagues/<existing-league-id>`
 **Related tracker IDs:** M3-13, M4-22. Verify current canonical evidence before closing any item.
@@ -80,4 +80,17 @@ A green build or inactive upload is not a live release. Preserve required checks
 8. Scoped revert/rollback and stop conditions.
 9. Owner acceptance or explicit hold; agreed next screen.
 
-**Current outcome:** Documentation prepared only. No screen implementation, new acceptance pass or live release is claimed by this work package.
+**Current outcome:** The League team-statistics receipt below supersedes the initial preparation status. Record final publication and activation evidence separately.
+
+
+## League team-statistics receipt — October 24, 2026
+
+- Scope: selected League pages, including the compact Games entry and normal detail view. All-leagues Games view shows a clearly labeled overall League summary. Each selected League includes only its own kind/ID; no other league or tournament totals are substituted.
+- Baseline: released main ed3765e25c2fbb2b4607e87c9e25680db6e5bf64 (PR #20, version 00d968c4). Delivery branch: codex/league-team-stats. Owner approved commit, push, merge and deployment after local review; final matching checks and activation receipts remain required.
+- Reuse: generalize the existing tournament summary behind its unchanged wrapper, reuse PlayerLeaderboard, existing competitionView, authoritative game evaluations, rate formatter and accepted centered styles. A small League wrapper labels the same presentation. Existing project reuse avoids a new dependency, duplicate formula or separate save path.
+- Presentation: OBP and Reach Base % as baseball decimal rates; centered Hits, RBIs, HRs and BEVs; signed net BEVs and separate gross owed/credits; most owed first in player rankings, with existing ties preserved. Unknown historical beverage detail stays unavailable. Empty/unknown/foreign team or season contexts fail closed.
+- Verification: 17 focused calculation/competition tests; typecheck; Worker build; Chromium/WebKit Games/Tournament/League flows with distinct League fixtures, rates, signed BEVs, ranking, empty and denied states, narrow screens and accessibility; built Next.js navigation checks in both browsers. Synthetic records only; no hosted mutations or new database/auth/API configuration.
+- Local previews: two fictional leagues have different totals. They are review fixtures, not newly implemented Explore Mode. Physical iPhone and authenticated hosted League acceptance remain pending. No tracker milestone closed.
+- Shared consumers: Tournament summaries and leaders remain covered by the same browser and calculation checks; original scoring/rule versions and league membership paths are unchanged.
+- Explore audit: Needs Demo Data. Reusable stats panel is available; realistic isolated named leagues, one-tap demo entry, consistent labeling/exit and authoritative mutation denial still need their separate acceptance. No Explore implementation or payments.
+- Revert: this seven-file local display/projection/test/handoff diff only; no database rollback. Publication and activation require the scoped approval specified above.
