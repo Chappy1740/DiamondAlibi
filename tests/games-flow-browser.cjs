@@ -65,11 +65,20 @@ const assert = require("node:assert/strict");
             for(let i=0;i<t.PA;i++)g.evaluation.rows.push({id:g.game.id+'-'+playerId+'-'+i,playerId,official:'Hit',outcome:'Hit',runs:0,rbi:0,voided:false,delta:i===0?t.board:0});
           }));
         }
+        if(c==='league-stats'){
+          league.forEach(g=>{g.evaluation.totals={};g.evaluation.rows=[]});
+          league[0].evaluation.totals={'sample-player-1':{...emptyTotals(),PA:4,AB:4,H:3,HR:1,RBI:4,board:-3},'sample-player-2':{...emptyTotals(),PA:2,AB:2,K:2,board:2}};
+          league[1].evaluation.totals={'sample-player-1':{...emptyTotals(),PA:2,AB:2,H:1,RBI:2,board:1}};
+          league[2].evaluation.totals={'sample-player-1':{...emptyTotals(),PA:1,AB:1,H:1,HR:1,RBI:1,board:1},'sample-player-2':{...emptyTotals(),PA:3,AB:3,H:2,RBI:2,board:2}};
+          league.forEach(g=>Object.entries(g.evaluation.totals).forEach(([playerId,t])=>{
+            for(let i=0;i<t.PA;i++)g.evaluation.rows.push({id:g.game.id+'-'+playerId+'-'+i,playerId,official:'Hit',outcome:'Hit',runs:0,rbi:0,voided:false,delta:i===0?t.board:0});
+          }));
+        }
         const scope=q.get('scope')==='League'?'League':q.get('scope')==='Tournament'?'Tournament':'Overall';
         data=sampleScope(data,scope);data.archived=c==='archived';
         const sample=q.get('sample')==='1';
         const gameContexts=[{id:'sample-team',name:'Riverside Rascals',seasons:[{id:'sample-season-2026',name:'Fall 2026',archived:data.archived,leagues:[{id:'thursday-league',name:'Thursday League'},{id:'sunday-league',name:'Sunday League'}]},{id:'old-season',name:'Fall 2025',archived:true,leagues:[]}]},{id:'west-team',name:'Westside Wolves with a very long team name for mobile selection',seasons:[{id:'west-season',name:'Summer 2027',archived:false,leagues:[{id:'west-league',name:'Westside League'}]}]},{id:'new-team',name:'New team without a season',seasons:[]}];
-        data.snapshot.leagues=[{id:'thursday-league',name:'Thursday League',fenceLimit:2},{id:'sunday-league',name:'Sunday League',fenceLimit:1}];
+        data.snapshot.leagues=[{id:'thursday-league',name:'Thursday League',fenceLimit:2},{id:'sunday-league',name:'Sunday League',fenceLimit:1},{id:'empty-league',name:'Upcoming League',fenceLimit:2}];
         league.forEach((g,i)=>g.game.league_id=i<2?'thursday-league':'sunday-league');
         if(q.get('team')==='west-team'){data.snapshot.teamId='west-team';data.snapshot.seasonId='west-season';data.snapshot.games=[];data.snapshot.leagues=[{id:'west-league',name:'Westside League',fenceLimit:1}];data.snapshot.tournaments=[];}
         if(c==='picker-many')for(let i=1;i<=24;i++)gameContexts.push({id:'extra-team-'+i,name:'Fictional long-name team '+i+' '+('Softball'.repeat(8)),seasons:[{id:'extra-season-'+i,name:'Fall 2026',archived:false,leagues:[]}]});
@@ -146,9 +155,9 @@ const assert = require("node:assert/strict");
     }
     async function capture(name){if(process.env.GAMES_SCREENSHOTS){
       // Tall review captures keep the fixed menu below the full tournament panel.
-      if(name.endsWith('-tournament-games'))await page.setViewportSize({width:390,height:1800});
+      if(name.endsWith('-tournament-games')||name.endsWith('-league-stats'))await page.setViewportSize({width:390,height:1800});
       await page.screenshot({path:path.join(process.env.GAMES_SCREENSHOTS,name+'.png'),fullPage:true});
-      if(name.endsWith('-tournament-games'))await page.setViewportSize({width:390,height:844});
+      if(name.endsWith('-tournament-games')||name.endsWith('-league-stats'))await page.setViewportSize({width:390,height:844});
     }}
     await page.goto(`${base}/games?${context}`);await ready();
     assert.deepEqual(await page.locator('.games-entry a').allTextContents(),['League','Tournament']);
@@ -407,6 +416,40 @@ const assert = require("node:assert/strict");
     assert.equal(await page.locator('form.club-form,.tournament-season-stats').count(),0);await page.getByRole('alert').waitFor();
     await page.goto(`${base}/tournaments/sample-tournament-7?settings=1&team=foreign-team`);await ready();
     assert.equal(await page.locator('form.club-form').count(),0);
+    await page.goto(`${base}/leagues/thursday-league?view=games&case=league-stats&scope=Tournament`);await ready();
+    const leagueStats=page.getByRole('region',{name:'League statistics',exact:true});
+    assert.deepEqual(await leagueStats.locator('.home-stat-row--rates strong').allTextContents(),['.500','.500']);
+    assert.deepEqual(await leagueStats.locator('.home-stat-row--counts dt').allTextContents(),['Hits','RBIs','HRs','BEVs']);
+    assert.deepEqual(await leagueStats.locator('.home-stat-row--counts strong').allTextContents(),['4','6','1','0']);
+    assert.deepEqual(await leagueStats.locator('.tournament-bev-activity dd').allTextContents(),['3','-3']);
+    assert.match(await leagueStats.innerText(),/Thursday League.*This league only/s);
+    const leagueLeaders=leagueStats.getByRole('region',{name:'League player leaderboard',exact:true});
+    await leagueLeaders.getByRole('button',{name:'View Beverages rankings',exact:true}).click();
+    assert.deepEqual(await leagueLeaders.locator('.leaderboard-counts strong').allTextContents(),['2','-2']);
+    assert.equal(await leagueLeaders.locator('.leaderboard-player strong').first().innerText(),'Blake');
+    assert.match(await leagueLeaders.innerText(),/Most owed first/);
+    await leagueLeaders.getByRole('button',{name:'← Back to leaders',exact:true}).click();
+    await sizes();await accessible();await capture('thursday-league-stats');
+    await page.goto(`${base}/leagues/sunday-league?view=games&case=league-stats`);await ready();
+    assert.deepEqual(await leagueStats.locator('.home-stat-row--rates strong').allTextContents(),['.750','.750']);
+    assert.deepEqual(await leagueStats.locator('.home-stat-row--counts strong').allTextContents(),['3','3','1','3']);
+    assert.deepEqual(await leagueStats.locator('.tournament-bev-activity dd').allTextContents(),['3','0']);
+    assert.equal(await page.locator('.game-entry-row').count(),1);
+    await sizes();await accessible();await capture('sunday-league-stats');
+    await page.goto(`${base}/leagues?view=games&case=league-stats`);await ready();
+    const allLeagues=page.getByRole('region',{name:'Overall league statistics',exact:true});
+    assert.deepEqual(await allLeagues.locator('.home-stat-row--counts strong').allTextContents(),['7','9','2','3']);
+    assert.deepEqual(await allLeagues.locator('.tournament-bev-activity dd').allTextContents(),['6','-3']);
+    await page.goto(`${base}/leagues/thursday-league?case=league-stats`);await ready();
+    assert.deepEqual(await leagueStats.locator('.home-stat-row--counts strong').allTextContents(),['4','6','1','0'],'Normal detail and compact Games entry share the same league totals');
+    await page.goto(`${base}/leagues/empty-league?view=games&sample=1`);await ready();
+    await leagueStats.getByText('No recorded plate appearances in this league.',{exact:true}).waitFor();
+    assert.equal(await leagueStats.locator('.home-stat,.leaderboard-summary').count(),0,'Empty league does not borrow other leagues stats');
+    for(const tail of ['foreign-league?view=games','thursday-league?view=games&team=foreign-team','thursday-league?view=games&season=foreign-season']){
+      await page.goto(`${base}/leagues/${tail}`);await ready();
+      assert.equal(await page.locator('.league-season-stats,.game-entry-row').count(),0,'Unknown or mismatched league context fails closed');
+      await page.getByRole('alert').waitFor();
+    }
     assert.deepEqual(writes,[],'No network mutations');assert.deepEqual(errors,[]);
     console.log(`Games flow passed (${engine===webkit?'WebKit':'Chromium'}): choice gate, compact scores, tournament/create paths, context, isolation, empty/archived/read-only states, mobile layout, accessibility. No backend writes.`);
   } finally {if(browser)await browser.close();if(server)await new Promise(resolve=>server.close(resolve));}
