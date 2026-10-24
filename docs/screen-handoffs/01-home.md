@@ -127,3 +127,7 @@ PR #14 merged as 3d623f0b2800c63a34a98162ecba4d141fd7ce7d after exact-head and m
 
 - Local verification passed: typecheck; diff whitespace; existing Chromium and WebKit Home regression at 320–1440px with the installed Inter font, equal centered rows, accessibility, personal-only totals, negative credit/positive owed/zero/missing BVGs and existing navigation/refresh cases. The supplied new screenshot is the brief; updated physical iPhone acceptance remains pending. Local synthetic preview captured outside the repository.
 - Delivery continues under the owner's existing Home commit/push/deploy approval. The Explore addendum remains an audit only: no Explore implementation, payment work, new service, security-setting change or hosted data-write test. Exact CI/merge/version/traffic and hosted readback will be recorded in this change's PR release receipt before claiming live delivery. Home remains active; no canonical milestone is closed.
+
+### Home abbreviation correction — October 23, 2026
+
+The owner corrected BVGs to **BEVs**. Change only the Home caption and its existing regression expectations; preserve Hits / RBIs / HRs, signed positive/negative/zero balance, missing-value dash, layout, rates and approved Stats presentation. Reuse the existing display; no dependency or data/API/auth change. Continue the existing Home delivery approval; exact validation and release receipt belong in the PR. Home remains active.
