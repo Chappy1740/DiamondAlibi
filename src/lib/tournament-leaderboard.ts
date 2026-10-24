@@ -1,6 +1,6 @@
 import { competitionView } from "./competitions.ts";
 import { emptyTotals, rates, type Scope, type Totals } from "./scoring.ts";
-import type { LoadedScorebook } from "./scorebook-view.ts";
+import type { ConnectedGame, LoadedScorebook } from "./scorebook-view.ts";
 export type LeaderboardMetric = "OBP" | "H" | "HR" | "RBI" | "board";
 export type TournamentPlayer = {
   id: string;
@@ -72,8 +72,69 @@ export function tournamentLeaderboard(
     tournament,
   );
   if (!selected) return [];
+  return playersFromGames(data, selected.games, metric);
+}
+
+/** All Tournament games in this authorized team/season, regardless of personal stats scope. */
+export function overallTournamentLeaderboard(
+  data: LoadedScorebook,
+  team: string,
+  season: string,
+) {
+  if (data.snapshot.teamId !== team || data.snapshot.seasonId !== season) return [];
+  return playersFromGames(data, data.snapshot.games.filter(({ game }) => game.kind === "Tournament"));
+}
+
+export function overallTournamentStats(data: LoadedScorebook, team: string, season: string) {
+  if (data.snapshot.teamId !== team || data.snapshot.seasonId !== season) return null;
+  return statsForGames(data, data.snapshot.games.filter(({ game }) => game.kind === "Tournament"));
+}
+
+export function tournamentStats(data: LoadedScorebook, team: string, season: string, tournament: string) {
+  const selected = competitionView(data, team, season, "Tournament", tournament);
+  if (!selected) return null;
+  return statsForGames(data, selected.games);
+}
+
+function statsForGames(data: LoadedScorebook, games: readonly ConnectedGame[]) {
+  const players = playersFromGames(data, games);
+  const totals = emptyTotals();
+  for (const player of players)
+    for (const key of Object.keys(totals) as (keyof Totals)[])
+      totals[key] += player.totals[key];
+  // Weight team rates by summed opportunities, never average player percentages.
+  return { players, totals, rates: rates(totals), beverageActivity: beverageActivity(games) };
+}
+
+// Gross activity comes from effective recorded plays, not the signed net balance.
+// Missing/inconsistent historical detail stays unknown instead of inventing zero earned.
+function beverageActivity(games: readonly ConnectedGame[]) {
+  let earned = 0, owed = 0;
+  for (const game of games) {
+    let net = 0, appearances = 0;
+    for (const row of game.evaluation.rows) {
+      if (row.voided) continue;
+      appearances++;
+      if (row.beverageParticipating === false) continue;
+      if (!Number.isFinite(row.delta)) return null;
+      net += row.delta;
+      if (row.delta < 0) earned -= row.delta;
+      else owed += row.delta;
+    }
+    const effective = Object.values(game.evaluation.totals);
+    if (net !== effective.reduce((sum, value) => sum + value.board, 0) ||
+        appearances !== effective.reduce((sum, value) => sum + value.PA, 0)) return null;
+  }
+  return { earned, owed };
+}
+
+function playersFromGames(
+  data: LoadedScorebook,
+  games: readonly ConnectedGame[],
+  metric: LeaderboardMetric = "H",
+) {
   const totals = new Map<string, Totals>();
-  for (const game of selected.games) {
+  for (const game of games) {
     // Use the engine's authoritative effective totals: corrections, voids,
     // over-limit HRs and original rule versions have already been applied.
     for (const [id, value] of Object.entries(game.evaluation.totals)) {

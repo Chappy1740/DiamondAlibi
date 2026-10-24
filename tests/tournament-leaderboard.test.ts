@@ -2,6 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   rankTournamentPlayers,
+  overallTournamentLeaderboard,
+  overallTournamentStats,
+  tournamentStats,
   teamLeaderboard,
   tournamentLeaderboard,
 } from "../src/lib/tournament-leaderboard.ts";
@@ -228,7 +231,7 @@ test("tournament Beverage totals preserve credit, charges and voids without usin
   );
 });
 
-test("Beverage ranking uses signed tournament net totals, shared ranks and effective corrections", () => {
+test("Beverage leaders rank most owed first with signed totals, shared ties and effective corrections", () => {
   const data = fixture();
   data.snapshot.games = [
     game("rank-beverages", "cup", 2, [
@@ -308,4 +311,113 @@ test("team leaders use only the selected team, season and scope, including scope
     teamLeaderboard(data, "team", "season", "League")[0].totals.RBI,
     0,
   );
+});
+
+test("overall tournament leaders combine all tournament games, exclude league and ignore season-wide personal totals", () => {
+  const data = fixture();
+  data.snapshot.scope = "League";
+  data.snapshot.board = { a: 9999, b: -9999 };
+  const before = JSON.stringify(data);
+  const rows = overallTournamentLeaderboard(data, "team", "season");
+  assert.deepEqual(rows.map(row => [row.id, row.totals.H, row.totals.HR, row.totals.RBI]), [
+    ["b", 3, 1, 6], ["a", 2, 1, 1], ["guest", 0, 0, 0],
+  ]);
+  assert.equal(rows.find(row => row.id === "a")?.rates.OBP, 2 / 3);
+  assert.equal(rows.find(row => row.id === "b")?.rates.OBP, 1);
+  assert.equal(rows.find(row => row.id === "a")?.totals.board, 0);
+  assert.equal(JSON.stringify(data), before);
+  assert.deepEqual(overallTournamentLeaderboard(data, "other-team", "season"), []);
+  assert.deepEqual(overallTournamentLeaderboard(data, "team", "other-season"), []);
+  data.snapshot.games = data.snapshot.games.filter(({game}) => game.kind === "League");
+  assert.deepEqual(overallTournamentLeaderboard(data, "team", "season"), []);
+});
+
+test("overall tournament leaders reflect signed credits and corrected authoritative totals across competitions", () => {
+  const data = fixture();
+  data.snapshot.games[0].evaluation.totals.a.board = -3;
+  data.snapshot.games[1].evaluation.totals.a.board = -2;
+  data.snapshot.games[3].evaluation.totals.b.RBI = 9;
+  const rows = overallTournamentLeaderboard(data, "team", "season");
+  assert.equal(rows.find(row => row.id === "a")?.totals.board, -5);
+  assert.equal(rows.find(row => row.id === "b")?.totals.RBI, 11);
+});
+
+test("overall tournament team summary uses combined opportunities and signed tournament-only balances", () => {
+  const data = fixture();
+  const summary = overallTournamentStats(data, "team", "season")!;
+  assert.deepEqual([summary.totals.PA, summary.totals.H, summary.totals.HR, summary.totals.RBI], [7, 5, 2, 7]);
+  assert.equal(summary.rates.OBP, 6 / 7);
+  assert.notEqual(summary.rates.OBP, summary.players.reduce((sum, row) => sum + (row.rates.OBP ?? 0), 0) / summary.players.length);
+  assert.equal(summary.totals.board, summary.players.reduce((sum, row) => sum + row.totals.board, 0));
+  assert.equal(overallTournamentStats(data, "foreign", "season"), null);
+  assert.equal(overallTournamentStats(data, "team", "foreign"), null);
+  data.snapshot.games = [];
+  const empty = overallTournamentStats(data, "team", "season")!;
+  assert.equal(empty.rates.OBP, null);
+  assert.equal(empty.totals.PA, 0);
+  assert.deepEqual(empty.players, []);
+});
+
+test("individual tournament summary reuses effective totals and rejects foreign or unknown tournaments", () => {
+  const data = fixture();
+  const summary = tournamentStats(data, "team", "season", "cup")!;
+  assert.deepEqual([summary.totals.PA, summary.totals.H, summary.totals.HR, summary.totals.RBI], [6, 4, 1, 3]);
+  assert.equal(summary.rates.OBP, 5 / 6);
+  assert.notEqual(summary.totals.HR, overallTournamentStats(data, "team", "season")!.totals.HR);
+  assert.equal(tournamentStats(data, "team", "season", "missing"), null);
+  assert.equal(tournamentStats(data, "foreign", "season", "cup"), null);
+  assert.equal(tournamentStats(data, "team", "foreign", "cup"), null);
+  data.snapshot.games = data.snapshot.games.filter(({game}) => game.tournament_id !== "cup");
+  const empty = tournamentStats(data, "team", "season", "cup")!;
+  assert.equal(empty.rates.OBP, null);
+  assert.equal(empty.totals.PA, 0);
+});
+
+test("earned beverages count gross tournament credits before offsets, ignoring voids and opted-out activity", () => {
+  const data = fixture();
+  const cup = game("earned-cup", "cup", 10, [
+    play("band-credit", "a", "Fence HR", 1, 1),
+    play("charge", "b", "K"),
+    play("inside-credit", "a", "ITP HR", 1, 1),
+    play("void-credit", "a", "Fence HR", 4, 4, true),
+    play("opted-out", "b", "K"),
+  ]);
+  cup.evaluation.rows.find(row => row.id === "opted-out")!.beverageParticipating = false;
+  cup.evaluation.totals.b.board -= 1;
+  const other = game("earned-other", "other-cup", 10, [play("grand-credit", "b", "Fence HR", 4, 4), play("other-charge", "b", "K")]);
+  const league = game("excluded-league", "cup", 10, [play("league-credit", "b", "ITP HR", 1, 1)]);
+  league.game.kind = "League";
+  data.snapshot.games = [cup, other, league];
+  const before = JSON.stringify(data);
+  const selected = tournamentStats(data, "team", "season", "cup")!;
+  assert.deepEqual(selected.beverageActivity, { earned: 2, owed: 1 });
+  assert.equal(selected.totals.board, -1);
+  assert.deepEqual(tournamentStats(data, "team", "season", "other-cup")!.beverageActivity, { earned: 1, owed: 1 });
+  const combined = overallTournamentStats(data, "team", "season")!;
+  assert.deepEqual(combined.beverageActivity, { earned: 3, owed: 2 });
+  assert.equal(combined.totals.board, combined.beverageActivity!.owed - combined.beverageActivity!.earned);
+  assert.equal(JSON.stringify(data), before);
+});
+
+test("gross beverage activity stays unknown when historical play details are missing or inconsistent", () => {
+  const data = fixture();
+  data.snapshot.games[0].evaluation.rows = [];
+  assert.equal(tournamentStats(data, "team", "season", "cup")!.beverageActivity, null);
+  const complete = fixture();
+  complete.snapshot.games[0].evaluation.rows[0].delta = 99;
+  assert.equal(overallTournamentStats(complete, "team", "season")!.beverageActivity, null);
+});
+
+test("BEV leaders show largest positive debt first, then settled, then credits; equal balances share rank", () => {
+  const players = [
+    ["large-credit", -5], ["tied-credit", -5], ["small-credit", -2], ["settled", 0], ["small-debt", 1], ["large-debt", 8],
+  ].map(([id, balance]) => {
+    const totals = { ...emptyTotals(), PA: 1, AB: 1, board: Number(balance) };
+    return { id: String(id), name: String(id), totals, rates: rates(totals) };
+  });
+  const before = JSON.stringify(players);
+  assert.deepEqual(rankTournamentPlayers(players, "board").map(row => [row.totals.board, row.rank]), [
+    [8, 1], [1, 2], [0, 3], [-2, 4], [-5, 5], [-5, 5],
+  ]);
+  assert.equal(JSON.stringify(players), before);
 });

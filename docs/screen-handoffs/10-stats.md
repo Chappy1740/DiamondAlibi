@@ -1,6 +1,6 @@
 # 10 — Stats: Screen handoff
 
-**Status:** Ready for owner brief. **Owner's requested change:** Not yet supplied.
+**Status:** Shared BEV behavior verified; broader Stats audit remains open. **Requested change:** Keep signed BEVs and lead with the highest positive amount owed.
 **Current screen only:** Stats.
 **Route/view:** `/stats`
 **Related tracker IDs:** M3-13, M4-20, M4-22. Verify current canonical evidence before closing any item.
@@ -81,4 +81,14 @@ A green build or inactive upload is not a live release. Preserve required checks
 8. Scoped revert/rollback and stop conditions.
 9. Owner acceptance or explicit hold; agreed next screen.
 
-**Current outcome:** Documentation prepared only. No screen implementation, new acceptance pass or live release is claimed by this work package.
+**Current outcome:** The receipt below supersedes the initial preparation status. No hosted release is claimed.
+
+## Delivery receipt — October 24, 2026
+
+Main Stats and tournament leaders reuse the same descending ranking function. Positive means owed, negative means credit, zero means settled. Matching Tournament scope produces identical per-player balances; Overall also includes League plays. Fictional preview fixtures contain nine owed, two credit and one settled player; real balances were not altered.
+
+- Baseline: main `42ecc95a75622a47dbf03ffd8dd88c1ecb877715`; delivery branch `codex/games-simple-preview`. Commit/push and owner email are authorized. Merge, upload and activation remain separate approval steps.
+- Verification: production Worker build and isolated unit/SQL/browser checks. Chromium and automated WebKit cover Games, Home, shared scorebook, beverage controls and built sample-route navigation, including 320–1440px, context, signed values, keyboard/touch and accessibility. All test writes use disposable databases or synthetic transports.
+- Limits: no hosted data mutation, schema/auth/access change, Explore Mode implementation or payment integration. Automated WebKit does not establish physical iPhone acceptance. Connected multi-device acceptance and Error 1102/capacity remain open; no tracker milestone was closed.
+- Reuse: existing route adapters, CompetitionPage/Form, authoritative scoring totals, baseball-rate formatter and PlayerLeaderboard. A small CompactGameList and summary projection avoid duplicating save/auth logic or adding a UI dependency.
+- Review/revert: inspect the branch PR before merge; revert only this scoped change if needed. Preserve unrelated local work. No database rollback is needed.

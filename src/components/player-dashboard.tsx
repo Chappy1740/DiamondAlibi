@@ -77,10 +77,6 @@ export function PlayerDashboard(p: DashboardProps) {
           ? "/review/scoring"
           : "/practice"
       : game ? `/club/score?${new URLSearchParams({ team: p.teamId, season: p.seasonId, game })}` : `/leagues?${query}`;
-  const filteredGames =
-    loaded?.snapshot.games.filter(
-      (g) => p.scope === "Overall" || g.game.kind === p.scope,
-    ) ?? [];
   const navigation = (
     <>
       {tabs.map((t) => (
@@ -133,7 +129,7 @@ export function PlayerDashboard(p: DashboardProps) {
         </article>
       ));
   const contextControls = (
-    <section className={`dashboard-context-panel${p.route === "" ? " dashboard-context-panel--home" : ""}`} aria-label="Team, season and statistics controls">
+    <section className={`dashboard-context-panel${p.route === "" ? " dashboard-context-panel--home" : p.route === "games" ? " dashboard-context-panel--compact" : ""}`} aria-label="Team, season and statistics controls">
           <form
             className="dashboard-context"
             method="get"
@@ -145,7 +141,7 @@ export function PlayerDashboard(p: DashboardProps) {
             <DashboardSelect label="Season" name="season" value={p.seasonId} options={p.seasons.map((s) => ({ id: s.id, name: `${s.name}${s.archived ? " · history" : ""}` }))} />
             <DashboardSelect label="Personal stats" accessibleLabel="Statistics view" name="scope" value={p.scope} options={["Overall", "League", "Tournament"].map((name) => ({ id: name, name }))} />
             {p.sample && <DashboardSelect label="Sample player" name="player" value={p.userId} options={loaded?.roster.map((r) => ({ id: r.user_id ?? "", name: r.display_name })) ?? []} />}
-            {p.route === "" ? <div className="dashboard-context-action"><span aria-hidden="true">Update view</span><button className="button secondary">Apply context</button></div> : <button className="button secondary">Apply context</button>}
+            {p.route === "" || p.route === "games" ? <div className="dashboard-context-action"><span aria-hidden="true">Update view</span><button className="button secondary">Apply context</button></div> : <button className="button secondary">Apply context</button>}
           </form>
       {!p.sample && <DashboardRefresh />}
       {p.sample && <p className="connection-notice dashboard-notice">
@@ -172,13 +168,13 @@ export function PlayerDashboard(p: DashboardProps) {
 
         </header>
         <div className="content-wrap">
-          {p.route !== "" && contextControls}
+          {p.route !== "" && p.route !== "games" && contextControls}
           <main id="main" tabIndex={-1}>
             {p.route !== "more/alibi" && <div className="page-heading">
               <div>
                 {p.route !== "" && <span className="eyebrow">
                   {team?.name ?? "Your team"} ·{" "}
-                  {season?.name ?? "Choose a season"} · {p.scope}
+                  {season?.name ?? "Choose a season"}{p.route !== "games" && ` · ${p.scope}`}
                 </span>}
                 <h1>
                   {p.route === ""
@@ -186,7 +182,7 @@ export function PlayerDashboard(p: DashboardProps) {
                     : p.route === "more/beverage-rules" ? "Beverage Rules" : (tabs.find((t) => t.path === p.route)?.label ??
                       "Clubhouse")}
                 </h1>
-                <p>The stats don’t lie. Your teammates might.</p>
+                {p.route !== "games" && <p>The stats don’t lie. Your teammates might.</p>}
               </div>
             </div>}
             {p.route === "games/live" &&
@@ -296,55 +292,11 @@ export function PlayerDashboard(p: DashboardProps) {
                 )}
                 {p.route === "games" && (
                   <>
-                    <Link className="button primary" href={scoring()}>
-                      {p.sample
-                        ? "Try local scoring"
-                        : "Start or manage a game"}
-                    </Link>
-                    <div className="competition-entry">
-                      <Link className="button secondary" href={`/leagues?${query}`}>Leagues</Link>
-                      <Link className="button secondary" href={`/tournaments?${query}`}>Tournaments</Link>
+                    <div className="competition-entry games-entry" aria-label="Choose game type">
+                      <Link className="button primary" href={`/leagues?${query}&view=games`}>League</Link>
+                      <Link className="button primary" href={`/tournaments?${query}&from=games`}>Tournament</Link>
                     </div>
-                    <h2>Season games</h2>
-                    <div className="dashboard-cards">{gameCards(false)}</div>
-                    {loaded.snapshot.games.length === 0 && (
-                      <p>No games recorded this season.</p>
-                    )}
-                    <h2>Tournaments</h2>
-                    {loaded.snapshot.tournaments.map((t) => (
-                      <section key={t.id} className="card detail-card">
-                        <h3>{t.name}</h3>
-                        <p>
-                          {t.guaranteedGames
-                            ? `${t.guaranteedGames}-game guaranteed`
-                            : "Guarantee unspecified"}{" "}
-                          ·{" "}
-                          {
-                            loaded.snapshot.games.filter(
-                              (g) => g.game.tournament_id === t.id,
-                            ).length
-                          }{" "}
-                          games recorded
-                        </p>
-                        <Link
-                          className="button secondary"
-                          href={
-                            p.sample
-                              ? p.review
-                                ? "/review/scoring"
-                                : "/practice"
-                              : `/tournaments/${encodeURIComponent(t.id)}?${query}`
-                          }
-                        >
-                          {p.sample
-                            ? "Practice additional games"
-                            : "Open tournament"}
-                        </Link>
-                        <p className="micro">
-                          Game setup remains separate from bracket advancement.
-                        </p>
-                      </section>
-                    ))}
+                    {p.sample && <p className="micro">Sample games · fictional, read only.</p>}
                   </>
                 )}
                 {p.route === "stats" && (
@@ -422,6 +374,7 @@ export function PlayerDashboard(p: DashboardProps) {
             )}
             {p.route === "more/beverage-rules" && (p.sample || !p.userId ? <section className="card detail-card"><h2>Beverage Rules</h2><p>Sign in and select your team to view its current rules.</p></section> : p.teamId ? <BeverageControls key={p.teamId} teamId={p.teamId} teamSettings /> : <p>Select a team to view Beverage Rules.</p>)}
             {p.route === "more/alibi" && <PersonalAlibis connected={!p.sample && !!p.userId} />}
+            {p.route === "games" && <details className="games-context"><summary>Change team or season</summary>{contextControls}</details>}
           </main>
         </div>
       </div>
