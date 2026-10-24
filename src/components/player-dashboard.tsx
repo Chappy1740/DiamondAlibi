@@ -276,9 +276,9 @@ export function PlayerDashboard(p: DashboardProps) {
                               { label: "Hits", value: view.statistics.H },
                               { label: "RBIs", value: view.statistics.RBI },
                               { label: "HRs", value: view.statistics.HR },
-                              { label: "BVGs", value: view.beverageBalance ?? "—" },
+                              { label: "BEVs", value: view.beverageBalance ?? "—" },
                             ].map((stat) => <div className="home-stat" key={stat.label}>
-                              <dt title={stat.label === "BVGs" ? "Beverages" : undefined}>{stat.label}</dt>
+                              <dt title={stat.label === "BEVs" ? "Beverages" : undefined}>{stat.label}</dt>
                               <dd><strong>{stat.value}</strong></dd>
                             </div>)}
                           </dl>

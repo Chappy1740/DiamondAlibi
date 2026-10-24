@@ -55,7 +55,7 @@ const assert = require("node:assert/strict");
     await page.goto(`http://127.0.0.1:${server.address().port}`);
     await page.getByRole("heading", { name: "Your game, Test Player." }).waitFor();
     await page.evaluate(()=>document.fonts.ready);
-    assert.match(await page.locator('.home-stat').last().innerText(),/BVGs\s+-2/);
+    assert.match(await page.locator('.home-stat').last().innerText(),/BEVs\s+-2/);
     assert.equal(await page.locator('.home-stat-note').count(),0,'Compact total tiles have no balance qualifiers or blank note rows');
     assert.equal(await page.locator(".dashboard-notice").count(), 0);
     assert.equal(await page.getByRole("link", { name: "Explore sample history" }).count(), 0);
@@ -92,10 +92,10 @@ const assert = require("node:assert/strict");
       await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       const bounds = await page.evaluate(() => ({ viewport: window.innerWidth, document: document.documentElement.scrollWidth, outside: Array.from(document.querySelectorAll('body *')).filter(el => el.getBoundingClientRect().right > window.innerWidth + 1).map(el => ({ tag: el.tagName, class: el.className, width: el.getBoundingClientRect().width, right: el.getBoundingClientRect().right })).slice(0, 15) }));
       const rows=await page.locator('.home-stat-row').evaluateAll(rows=>rows.map(row=>Array.from(row.children).map(tile=>{const r=tile.getBoundingClientRect();const label=tile.querySelector('dt'),value=tile.querySelector('strong');const lr=label.getBoundingClientRect(),vr=value.getBoundingClientRect();return{label:label.textContent,left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height,labelCenter:(lr.left+lr.right)/2,valueCenter:(vr.left+vr.right)/2,center:(r.left+r.right)/2}})));
-      assert.deepEqual(rows.map(row=>row.map(tile=>tile.label)),[['OBP','Reach Base %'],['Hits','RBIs','HRs','BVGs']]);
+      assert.deepEqual(rows.map(row=>row.map(tile=>tile.label)),[['OBP','Reach Base %'],['Hits','RBIs','HRs','BEVs']]);
       for(const row of rows)assert(row.every(tile=>Math.abs(tile.top-row[0].top)<1&&Math.abs(tile.width-row[0].width)<1&&Math.abs(tile.height-row[0].height)<1&&Math.abs(tile.labelCenter-tile.center)<1&&Math.abs(tile.valueCenter-tile.center)<1),'Equal centered statistic tiles at '+width+'px: '+JSON.stringify(rows));
       assert(rows[0][0].bottom<rows[1][0].top,'Rates stay on the first row');
-      assert.equal(await page.locator('.home-stat-row--counts dt').last().evaluate(el=>{const range=document.createRange();range.selectNodeContents(el);return range.getClientRects().length}),1,'BVGs stays on one line with the real Inter font at '+width+'px');
+      assert.equal(await page.locator('.home-stat-row--counts dt').last().evaluate(el=>{const range=document.createRange();range.selectNodeContents(el);return range.getClientRects().length}),1,'BEVs stays on one line with the real Inter font at '+width+'px');
       const controls=await page.locator('.dashboard-context-panel--home .dashboard-select, .dashboard-context-action > button').evaluateAll(elements=>elements.map(el=>{const r=el.getBoundingClientRect();return{width:r.width,height:r.height}}));
       assert.equal(controls.length,4);
       assert(controls.every(box=>Math.abs(box.width-controls[0].width)<1 && Math.abs(box.height-controls[0].height)<1 && box.height>=44), 'Four matching controls at '+width+'px: '+JSON.stringify(controls));
@@ -159,7 +159,7 @@ const assert = require("node:assert/strict");
     for(const [query,value] of [['owed','4'],['settled','0'],['missing-balance','—']]){
       await page.goto('http://127.0.0.1:'+server.address().port+'/?'+query+'=1');
       const beverage=page.locator('.home-stat-row--counts .home-stat').last();
-      await beverage.waitFor();assert.equal(await beverage.locator('strong').innerText(),value);assert.equal(await beverage.innerText(),'BVGs\n'+value,'BVGs shows only its label and signed balance');
+      await beverage.waitFor();assert.equal(await beverage.locator('strong').innerText(),value);assert.equal(await beverage.innerText(),'BEVs\n'+value,'BEVs shows only its label and signed balance');
     }
     for(const [query,message] of [['no-stats','No recorded plate appearances in this view.'],['unlinked','No player record is linked to this account. Guest history is not claimed automatically.']]){
       await page.goto('http://127.0.0.1:'+server.address().port+'/?'+query+'=1');await page.getByText(message,{exact:true}).waitFor();
