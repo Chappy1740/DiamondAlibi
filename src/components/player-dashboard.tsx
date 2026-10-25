@@ -263,7 +263,7 @@ export function PlayerDashboard(p: DashboardProps) {
                         <div className="dashboard-cards">{gameCards(true)}</div>
                       </section>
                     )}
-                    <section className="card detail-card home-season-card">
+                    <section className="card detail-card home-season-card home-personal-summary">
                       <h2>My season</h2>
                       <p className="dashboard-selected-context">{team?.name} · {season?.name} · {p.scope}</p>
                       {view?.statistics ? (

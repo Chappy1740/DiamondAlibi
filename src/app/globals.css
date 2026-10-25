@@ -1970,6 +1970,7 @@ blockquote {
 
 
 /* Personal Home summary: two rate tiles, then four equal count/balance tiles. */
+.home-personal-summary { width: 100%; max-width: none; margin-inline: auto; }
 .home-season-card > h2, .home-season-card > p { text-align: center; }
 .dashboard-metrics.home-season-stats { display: grid; gap: 12px; }
 .home-stat-row { display: grid; gap: 8px; margin: 0; min-width: 0; }
