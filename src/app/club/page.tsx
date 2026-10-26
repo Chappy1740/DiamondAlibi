@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
+import { TeamRoster, TeamInvitations } from "@/components/team-roster";
 import { SeasonManager } from "@/components/season-manager";
 import { ClubForm } from "@/components/club-form";
 import { BrandLink } from "@/components/brand-link";
@@ -61,9 +62,11 @@ export default async function ClubPage({
   let seasons: Season[] = [];
   let players: Player[] = [];
   let invites: Invite[] = [];
+  let playerInvites: {invite_id: string; player_id: string}[] = [];
+  let playerInvitesAvailable = false;
   let detailError = false;
   if (selected) {
-    const [s, p, i] = await Promise.all([
+    const [s, p, i, pi] = await Promise.all([
       supabase
         .from("team_seasons")
         .select("id,name,archived")
@@ -75,10 +78,13 @@ export default async function ClubPage({
         .eq("team_id", selected.id)
         .order("created_at"),
       supabase.rpc("da_list_invites", { p_team: selected.id }),
+      supabase.rpc("da_list_player_invites", { p_team: selected.id }),
     ]);
     seasons = (s.data ?? []) as Season[];
     players = (p.data ?? []) as Player[];
     invites = (i.data ?? []) as Invite[];
+    playerInvites = pi.error ? [] : (pi.data ?? []);
+    playerInvitesAvailable = !pi.error;
     detailError = Boolean(s.error || p.error || i.error);
   }
   const season =
@@ -144,6 +150,7 @@ export default async function ClubPage({
             </label>
           </ClubForm>
           <h3>Join a team</h3>
+          <p className="muted">Already on the roster? Ask for your player-specific membership invite to keep your saved stats and BEVs. A general team invite adds a separate player record.</p>
           <ClubForm operation="join-team" label="Join team">
             <label>
               Invite code
@@ -186,77 +193,12 @@ export default async function ClubPage({
                   : "Tag myself as captain"
               }
             />
-            <h3>Roster</h3>
-            <ul className="roster-list">
-              {players.map((p) => (
-                <li key={p.id}>
-                  {p.display_name}
-                  <span className="badge">
-                    {p.is_guest ? "Guest · no account access" : "Member"}
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <ClubForm
-              operation="guest"
-              team={selected.id}
-              label="Add guest player"
-            >
-              <label>
-                Guest roster nickname
-                <input name="name" maxLength={40} required />
-              </label>
-            </ClubForm>
+            <TeamRoster team={selected.id} players={players} playerInvitesAvailable={playerInvitesAvailable} />
           </section>
         )}
         {selected && <Link className="button secondary" href={`/more/beverage-rules?${new URLSearchParams({ team: selected.id, ...(season ? { season: season.id } : {}) })}`}>View Beverage Rules</Link>}
         {selected && <SeasonManager team={selected.id} seasons={seasons} selected={season} />}
-        {selected && (
-          <section className="card detail-card">
-            <h2>Private invitations</h2>
-            <p className="muted">
-              New codes expire in seven days. Share manually only with the
-              intended teammate. Raw codes are shown once, never stored here.
-            </p>
-            <ClubForm
-              operation="create-invite"
-              team={selected.id}
-              label="Create invite code"
-            >
-              <label>
-                Maximum joins
-                <input
-                  name="maxUses"
-                  type="number"
-                  min={1}
-                  max={100}
-                  defaultValue={10}
-                  required
-                />
-              </label>
-            </ClubForm>
-            {invites.map((i) => (
-              <div className="invite-row" key={i.id}>
-                <p>
-                  {i.uses}/{i.max_uses} uses ·{" "}
-                  {i.revoked_at
-                    ? "Revoked"
-                    : new Date(i.expires_at) < new Date()
-                      ? "Expired"
-                      : `Expires ${new Date(i.expires_at).toISOString().slice(0, 10)}`}
-                </p>
-                {!i.revoked_at && (
-                  <ClubForm
-                    operation="revoke-invite"
-                    team={selected.id}
-                    hidden={{ invite: i.id }}
-                    label="Revoke this invite"
-                  />
-                )}
-              </div>
-            ))}
-          </section>
-        )}
+        {selected && <TeamInvitations team={selected.id} players={players} invites={invites} playerInvites={playerInvites} playerInvitesAvailable={playerInvitesAvailable} />}
         <section className="card detail-card">
           <h2>Personal nickname</h2>
           <p className="muted">

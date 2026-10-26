@@ -167,7 +167,7 @@ const assert = require("node:assert/strict");
       const beverage=page.locator('.home-stat-row--counts .home-stat').last();
       await beverage.waitFor();assert.equal(await beverage.locator('strong').innerText(),value);assert.equal(await beverage.innerText(),'BEVs\n'+value,'BEVs shows only its label and signed balance');
     }
-    for(const [query,message] of [['no-stats','No recorded plate appearances in this view.'],['unlinked','No player record is linked to this account. Guest history is not claimed automatically.']]){
+    for(const [query,message] of [['no-stats','No recorded plate appearances in this view.'],['unlinked','No player record is linked to this account. Use your player-specific membership invite to link existing roster history.']]){
       await page.goto('http://127.0.0.1:'+server.address().port+'/?'+query+'=1');await page.getByText(message,{exact:true}).waitFor();
       assert.equal(await page.locator('.home-stat-row').count(),0,'Missing player statistics are never shown as zero');
     }

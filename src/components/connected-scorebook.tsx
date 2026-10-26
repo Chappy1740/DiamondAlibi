@@ -445,7 +445,6 @@ export function ConnectedScorebook({
               defaultChecked={chosen}
             />
             {p.display_name}
-            {p.is_guest ? " · guest" : ""}
           </label>
           <label>
             Batting position for {p.display_name}
