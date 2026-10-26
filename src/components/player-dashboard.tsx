@@ -286,7 +286,7 @@ export function PlayerDashboard(p: DashboardProps) {
                         </div>
                       ) : (
                         <>
-                          <p>{view?.player ? "No recorded plate appearances in this view." : "No player record is linked to this account. Guest history is not claimed automatically."}</p>
+                          <p>{view?.player ? "No recorded plate appearances in this view." : "No player record is linked to this account. Use your player-specific membership invite to link existing roster history."}</p>
                           <p>Beverage Board: <strong>{balance(view?.beverageBalance ?? null)}</strong></p>
                         </>
                       )}

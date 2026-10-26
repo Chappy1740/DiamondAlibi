@@ -81,3 +81,7 @@ A green build or inactive upload is not a live release. Preserve required checks
 9. Owner acceptance or explicit hold; agreed next screen.
 
 **Current outcome:** Documentation prepared only. No screen implementation, new acceptance pass or live release is claimed by this work package.
+
+
+## Regular players and later membership preparation - October 26, 2026
+Owner wants normal roster players without required accounts, with later membership for the test crew. Local implementation separates player status from account status, reuses Add player, and offers explicit player-bound single-account invitations preserving existing roster IDs/stats/BEVs. General new-teammate invites remain separate; no name matching or automatic merge. See ../roster-membership-review.md for guarded unapplied migration, authorization/verification policy, checks and release limits. Baseline deployed main f736b87; local branch codex/regular-roster-membership. No hosted roster/account/invite mutation or new publication/database/deployment approval. Explore presentation Needs Demo Data; membership mutations Not Suitable for Demo. Physical phone and canonical tracker remain pending.

@@ -91,6 +91,14 @@ export async function clubAction(
         p_captain: field(form, "captain") === "true",
       });
       break;
+    case "create-player-invite": {
+      const player = field(form, "player");
+      if (!uuid.test(player)) return { error: "Choose a valid roster player." };
+      response = await supabase.rpc("da_create_player_invite", {p_team: team, p_player: player});
+      if (response.error || !response.data?.[0]?.code) return {error: "Could not create this player invitation. Refresh and check team access; the player may already have an account."};
+      revalidatePath("/club");
+      return {code: response.data[0].code, message: "Private player invitation created. One account can use it within seven days. Share it only with this player; nothing was sent. Their existing stats and BEVs will stay with this roster entry."};
+    }
     case "create-invite": {
       const uses = Number(field(form, "maxUses"));
       if (!Number.isInteger(uses) || uses < 1 || uses > 100)

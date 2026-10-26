@@ -2051,3 +2051,11 @@ blockquote {
 .archive-controls { margin-block: 20px; }
 .archive-controls p { overflow-wrap: anywhere; }
 .archive-controls .button { min-height: 48px; margin: 8px 8px 0 0; max-width: 100%; white-space: normal; }
+
+/* A regular roster player may be present before they link a sign-in account. */
+.roster-list.regular-roster li { display: block; min-width: 0; }
+.roster-player-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; justify-content: space-between; overflow-wrap: anywhere; }
+.regular-roster .club-form { margin-top: 12px; }
+.regular-roster .button { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+
+.team-invitations summary { min-height: 44px; display: list-item; align-content: center; cursor: pointer; }

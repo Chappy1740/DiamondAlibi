@@ -98,12 +98,13 @@ async function rpc(c, name, args) {
     await page
       .getByRole("button", { name: "Remove my captain tag", exact: true })
       .waitFor();
-    const guestForm = formFor("Add guest player");
-    await guestForm.getByLabel("Guest roster nickname").fill("Synthetic Guest");
+    const guestForm = formFor("Add player");
+    await guestForm.getByLabel("Player name").fill("Synthetic Guest");
     await guestForm
-      .getByRole("button", { name: "Add guest player", exact: true })
+      .getByRole("button", { name: "Add player", exact: true })
       .click();
     await page.getByText("Synthetic Guest", { exact: false }).first().waitFor();
+    await page.getByText("Invite someone not on the roster", { exact: true }).click();
     const inviteForm = formFor("Create invite code");
     await inviteForm.getByLabel("Maximum joins").fill("2");
     await inviteForm
