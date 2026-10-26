@@ -6,6 +6,10 @@ export const OUTCOMES = [
   "HBP",
   "ROE",
   "K",
+  "K Looking",
+  "K Swinging",
+  "SOFO",
+  "DP",
   "Out",
   "SF",
   "Fence HR",
@@ -18,6 +22,10 @@ export type Rules = {
   fenceLimit: number;
   board: {
     strikeout: number;
+    strikeoutLooking?: number;
+    strikeoutSwinging?: number;
+    strikeoutFoul?: number;
+    doublePlay?: number;
     solo: number;
     bandSolo: number;
     grandSlam: number;
@@ -35,6 +43,32 @@ export const DEFAULT_BOARD = {
   insidePark: -1,
   multiRun: 0,
 };
+export const EXTENDED_BOARD = {
+  ...DEFAULT_BOARD,
+  strikeoutLooking: 2,
+  strikeoutSwinging: 2,
+  strikeoutFoul: 1,
+  doublePlay: 1,
+};
+export const EXTENDED_RULE_KEYS = ["strikeoutLooking", "strikeoutSwinging", "strikeoutFoul", "doublePlay"] as const;
+export const BOARD_LABELS: Record<keyof typeof EXTENDED_BOARD, string> = {
+  strikeout: "Strikeout", solo: "Solo fence HR", bandSolo: "Solo fence HR with Band",
+  grandSlam: "Grand slam", overLimit: "Over-limit HR", insidePark: "Inside-the-park HR", multiRun: "Other multi-run HR",
+  strikeoutLooking: "Strikeout looking", strikeoutSwinging: "Strikeout swinging",
+  strikeoutFoul: "Strikeout foul out (SOFO)", doublePlay: "Hit into double play",
+};
+export const OUTCOME_LABELS: Partial<Record<Outcome, string>> = {
+  "K Looking": "Strikeout looking", "K Swinging": "Strikeout swinging", SOFO: "Strikeout foul out (SOFO)", DP: "Hit into double play",
+};
+export const EXTENDED_OUTCOME_RULES = {"K Looking":"strikeoutLooking", "K Swinging":"strikeoutSwinging", SOFO:"strikeoutFoul", DP:"doublePlay"} as const;
+export function isStrikeout(outcome: Outcome) { return outcome === "K" || outcome === "K Looking" || outcome === "K Swinging" || outcome === "SOFO"; }
+export function hasExtendedRules(board: Rules["board"]) { return EXTENDED_RULE_KEYS.every(key => typeof board[key] === "number"); }
+export function availableOutcomes(board: Rules["board"]): Outcome[] { return OUTCOMES.filter(outcome => !(outcome in EXTENDED_OUTCOME_RULES) || hasExtendedRules(board)); }
+export function extendedBoardFromColumns(rules: Record<string, unknown>): Partial<Pick<Rules["board"], typeof EXTENDED_RULE_KEYS[number]>> {
+  const columns = ["strikeout_looking", "strikeout_swinging", "strikeout_foul", "double_play"];
+  if (!columns.every(key => typeof rules[key] === "number" && Number.isInteger(rules[key]) && Math.abs(rules[key] as number) <= 100)) return {};
+  return Object.fromEntries(EXTENDED_RULE_KEYS.map((key, i) => [key, rules[columns[i]]])) as Pick<Rules["board"], typeof EXTENDED_RULE_KEYS[number]>;
+}
 export type Player = { id: string; name: string };
 export type Play = {
   id: string;
@@ -137,6 +171,10 @@ function count(value: number, max: number, label: string) {
 }
 export function validateRules(rules: Rules) {
   text(rules.version, "Rule version");
+  insist(Object.keys(rules.board).every(key => Object.hasOwn(EXTENDED_BOARD, key)), "Unrecognized Board adjustment.");
+  const extras = EXTENDED_RULE_KEYS.filter(key => Object.hasOwn(rules.board, key));
+  insist(extras.length === 0 || extras.length === EXTENDED_RULE_KEYS.length, "Choose all extended outcome amounts explicitly.");
+  for (const key of extras) insist(Number.isInteger(rules.board[key]) && Math.abs(rules.board[key]!) <= 100, "Board adjustments must be whole numbers from -100 to 100.");
   count(rules.fenceLimit, 100, "Fence limit");
   for (const key of Object.keys(
     DEFAULT_BOARD,
@@ -294,6 +332,7 @@ export function applyCommand(current: Scorebook, request: Request): Scorebook {
       const play = game.plays.find((p) => p.id === cmd.playId);
       insist(play, "Play was not found.");
       validatePlay(cmd.outcome, cmd.runs, cmd.rbi);
+      insist(availableOutcomes(game.rules.board).includes(cmd.outcome), "This game does not have saved rules for that outcome.");
       insist(
         typeof cmd.voided === "boolean",
         "Choose whether the play is voided.",
@@ -340,6 +379,7 @@ export function applyCommand(current: Scorebook, request: Request): Scorebook {
           "The next batter changed. Confirm the batter before scoring.",
         );
         validatePlay(cmd.outcome, cmd.runs, cmd.rbi);
+      insist(availableOutcomes(game.rules.board).includes(cmd.outcome), "This game does not have saved rules for that outcome.");
         game.plays.push({
           id: cmd.playId,
           playerId: cmd.playerId,
@@ -417,9 +457,14 @@ export function evaluateGame(game: Game, bands: string[]) {
     if (play.outcome === "HBP") t.HBP++;
     if (play.outcome === "ROE") t.ROE++;
     if (play.outcome === "SF") t.SF++;
-    if (play.outcome === "K") t.K++;
+    if (isStrikeout(play.outcome)) t.K++;
     let delta = 0;
     if (play.outcome === "K") delta = b.strikeout;
+    if (play.outcome in EXTENDED_OUTCOME_RULES) {
+      const key = EXTENDED_OUTCOME_RULES[play.outcome as keyof typeof EXTENDED_OUTCOME_RULES];
+      insist(typeof b[key] === "number", "Missing saved outcome rule.");
+      delta = b[key]!;
+    }
     if (play.outcome === "ITP HR") {
       t.HR++;
       delta = b.insidePark;

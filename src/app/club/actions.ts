@@ -158,6 +158,7 @@ export async function clubAction(
         p_season: id,
         p_archived: field(form, "archived") === "true",
       });
+      if (!response.error && field(form, "archived") === "true" && jar.get("da-season")?.value === id) jar.delete("da-season");
       break;
     }
     case "guest":
@@ -186,6 +187,7 @@ export async function clubAction(
         "Could not save this change. Check your team access and try again. Names must be valid and season names unique.",
     };
   revalidatePath("/club");
+  if (operation === "archive-season") revalidatePath("/", "layout");
   revalidatePath("/more/profile");
   return { message: "Saved to your clubhouse." };
 }

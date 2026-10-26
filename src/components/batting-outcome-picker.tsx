@@ -41,7 +41,9 @@ export function BattingOutcomePicker({
   onChange,
   disabled,
   onPick,
+  extended = false,
 }: {
+  extended?: boolean;
   value: Outcome;
   onChange: (outcome: Outcome) => void;
   disabled: boolean;
@@ -58,7 +60,13 @@ export function BattingOutcomePicker({
         >
           <p className="batting-outcome-heading">{group.title}</p>
           <div className="batting-outcome-grid">
-            {group.choices.map((choice) => (
+            {(extended && group.title === "Outs" ? [
+              {outcome:"K Swinging" as Outcome,code:"K",label:"Strikeout swinging"},
+              {outcome:"K Looking" as Outcome,code:"ꓘ",label:"Strikeout looking"},
+              {outcome:"SOFO" as Outcome,code:"SOFO",label:"Strikeout foul out"},
+              {outcome:"DP" as Outcome,code:"DP",label:"Hit into double play"},
+              {outcome:"Out" as Outcome,code:"OUT",label:"Out"},
+            ] : group.choices).map((choice) => (
               <button
                 key={choice.outcome}
                 type="button"

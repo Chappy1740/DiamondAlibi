@@ -15,12 +15,12 @@ const esbuild = require("esbuild"),
  import React from 'react';import{createRoot}from'react-dom/client';import{BeverageControls}from'./src/components/beverage-controls';import{DEFAULT_BOARD}from'./src/lib/scoring';
  const q=new URLSearchParams(location.search),teamId='00000000-0000-4000-8000-000000000010';
  window.__writes=[];window.__commits=0;window.__responses=new Map();window.__nextResult='accepted';
- window.__state={teamId,revision:0,finalized:!q.has('draft'),rules:q.has('draft')?null:DEFAULT_BOARD,canToggle:!q.has('guest'),participating:true,management:q.has('legacy')?undefined:{canEdit:!q.has('member'),lockedBy:q.has('draft')?null:'Synthetic Manager',lockedAt:q.has('draft')?null:'2026-10-14T11:00:00Z'}};
+ window.__state={extendedOutcomes:q.has('extended'),teamId,revision:0,finalized:!q.has('draft'),rules:q.has('draft')?null:DEFAULT_BOARD,canToggle:!q.has('guest'),participating:true,management:q.has('legacy')?undefined:{canEdit:!q.has('member'),lockedBy:q.has('draft')?null:'Synthetic Manager',lockedAt:q.has('draft')?null:'2026-10-14T11:00:00Z'}};
  window.__action=async request=>{
   if(request.type==='read')return q.has('unsupported')?{status:'unsupported'}:{status:'ok',data:{...window.__state}};
   window.__writes.push(request);await new Promise(r=>setTimeout(r,25));
   if(window.__responses.has(request.commandId))return{status:'accepted',duplicate:true};
-  if(request.change.type==='replace'&&Object.keys(DEFAULT_BOARD).every(key=>request.change.rules[key]===window.__state.rules?.[key]))return{status:'invalid'};
+  if(request.change.type==='replace'&&JSON.stringify(request.change.rules)===JSON.stringify(window.__state.rules))return{status:'invalid'};
   if(window.__nextResult==='conflict'){window.__nextResult='accepted';window.__state={...window.__state,revision:window.__state.revision+1,participating:false};return{status:'conflict'}};
   window.__state={...window.__state,revision:window.__state.revision+1,...(['finalize','replace'].includes(request.change.type)?{finalized:true,rules:request.change.rules,management:{canEdit:true,lockedBy:'Synthetic Manager',lockedAt:'2026-10-14T11:05:00Z'}}:{participating:request.change.participating})};
   window.__commits++;window.__responses.set(request.commandId,true);
@@ -286,6 +286,19 @@ const esbuild = require("esbuild"),
       )
       .waitFor();
     assert.equal(await page.evaluate(() => window.__commits), 0);
+
+    await page.goto(base+'?team&extended');
+    await page.getByRole('button',{name:'Change',exact:true}).click();
+    for(const [label,value] of [['Strikeout looking','2'],['Strikeout swinging','2'],['Strikeout foul out (SOFO)','1'],['Hit into double play','1']])assert.equal(await page.getByLabel(label,{exact:true}).inputValue(),value);
+    for(const width of [320,390,1440]){
+      await page.setViewportSize({width,height:900});
+      await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Extended rule fields fit '+width);
+    }
+    await page.getByRole('button',{name:'Save Beverage Rules',exact:true}).click();
+    await page.waitForFunction(()=>window.__commits===1);
+    assert.deepEqual(await page.evaluate(()=>window.__writes[0].change.rules),{strikeout:1,solo:1,bandSolo:-1,grandSlam:-1,overLimit:1,insidePark:-1,multiRun:0,strikeoutLooking:2,strikeoutSwinging:2,strikeoutFoul:1,doublePlay:1});
+
     assert.deepEqual(errors, []);
     console.log(
       "Beverage controls: unchanged saves make no write (defaults, numeric formatting, saved custom values and reverted edits); actual replacement, opt-out/rejoin, duplicate protection, same-ID retry, offline/conflict, creator/member fallback and 320–1440px passed.",

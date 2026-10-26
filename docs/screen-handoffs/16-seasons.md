@@ -81,3 +81,8 @@ A green build or inactive upload is not a live release. Preserve required checks
 9. Owner acceptance or explicit hold; agreed next screen.
 
 **Current outcome:** Documentation prepared only. No screen implementation, new acceptance pass or live release is claimed by this work package.
+
+
+### Recoverable archive preparation — October 26, 2026
+
+Owner requested a delete-like option and chose hide with restore. Reuse the existing season archive RPC with clearer active/Archived seasons sections and confirmation/Cancel. Add equivalent Tournament settings Archive/Restore, archived history list and server/database scoring denial while archived. Keep every saved game, rule, stat and BEV; current membership/captain policies remain. See ../archive-lifecycle-review.md for exact code, unapplied migration and verification. Work is local-only on codex/strikeout-types-double-play, alongside preserved unpublished SO changes; no hosted archive/restore, publication, schema application or deployment. Physical-device acceptance and canonical tracker remain open.

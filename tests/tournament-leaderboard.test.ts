@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   competitionStats,
   rankTournamentPlayers,
+  leaderboardValue,
   overallTournamentLeaderboard,
   overallTournamentStats,
   tournamentStats,
@@ -11,6 +12,7 @@ import {
 } from "../src/lib/tournament-leaderboard.ts";
 import {
   DEFAULT_BOARD,
+  EXTENDED_BOARD,
   emptyTotals,
   evaluateGame,
   rates,
@@ -465,4 +467,60 @@ test("league summaries isolate each league and kind, reuse weighted rates and ke
   data.snapshot.games[0].evaluation.totals.a.board = -4;
   assert.equal(competitionStats(data, "team", "season", "League", "one")!.players.find(row => row.id === "a")!.totals.board, -4);
   assert.equal(competitionStats(data, "team", "season", "League", "one")!.beverageActivity, null, "inconsistent historical detail stays unknown");
+});
+
+
+test("all shared leaderboards rank recorded outcome counts in the correct season/kind/competition scope",()=>{
+ function extended(id: string,kind: "League"|"Tournament",competition: string,outcomes: Play["outcome"][]): ConnectedGame {
+  const source: Game={id,opponent:"Synthetic",kind,lineup:["a"],next:0,complete:false,rules:{version:"Expanded",fenceLimit:3,board:EXTENDED_BOARD},plays:outcomes.map((outcome,i)=>play(id+i,"a",outcome))};
+  return {game:{id,day_id:"day",kind,tournament_id:kind==="Tournament"?competition:null,league_id:kind==="League"?competition:null,opponent:"Synthetic",completed:false,next_batter_position:0},playedOn:"2026-11-07",dayRevision:1,tournamentRevision:kind==="Tournament"?1:null,lineup:["a"],rules:{version_label:"Expanded",fence_limit:3,strikeout_looking:2,strikeout_swinging:2,strikeout_foul:1,double_play:1},evaluation:evaluateGame(source,[])};
+ }
+ const games=[extended("c1","Tournament","cup",["K Looking","DP"]),extended("c2","Tournament","other-cup",["K Looking","K Swinging","SOFO"]),extended("l1","League","league",["K Swinging","DP","DP"]),extended("l2","League","other-league",["SOFO","SOFO"])];
+ const totals=emptyTotals();for(const game of games)for(const key of Object.keys(totals) as (keyof typeof totals)[])totals[key]+=game.evaluation.totals.a[key];
+ const data: LoadedScorebook={snapshot:{teamId:"team",seasonId:"season",scope:"Overall",totals:{a:totals},board:{a:totals.board},games,tournaments:[{id:"cup",name:"Cup",revision:1},{id:"other-cup",name:"Other Cup",revision:1}],leagues:[{id:"league",name:"League",fenceLimit:3},{id:"other-league",name:"Other League",fenceLimit:3}]},roster:[{id:"a",display_name:"Synthetic Alex",is_guest:false}],bands:[],participation:[],leagueBands:[],archived:false};
+ assert.deepEqual(teamLeaderboard(data,"team","season","Overall")[0].outcomes,{DP:3});
+ assert.equal(leaderboardValue(teamLeaderboard(data,"team","season","Overall")[0],"SO"),7,"all strikeout types combine under SO");
+ assert.equal(leaderboardValue(overallTournamentLeaderboard(data,"team","season")[0],"SO"),4);
+ assert.equal(leaderboardValue(competitionStats(data,"team","season","League")!.players[0],"SO"),3);
+ assert.deepEqual(overallTournamentLeaderboard(data,"team","season")[0].outcomes,{DP:1});
+ const incomplete=structuredClone(data);(incomplete.snapshot.games[0] as Partial<ConnectedGame>).evaluation=undefined;
+ const unknown=teamLeaderboard(incomplete,"team","season","Overall")[0];
+ assert.equal(leaderboardValue(unknown,"SO"),totals.K,"SO uses authoritative K even when subtype history is unavailable");
+ assert.deepEqual(unknown.outcomes,{DP:null});assert.equal(unknown.totals.board,totals.board,"missing breakdown does not change owed BEVs");
+ games[0].evaluation.rows[0].outcome="K";
+ assert.deepEqual(tournamentLeaderboard(data,"team","season","cup")[0].outcomes,{DP:1},"unspecified K does not change independently recorded DP counts");
+ games[0].evaluation.rows[0].outcome="K Looking";
+
+ assert.deepEqual(tournamentLeaderboard(data,"team","season","cup")[0].outcomes,{DP:1});
+ assert.deepEqual(competitionStats(data,"team","season","League","league")!.players[0].outcomes,{DP:2});
+ assert.deepEqual(competitionStats(data,"team","season","League")!.players[0].outcomes,{DP:2});
+ assert.deepEqual(competitionStats(data,"team","season","Tournament","other-cup")!.players[0].outcomes,{DP:0});
+ data.snapshot.scope="League";const league=competitionStats(data,"team","season","League")!;data.snapshot.totals={a:league.totals};
+ assert.deepEqual(teamLeaderboard(data,"team","season","League")[0].outcomes,league.players[0].outcomes);
+ // Corrections/voids use current effective rows and totals, never original action counts.
+ const first=games[0];first.evaluation.rows[0].outcome="SOFO";
+ assert.deepEqual(tournamentLeaderboard(data,"team","season","cup")[0].outcomes,{DP:1});
+ first.evaluation.rows[1].voided=true;first.evaluation.totals.a.PA--;
+ assert.equal(tournamentLeaderboard(data,"team","season","cup")[0].outcomes!.DP,0);
+ // Missing or old subtype capture stays unknown, with existing BEV totals untouched.
+ first.rules.double_play=null;
+ const historical=tournamentLeaderboard(data,"team","season","cup")[0];
+ assert.deepEqual(historical.outcomes,{DP:null});
+ assert.equal(leaderboardValue(historical,"DP"),null);assert.equal(leaderboardValue(historical,"board"),first.evaluation.totals.a.board);
+ assert.deepEqual(tournamentLeaderboard(data,"foreign-team","season","cup"),[]);
+});
+
+test("new outcome rankings keep highest count first, shared ties, zero and unknown separate",()=>{
+ const row=(id:string,value:number|null)=>({id,name:id,totals:emptyTotals(),rates:rates(emptyTotals()),outcomes:{DP:value}});
+ for(const metric of ["DP"] as const){
+  const ranked=rankTournamentPlayers([row("unknown",null),row("zero",0),row("b",2),row("a",2),row("one",1)],metric);
+  assert.deepEqual(ranked.map(r=>[r.id,r.rank]),[["a",1],["b",1],["one",3],["zero",4],["unknown",null]]);
+ }
+});
+
+
+test("SO ranks the authoritative combined strikeout total including legacy generic K",()=>{
+ const player=(id:string,k:number)=>({id,name:id,totals:{...emptyTotals(),K:k},rates:rates(emptyTotals())});
+ const rows=rankTournamentPlayers([player("zero",0),player("b",3),player("a",3),player("one",1)],"SO");
+ assert.deepEqual(rows.map(row=>[row.id,leaderboardValue(row,"SO"),row.rank]),[["a",3,1],["b",3,1],["one",1,3],["zero",0,4]]);
 });

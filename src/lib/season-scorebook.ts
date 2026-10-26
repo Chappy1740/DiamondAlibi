@@ -2,6 +2,7 @@ import {
   applyCommand,
   createScorebook,
   validateRules,
+  EXTENDED_RULE_KEYS,
   type Audit,
   type Command,
   type Player,
@@ -135,7 +136,7 @@ function rules(value: unknown) {
     "overLimit",
     "insidePark",
     "multiRun",
-  ]);
+  ], [...EXTENDED_RULE_KEYS]);
   validateRules(r as Rules);
 }
 function bandChoices(value: unknown) {

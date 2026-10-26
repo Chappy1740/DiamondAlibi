@@ -28,6 +28,9 @@ jobs:
       - run: node tests/optional-lineups-sql.cjs
       - run: node tests/team-beverage-sql.cjs
       - run: node tests/manager-beverage-sql.cjs
+      - run: node --experimental-strip-types tests/extended-outcomes-sql.cjs
+      - run: node tests/archive-lifecycle-sql.cjs
+      - run: WITH_EXTENDED=1 node tests/archive-lifecycle-sql.cjs
       - run: node tests/personal-alibis-sql.cjs
       - run: node tests/dashboard-loader.cjs
       - run: node tests/password-reset.cjs
@@ -48,6 +51,8 @@ jobs:
       - run: BROWSER_ENGINE=webkit node tests/home-layout-browser.cjs
       - run: node tests/games-flow-browser.cjs
       - run: BROWSER_ENGINE=webkit node tests/games-flow-browser.cjs
+      - run: node tests/archive-controls-browser.cjs
+      - run: BROWSER_ENGINE=webkit node tests/archive-controls-browser.cjs
       - run: node tests/beverage-controls-browser.cjs
       - run: BROWSER_ENGINE=webkit node tests/beverage-controls-browser.cjs
       - run: node tests/scorebook-modes-browser.cjs

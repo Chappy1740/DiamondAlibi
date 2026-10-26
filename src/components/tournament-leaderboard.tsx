@@ -3,18 +3,20 @@ import { useEffect, useRef, useState } from "react";
 import { formatBaseballRate } from "@/lib/baseball-rate";
 import {
   rankTournamentPlayers,
+  leaderboardValue,
   type TournamentPlayer,
   type LeaderboardMetric,
 } from "@/lib/tournament-leaderboard";
-const metrics: LeaderboardMetric[] = ["OBP", "H", "HR", "RBI", "board"];
+const metrics: LeaderboardMetric[] = ["OBP", "H", "HR", "RBI", "board", "SO", "DP"];
 const labels = {
   OBP: "OBP%",
   H: "Hits",
   HR: "HR",
   RBI: "RBI",
   board: "Beverages",
+  SO: "SO", DP: "Hit into double play",
 };
-const badges = { OBP: "OBP", H: "H", HR: "HR", RBI: "RBI", board: "BEV" };
+const badges = { OBP: "OBP", H: "H", HR: "HR", RBI: "RBI", board: "BEV", SO: "SO", DP: "DP" };
 function MetricValue({
   row,
   metric,
@@ -45,7 +47,7 @@ function MetricValue({
       <strong>
         {metric === "OBP"
           ? formatBaseballRate(row.rates.OBP)
-          : row.totals[metric]}
+          : (leaderboardValue(row, metric) ?? "—")}
       </strong>
       {showLabel && labels[metric]}
     </span>
@@ -78,6 +80,8 @@ export function PlayerLeaderboard({
     <section className="tournament-leaderboard" aria-label={regionLabel}>
       <h2>{metric ? `${labels[metric]} rankings` : title}</h2>
       <p className="micro leaderboard-scope">{scopeLabel}</p>
+      <p className="micro">SO includes looking, swinging, and SOFO strikeouts.</p>
+      {players.some(row => leaderboardValue(row, "DP") == null) && <p className="micro">Some older games did not record double plays. Unavailable DP counts show — and are unranked.</p>}
       {metric == null ? (
         <div
           className="leaderboard-summary"

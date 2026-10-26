@@ -1,7 +1,7 @@
 import {
   evaluateGame,
   emptyTotals,
-  OUTCOMES,
+  availableOutcomes,
   validateRules,
   type Game,
   type Totals,
@@ -60,7 +60,7 @@ function validateGame(game: Game) {
   );
   for (const play of game.plays) {
     requireValue(
-      game.lineup.includes(play.playerId) && OUTCOMES.includes(play.outcome),
+      game.lineup.includes(play.playerId) && availableOutcomes(game.rules.board).includes(play.outcome),
       "Choose a lineup player and recognized outcome.",
     );
     requireValue(
