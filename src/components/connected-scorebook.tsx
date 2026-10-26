@@ -1,4 +1,5 @@
 "use client";
+import { BOARD_LABELS, extendedBoardFromColumns, availableOutcomes, OUTCOME_LABELS } from "@/lib/scoring";
 import { formatBaseballRate as rate } from "@/lib/baseball-rate";
 import { competitionGames, competitionPath, contextQuery } from "@/lib/competitions";
 import { revealInvalidField } from "@/lib/form-details";
@@ -17,7 +18,6 @@ import { connectedScoreboard } from "@/lib/game-scoreboard";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   DEFAULT_BOARD,
-  OUTCOMES,
   emptyTotals,
   rates,
   type Outcome,
@@ -48,15 +48,7 @@ type Props = {
     scope: Scope,
   ): Promise<ScorebookLoadResult>;
 };
-const boardLabels: Record<keyof typeof DEFAULT_BOARD, string> = {
-  strikeout: "Strikeout",
-  solo: "Solo fence HR",
-  bandSolo: "Solo fence HR with Band",
-  grandSlam: "Grand slam",
-  overLimit: "Over-limit HR",
-  insidePark: "Inside-the-park HR",
-  multiRun: "Other multi-run HR",
-};
+const boardLabels = BOARD_LABELS;
 export function ConnectedScorebook({
   storageKey,
   teamId,
@@ -127,7 +119,8 @@ export function ConnectedScorebook({
   // A requested game that vanished must not silently select a different game.
   const current = selected ? games.find((g) => g.game.id === selected) : games[0];
   const visibleAudit = mode === "manage" ? current ? gameAudit(audit?.events ?? [], current.game.id, current.game.tournament_id) : [] : audit?.events ?? [];
-  const liveUpdates = Boolean((mode === "score" || mode === "full") && current && !current.game.completed && !data?.archived);
+  const tournamentArchived = snapshot?.tournaments.find(t => t.id === (current?.game.tournament_id || tournamentId))?.archived === true;
+  const liveUpdates = Boolean((mode === "score" || mode === "full") && current && !current.game.completed && !data?.archived && !tournamentArchived);
   const manual = current?.game.batting_mode === "manual";
   const battingPlayer = manual ? manualPlayer : current?.lineup[current.game.next_batter_position] ?? "";
   useEffect(() => { setManualPlayer(""); setPlayerSearch(""); setFirstBand(null); setEntryError(""); pendingPlay.current = null; }, [current?.game.id]);
@@ -135,7 +128,7 @@ export function ConnectedScorebook({
     data?.roster.find((p) => p.id === id)?.display_name ??
     "Former roster player";
   const disabled =
-    busy || !online || paused || review || uncertain || !data || data.archived;
+    busy || !online || paused || review || uncertain || !data || data.archived || tournamentArchived;
   const base = { teamId, seasonId };
   const needsBeverageRules = Boolean(snapshot?.capabilities?.teamBeverage && !snapshot.beverage?.finalized);
   const continuation =
@@ -307,7 +300,7 @@ export function ConnectedScorebook({
         }
         setMessage(
           result.status === "paused"
-            ? "This season is archived. Writes are paused."
+            ? "Scoring is paused. Refresh to check the season and tournament status."
             : result.status === "invalid"
               ? "That change was not accepted. Check the setup and refresh before retrying."
               : "Sign in and check your team access in My clubhouse.",
@@ -416,6 +409,8 @@ export function ConnectedScorebook({
     if (!data || !current || disabled) return false;
     const result = parseNamedPlay(text, data.roster, battingPlayer);
     if (result.status !== "ok") { setEntryError(result.message); return false; }
+    if (!availableOutcomes({ ...DEFAULT_BOARD, ...extendedBoardFromColumns(current.rules) }).includes(result.outcome)) { setEntryError("This game does not have saved rules for that outcome."); return false; }
+    if (result.outcome === "K" && Object.keys(extendedBoardFromColumns(current.rules)).length === 4) { setEntryError("Choose strikeout looking, strikeout swinging, or SOFO."); return false; }
     setOutcome(result.outcome); setRuns(result.runs); setRbi(result.rbi);
     return recordPlay(result.playerId, result.outcome, result.runs, result.rbi);
   }
@@ -507,7 +502,7 @@ export function ConnectedScorebook({
       gameKind === "Tournament"
         ? snapshot?.tournaments.find((t) => t.id === chosenTournament)
         : null;
-    if (gameKind === "Tournament" && !tour) {
+    if (gameKind === "Tournament" && (!tour || tour.archived)) {
       setMessage("Choose a tournament first.");
       return;
     }
@@ -664,7 +659,7 @@ export function ConnectedScorebook({
       <section className={mode === "full" ? "card detail-card" : `scorebook-status${needsAttention ? " scorebook-status--attention" : ""}`} aria-label="Scorebook connection">
         <div className="scorebook-toolbar">
           {mode === "full" ? <h2>Team scorebook</h2> : <span className="connection-indicator" role="status">
-            {busy ? "Working…" : !online ? "Offline" : paused ? "Paused" : uncertain ? "Save unconfirmed" : review ? "Review needed" : data?.archived ? "Read only" : "Connected"}
+            {busy ? "Working…" : !online ? "Offline" : paused ? "Paused" : uncertain ? "Save unconfirmed" : review ? "Review needed" : data?.archived || tournamentArchived ? "Read only" : "Connected"}
           </span>}
           <button
             className="button secondary"
@@ -683,9 +678,10 @@ export function ConnectedScorebook({
           {online ? "Connected" : "Offline"} ·{" "}
           {data?.archived
             ? "Archived season · read only"
-            : "Changes require a confirmed save"}
+            : tournamentArchived ? "Archived tournament · read only" : "Changes require a confirmed save"}
           .{liveUpdates ? " Live game updates while this page is visible." : ""}
         </p>}
+        {tournamentArchived && <p className="connection-notice" role="status">Archived tournament · read only. Restore it in Tournament settings to score again.</p>}
         {uncertain && (
           <button
             className="button primary"
@@ -757,7 +753,7 @@ export function ConnectedScorebook({
                       </label>
                       <input type="hidden" name="at-bat-rbi" value={rbi} />
                       {mode === "score" && <p className="quick-play-hint">Set RBI when needed, then tap the result to record.</p>}
-                      <BattingOutcomePicker value={outcome} disabled={disabled} onPick={mode === "score" ? pickOutcome : undefined} onChange={(next) => {
+                      <BattingOutcomePicker extended={Object.keys(extendedBoardFromColumns(current.rules)).length === 4} value={outcome} disabled={disabled} onPick={mode === "score" ? pickOutcome : undefined} onChange={(next) => {
                         setOutcome(next);
                         const hr = next === "Fence HR" || next === "ITP HR";
                         setRuns(hr ? 1 : 0);
@@ -915,8 +911,8 @@ export function ConnectedScorebook({
                           aria-label="Correct outcome"
                           defaultValue={row.outcome}
                         >
-                          {OUTCOMES.map((o) => (
-                            <option key={o}>{o}</option>
+                          {availableOutcomes({ ...DEFAULT_BOARD, ...extendedBoardFromColumns(current.rules) }).map((o) => (
+                            <option key={o} value={o}>{OUTCOME_LABELS[o] ?? o}</option>
                           ))}
                         </select>
                       </label>
@@ -1086,7 +1082,7 @@ export function ConnectedScorebook({
                         required
                       >
                         <option value="">Choose tournament</option>
-                        {snapshot?.tournaments.map((t) => (
+                        {snapshot?.tournaments.filter(t => !t.archived).map((t) => (
                           <option key={t.id} value={t.id}>
                             {t.name}
                             {t.guaranteedGames

@@ -9,22 +9,25 @@ const assert = require("node:assert/strict");
   const errors=[];
   try {
     const bundle=await esbuild.build({stdin:{resolveDir:process.cwd(),loader:"tsx",contents:`
-      import React from 'react';import{createRoot}from'react-dom/client';import{ConnectedScorebook}from'./src/components/connected-scorebook';import{DEFAULT_BOARD}from'./src/lib/scoring';import ScorePage from'./src/app/club/score/page';import{CompetitionPage}from'./src/components/competition-page';import{emptyTotals}from'./src/lib/scoring';import{BottomNavigationView}from'./src/components/bottom-navigation';
+      import React from 'react';import{createRoot}from'react-dom/client';import{ConnectedScorebook}from'./src/components/connected-scorebook';import{DEFAULT_BOARD,EXTENDED_BOARD,evaluateGame}from'./src/lib/scoring';import ScorePage from'./src/app/club/score/page';import{CompetitionPage}from'./src/components/competition-page';import{emptyTotals}from'./src/lib/scoring';import{BottomNavigationView}from'./src/components/bottom-navigation';
       const rules={version_label:'Synthetic rules',fence_limit:9,strikeout:DEFAULT_BOARD.strikeout,solo:DEFAULT_BOARD.solo,band_solo:DEFAULT_BOARD.bandSolo,grand_slam:DEFAULT_BOARD.grandSlam,over_limit:DEFAULT_BOARD.overLimit,inside_park:DEFAULT_BOARD.insidePark,multi_run:DEFAULT_BOARD.multiRun};
       const g=(id,kind,competition,opponent)=>({game:{id,kind,league_id:kind==='League'?competition:null,tournament_id:kind==='Tournament'?competition:null,day_id:'synthetic-day',opponent,completed:false,next_batter_position:0},playedOn:'2026-10-13',dayRevision:1,tournamentRevision:kind==='Tournament'?1:null,lineup:['synthetic-player'],rules,evaluation:{rows:[],fenceUsed:0,totals:{}}});
       const data={archived:false,roster:[{id:'synthetic-player',display_name:'Synthetic Player',is_guest:false}],bands:[{player_id:'synthetic-player',tournament_id:'synthetic-cup',has_band:true}],participation:[],leagueBands:[],snapshot:{teamId:'synthetic-team',seasonId:'synthetic-season',scope:'Overall',totals:{},board:{'synthetic-player':-2},leagues:[{id:'synthetic-league',name:'Synthetic league',fenceLimit:0},{id:'other-league',name:'Other synthetic league',fenceLimit:5}],tournaments:[{id:'synthetic-cup',name:'M3-5 Synthetic Cup',revision:1,fenceLimit:2,guaranteedGames:2}],games:[g('league-game','League','synthetic-league','League opponent'),g('other-game','League','other-league','Other opponent'),g('cup-game','Tournament','synthetic-cup','Cup opponent')]}};
       const query=new URLSearchParams(location.search);window.__writes=[];window.__reloads=0;window.__writeResult='invalid';window.__reloadStatus='ok';
       const footer=document.createElement('div');document.body.append(footer);createRoot(footer).render(<BottomNavigationView pathname={query.has('leaderboard')?'/tournaments/synthetic-cup':'/club/score'} context='team=synthetic-team&season=synthetic-season'/>);
+      if(query.has('extended'))Object.assign(rules,{strikeout_looking:2,strikeout_swinging:2,strikeout_foul:1,double_play:1});
       if(query.has('empty')){data.snapshot.games=data.snapshot.games.filter(g=>!g.game.tournament_id);data.bands=[];}
       if(query.has('team-beverage')){data.snapshot.capabilities={manualBatting:true,teamBeverage:true};data.snapshot.beverage={teamId:'synthetic-team',revision:1,finalized:!query.has('unfinalized'),rules:query.has('unfinalized')?null:{...DEFAULT_BOARD,solo:2},canToggle:true,participating:true};}
       if(query.has('manual')){data.snapshot.capabilities={manualBatting:true};data.roster.push({id:'adam-player',display_name:'Adam Jones',is_guest:false});data.snapshot.games.forEach(game=>{game.game.batting_mode='manual';game.lineup=[];});if(query.has('first-band'))data.bands=[];}
       if(query.has('voice'))window.SpeechRecognition=class{start(){window.__recognition=this;}stop(){}abort(){window.__aborted=true;}};
+      if(query.has('tournament-archived'))data.snapshot.tournaments[0].archived=true;
       if(query.has('completed'))data.snapshot.games.forEach(g=>g.game.completed=true);if(query.has('archived'))data.archived=true;
       window.__fixture=data;window.__audit=[{action:'hrLimit',reason:'Tournament game history',after:{game:{id:'cup-game'},fenceLimit:2}},{action:'hrLimit',reason:'League game history',after:{game:{id:'league-game'},fenceLimit:0}},{action:'band',tournamentId:'synthetic-cup',reason:'Cup Band history',before:true,after:false},{action:'start',reason:'Other game history',after:{gameId:'other-game'}}];
       if(query.has('leaderboard')){
         data.roster.push({id:'other-player',display_name:'Synthetic Blair with a very long roster nickname',is_guest:true});
         const cupGame=data.snapshot.games.find(g=>g.game.id==='cup-game');cupGame.evaluation.totals={'synthetic-player':{...emptyTotals(),PA:3,AB:3,H:2,HR:1,RBI:1,board:-1},'other-player':{...emptyTotals(),PA:3,AB:3,H:2,HR:0,RBI:2,board:2}};
         data.snapshot.games.find(g=>g.game.id==='league-game').evaluation.totals={'synthetic-player':{...emptyTotals(),PA:99,H:99,HR:99,RBI:99,board:50}};
+        if(query.has('new-leaders'))cupGame.evaluation=evaluateGame({id:'cup-game',opponent:'Synthetic',kind:'Tournament',lineup:['synthetic-player','other-player'],next:0,complete:false,rules:{version:'Synthetic expanded',fenceLimit:3,board:EXTENDED_BOARD},plays:[['synthetic-player','K Looking'],['synthetic-player','K Looking'],['synthetic-player','K Swinging'],['synthetic-player','DP'],['other-player','SOFO'],['other-player','SOFO'],['other-player','DP'],['other-player','DP']].map(([playerId,outcome],i)=>({id:String(i),playerId,outcome,runs:0,rbi:0,voided:false}))},[]);
         if(query.has('nine-games')){data.snapshot.games=data.snapshot.games.filter(g=>g.game.kind==='League').concat(Array.from({length:9},(_,i)=>({...structuredClone(cupGame),game:{...cupGame.game,id:'cup-game-'+i,tournament_game_number:i+1}})));}
         createRoot(document.getElementById('app')).render(<CompetitionPage kind={query.has('league-page')?'League':'Tournament'} id={query.has('league-page')?'synthetic-league':'synthetic-cup'} data={{route:'tournaments',sample:false,userId:'synthetic-user',teams:[{id:'synthetic-team',name:'Synthetic Team'}],seasons:[{id:'synthetic-season',name:'Synthetic Season',archived:false}],teamId:'synthetic-team',seasonId:'synthetic-season',scope:'Overall',loaded:data}}/>);
       }else if(query.has('page')) ScorePage({searchParams:Promise.resolve({setup:query.has('scoring-page')||query.has('manage-page')?undefined:'1',manage:query.has('manage-page')?'1':undefined,game:query.has('manage-page')?(query.get('game')||'cup-game'):query.has('scoring-page')?'cup-game':undefined,tournament:query.get('tournament')||undefined,league:query.get('league')||undefined})}).then(ui=>createRoot(document.getElementById('app')).render(ui));
@@ -81,9 +84,9 @@ const assert = require("node:assert/strict");
     // repeated dates, supports tied ranks, readable names and ninth-game Add.
     await page.goto(`${base}/?leaderboard=1`);
     const leaders=page.getByRole('region',{name:'Tournament player leaderboard',exact:true});await leaders.waitFor();
-    assert.equal(await leaders.locator('.leaderboard-summary button').count(),5);
-    assert.deepEqual(await leaders.locator('.leaderboard-summary .leaderboard-player strong').allTextContents(),['2 tied','2 tied','Synthetic Player','Synthetic Blair with a very long roster nickname','Synthetic Blair with a very long roster nickname']);
-    assert.deepEqual(await leaders.locator('.leaderboard-summary .leaderboard-counts strong').allTextContents(),['.667','2','1','2','2']);
+    assert.equal(await leaders.locator('.leaderboard-summary button').count(),7);
+    assert.deepEqual((await leaders.locator('.leaderboard-summary .leaderboard-player strong').allTextContents()).slice(0,5),['2 tied','2 tied','Synthetic Player','Synthetic Blair with a very long roster nickname','Synthetic Blair with a very long roster nickname']);
+    assert.deepEqual((await leaders.locator('.leaderboard-summary .leaderboard-counts strong').allTextContents()).slice(0,5),['.667','2','1','2','2']);
     assert.equal(await leaders.locator('.leaderboard-players').count(),0,'leaders first, not the full ranking');
     async function onlyMetric(label,values){
       await leaders.getByRole('button',{name:'View '+label+' rankings',exact:true}).click();
@@ -412,6 +415,73 @@ const assert = require("node:assert/strict");
     await page.getByText("That game is unavailable in this scorebook.",{exact:false}).waitFor();
     assert.equal(await page.getByRole("button",{name:"Record plate appearance",exact:true}).count(),0);
     assert.deepEqual(await page.evaluate(()=>window.__writes),[]);assert.deepEqual(errors,[]);
+
+    // New outcomes are available only when the selected game saved their explicit amounts.
+    await page.goto(`${base}/?mode=score&quick=1&extended=1&game=league-game`);
+    await page.getByRole('button',{name:'Strikeout looking',exact:true}).waitFor();
+    assert.equal(await page.getByRole('button',{name:'Strikeout',exact:true}).count(),0,'legacy unspecified K is replaced by explicit choices');
+    assert.equal(await page.getByRole('button',{name:'Strikeout looking',exact:true}).locator('strong').innerText(),'ꓘ');
+    for(const width of [320,390,430,800,1440]){
+      await page.setViewportSize({width,height:900});
+      await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Extended choices fit '+width);
+      assert(await page.locator('.batting-outcomes button').evaluateAll(buttons=>buttons.every(b=>{const r=b.getBoundingClientRect();return r.width>=44&&r.height>=44&&b.scrollWidth<=b.clientWidth&&b.scrollHeight<=b.clientHeight})), 'Readable, contained outcome targets at '+width);
+    }
+    await page.setViewportSize({width:390,height:844});
+    if(process.env.OUTCOME_SCREENSHOT)await page.locator('.batting-outcomes').screenshot({path:process.env.OUTCOME_SCREENSHOT});
+    for(const [i,name] of ['Strikeout looking','Strikeout swinging','Strikeout foul out','Hit into double play'].entries()){
+      await page.getByRole('button',{name,exact:true}).click();
+      await page.waitForFunction(count=>window.__writes.length===count&&!document.querySelector('.batting-outcomes button').disabled,i+1);
+    }
+    assert.deepEqual(await page.evaluate(()=>window.__writes.map(w=>[w.change.outcome,w.change.runs,w.change.rbi])),[['K Looking',0,0],['K Swinging',0,0],['SOFO',0,0],['DP',0,0]]);
+    await page.getByLabel('Player and result',{exact:true}).fill('strikeout');
+    await page.getByRole('button',{name:'Record result',exact:true}).click();
+    await page.getByText('Choose strikeout looking, strikeout swinging, or SOFO.',{exact:true}).waitFor();
+    assert.equal(await page.evaluate(()=>window.__writes.length),4,'unspecified strikeout cannot guess the subtype');
+    await page.goto(`${base}/?mode=manage&extended=1&game=league-game`);
+    await page.getByText('Saved Beverage Rules for this game',{exact:true}).click();
+    const savedExtended=page.locator('.saved-game-rules');
+    for(const label of ['Strikeout looking','Strikeout swinging','Strikeout foul out (SOFO)','Hit into double play'])assert.equal(await savedExtended.getByText(label,{exact:true}).count(),1);
+    assert.deepEqual((await savedExtended.locator('dd').allTextContents()).slice(-4),['+2','+2','+1','+1']);
+    await page.goto(`${base}/?mode=score&game=league-game`);
+    await page.getByRole('button',{name:'Strikeout',exact:true}).waitFor();
+    assert.equal(await page.getByRole('button',{name:'Strikeout looking',exact:true}).count(),0,'older saved game keeps its original options');
+
+
+    // All competition and Stats pages share the same seven-category component.
+    await page.goto(`${base}/?leaderboard=1&extended=1&new-leaders=1`);
+    const expandedLeaders=page.getByRole('region',{name:'Tournament player leaderboard',exact:true});await expandedLeaders.waitFor();
+    assert.equal(await expandedLeaders.locator('.leaderboard-summary button').count(),7);
+    for(const [label,expected] of [['SO','3'],['Hit into double play','2']]){
+      const button=expandedLeaders.getByRole('button',{name:'View '+label+' rankings',exact:true});
+      assert.equal(await button.locator('.leaderboard-counts strong').innerText(),expected);
+      await button.click();
+      assert.equal(await expandedLeaders.locator('.leaderboard-counts strong').first().innerText(),expected);
+      for(const width of [320,390,800,1440]){
+        await page.setViewportSize({width,height:900});
+        await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,label+' rankings fit '+width);
+      }
+      await expandedLeaders.getByRole('button',{name:'← Back to leaders',exact:true}).click();
+      await button.waitFor({state:'visible'});
+      assert.equal(await button.evaluate(el=>el===document.activeElement),true,'Back restores category focus');
+    }
+    await page.setViewportSize({width:390,height:844});
+    if(process.env.LEADERBOARD_SCREENSHOT)await expandedLeaders.screenshot({path:process.env.LEADERBOARD_SCREENSHOT});
+    await page.goto(`${base}/?leaderboard=1`);
+    await expandedLeaders.waitFor();
+    assert.equal(await expandedLeaders.getByRole('button',{name:'View Hit into double play rankings',exact:true}).isDisabled(),true,'old DP count has no fabricated leader');
+    assert.equal(await expandedLeaders.getByRole('button',{name:'View SO rankings',exact:true}).isDisabled(),false,'historical generic K remains countable under SO');
+
+    await page.goto(`${base}/?mode=score&game=cup-game&tournament-archived=1`);
+    await page.getByText('Archived tournament · read only. Restore it in Tournament settings to score again.',{exact:true}).waitFor();
+    assert.equal(await page.getByRole('button',{name:'Hit',exact:true}).isDisabled(),true);
+    assert.equal(await page.evaluate(()=>window.__polls.size),0,'archived tournaments stop live polling');
+    assert.equal(await page.evaluate(()=>window.__writes.length),0,'opening archived history does not write');
+    await page.goto(`${base}/?mode=setup&tournament=synthetic-cup&tournament-archived=1`);
+    await page.getByRole('heading',{name:'Synthetic scorebook',exact:true}).waitFor();
+    assert.equal(await page.getByLabel('Tournament',{exact:true}).getByRole('option',{name:'M3-5 Synthetic Cup',exact:true}).count(),0,'archived tournaments are absent from new-game choices');
+    assert.equal(await page.evaluate(()=>window.__writes.length),0);
     console.log(`PASS ${process.env.BROWSER_ENGINE || "chromium"} compact at-bat: RBI before instant results; settings/history absent from scorer, separate game-details link. Legacy draft selection/save preserved; actual page primary controls within 900px. Grouped outcome buttons: all nine choices, selected/keyboard state, HR defaults/reset, no write until confirmed, unchanged score payload, offline disabling and readable touch targets at 320–1440px. Compact setup: actual page heading, first/next-game primary actions above the fold, native date containment, hidden-field validation, preserved HR/Bands payloads and prominent uncertain/offline handling. Score/setup modes: selected competition isolation, no unrelated scoring during setup, inherited zero/2 limits, opponent-only tournament continuation, collapsed statistics/audit, missing-game denial and mobile overflow. Live polling only for active, visible, online games; completed/setup/manage/archived/missing games do not poll. Hidden/offline reads are skipped and returning/reconnecting refreshes without recording plays. Decimal leaderboard rates. Synthetic services only; no hosted writes.`);
   } finally{if(browser)await browser.close();if(server)await new Promise(resolve=>server.close(resolve));}
 })().catch(error=>{console.error(error);process.exitCode=1;});

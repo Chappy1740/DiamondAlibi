@@ -7,6 +7,10 @@ const aliases: [Outcome, string[]][] = [
   ["ITP HR", ["inside the park home run", "inside-the-park home run", "inside the park hr", "itp hr"]],
   ["Fence HR", ["fence home run", "fence hr", "home run", "hr"]],
   ["Hit", ["hit"]], ["BB", ["walk", "bb"]], ["HBP", ["hit by pitch", "hbp"]],
+  ["K Looking", ["strikeout looking", "strike out looking", "looking strikeout", "backwards k", "backward k", "ꓘ"]],
+  ["K Swinging", ["strikeout swinging", "strike out swinging", "swinging strikeout"]],
+  ["SOFO", ["strikeout foul out", "strike out foul out", "foul strikeout", "sofo"]],
+  ["DP", ["hit into double play", "double play", "dp"]],
   ["K", ["strikeout", "strike out", "k"]], ["Out", ["out"]],
   ["SF", ["sacrifice fly", "sac fly", "sf"]], ["ROE", ["reached on error", "error", "roe"]],
 ];

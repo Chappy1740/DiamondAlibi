@@ -1,18 +1,11 @@
 "use client";
+import { BOARD_LABELS } from "@/lib/scoring";
 import { revealInvalidField } from "@/lib/form-details";
 import { useEffect, useState } from "react";
 import type { LoadedScorebook } from "@/lib/scorebook-view";
 import type { TournamentContinuation } from "@/lib/tournament-continuation";
 
-const labels = {
-  strikeout: "Strikeout",
-  solo: "Solo fence HR",
-  bandSolo: "Solo fence HR with Band",
-  grandSlam: "Grand slam",
-  overLimit: "Over-limit HR",
-  insidePark: "Inside-the-park HR",
-  multiRun: "Other multi-run HR",
-};
+const labels = BOARD_LABELS;
 export function TournamentNextGame({
   template,
   data,

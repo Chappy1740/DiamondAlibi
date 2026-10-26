@@ -197,3 +197,15 @@ test("tournament guarantee accepts only explicit 2 or 3 and preserves the value 
       status: "invalid",
     });
 });
+
+
+test("tournament archive uses own session, explicit state, bounded revision and stable command identity", async()=>{
+ let calls=0;
+ const request={type:"archiveTournament",teamId:id(1),seasonId:id(2),tournamentId:id(3),commandId:id(4),expectedRevision:0,archived:true};
+ const c=client(async(name,args)=>{calls++;assert.equal(name,"da_archive_scoring_tournament");assert.deepEqual(args,{p_team:id(1),p_season:id(2),p_tournament:id(3),p_command:id(4),p_expected:0,p_archived:true});return {data:{status:"accepted",duplicate:false,revision:1,archived:true},error:null}});
+ assert.equal((await connectedScoring(c,request)).status,"ok");
+ for(const bad of [{...request,archived:"true"},{...request,expectedRevision:-1},{...request,commandId:"missing"},{...request,actorId:id(9)},{...request,delete:true}])assert.equal((await connectedScoring(c,bad)).status,"invalid");
+ assert.equal(calls,1);
+ assert.deepEqual(await connectedScoring(client(async()=>{throw Error("transport")}),request),{status:"uncertain",commandId:id(4)});
+ c.auth.getUser=async()=>({data:{user:null},error:null});assert.equal((await connectedScoring(c,request)).status,"auth-required");assert.equal(calls,1);
+});

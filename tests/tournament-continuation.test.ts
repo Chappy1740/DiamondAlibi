@@ -132,3 +132,14 @@ test("manual continuation keeps an empty order and stable competition settings",
   const data = fixture(); data.snapshot.games[0].game.batting_mode = "manual"; data.snapshot.games[0].lineup = [];
   const result = tournamentContinuation(data, "cup"); assert.ok(result); assert.equal(result.battingMode, "manual"); assert.deepEqual(result.game.lineup, []); assert.equal(result.tournament.fenceLimit, 0);
 });
+
+test("continuation retains explicit new outcome amounts including zero and rejects partial saved settings",()=>{
+ const data=fixture();
+ Object.assign(data.snapshot.games[0].rules,{strikeout_looking:2,strikeout_swinging:2,strikeout_foul:1,double_play:0});
+ const result=tournamentContinuation(data,"cup");assert.ok(result);
+ assert.equal(result.board.strikeoutLooking,2);assert.equal(result.board.strikeoutSwinging,2);assert.equal(result.board.strikeoutFoul,1);assert.equal(result.board.doublePlay,0);
+ data.snapshot.games[0].rules.double_play=null;
+ assert.equal(tournamentContinuation(data,"cup"),null,"partial new rules cannot fall back to legacy defaults");
+});
+
+test("an archived tournament cannot supply a next-game continuation",()=>{const data=fixture();data.snapshot.tournaments[0].archived=true;assert.equal(tournamentContinuation(data,"cup"),null);});

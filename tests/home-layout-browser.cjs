@@ -141,7 +141,7 @@ const assert = require("node:assert/strict");
     await page.locator(".bottom-nav").getByRole("link", { name: "Stats", exact: true }).click();
     await page.getByRole("heading", { name: "Team leaders" }).waitFor();
     const leaders=page.getByRole('region',{name:'Team player leaderboard',exact:true});
-    assert.equal(await leaders.locator('.leaderboard-summary button').count(),5);
+    assert.equal(await leaders.locator('.leaderboard-summary button').count(),7);
     assert.equal(await page.locator('.dashboard-table').count(),0,'leaders replace the mixed statistics table');
     assert.equal(await leaders.locator('.leaderboard-scope').textContent(),'M3-5 Synthetic Test · M3-5 Synthetic Season · Overall');
     await leaders.getByRole('button',{name:'View HR rankings',exact:true}).click();

@@ -36,6 +36,10 @@ export type ConnectedGame = {
     version_label: string;
     fence_limit: number;
     strikeout?: number;
+    strikeout_looking?: number | null;
+    strikeout_swinging?: number | null;
+    strikeout_foul?: number | null;
+    double_play?: number | null;
     solo?: number;
     band_solo?: number;
     grand_slam?: number;
@@ -50,7 +54,7 @@ export type ConnectedGame = {
   };
 };
 export type ScorebookView = {
-  capabilities?: { manualBatting?: boolean; teamBeverage?: boolean };
+  capabilities?: { manualBatting?: boolean; teamBeverage?: boolean; tournamentArchive?: boolean };
   beverage?: BeverageState;
   teamId: string;
   seasonId: string;
@@ -63,6 +67,7 @@ export type ScorebookView = {
     id: string;
     name: string;
     revision: number;
+    archived?: boolean;
     guaranteedGames?: 2 | 3 | null;
     fenceLimit?: number | null;
   }[];

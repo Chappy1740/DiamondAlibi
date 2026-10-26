@@ -1,17 +1,10 @@
 "use client";
+import { BOARD_LABELS, EXTENDED_BOARD } from "@/lib/scoring";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { beverageAction } from "@/app/club/beverage-actions";
 import { DEFAULT_BOARD } from "@/lib/scoring";
 import type { BeverageRequest, BeverageState } from "@/lib/team-beverage";
-const labels = {
-  strikeout: "Strikeout",
-  solo: "Solo fence HR",
-  bandSolo: "Solo fence HR with Band",
-  grandSlam: "Grand slam",
-  overLimit: "Over-limit HR",
-  insidePark: "Inside-the-park HR",
-  multiRun: "Other multi-run HR",
-};
+const labels = BOARD_LABELS;
 export function BeverageControls({
   teamId,
   teamSettings = false,
@@ -102,10 +95,10 @@ export function BeverageControls({
     )
       return;
     const form = new FormData(event.currentTarget);
-    const ruleKeys = Object.keys(DEFAULT_BOARD) as (keyof typeof DEFAULT_BOARD)[];
+    const ruleKeys = Object.keys(value.extendedOutcomes ? EXTENDED_BOARD : DEFAULT_BOARD) as (keyof typeof EXTENDED_BOARD)[];
     const rules = Object.fromEntries(
       ruleKeys.map((key) => [key, Number(form.get(key))]),
-    ) as typeof DEFAULT_BOARD;
+    ) as typeof EXTENDED_BOARD;
     if (
       value.finalized &&
       ruleKeys.every((key) => rules[key] === value.rules?.[key])
@@ -161,7 +154,7 @@ export function BeverageControls({
               <dl className="beverage-rule-list">
                 {Object.entries(value.rules!).map(([key, amount]) => (
                   <div key={key}>
-                    <dt>{labels[key as keyof typeof labels]}</dt>
+                    <dt>{key === "strikeout" && value.extendedOutcomes ? "Unspecified strikeout (legacy)" : labels[key as keyof typeof labels]}</dt>
                     <dd>{amount}</dd>
                   </div>
                 ))}
@@ -183,10 +176,10 @@ export function BeverageControls({
                 rules and balances.
               </p>
               <fieldset disabled={disabled}>
-                {Object.entries(value.rules ?? DEFAULT_BOARD).map(
+                {Object.entries(value.extendedOutcomes ? { ...EXTENDED_BOARD, ...value.rules } : value.rules ?? DEFAULT_BOARD).map(
                   ([key, amount]) => (
                     <label key={key}>
-                      {labels[key as keyof typeof labels]}
+                      {key === "strikeout" && value.extendedOutcomes ? "Unspecified strikeout (legacy)" : labels[key as keyof typeof labels]}
                       <input
                         type="number"
                         name={key}

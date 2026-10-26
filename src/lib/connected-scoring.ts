@@ -181,6 +181,12 @@ function prepare(input: unknown): {
         p_change: input.change,
       };
       break;
+    case "archiveTournament":
+      keys = ["tournamentId", "commandId", "expectedRevision", "archived"];
+      if (!isId(input.tournamentId) || typeof input.archived !== "boolean") return null;
+      name = "da_archive_scoring_tournament";
+      args = {...common, p_tournament: input.tournamentId, p_command: input.commandId, p_expected: input.expectedRevision, p_archived: input.archived};
+      break;
     case "band":
       keys = [
         "tournamentId",
@@ -213,7 +219,7 @@ function prepare(input: unknown): {
   }
   const allowed = ["type", "teamId", "seasonId", ...keys];
   if (Object.keys(input).some((key) => !allowed.includes(key))) return null;
-  const journalWrite = ["start", "change", "band"].includes(String(input.type));
+  const journalWrite = ["start", "change", "band", "archiveTournament"].includes(String(input.type));
   if (
     journalWrite &&
     (!isId(input.commandId) || !revision(input.expectedRevision))

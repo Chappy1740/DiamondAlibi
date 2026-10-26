@@ -1,18 +1,23 @@
 import { competitionView, type CompetitionKind } from "./competitions.ts";
 import { emptyTotals, rates, type Scope, type Totals } from "./scoring.ts";
 import type { ConnectedGame, LoadedScorebook } from "./scorebook-view.ts";
-export type LeaderboardMetric = "OBP" | "H" | "HR" | "RBI" | "board";
+export type OutcomeMetric = "DP";
+export type OutcomeCounts = Record<OutcomeMetric, number | null>;
+export type LeaderboardMetric = "OBP" | "H" | "HR" | "RBI" | "board" | "SO" | OutcomeMetric;
 export type TournamentPlayer = {
   id: string;
   name: string;
   totals: Totals;
+  outcomes?: OutcomeCounts;
   rates: ReturnType<typeof rates>;
 };
 export function leaderboardValue(
   row: TournamentPlayer,
   metric: LeaderboardMetric,
 ) {
-  return metric === "OBP" ? row.rates.OBP : row.totals[metric];
+  if (metric === "SO") return row.totals.K;
+  if (metric === "DP") return row.outcomes?.DP ?? null;
+  return metric === "OBP" ? row.rates.OBP : row.totals[metric as keyof Totals];
 }
 export function rankTournamentPlayers(
   players: readonly TournamentPlayer[],
@@ -45,6 +50,7 @@ export function teamLeaderboard(
     snapshot.scope !== scope
   )
     return [];
+  const outcomeIndex = indexPlayerOutcomes(snapshot.games.filter(({game}) => scope === "Overall" || game.kind === scope));
   // Use scoped totals.board, never the separate season-wide snapshot.board.
   return Object.entries(snapshot.totals)
     .filter(([, totals]) => totals.PA > 0)
@@ -54,6 +60,7 @@ export function teamLeaderboard(
         data.roster.find((player) => player.id === id)?.display_name ??
         "Former roster player",
       totals: { ...totals },
+      outcomes: playerOutcomeCounts(outcomeIndex, id, totals.PA),
       rates: rates(totals),
     }));
 }
@@ -151,6 +158,7 @@ function playersFromGames(
       totals.set(id, combined);
     }
   }
+  const outcomeIndex = indexPlayerOutcomes(games);
   const rows = [...totals]
     .filter(([, value]) => value.PA > 0)
     .map(([id, value]) => ({
@@ -159,7 +167,42 @@ function playersFromGames(
         data.roster.find((player) => player.id === id)?.display_name ??
         "Former roster player",
       totals: value,
+      outcomes: playerOutcomeCounts(outcomeIndex, id, value.PA),
       rates: rates(value),
     }));
   return rankTournamentPlayers(rows, metric);
+}
+
+/** Index effective rows once per projection, rather than rescan every play per player. */
+function indexPlayerOutcomes(games: readonly ConnectedGame[]) {
+  const index = new Map<string, {counts: OutcomeCounts; appearances: number}>();
+  for (const game of games) {
+    if (!game.evaluation || !Array.isArray(game.evaluation.rows) || !game.evaluation.totals) continue;
+    const rowsByPlayer = new Map<string, ConnectedGame["evaluation"]["rows"]>();
+    for (const row of game.evaluation.rows) {
+      if (row.voided) continue;
+      const rows = rowsByPlayer.get(row.playerId) ?? [];
+      rows.push(row); rowsByPlayer.set(row.playerId, rows);
+    }
+    const explicit = typeof game.rules.double_play === "number" && Number.isFinite(game.rules.double_play);
+    for (const [playerId, total] of Object.entries(game.evaluation.totals)) {
+      if (total.PA === 0) continue;
+      const entry = index.get(playerId) ?? {counts: {DP: 0}, appearances: 0};
+      index.set(playerId, entry);
+      const {counts} = entry;
+      entry.appearances += total.PA;
+      const rows = rowsByPlayer.get(playerId) ?? [];
+      if (rows.length !== total.PA || !explicit) {
+        counts.DP = null;
+        continue;
+      }
+      if (counts.DP !== null) counts.DP += rows.filter(row => row.outcome === "DP").length;
+    }
+  }
+  return index;
+}
+/** Unrecorded double plays and incomplete historical projections remain unranked. */
+function playerOutcomeCounts(index: ReturnType<typeof indexPlayerOutcomes>, playerId: string, expectedPA: number): OutcomeCounts {
+  const entry = index.get(playerId);
+  return entry?.appearances === expectedPA ? {...entry.counts} : { DP: null };
 }

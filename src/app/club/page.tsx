@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
+import { SeasonManager } from "@/components/season-manager";
 import { ClubForm } from "@/components/club-form";
 import { BrandLink } from "@/components/brand-link";
 import { ProfileMenu } from "@/components/profile-menu";
@@ -209,46 +210,7 @@ export default async function ClubPage({
           </section>
         )}
         {selected && <Link className="button secondary" href={`/more/beverage-rules?${new URLSearchParams({ team: selected.id, ...(season ? { season: season.id } : {}) })}`}>View Beverage Rules</Link>}
-        {selected && (
-          <section className="card detail-card">
-            <h2>Seasons</h2>
-            {season && (
-              <Link className="button primary" href={`/club/score?${new URLSearchParams({team: selected.id, season: season.id})}`}>
-                Open team scorebook
-              </Link>
-            )}
-            <p className="muted">
-              Selected: {season?.name ?? "No season yet"}. History is retained;
-              each new season starts a fresh Beverage Board.
-            </p>
-            {seasons.map((s) => (
-              <div className="season-actions" key={s.id}>
-                <ClubForm
-                  operation="select-season"
-                  team={selected.id}
-                  hidden={{ season: s.id }}
-                  label={`${s.name}${s.archived ? " · archived" : ""}${s.id === season?.id ? " · selected" : ""}`}
-                />
-                <ClubForm
-                  operation="archive-season"
-                  team={selected.id}
-                  hidden={{ season: s.id, archived: String(!s.archived) }}
-                  label={s.archived ? "Restore season" : "Archive season"}
-                />
-              </div>
-            ))}
-            <ClubForm
-              operation="create-season"
-              team={selected.id}
-              label="Create season"
-            >
-              <label>
-                Season name
-                <input name="name" maxLength={80} required />
-              </label>
-            </ClubForm>
-          </section>
-        )}
+        {selected && <SeasonManager team={selected.id} seasons={seasons} selected={season} />}
         {selected && (
           <section className="card detail-card">
             <h2>Private invitations</h2>

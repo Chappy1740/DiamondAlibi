@@ -2043,3 +2043,11 @@ blockquote {
 .games-picker-teams span { min-width: 0; overflow-wrap: anywhere; }
 .games-picker-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .games-picker-actions .button { min-width: 0; white-space: normal; font-size: 16px; }
+
+/* Recoverable season and tournament history. */
+.archive-history { margin-block: 20px; }
+.archive-history > summary { min-height: 48px; padding-block: 12px; cursor: pointer; color: var(--muted); }
+.archive-history .competition-list { margin-block: 12px; }
+.archive-controls { margin-block: 20px; }
+.archive-controls p { overflow-wrap: anywhere; }
+.archive-controls .button { min-height: 48px; margin: 8px 8px 0 0; max-width: 100%; white-space: normal; }

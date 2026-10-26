@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BrandLink } from "./brand-link";
 import { ProfileMenu } from "./profile-menu";
+import { TournamentArchiveControls } from "./tournament-archive-controls";
 import { CompetitionForm } from "./competition-form";
 import { GameScoreboardPanel } from "./game-scoreboard";
 import { connectedScoreboard } from "@/lib/game-scoreboard";
@@ -25,6 +26,9 @@ export function CompetitionPage({ data: p, kind, id, gamesOnly = false, fromGame
   const gameHref = (game: string) => `${p.sample ? "/games/live" : "/club/score"}?${context}&game=${encodeURIComponent(game)}`;
   const selected = p.loaded && id ? competitionView(p.loaded, p.teamId, p.seasonId, kind, id) : null;
   const options = !matching ? [] : kind === "League" ? p.loaded?.snapshot.leagues ?? [] : p.loaded?.snapshot.tournaments ?? [];
+  const activeOptions = options.filter(c => !("archived" in c && c.archived));
+  const archivedOptions = options.filter(c => "archived" in c && c.archived);
+  const tournamentArchived = kind === "Tournament" && !!selected && "archived" in selected.competition && selected.competition.archived === true;
   const home = `/?${context}`;
   const list = `${competitionPath(kind)}?${context}${fromGames ? "&from=games" : ""}`;
   const detail = `${competitionPath(kind, id)}?${context}${fromGames ? "&from=games" : ""}`;
@@ -56,13 +60,14 @@ export function CompetitionPage({ data: p, kind, id, gamesOnly = false, fromGame
     </>}
     {p.loaded && matching && !id && !leagueGameList && <>
       {!createView && <div className="competition-list">
-        {options.map((c) => <Link className={`card competition-link${kind === "Tournament" ? " tournament-entry" : ""}`} key={c.id} href={`${competitionPath(kind, c.id)}?${context}${fromGames ? "&from=games" : ""}`}>
+        {activeOptions.map((c) => <Link className={`card competition-link${kind === "Tournament" ? " tournament-entry" : ""}`} key={c.id} href={`${competitionPath(kind, c.id)}?${context}${fromGames ? "&from=games" : ""}`}>
           <strong>{c.name}</strong>{kind === "Tournament"
             ? <span className="button primary">Enter</span>
             : <span>{c.fenceLimit == null ? "HR default unspecified" : `${c.fenceLimit} fence HR per game`} · Open games →</span>}
         </Link>)}
-        {!options.length && <p>No {kind === "League" ? "leagues" : "tournaments"} in this season yet.</p>}
+        {!activeOptions.length && <p>No {archivedOptions.length > 0 ? "active " : ""}{kind === "League" ? "leagues" : "tournaments"} in this season yet.</p>}
       </div>}
+      {kind === "Tournament" && !createView && archivedOptions.length > 0 && <details className="archive-history"><summary>Archived tournaments ({archivedOptions.length})</summary><div className="competition-list">{archivedOptions.map(c => <Link className="card competition-link tournament-entry" key={c.id} href={`${competitionPath(kind,c.id)}?${context}${fromGames ? "&from=games" : ""}`}><strong>{c.name} · Archived</strong><span className="button secondary">View history</span></Link>)}</div></details>}
       {kind === "Tournament" && !createView && (p.sample || p.loaded.archived
         ? <><button className="button primary" disabled>Create tournament</button>{p.loaded.archived && <p className="connection-notice">Archived season · read only</p>}</>
         : <Link className="button primary" href={`${list}&create=1`}>Create tournament</Link>)}
@@ -85,14 +90,16 @@ export function CompetitionPage({ data: p, kind, id, gamesOnly = false, fromGame
           <dt>Fence HR limit</dt><dd>{selected.competition.fenceLimit ?? "Unspecified"}</dd>
           <dt>Games guaranteed</dt><dd>{"guaranteedGames" in selected.competition ? selected.competition.guaranteedGames ?? "Unspecified" : "Unspecified"}</dd>
         </dl>
-      </> : <CompetitionForm team={p.teamId} season={p.seasonId} kind="Tournament" existing={selected.competition} archived={!!p.loaded?.archived} />}
+      </> : <CompetitionForm team={p.teamId} season={p.seasonId} kind="Tournament" existing={selected.competition} archived={!!p.loaded?.archived || tournamentArchived} />}
+      {!p.sample && p.loaded?.snapshot.capabilities?.tournamentArchive && "revision" in selected.competition && <TournamentArchiveControls team={p.teamId} season={p.seasonId} id={selected.competition.id} name={selected.competition.name} archived={tournamentArchived} revision={selected.competition.revision} seasonArchived={!!p.loaded.archived} />}
     </section>}
     {selected && !settingsView && !leagueGameList && <>
       <div className="competition-actions">
-        {!p.sample && !p.loaded?.archived && <Link className="button primary" href={setup}>Add {kind === "Tournament" ? `Game ${selected.games.length + 1}` : "a game"}</Link>}
+        {!p.sample && !p.loaded?.archived && !tournamentArchived && <Link className="button primary" href={setup}>Add {kind === "Tournament" ? `Game ${selected.games.length + 1}` : "a game"}</Link>}
         {kind === "Tournament" && <Link className="button secondary" href={`${detail}&settings=1`}>Tournament settings</Link>}
       </div>
       {p.loaded?.archived && <p className="connection-notice">Archived season · read only</p>}
+      {tournamentArchived && <p className="connection-notice">Archived tournament · read only. Restore it in Tournament settings to resume scoring.</p>}
       <h2>Games</h2>
       {kind === "Tournament" ? <CompactGameList games={selected.games} gameHref={gameHref} /> : <div className="dashboard-cards">
         {selected.games.map((g) => { const score = connectedScoreboard(g.game); return <article className="card detail-card" key={g.game.id}>
@@ -102,7 +109,7 @@ export function CompetitionPage({ data: p, kind, id, gamesOnly = false, fromGame
           {kind === "League" ? <GameScoreboardPanel value={score} /> : score && <p className="micro">Our team {score.teamRuns} · Opponent {score.opponentRuns}</p>}
         </article>; })}
       </div>}
-      {!selected.games.length && <p>No games recorded.{!p.sample && !p.loaded?.archived && " Add the first game to choose a lineup and start scoring."}</p>}
+      {!selected.games.length && <p>No games recorded.{!p.sample && !p.loaded?.archived && !tournamentArchived && " Add the first game to choose a lineup and start scoring."}</p>}
       {kind === "Tournament" && p.loaded && <TournamentSeasonStats data={p.loaded} team={p.teamId} season={p.seasonId}
         seasonName={p.seasons.find(s => s.id === p.seasonId)?.name ?? "Selected season"} tournamentId={id} tournamentName={selected.competition.name} />}
       {kind === "League" && p.loaded && <LeagueSeasonStats data={p.loaded} team={p.teamId} season={p.seasonId}

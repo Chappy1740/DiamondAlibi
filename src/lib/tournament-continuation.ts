@@ -1,5 +1,5 @@
 import type { LoadedScorebook } from "./scorebook-view.ts";
-import type { Rules } from "./scoring.ts";
+import { extendedBoardFromColumns, type Rules } from "./scoring.ts";
 
 export function tournamentContinuation(
   data: LoadedScorebook | null,
@@ -8,7 +8,7 @@ export function tournamentContinuation(
   const tournament = data?.snapshot.tournaments.find(
     (t) => t.id === tournamentId,
   );
-  if (!data || !tournament || tournament.fenceLimit == null) return null;
+  if (!data || !tournament || tournament.archived || tournament.fenceLimit == null) return null;
   const game = data.snapshot.games
     .filter((g) => g.game.tournament_id === tournamentId)
     .sort(
@@ -49,6 +49,10 @@ export function tournamentContinuation(
     )
   )
     return null;
+  const extended = extendedBoardFromColumns(game.rules);
+  const extraValues = [game.rules.strikeout_looking, game.rules.strikeout_swinging, game.rules.strikeout_foul, game.rules.double_play];
+  if (extraValues.some(value => value != null) && Object.keys(extended).length !== 4) return null;
+  Object.assign(board, extended);
   return { tournament, game, board, battingMode: game.game.batting_mode ?? "ordered" };
 }
 export type TournamentContinuation = NonNullable<

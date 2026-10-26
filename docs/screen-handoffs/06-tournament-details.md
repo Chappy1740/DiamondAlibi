@@ -94,3 +94,8 @@ The selected tournament shows its own compact games, team totals and player lead
 
 
 Game-box spacing follow-up (October 24): the owner requested the team name and score fit on separate lines with comfortable inner spacing, matching League games. The shared CompactGameList refinement and its current local verification are recorded in [02-games.md](02-games.md#game-box-spacing-refinement--october-24-2026). Tournament stats, settings and game-entry destinations are preserved; the owner authorized publication and deployment after local review; record final matching check and activation receipts separately.
+
+
+### Recoverable archive preparation — October 26, 2026
+
+Owner requested a delete-like option and chose hide with restore. Reuse the existing season archive RPC with clearer active/Archived seasons sections and confirmation/Cancel. Add equivalent Tournament settings Archive/Restore, archived history list and server/database scoring denial while archived. Keep every saved game, rule, stat and BEV; current membership/captain policies remain. See ../archive-lifecycle-review.md for exact code, unapplied migration and verification. Work is local-only on codex/strikeout-types-double-play, alongside preserved unpublished SO changes; no hosted archive/restore, publication, schema application or deployment. Physical-device acceptance and canonical tracker remain open.

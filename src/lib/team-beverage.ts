@@ -1,7 +1,8 @@
-import { DEFAULT_BOARD, type Rules } from "./scoring.ts";
+import { DEFAULT_BOARD, EXTENDED_BOARD, type Rules } from "./scoring.ts";
 import type { ScoringClient } from "./connected-scoring.ts";
 export type BeverageState = {
   teamId: string;
+  extendedOutcomes?: boolean;
   revision: number;
   finalized: boolean;
   rules: Rules["board"] | null;
@@ -50,7 +51,7 @@ function fields(v: Record<string, unknown>, keys: string[]) {
 function validRules(v: unknown): v is Rules["board"] {
   return (
     object(v) &&
-    fields(v, Object.keys(DEFAULT_BOARD)) &&
+    (fields(v, Object.keys(DEFAULT_BOARD)) || fields(v, Object.keys(EXTENDED_BOARD))) &&
     Object.values(v).every(
       (n) => typeof n === "number" && Number.isInteger(n) && Math.abs(n) <= 100,
     )
@@ -60,6 +61,7 @@ function state(v: unknown, team: string): v is BeverageState {
   return (
     object(v) &&
     v.teamId === team &&
+    (v.extendedOutcomes === undefined || typeof v.extendedOutcomes === "boolean") &&
     Number.isSafeInteger(v.revision) &&
     Number(v.revision) >= 0 &&
     Number(v.revision) < Number.MAX_SAFE_INTEGER &&
