@@ -729,7 +729,9 @@ export function ConnectedScorebook({
                     <h3>{manualPlayer ? `Batting: ${playerName(manualPlayer)}` : "Who’s batting?"}</h3>
                     <input aria-label="Find player" placeholder="Player name" value={playerSearch} disabled={disabled} onChange={event => { setPlayerSearch(event.target.value); setManualPlayer(""); setFirstBand(null); pendingPlay.current = null; }} />
                     <div className="manual-player-buttons" role="group" aria-label="Choose batting player">
-                      {data?.roster.filter(player => (!manualPlayer || player.id === manualPlayer || playerSearch) && player.display_name.toLocaleLowerCase().includes(playerSearch.toLocaleLowerCase())).slice(0,6).map(player => <button type="button" key={player.id} disabled={disabled} aria-pressed={manualPlayer === player.id} onClick={() => { setManualPlayer(player.id); setPlayerSearch(""); setFirstBand(null); pendingPlay.current = null; setEntryError(""); }}>{player.display_name}</button>)}
+                      {data?.roster
+                        .filter(player => player.display_name.toLocaleLowerCase().includes(playerSearch.toLocaleLowerCase()))
+                        .map(player => <button type="button" key={player.id} disabled={disabled} aria-pressed={manualPlayer === player.id} onClick={() => { setManualPlayer(player.id); setPlayerSearch(""); setFirstBand(null); pendingPlay.current = null; setEntryError(""); }}>{player.display_name}</button>)}
                     </div>
                   </div> : <h3>Next batter: {playerName(battingPlayer)}</h3>}
                   {mode === "score" && <VoicePlayEntry disabled={disabled} resetKey={confirmedPlays} onResult={spokenPlay} />}

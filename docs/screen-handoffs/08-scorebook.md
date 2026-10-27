@@ -1,6 +1,6 @@
 # 08 — Live scorebook: Screen handoff
 
-**Status:** Ready for owner brief. **Owner's requested change:** Not yet supplied.
+**Current status (October 27):** Full-roster picker locally verified and approved by the owner for protected-preview release together with the Home update. Release is in progress. **Owner's requested change:** "The full roster should be available".
 **Current screen only:** Live scorebook.
 **Route/view:** `/club/score?team=<id>&season=<id>&game=<existing-game-id>`
 **Related tracker IDs:** M3-10, M3-11, M3-12, M4-16, M4-28, M5-5. Verify current canonical evidence before closing any item.
@@ -83,3 +83,15 @@ A green build or inactive upload is not a live release. Preserve required checks
 9. Owner acceptance or explicit hold; agreed next screen.
 
 **Current outcome:** Documentation prepared only. No screen implementation, new acceptance pass or live release is claimed by this work package.
+
+## Full roster in the batting picker — October 27, 2026
+
+The owner's physical-phone screenshot showed only six player shortcuts. The owner requested that the full roster be available. Reuse the current native player buttons and optional search: remove the six-result cap and the selected-player-only filter. All roster players remain available before and after selecting a batter; the selected player retains its pressed state. Search still filters by name, and clearing it restores the complete roster. Scoring, rule/Band handling, writes, player identities, order and saved history are unchanged. No new dependency, service or migration.
+
+- Source: local `codex/home-fit-screen`, based on main `979b85e26b3fd8d2ab813c7fe4de6c2f3cabd76a`. The previously reviewed Home changes and earlier unrelated local files remain preserved.
+- Files: `src/components/connected-scorebook.tsx`, `tests/scorebook-modes-browser.cjs`, and this receipt. The new synthetic eleven-player regression reproduced the original six-result failure before the fix.
+- Checks passed: existing Chromium/installed Edge scorebook modes suite, including all eleven buttons without search, continued availability after choosing/switching a batter, case-insensitive search/clear, no writes from selection, and a successful synthetic play attributed to the eleventh player. Readable touch targets and no horizontal overflow pass at 320px and 390px. Existing scoring, typed/voice, retry/offline, rule and isolation checks remain passing. Typecheck and diff whitespace checks passed.
+- Scope limits: local code and synthetic verification only; no real game or player records changed. The screenshot supplied by the owner establishes the earlier phone UI problem, not acceptance of the corrected version. New physical-phone acceptance, hosted publication and release checks remain pending. No canonical milestone was closed.
+- Delivery boundary: the full-roster fix and previously reviewed Home update are prepared locally for a scoped protected-preview release, subject to explicit owner approval under `CONTRIBUTING.md`. Exclude the pre-existing `next-env.d.ts` change and all private notes/credentials from publication. No commit, push, PR, merge, deploy, schema/auth/access change or external message has occurred for this package.
+
+Release authorization, October 27: the owner answered "I approve" to the explicit commit/push/merge-after-checks/deploy request for this roster fix and the reviewed Home update. Continue the protected-preview release within that scope. Required checks and protection remain enforced; the generated-file edit and all private notes remain excluded. Record exact source/check/version receipts separately and retain physical-phone acceptance as a distinct gate.

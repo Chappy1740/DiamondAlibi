@@ -22,7 +22,7 @@ function SelectedField({ label, accessibleLabel, name, value, options, disabled,
   const [selected, setSelected] = useState(value);
   return (
     <label>
-      {label}
+      <span className="dashboard-select-label">{label}</span>
       <span className="dashboard-select">
         <span className="dashboard-select-value" aria-hidden="true">
           {options.find((option) => option.id === selected)?.name ?? "Choose an option"}

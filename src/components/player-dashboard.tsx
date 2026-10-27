@@ -57,6 +57,7 @@ const balance = (value: number | null) =>
         : "Settled · 0";
 export function PlayerDashboard(p: DashboardProps) {
   const { loaded } = p;
+  const fitHome = p.route === "" && !p.sample && !p.review;
   const view = loaded ? personalDashboard(loaded, p) : null;
   const team = p.teams.find((t) => t.id === p.teamId);
   const season = p.seasons.find((s) => s.id === p.seasonId);
@@ -148,7 +149,7 @@ export function PlayerDashboard(p: DashboardProps) {
             {p.sample && <DashboardSelect label="Sample player" name="player" value={p.userId} options={loaded?.roster.map((r) => ({ id: r.user_id ?? "", name: r.display_name })) ?? []} />}
             {p.route === "" || p.route === "games" ? <div className="dashboard-context-action"><span aria-hidden="true">Update view</span><button className="button secondary">Apply context</button></div> : <button className="button secondary">Apply context</button>}
           </form>
-      {!p.sample && <DashboardRefresh />}
+      {!p.sample && !fitHome && <DashboardRefresh />}
       {p.sample && <p className="connection-notice dashboard-notice">
         Sample history · 12 players · four 16-game league seasons · seven tournaments. These records are separate from your clubhouse.{" "}
         {!p.review && <Link className="text-link" href="/">Use my account</Link>}
@@ -165,10 +166,11 @@ export function PlayerDashboard(p: DashboardProps) {
         <span className="rail-caption">THE STATS DON’T LIE.</span>
         <nav aria-label="Desktop primary">{navigation}</nav>
       </aside>
-      <div className="workspace">
+      <div className={`workspace${fitHome ? " workspace--home" : ""}`}>
         <header className="topbar">
           <BrandLink className={p.route.includes("/") ? "" : "header-logo"} href={href("")} variant={p.route.includes("/") ? "compact" : "primary"} />
           {p.review ? <Link className="button secondary" href="/review" target="_top">Review hub</Link>
+            : fitHome ? <div className="home-header-actions"><DashboardRefresh compact /><ProfileMenu signedIn={!!p.userId} context={query.toString()} /></div>
             : <ProfileMenu signedIn={!p.sample && !!p.userId} context={query.toString()} />}
 
         </header>

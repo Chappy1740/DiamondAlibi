@@ -19,6 +19,7 @@ const assert = require("node:assert/strict");
       if(query.has('empty')){data.snapshot.games=data.snapshot.games.filter(g=>!g.game.tournament_id);data.bands=[];}
       if(query.has('team-beverage')){data.snapshot.capabilities={manualBatting:true,teamBeverage:true};data.snapshot.beverage={teamId:'synthetic-team',revision:1,finalized:!query.has('unfinalized'),rules:query.has('unfinalized')?null:{...DEFAULT_BOARD,solo:2},canToggle:true,participating:true};}
       if(query.has('manual')){data.snapshot.capabilities={manualBatting:true};data.roster.push({id:'adam-player',display_name:'Adam Jones',is_guest:false});data.snapshot.games.forEach(game=>{game.game.batting_mode='manual';game.lineup=[];});if(query.has('first-band'))data.bands=[];}
+      if(query.has('full-roster'))data.roster.push(...Array.from({length:9},(_,i)=>({id:'roster-player-'+(i+3),display_name:'Roster Player '+(i+3),is_guest:false})));
       if(query.has('voice'))window.SpeechRecognition=class{start(){window.__recognition=this;}stop(){}abort(){window.__aborted=true;}};
       if(query.has('tournament-archived'))data.snapshot.tournaments[0].archived=true;
       if(query.has('start-time')){Object.assign(data.snapshot.tournaments[0],{firstGameTime:'08:00',firstGameZone:'America/Chicago'});data.snapshot.capabilities={...data.snapshot.capabilities,tournamentStartTime:true};const first=data.snapshot.games.find(g=>g.game.id==='cup-game');if(first)first.game.tournament_game_number=query.has('next-time')?2:1;}
@@ -138,6 +139,33 @@ const assert = require("node:assert/strict");
     await page.getByRole('heading',{name:'Synthetic league',exact:true}).waitFor();
     assert.equal(await page.getByRole('region',{name:'Tournament player leaderboard',exact:true}).count(),0);
     await page.setViewportSize({width:390,height:844});
+    // Every roster player can be selected directly, including beyond the old six shortcuts.
+    await page.goto(`${base}/?mode=score&quick=1&manual=1&full-roster=1&game=league-game`);
+    const rosterPicker=page.getByRole('group',{name:'Choose batting player',exact:true});
+    await rosterPicker.waitFor();
+    assert.equal(await rosterPicker.getByRole('button').count(),11,'The full roster is shown without searching');
+    for(const width of [320,390]){
+      await page.setViewportSize({width,height:844});
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'Full roster fits phone width');
+      assert(await rosterPicker.getByRole('button').evaluateAll(buttons=>buttons.every(button=>{const r=button.getBoundingClientRect();return r.width>=44&&r.height>=44&&button.scrollWidth<=button.clientWidth;})),'Every roster player has a readable touch target');
+    }
+    if(process.env.FULL_ROSTER_SCREENSHOT)await page.locator('.manual-batter').screenshot({path:process.env.FULL_ROSTER_SCREENSHOT});
+    await rosterPicker.getByRole('button',{name:'Roster Player 11',exact:true}).click();
+    assert.equal(await rosterPicker.getByRole('button').count(),11,'Selecting a batter keeps the full roster available');
+    assert.equal(await rosterPicker.getByRole('button',{name:'Roster Player 11',exact:true}).getAttribute('aria-pressed'),'true');
+    await rosterPicker.getByRole('button',{name:'Synthetic Player',exact:true}).click();
+    assert.equal(await rosterPicker.getByRole('button',{name:'Synthetic Player',exact:true}).getAttribute('aria-pressed'),'true');
+    assert.equal(await rosterPicker.getByRole('button',{name:'Roster Player 11',exact:true}).getAttribute('aria-pressed'),'false');
+    await page.getByLabel('Find player',{exact:true}).fill('player 11');
+    assert.deepEqual(await rosterPicker.getByRole('button').allTextContents(),['Roster Player 11'],'Optional search still filters the full roster');
+    await page.getByLabel('Find player',{exact:true}).fill('');
+    assert.equal(await rosterPicker.getByRole('button').count(),11,'Clearing search restores everyone');
+    assert.equal(await page.evaluate(()=>window.__writes.length),0,'Choosing/searching players never records a play');
+    await rosterPicker.getByRole('button',{name:'Roster Player 11',exact:true}).click();
+    await page.getByRole('button',{name:'Hit',exact:true}).click();
+    await page.getByText('Saved to the team scorebook.',{exact:true}).waitFor();
+    assert.equal(await page.evaluate(()=>window.__writes[0].change.playerId),'roster-player-11','A player past the former limit receives their own play');
+    assert.equal(await rosterPicker.getByRole('button').count(),11,'The roster remains available after saving');
     // Quick taps and typed/native voice contracts; all writes remain local synthetic mocks.
     await page.goto(`${base}/?mode=score&quick=1&game=league-game`);
     await page.getByRole("group",{name:"Batting outcome",exact:true}).waitFor();

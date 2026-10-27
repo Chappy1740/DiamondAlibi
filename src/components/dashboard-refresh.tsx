@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-export function DashboardRefresh() {
+import { RefreshCw } from "lucide-react";
+export function DashboardRefresh({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
   const [online, setOnline] = useState(true);
   const [pending, start] = useTransition();
@@ -27,9 +28,9 @@ export function DashboardRefresh() {
     };
   }, [router]);
   return (
-    <div className="dashboard-refresh">
+    <div className={`dashboard-refresh${compact ? " dashboard-refresh--compact" : ""}`}>
       {(!online || pending) && <span role="status">{!online ? "Offline · displayed records may be out of date" : "Refreshing…"}</span>}
-      <button className="button secondary" disabled={!online || pending} onClick={() => start(() => router.refresh())}>Refresh records</button>
+      <button className="button secondary" aria-label="Refresh records" title={compact ? "Refresh records" : undefined} disabled={!online || pending} onClick={() => start(() => router.refresh())}>{compact ? <RefreshCw size={20} aria-hidden="true" /> : "Refresh records"}</button>
     </div>
   );
 }
