@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BrandLink } from "./brand-link";
 import { ProfileMenu } from "./profile-menu";
 import { TournamentArchiveControls } from "./tournament-archive-controls";
+import { TournamentStartTimeForm } from "./tournament-start-time";
 import { CompetitionForm } from "./competition-form";
 import { GameScoreboardPanel } from "./game-scoreboard";
 import { connectedScoreboard } from "@/lib/game-scoreboard";
@@ -92,6 +93,7 @@ export function CompetitionPage({ data: p, kind, id, gamesOnly = false, fromGame
         </dl>
       </> : <CompetitionForm team={p.teamId} season={p.seasonId} kind="Tournament" existing={selected.competition} archived={!!p.loaded?.archived || tournamentArchived} />}
       {!p.sample && p.loaded?.snapshot.capabilities?.tournamentArchive && "revision" in selected.competition && <TournamentArchiveControls team={p.teamId} season={p.seasonId} id={selected.competition.id} name={selected.competition.name} archived={tournamentArchived} revision={selected.competition.revision} seasonArchived={!!p.loaded.archived} />}
+      {!p.sample && p.loaded?.snapshot.capabilities?.tournamentStartTime && "revision" in selected.competition && <TournamentStartTimeForm team={p.teamId} season={p.seasonId} tournament={selected.competition} disabled={!!p.loaded.archived || tournamentArchived} />}
     </section>}
     {selected && !settingsView && !leagueGameList && <>
       <div className="competition-actions">
@@ -101,7 +103,7 @@ export function CompetitionPage({ data: p, kind, id, gamesOnly = false, fromGame
       {p.loaded?.archived && <p className="connection-notice">Archived season · read only</p>}
       {tournamentArchived && <p className="connection-notice">Archived tournament · read only. Restore it in Tournament settings to resume scoring.</p>}
       <h2>Games</h2>
-      {kind === "Tournament" ? <CompactGameList games={selected.games} gameHref={gameHref} /> : <div className="dashboard-cards">
+      {kind === "Tournament" ? <CompactGameList games={selected.games} gameHref={gameHref} firstGameStart={"revision" in selected.competition ? selected.competition : undefined} /> : <div className="dashboard-cards">
         {selected.games.map((g) => { const score = connectedScoreboard(g.game); return <article className="card detail-card" key={g.game.id}>
           <span className="eyebrow">{g.game.completed ? "Final" : "Live"}{kind === "League" || dates.length > 1 ? ` · ${g.playedOn}` : ""}{g.game.tournament_game_number ? ` · Game ${g.game.tournament_game_number}` : ""}</span>
           <h3>vs. {g.game.opponent}</h3>

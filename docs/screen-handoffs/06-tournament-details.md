@@ -1,5 +1,60 @@
 # 06 — Tournament details: Screen handoff
 
+## First-game start time - local preparation, October 26, 2026
+
+Owner requested a time for the first tournament game. Prepared from current main
+`1d079f4a867c1f1be6f9e11b3a27d71f5426eb6a` on
+`codex/tournament-first-game-time`, in a separate local checkout.
+
+Tournament settings now offer an optional venue-local first-game time and named
+time zone. Game 1 shows that time beside its existing date; scorebook and game
+details show the same schedule. First-game setup links to Tournament settings.
+Later games do not inherit the opener time. No date, play, lineup, HR Band, rule
+version or BEV balance is changed by this metadata edit. Missing historical times
+remain unspecified. No new dependency or package-lock change.
+
+Reuse: existing tournament snapshot, authorization, revision locks, command
+journal, retry/readback flow, native time/select controls and game cards. A new
+calendar library would not replace a missing capability; a small focused form and
+formatter reuse platform controls instead. No UTC conversion is made from the
+viewer device: the saved wall-clock time stays associated with its venue zone.
+
+The unapplied CLI-generated migration
+`20261027012821_tournament_first_game_time.sql` adds two tournament metadata
+columns and a checked RPC. It uses existing active-member/season/tournament
+locks, rejects archives and stale revisions, retains same-ID retries and records
+before/after values in the private tournament command journal. Existing RLS and
+direct-write denial are unchanged. The public wrapper is SECURITY INVOKER;
+the private transactional function has fixed search_path and authenticated-only
+execution. Snapshot extension is guarded against the reviewed function hash.
+The definition hash ignores carriage returns only: the live CRLF body and local
+LF body have the same reviewed hash; substantive drift still rejects the change.
+Controls stay hidden until the new database capability is available.
+
+Verified locally with synthetic records: typecheck, 107 unit tests, real local
+PostgreSQL migration/RPC checks, Chromium phone/large-text/keyboard layout and
+save/error/offline/retry/conflict checks, existing scoring-mode regression plus
+first-versus-later-game schedule checks, and the full Worker build. Two build
+attempts hit Windows EPERM in generated prerender directories; the unchanged
+build succeeded with normal local filesystem permissions. Pinned dependencies
+were restored with npm ci. No package versions were changed.
+
+WebKit and physical iPhone checks are NOT VERIFIED on this laptop. CI has both
+Chromium and WebKit coverage configured for the new browser test. Hosted
+migration/permissions/hash checks, exact-head CI, phone/laptop persistence and
+owner acceptance remain pending. This does not close broader pilot readiness or
+capacity gates. Canonical tracker unchanged.
+
+No commit, push, PR, merge, hosted migration, app deployment or real schedule
+update has been performed. Release requires exact-file review, owner approval,
+current hosted definition guard, protected CI, migration then compatible app
+delivery. Preserve the prior compatible app; an app rollback retains additive
+time metadata. Do not erase schedules or revert database history to roll back UI.
+
+Changed contracts: Tournament settings/details (06), first-game setup (07),
+scorebook (08), game details (09), shared compact game cards, checked RPC
+transport and read-model fields. Shared League cards retain their prior display.
+
 **Status:** Tournament detail changes locally verified; final owner/device acceptance pending. **Requested change:** Tournament-only stats matching the overall layout, and a separate Tournament settings button.
 **Current screen only:** Tournament details.
 **Route/view:** `/tournaments/<existing-tournament-id>`

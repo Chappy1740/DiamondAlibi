@@ -31,6 +31,7 @@ jobs:
       - run: node --experimental-strip-types tests/extended-outcomes-sql.cjs
       - run: node tests/archive-lifecycle-sql.cjs
       - run: WITH_EXTENDED=1 node tests/archive-lifecycle-sql.cjs
+      - run: node tests/tournament-start-time-sql.cjs
       - run: node tests/roster-actions.cjs
       - run: node tests/roster-membership-sql.cjs
       - run: node tests/personal-alibis-sql.cjs
@@ -55,6 +56,8 @@ jobs:
       - run: BROWSER_ENGINE=webkit node tests/games-flow-browser.cjs
       - run: node tests/archive-controls-browser.cjs
       - run: BROWSER_ENGINE=webkit node tests/archive-controls-browser.cjs
+      - run: node tests/tournament-start-time-browser.cjs
+      - run: BROWSER_ENGINE=webkit node tests/tournament-start-time-browser.cjs
       - run: node tests/roster-membership-browser.cjs
       - run: BROWSER_ENGINE=webkit node tests/roster-membership-browser.cjs
       - run: node tests/beverage-controls-browser.cjs
