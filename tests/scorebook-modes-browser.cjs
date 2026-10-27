@@ -21,6 +21,7 @@ const assert = require("node:assert/strict");
       if(query.has('manual')){data.snapshot.capabilities={manualBatting:true};data.roster.push({id:'adam-player',display_name:'Adam Jones',is_guest:false});data.snapshot.games.forEach(game=>{game.game.batting_mode='manual';game.lineup=[];});if(query.has('first-band'))data.bands=[];}
       if(query.has('voice'))window.SpeechRecognition=class{start(){window.__recognition=this;}stop(){}abort(){window.__aborted=true;}};
       if(query.has('tournament-archived'))data.snapshot.tournaments[0].archived=true;
+      if(query.has('start-time')){Object.assign(data.snapshot.tournaments[0],{firstGameTime:'08:00',firstGameZone:'America/Chicago'});data.snapshot.capabilities={...data.snapshot.capabilities,tournamentStartTime:true};const first=data.snapshot.games.find(g=>g.game.id==='cup-game');if(first)first.game.tournament_game_number=query.has('next-time')?2:1;}
       if(query.has('completed'))data.snapshot.games.forEach(g=>g.game.completed=true);if(query.has('archived'))data.archived=true;
       window.__fixture=data;window.__audit=[{action:'hrLimit',reason:'Tournament game history',after:{game:{id:'cup-game'},fenceLimit:2}},{action:'hrLimit',reason:'League game history',after:{game:{id:'league-game'},fenceLimit:0}},{action:'band',tournamentId:'synthetic-cup',reason:'Cup Band history',before:true,after:false},{action:'start',reason:'Other game history',after:{gameId:'other-game'}}];
       if(query.has('leaderboard')){
@@ -58,6 +59,17 @@ const assert = require("node:assert/strict");
       window.setInterval=(fn,delay,...args)=>{if(delay!==15000)return original(fn,delay,...args);window.__polls.set(--id,fn);return id};
       window.clearInterval=timer=>{if(!window.__polls.delete(timer))clear(timer)};
     });
+    // A saved venue-local opener time is shown in scoring/details, never copied to Game 2.
+    for(const mode of ['score','manage']){
+      await page.goto(base+'/?mode='+mode+'&game=cup-game&start-time');
+      await page.getByText('Scheduled start: 8:00 AM Central',{exact:true}).waitFor();
+      assert.equal(await page.evaluate(()=>window.__writes.length),0);
+    }
+    await page.goto(base+'/?mode=score&game=cup-game&start-time&next-time');
+    assert.equal(await page.getByText('Scheduled start: 8:00 AM Central',{exact:true}).count(),0);
+    await page.goto(base+'/?mode=setup&tournament=synthetic-cup&empty&manual&start-time');
+    await page.getByRole('link',{name:'Set start time in Tournament settings',exact:true}).waitFor();
+    assert.equal(await page.evaluate(()=>window.__writes.length),0);
     // Controlled polling: exercise real effects without waiting for wall-clock intervals.
     for(const query of ['mode=setup','mode=manage&game=league-game','mode=score&game=league-game&completed=1','mode=full&game=league-game&archived=1','mode=score&game=missing']){
       await page.goto(base+'/?'+query);await page.locator('.team-scorebook').waitFor();

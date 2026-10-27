@@ -6,6 +6,7 @@ import { revealInvalidField } from "@/lib/form-details";
 import { TournamentNextGame } from "@/components/tournament-next-game";
 import { tournamentContinuation } from "@/lib/tournament-continuation";
 import { gameAudit } from "@/lib/game-audit";
+import { tournamentStartLabel } from "@/lib/tournament-start-time";
 import { ScorebookAudit } from "@/components/scorebook-audit";
 import { SavedGameRules } from "./saved-game-rules";
 import { GameHrLimitPanel } from "@/components/game-hr-limit";
@@ -711,6 +712,11 @@ export function ConnectedScorebook({
           {mode !== "setup" && current && (
             <section className={`card detail-card at-bat-card${mode === "score" ? " at-bat-card--compact" : ""}`} key={current.game.id}>
               <h2>{current.game.opponent}</h2>
+              {current.game.kind === "Tournament" && current.game.tournament_game_number === 1 && (() => {
+                const tournament = snapshot?.tournaments.find(t => t.id === current.game.tournament_id);
+                const start = tournament && tournamentStartLabel(tournament);
+                return start ? <p>Scheduled start: {start}</p> : null;
+              })()}
               <p>
                 {current.playedOn} · {current.game.kind}{current.game.tournament_game_number ? ` · Game ${current.game.tournament_game_number}` : ""} ·{" "}
                 {current.game.completed
@@ -1041,6 +1047,10 @@ export function ConnectedScorebook({
           {!needsBeverageRules && !continuation && (mode === "setup" || mode === "full") && (
             <section className="card detail-card game-setup-card">
               {mode === "full" && <h2 id="new-game-setup" tabIndex={-1}>Set up a game</h2>}
+              {kind === "Tournament" && setupNumber === 1 && snapshot?.capabilities?.tournamentStartTime && <p>
+                First game start: {tournamentStartLabel(snapshot.tournaments.find(t => t.id === tournamentId) ?? {}) ?? "Not set"}.{" "}
+                <a className="text-link" href={`/tournaments/${encodeURIComponent(tournamentId)}?${contextQuery(teamId,seasonId)}&settings=1`}>Set start time in Tournament settings</a>
+              </p>}
               <form className="club-form game-setup-form" aria-label="Set up a game" ref={setupForm} onSubmit={start} onInvalidCapture={(e) => revealInvalidField(e.target)}>
                 <fieldset disabled={disabled}>
                   <label>

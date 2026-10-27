@@ -1,3 +1,4 @@
+import { validStartTime } from "./tournament-start-time.ts";
 /** Checked RPC transport. Database functions own membership, revisions and totals. */
 type AuthResult = { data: { user: { id: string } | null }; error: unknown };
 type RpcResult = { data: unknown; error: { code?: string } | null };
@@ -181,6 +182,12 @@ function prepare(input: unknown): {
         p_change: input.change,
       };
       break;
+    case "tournamentStartTime":
+      keys = ["tournamentId", "commandId", "expectedRevision", "time", "zone"];
+      if (!isId(input.tournamentId) || !validStartTime(input.time, input.zone)) return null;
+      name = "da_set_tournament_start_time";
+      args = {...common, p_tournament: input.tournamentId, p_command: input.commandId, p_expected: input.expectedRevision, p_time: input.time, p_zone: input.zone};
+      break;
     case "archiveTournament":
       keys = ["tournamentId", "commandId", "expectedRevision", "archived"];
       if (!isId(input.tournamentId) || typeof input.archived !== "boolean") return null;
@@ -219,7 +226,7 @@ function prepare(input: unknown): {
   }
   const allowed = ["type", "teamId", "seasonId", ...keys];
   if (Object.keys(input).some((key) => !allowed.includes(key))) return null;
-  const journalWrite = ["start", "change", "band", "archiveTournament"].includes(String(input.type));
+  const journalWrite = ["start", "change", "band", "archiveTournament", "tournamentStartTime"].includes(String(input.type));
   if (
     journalWrite &&
     (!isId(input.commandId) || !revision(input.expectedRevision))
