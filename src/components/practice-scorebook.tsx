@@ -12,7 +12,8 @@ import {
   emptyTotals,
   rates,
   DEFAULT_BOARD,
-  OUTCOMES,
+  scoringOutcomes,
+  OUTCOME_LABELS,
   type Request,
   type Command,
   type Outcome,
@@ -88,7 +89,7 @@ export function PracticeScorebook({
   const [kind, setKind] = useState<"League" | "Tournament">("League"),
     [tournamentId, setTournamentId] = useState(""),
     [rulesTarget, setRulesTarget] = useState("league");
-  const [outcome, setOutcome] = useState<Outcome>("Hit"),
+  const [outcome, setOutcome] = useState<Outcome>("1B"),
     [runs, setRuns] = useState(0),
     [rbi, setRbi] = useState(0),
     [editId, setEditId] = useState("");
@@ -818,8 +819,8 @@ export function PracticeScorebook({
                           chooseOutcome(e.target.value as Outcome)
                         }
                       >
-                        {OUTCOMES.map((o) => (
-                          <option key={o}>{o}</option>
+                        {scoringOutcomes(game.rules.board).map((o) => (
+                          <option key={o} value={o}>{OUTCOME_LABELS[o] ?? o}</option>
                         ))}
                       </select>
                     </label>
@@ -927,8 +928,8 @@ export function PracticeScorebook({
                           game.plays.find((p) => p.id === editId)!.outcome
                         }
                       >
-                        {OUTCOMES.map((o) => (
-                          <option key={o}>{o}</option>
+                        {scoringOutcomes(game.rules.board, true, game.plays.find(p => p.id === editId)?.outcome).map((o) => (
+                          <option key={o} value={o}>{OUTCOME_LABELS[o] ?? o}</option>
                         ))}
                       </select>
                     </label>

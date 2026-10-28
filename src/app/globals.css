@@ -1796,7 +1796,7 @@ blockquote {
 .batting-outcomes .batting-outcome-heading { margin: 0 0 4px; color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
 .batting-outcome-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
 .batting-outcome-group--out .batting-outcome-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.batting-outcome-group--other .batting-outcome-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.batting-outcome-group--other .batting-outcome-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .batting-outcome-group { --outcome-color: #8ee2c7; --outcome-background: #0d3533; }
 .batting-outcome-group--out { --outcome-color: #ffb5b5; --outcome-background: #35252e; }
 .batting-outcome-group--other { --outcome-color: #b5d3ff; --outcome-background: #172f4a; }

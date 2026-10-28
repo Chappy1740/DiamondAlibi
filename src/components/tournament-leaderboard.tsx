@@ -7,16 +7,17 @@ import {
   type TournamentPlayer,
   type LeaderboardMetric,
 } from "@/lib/tournament-leaderboard";
-const metrics: LeaderboardMetric[] = ["OBP", "H", "HR", "RBI", "board", "SO", "DP"];
+const metrics: LeaderboardMetric[] = ["OBP", "H", "2B", "3B", "HR", "RBI", "board", "SO", "DP"];
 const labels = {
   OBP: "OBP%",
   H: "Hits",
+  "2B": "Doubles", "3B": "Triples",
   HR: "HR",
   RBI: "RBI",
   board: "Beverages",
   SO: "SO", DP: "Hit into double play",
 };
-const badges = { OBP: "OBP", H: "H", HR: "HR", RBI: "RBI", board: "BEV", SO: "SO", DP: "DP" };
+const badges = { OBP: "OBP", H: "H", "2B": "2B", "3B": "3B", HR: "HR", RBI: "RBI", board: "BEV", SO: "SO", DP: "DP" };
 function MetricValue({
   row,
   metric,
@@ -81,6 +82,7 @@ export function PlayerLeaderboard({
       <h2>{metric ? `${labels[metric]} rankings` : title}</h2>
       <p className="micro leaderboard-scope">{scopeLabel}</p>
       <p className="micro">SO includes looking, swinging, and SOFO strikeouts.</p>
+      {players.some(row => leaderboardValue(row, "2B") == null || leaderboardValue(row, "3B") == null) && <p className="micro">Some older hits did not record a hit type. Unavailable doubles and triples show — and are unranked.</p>}
       {players.some(row => leaderboardValue(row, "DP") == null) && <p className="micro">Some older games did not record double plays. Unavailable DP counts show — and are unranked.</p>}
       {metric == null ? (
         <div

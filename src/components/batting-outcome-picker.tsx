@@ -11,7 +11,9 @@ const groups: {
     title: "Hits",
     tone: "hit",
     choices: [
-      { outcome: "Hit", code: "H", label: "Hit" },
+      { outcome: "1B", code: "1B", label: "Single" },
+      { outcome: "2B", code: "2B", label: "Double" },
+      { outcome: "3B", code: "3B", label: "Triple" },
       { outcome: "Fence HR", code: "HR", label: "Fence home run" },
       { outcome: "ITP HR", code: "ITP HR", label: "Inside-the-park HR" },
     ],
@@ -29,7 +31,6 @@ const groups: {
     tone: "other",
     choices: [
       { outcome: "BB", code: "BB", label: "Walk" },
-      { outcome: "HBP", code: "HBP", label: "Hit by pitch" },
       { outcome: "SF", code: "SF", label: "Sacrifice fly" },
       { outcome: "ROE", code: "E", label: "Reached on error" },
     ],
@@ -42,8 +43,10 @@ export function BattingOutcomePicker({
   disabled,
   onPick,
   extended = false,
+  hitTypes = true,
 }: {
   extended?: boolean;
+  hitTypes?: boolean;
   value: Outcome;
   onChange: (outcome: Outcome) => void;
   disabled: boolean;
@@ -66,6 +69,9 @@ export function BattingOutcomePicker({
               {outcome:"SOFO" as Outcome,code:"SOFO",label:"Strikeout foul out"},
               {outcome:"DP" as Outcome,code:"DP",label:"Hit into double play"},
               {outcome:"Out" as Outcome,code:"OUT",label:"Out"},
+            ] : !hitTypes && group.title === "Hits" ? [
+              {outcome: "Hit" as Outcome, code: "H", label: "Hit"},
+              ...group.choices.filter(choice => !["1B", "2B", "3B"].includes(choice.outcome)),
             ] : group.choices).map((choice) => (
               <button
                 key={choice.outcome}

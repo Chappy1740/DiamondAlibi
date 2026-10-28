@@ -41,7 +41,7 @@ export function VoicePlayEntry({ disabled, resetKey = 0, onResult }: { disabled:
   }
   return <div className="voice-play-entry">
     <div className="voice-play-controls">
-      <input aria-label="Player and result" value={text} maxLength={200} placeholder="Alex hit · Alex home run 2 RBI" disabled={disabled || listening} onChange={event => setText(event.target.value)} onKeyDown={event => { if (event.key === "Enter") { event.preventDefault(); void submit(text); } }} />
+      <input aria-label="Player and result" value={text} maxLength={200} placeholder="Alex double · Alex triple 2 RBI" disabled={disabled || listening} onChange={event => setText(event.target.value)} onKeyDown={event => { if (event.key === "Enter") { event.preventDefault(); void submit(text); } }} />
       {available && <button type="button" className="button secondary" disabled={disabled || listening} aria-label="Speak a result" onClick={listen}><Mic size={18} aria-hidden /></button>}
       <button type="button" className="button secondary" disabled={disabled || listening || !text.trim()} onClick={() => void submit(text)}>Record result</button>
     </div>

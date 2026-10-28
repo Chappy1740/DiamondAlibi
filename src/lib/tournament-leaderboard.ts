@@ -3,12 +3,13 @@ import { emptyTotals, rates, type Scope, type Totals } from "./scoring.ts";
 import type { ConnectedGame, LoadedScorebook } from "./scorebook-view.ts";
 export type OutcomeMetric = "DP";
 export type OutcomeCounts = Record<OutcomeMetric, number | null>;
-export type LeaderboardMetric = "OBP" | "H" | "HR" | "RBI" | "board" | "SO" | OutcomeMetric;
+export type LeaderboardMetric = "OBP" | "H" | "HR" | "RBI" | "board" | "SO" | "2B" | "3B" | OutcomeMetric;
 export type TournamentPlayer = {
   id: string;
   name: string;
   totals: Totals;
   outcomes?: OutcomeCounts;
+  hitTypes?: { "2B": number | null; "3B": number | null };
   rates: ReturnType<typeof rates>;
 };
 export function leaderboardValue(
@@ -17,6 +18,7 @@ export function leaderboardValue(
 ) {
   if (metric === "SO") return row.totals.K;
   if (metric === "DP") return row.outcomes?.DP ?? null;
+  if (metric === "2B" || metric === "3B") return row.hitTypes?.[metric] ?? null;
   return metric === "OBP" ? row.rates.OBP : row.totals[metric as keyof Totals];
 }
 export function rankTournamentPlayers(
@@ -61,6 +63,7 @@ export function teamLeaderboard(
         "Former roster player",
       totals: { ...totals },
       outcomes: playerOutcomeCounts(outcomeIndex, id, totals.PA),
+      hitTypes: playerHitTypes(outcomeIndex, id, totals.PA),
       rates: rates(totals),
     }));
 }
@@ -168,6 +171,7 @@ function playersFromGames(
         "Former roster player",
       totals: value,
       outcomes: playerOutcomeCounts(outcomeIndex, id, value.PA),
+      hitTypes: playerHitTypes(outcomeIndex, id, value.PA),
       rates: rates(value),
     }));
   return rankTournamentPlayers(rows, metric);
@@ -175,7 +179,7 @@ function playersFromGames(
 
 /** Index effective rows once per projection, rather than rescan every play per player. */
 function indexPlayerOutcomes(games: readonly ConnectedGame[]) {
-  const index = new Map<string, {counts: OutcomeCounts; appearances: number}>();
+  const index = new Map<string, {counts: OutcomeCounts; hits: NonNullable<TournamentPlayer["hitTypes"]>; appearances: number}>();
   for (const game of games) {
     if (!game.evaluation || !Array.isArray(game.evaluation.rows) || !game.evaluation.totals) continue;
     const rowsByPlayer = new Map<string, ConnectedGame["evaluation"]["rows"]>();
@@ -187,11 +191,15 @@ function indexPlayerOutcomes(games: readonly ConnectedGame[]) {
     const explicit = typeof game.rules.double_play === "number" && Number.isFinite(game.rules.double_play);
     for (const [playerId, total] of Object.entries(game.evaluation.totals)) {
       if (total.PA === 0) continue;
-      const entry = index.get(playerId) ?? {counts: {DP: 0}, appearances: 0};
+      const entry = index.get(playerId) ?? {counts: {DP: 0}, hits: {"2B": 0, "3B": 0}, appearances: 0};
       index.set(playerId, entry);
       const {counts} = entry;
       entry.appearances += total.PA;
       const rows = rowsByPlayer.get(playerId) ?? [];
+      for (const key of ["2B", "3B"] as const) {
+        if (rows.length !== total.PA || rows.some(row => row.outcome === "Hit")) entry.hits[key] = null;
+        else if (entry.hits[key] !== null) entry.hits[key] += rows.filter(row => row.outcome === key).length;
+      }
       if (rows.length !== total.PA || !explicit) {
         counts.DP = null;
         continue;
@@ -205,4 +213,8 @@ function indexPlayerOutcomes(games: readonly ConnectedGame[]) {
 function playerOutcomeCounts(index: ReturnType<typeof indexPlayerOutcomes>, playerId: string, expectedPA: number): OutcomeCounts {
   const entry = index.get(playerId);
   return entry?.appearances === expectedPA ? {...entry.counts} : { DP: null };
+}
+function playerHitTypes(index: ReturnType<typeof indexPlayerOutcomes>, playerId: string, expectedPA: number): NonNullable<TournamentPlayer["hitTypes"]> {
+  const entry = index.get(playerId);
+  return entry?.appearances === expectedPA ? {...entry.hits} : {"2B": null, "3B": null};
 }

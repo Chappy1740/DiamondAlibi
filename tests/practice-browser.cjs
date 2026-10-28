@@ -39,6 +39,13 @@ const assert = require("node:assert/strict");
       .click();
     await page.getByLabel("Opponent", { exact: true }).fill("Sample Opponent");
     await page.getByRole("button", { name: "Start game", exact: true }).click();
+    const slowPitchChoices=await page.getByLabel("Batting outcome",{exact:true}).locator("option").evaluateAll(options=>options.map(option=>option.value));
+    assert(!slowPitchChoices.includes("HBP"));assert(!slowPitchChoices.includes("Hit"));
+    for(const type of ["1B","2B","3B"]){
+      assert(slowPitchChoices.includes(type));
+      await page.getByLabel("Batting outcome",{exact:true}).selectOption(type);
+      assert.equal(await page.getByLabel("Batting outcome",{exact:true}).inputValue(),type);
+    }
     await page
       .getByLabel("Batting outcome", { exact: true })
       .selectOption("Fence HR");
