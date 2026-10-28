@@ -6,7 +6,10 @@ const words: Record<string, number> = { zero: 0, one: 1, two: 2, three: 3, four:
 const aliases: [Outcome, string[]][] = [
   ["ITP HR", ["inside the park home run", "inside-the-park home run", "inside the park hr", "itp hr"]],
   ["Fence HR", ["fence home run", "fence hr", "home run", "hr"]],
-  ["Hit", ["hit"]], ["BB", ["walk", "bb"]], ["HBP", ["hit by pitch", "hbp"]],
+  ["1B", ["single", "1b", "one base hit", "hit"]],
+  ["2B", ["double", "2b", "two base hit"]],
+  ["3B", ["triple", "3b", "three base hit"]],
+  ["BB", ["walk", "bb"]],
   ["K Looking", ["strikeout looking", "strike out looking", "looking strikeout", "backwards k", "backward k", "ꓘ"]],
   ["K Swinging", ["strikeout swinging", "strike out swinging", "swinging strikeout"]],
   ["SOFO", ["strikeout foul out", "strike out foul out", "foul strikeout", "sofo"]],

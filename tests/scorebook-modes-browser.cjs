@@ -20,6 +20,7 @@ const assert = require("node:assert/strict");
       if(query.has('team-beverage')){data.snapshot.capabilities={manualBatting:true,teamBeverage:true};data.snapshot.beverage={teamId:'synthetic-team',revision:1,finalized:!query.has('unfinalized'),rules:query.has('unfinalized')?null:{...DEFAULT_BOARD,solo:2},canToggle:true,participating:true};}
       if(query.has('manual')){data.snapshot.capabilities={manualBatting:true};data.roster.push({id:'adam-player',display_name:'Adam Jones',is_guest:false});data.snapshot.games.forEach(game=>{game.game.batting_mode='manual';game.lineup=[];});if(query.has('first-band'))data.bands=[];}
       if(query.has('full-roster'))data.roster.push(...Array.from({length:9},(_,i)=>({id:'roster-player-'+(i+3),display_name:'Roster Player '+(i+3),is_guest:false})));
+      data.snapshot.capabilities={...data.snapshot.capabilities,hitTypes:!query.has('legacy-hits')};
       if(query.has('voice'))window.SpeechRecognition=class{start(){window.__recognition=this;}stop(){}abort(){window.__aborted=true;}};
       if(query.has('tournament-archived'))data.snapshot.tournaments[0].archived=true;
       if(query.has('start-time')){Object.assign(data.snapshot.tournaments[0],{firstGameTime:'08:00',firstGameZone:'America/Chicago'});data.snapshot.capabilities={...data.snapshot.capabilities,tournamentStartTime:true};const first=data.snapshot.games.find(g=>g.game.id==='cup-game');if(first)first.game.tournament_game_number=query.has('next-time')?2:1;}
@@ -30,6 +31,7 @@ const assert = require("node:assert/strict");
         const cupGame=data.snapshot.games.find(g=>g.game.id==='cup-game');cupGame.evaluation.totals={'synthetic-player':{...emptyTotals(),PA:3,AB:3,H:2,HR:1,RBI:1,board:-1},'other-player':{...emptyTotals(),PA:3,AB:3,H:2,HR:0,RBI:2,board:2}};
         data.snapshot.games.find(g=>g.game.id==='league-game').evaluation.totals={'synthetic-player':{...emptyTotals(),PA:99,H:99,HR:99,RBI:99,board:50}};
         if(query.has('new-leaders'))cupGame.evaluation=evaluateGame({id:'cup-game',opponent:'Synthetic',kind:'Tournament',lineup:['synthetic-player','other-player'],next:0,complete:false,rules:{version:'Synthetic expanded',fenceLimit:3,board:EXTENDED_BOARD},plays:[['synthetic-player','K Looking'],['synthetic-player','K Looking'],['synthetic-player','K Swinging'],['synthetic-player','DP'],['other-player','SOFO'],['other-player','SOFO'],['other-player','DP'],['other-player','DP']].map(([playerId,outcome],i)=>({id:String(i),playerId,outcome,runs:0,rbi:0,voided:false}))},[]);
+        if(query.has('hit-leaders'))cupGame.evaluation=evaluateGame({id:'cup-game',opponent:'Synthetic',kind:'Tournament',lineup:['synthetic-player','other-player'],next:0,complete:false,rules:{version:'Synthetic hits',fenceLimit:3,board:DEFAULT_BOARD},plays:[['synthetic-player','2B'],['synthetic-player','2B'],['synthetic-player','3B'],['other-player','1B'],['other-player','3B'],['other-player','3B']].map(([playerId,outcome],i)=>({id:String(i),playerId,outcome,runs:0,rbi:0,voided:false}))},[]);
         if(query.has('nine-games')){data.snapshot.games=data.snapshot.games.filter(g=>g.game.kind==='League').concat(Array.from({length:9},(_,i)=>({...structuredClone(cupGame),game:{...cupGame.game,id:'cup-game-'+i,tournament_game_number:i+1}})));}
         createRoot(document.getElementById('app')).render(<CompetitionPage kind={query.has('league-page')?'League':'Tournament'} id={query.has('league-page')?'synthetic-league':'synthetic-cup'} data={{route:'tournaments',sample:false,userId:'synthetic-user',teams:[{id:'synthetic-team',name:'Synthetic Team'}],seasons:[{id:'synthetic-season',name:'Synthetic Season',archived:false}],teamId:'synthetic-team',seasonId:'synthetic-season',scope:'Overall',loaded:data}}/>);
       }else if(query.has('page')) ScorePage({searchParams:Promise.resolve({setup:query.has('scoring-page')||query.has('manage-page')?undefined:'1',manage:query.has('manage-page')?'1':undefined,game:query.has('manage-page')?(query.get('game')||'cup-game'):query.has('scoring-page')?'cup-game':undefined,tournament:query.get('tournament')||undefined,league:query.get('league')||undefined})}).then(ui=>createRoot(document.getElementById('app')).render(ui));
@@ -97,8 +99,8 @@ const assert = require("node:assert/strict");
     // repeated dates, supports tied ranks, readable names and ninth-game Add.
     await page.goto(`${base}/?leaderboard=1`);
     const leaders=page.getByRole('region',{name:'Tournament player leaderboard',exact:true});await leaders.waitFor();
-    assert.equal(await leaders.locator('.leaderboard-summary button').count(),7);
-    assert.deepEqual((await leaders.locator('.leaderboard-summary .leaderboard-player strong').allTextContents()).slice(0,5),['2 tied','2 tied','Synthetic Player','Synthetic Blair with a very long roster nickname','Synthetic Blair with a very long roster nickname']);
+    assert.equal(await leaders.locator('.leaderboard-summary button').count(),9);
+    assert.deepEqual((await leaders.locator('.leaderboard-summary button:not(:disabled) .leaderboard-player strong').allTextContents()).slice(0,5),['2 tied','2 tied','Synthetic Player','Synthetic Blair with a very long roster nickname','Synthetic Blair with a very long roster nickname']);
     assert.deepEqual((await leaders.locator('.leaderboard-summary .leaderboard-counts strong').allTextContents()).slice(0,5),['.667','2','1','2','2']);
     assert.equal(await leaders.locator('.leaderboard-players').count(),0,'leaders first, not the full ranking');
     async function onlyMetric(label,values){
@@ -162,14 +164,14 @@ const assert = require("node:assert/strict");
     assert.equal(await rosterPicker.getByRole('button').count(),11,'Clearing search restores everyone');
     assert.equal(await page.evaluate(()=>window.__writes.length),0,'Choosing/searching players never records a play');
     await rosterPicker.getByRole('button',{name:'Roster Player 11',exact:true}).click();
-    await page.getByRole('button',{name:'Hit',exact:true}).click();
+    await page.getByRole('button',{name:'Single',exact:true}).click();
     await page.getByText('Saved to the team scorebook.',{exact:true}).waitFor();
     assert.equal(await page.evaluate(()=>window.__writes[0].change.playerId),'roster-player-11','A player past the former limit receives their own play');
     assert.equal(await rosterPicker.getByRole('button').count(),11,'The roster remains available after saving');
     // Quick taps and typed/native voice contracts; all writes remain local synthetic mocks.
     await page.goto(`${base}/?mode=score&quick=1&game=league-game`);
     await page.getByRole("group",{name:"Batting outcome",exact:true}).waitFor();
-    await page.getByRole("button",{name:"Hit",exact:true}).click();
+    await page.getByRole("button",{name:"Single",exact:true}).click();
     await page.getByText("Saved to the team scorebook.",{exact:true}).waitFor();
     assert.equal(await page.evaluate(()=>window.__writes.length),1);
     await page.getByRole("button",{name:"2 RBI",exact:true}).click();
@@ -177,6 +179,41 @@ const assert = require("node:assert/strict");
     await page.waitForFunction(()=>window.__writes.length===2 && !document.querySelector('.batting-outcomes button').disabled);
     assert.deepEqual(await page.evaluate(()=>{const c=window.__writes[1].change;return[c.playerId,c.outcome,c.runs,c.rbi]}),['synthetic-player','Fence HR',2,2]);
     assert.equal(await page.locator('input[name="at-bat-rbi"]').inputValue(),'0');
+    // Explicit hit types are real save payloads, with the usual RBI handling and no HBP choice.
+    for (const width of [320,390]) {
+      await page.setViewportSize({width,height:844});
+      const hits=page.getByRole('group',{name:'Hits',exact:true});
+      assert.deepEqual(await hits.locator('strong').allTextContents(),['1B','2B','3B','HR','ITP HR']);
+      assert.equal(await page.getByRole('button',{name:'Hit by pitch',exact:true}).count(),0);
+      assert(await hits.getByRole('button').evaluateAll(buttons=>buttons.every(button=>{const r=button.getBoundingClientRect();return r.width>=44&&r.height>=44&&button.scrollWidth<=button.clientWidth;})));
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+    }
+    if(process.env.HIT_TYPES_SCREENSHOT)await page.locator('.batting-outcomes').screenshot({path:process.env.HIT_TYPES_SCREENSHOT});
+    for(const [name,value] of [['Double','2B'],['Triple','3B']]){
+      const before=await page.evaluate(()=>window.__writes.length);
+      await page.getByRole('button',{name:'2 RBI',exact:true}).click();
+      await page.getByRole('button',{name,exact:true}).click();
+      await page.waitForFunction(n=>window.__writes.length===n+1&&!document.querySelector('.batting-outcomes button').disabled,before);
+      assert.deepEqual(await page.evaluate(()=>{const c=window.__writes.at(-1).change;return[c.outcome,c.runs,c.rbi]}),[value,2,2]);
+    }
+    await page.goto(`${base}/?mode=score&quick=1&game=league-game&legacy-hits=1`);
+    await page.getByRole('button',{name:'Hit',exact:true}).waitFor();
+    assert.equal(await page.getByRole('button',{name:'Double',exact:true}).count(),0,'unsupported server cannot receive new outcomes');
+    assert.equal(await page.getByRole('button',{name:'Hit by pitch',exact:true}).count(),0);
+    await page.getByLabel('Player and result',{exact:true}).fill('Synthetic Player double');
+    await page.getByRole('button',{name:'Record result',exact:true}).click();
+    assert.equal(await page.evaluate(()=>window.__writes.length),0,'typed entry also respects server capability');
+    await page.goto(`${base}/?mode=score&quick=1&game=league-game`);
+    for(const text of ['Synthetic Player double','Synthetic Player triple 2 RBI']){
+      const before=await page.evaluate(()=>window.__writes.length);
+      await page.getByLabel('Player and result',{exact:true}).fill(text);
+      await page.getByRole('button',{name:'Record result',exact:true}).click();
+      await page.waitForFunction(n=>window.__writes.length===n+1&&!document.querySelector('.batting-outcomes button').disabled,before);
+      assert.equal(await page.evaluate(()=>window.__writes.at(-1).change.outcome),text.includes('double')?'2B':'3B');
+    }
+    await page.getByLabel('Player and result',{exact:true}).fill('Synthetic Player hit by pitch');
+    await page.getByRole('button',{name:'Record result',exact:true}).click();
+    assert.equal(await page.evaluate(()=>window.__writes.length),2,'HBP is not accepted through new typed/voice entry');
     assert.equal(await page.locator('.game-management,.at-bat-history,.game-switcher').count(),0);
     await page.goto(`${base}/?mode=score&quick=1&manual=1&voice=1&first-band=1&game=cup-game`);
     await page.getByRole("button",{name:"Speak a result",exact:true}).waitFor();
@@ -259,8 +296,8 @@ const assert = require("node:assert/strict");
     assert.equal(await page.getByRole("region",{name:"Season statistics",exact:true}).isVisible(),true);
     assert.equal(await page.getByRole("button",{name:"Load audit history",exact:true}).isVisible(),true);
     const picker=page.getByRole("group",{name:"Batting outcome",exact:true});
-    assert.equal(await picker.getByRole("button").count(),9);
-    for(const [name,runs] of [["Fence home run",1],["Inside-the-park HR",1],["Strikeout",0],["Walk",0],["Hit by pitch",0],["Sacrifice fly",0],["Reached on error",0],["Out",0],["Hit",0]]){
+    assert.equal(await picker.getByRole("button").count(),10);
+    for(const [name,runs] of [["Fence home run",1],["Inside-the-park HR",1],["Strikeout",0],["Walk",0],["Sacrifice fly",0],["Reached on error",0],["Out",0],["Single",0],["Double",0],["Triple",0]]){
       await picker.getByRole("button",{name,exact:true}).click();
       assert.equal(await picker.getByRole("button",{name,exact:true}).getAttribute("aria-pressed"),"true");
       assert.equal(await picker.locator('[aria-pressed="true"]').count(),1);
@@ -314,7 +351,9 @@ const assert = require("node:assert/strict");
     await page.goto(`${base}/?page=1&scoring-page=1&tournament=synthetic-cup`);
     await page.getByRole("group",{name:"Batting outcome",exact:true}).waitFor();
     await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
-    assert.equal(await page.locator(".at-bat-form").evaluate(el=>el.getBoundingClientRect().bottom<900),true);
+    // Scoring may scroll; every outcome must remain reachable above the fixed navigation.
+    await page.getByRole('button',{name:'Reached on error',exact:true}).scrollIntoViewIfNeeded();
+    assert.equal(await page.getByRole('button',{name:'Reached on error',exact:true}).evaluate(el=>el.getBoundingClientRect().bottom<=document.querySelector('.app-bottom-nav').getBoundingClientRect().top),true);
     assert.equal(await page.getByRole("button",{name:"Record plate appearance",exact:true}).count(),0);
     assert.equal(await page.getByRole("link",{name:"Game details",exact:true}).count(),1);
     assert.equal(await page.getByText("Score and inning have not been recorded.",{exact:true}).count(),0);
@@ -488,10 +527,22 @@ const assert = require("node:assert/strict");
     assert.equal(await page.getByRole('button',{name:'Strikeout looking',exact:true}).count(),0,'older saved game keeps its original options');
 
 
-    // All competition and Stats pages share the same seven-category component.
+    // Doubles/triples rankings use saved effective hit types, including real zero counts.
+    await page.goto(`${base}/?leaderboard=1&hit-leaders=1`);
+    const hitLeaders=page.getByRole('region',{name:'Tournament player leaderboard',exact:true});await hitLeaders.waitFor();
+    for(const [label,values] of [['Doubles',['2','0']],['Triples',['2','1']]]){
+      await hitLeaders.getByRole('button',{name:'View '+label+' rankings',exact:true}).click();
+      assert.deepEqual(await hitLeaders.locator('.leaderboard-counts strong').allTextContents(),values);
+      await page.setViewportSize({width:320,height:844});
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+      await hitLeaders.getByRole('button',{name:'← Back to leaders',exact:true}).click();
+    }
+    await page.setViewportSize({width:390,height:844});
+
+    // All competition and Stats pages share the same nine-category component.
     await page.goto(`${base}/?leaderboard=1&extended=1&new-leaders=1`);
     const expandedLeaders=page.getByRole('region',{name:'Tournament player leaderboard',exact:true});await expandedLeaders.waitFor();
-    assert.equal(await expandedLeaders.locator('.leaderboard-summary button').count(),7);
+    assert.equal(await expandedLeaders.locator('.leaderboard-summary button').count(),9);
     for(const [label,expected] of [['SO','3'],['Hit into double play','2']]){
       const button=expandedLeaders.getByRole('button',{name:'View '+label+' rankings',exact:true});
       assert.equal(await button.locator('.leaderboard-counts strong').innerText(),expected);
@@ -515,13 +566,13 @@ const assert = require("node:assert/strict");
 
     await page.goto(`${base}/?mode=score&game=cup-game&tournament-archived=1`);
     await page.getByText('Archived tournament · read only. Restore it in Tournament settings to score again.',{exact:true}).waitFor();
-    assert.equal(await page.getByRole('button',{name:'Hit',exact:true}).isDisabled(),true);
+    assert.equal(await page.getByRole('button',{name:'Single',exact:true}).isDisabled(),true);
     assert.equal(await page.evaluate(()=>window.__polls.size),0,'archived tournaments stop live polling');
     assert.equal(await page.evaluate(()=>window.__writes.length),0,'opening archived history does not write');
     await page.goto(`${base}/?mode=setup&tournament=synthetic-cup&tournament-archived=1`);
     await page.getByRole('heading',{name:'Synthetic scorebook',exact:true}).waitFor();
     assert.equal(await page.getByLabel('Tournament',{exact:true}).getByRole('option',{name:'M3-5 Synthetic Cup',exact:true}).count(),0,'archived tournaments are absent from new-game choices');
     assert.equal(await page.evaluate(()=>window.__writes.length),0);
-    console.log(`PASS ${process.env.BROWSER_ENGINE || "chromium"} compact at-bat: RBI before instant results; settings/history absent from scorer, separate game-details link. Legacy draft selection/save preserved; actual page primary controls within 900px. Grouped outcome buttons: all nine choices, selected/keyboard state, HR defaults/reset, no write until confirmed, unchanged score payload, offline disabling and readable touch targets at 320–1440px. Compact setup: actual page heading, first/next-game primary actions above the fold, native date containment, hidden-field validation, preserved HR/Bands payloads and prominent uncertain/offline handling. Score/setup modes: selected competition isolation, no unrelated scoring during setup, inherited zero/2 limits, opponent-only tournament continuation, collapsed statistics/audit, missing-game denial and mobile overflow. Live polling only for active, visible, online games; completed/setup/manage/archived/missing games do not poll. Hidden/offline reads are skipped and returning/reconnecting refreshes without recording plays. Decimal leaderboard rates. Synthetic services only; no hosted writes.`);
+    console.log(`PASS ${process.env.BROWSER_ENGINE || "chromium"} compact at-bat: RBI before instant results; settings/history absent from scorer, separate game-details link. Legacy draft selection/save preserved; all scoring choices reachable above fixed navigation. Grouped outcome buttons: explicit 1B/2B/3B, no HBP, supported-server guards and ten base choices, selected/keyboard state, HR defaults/reset, no write until confirmed, unchanged score payload, offline disabling and readable touch targets at 320–1440px. Compact setup: actual page heading, first/next-game primary actions above the fold, native date containment, hidden-field validation, preserved HR/Bands payloads and prominent uncertain/offline handling. Score/setup modes: selected competition isolation, no unrelated scoring during setup, inherited zero/2 limits, opponent-only tournament continuation, collapsed statistics/audit, missing-game denial and mobile overflow. Live polling only for active, visible, online games; completed/setup/manage/archived/missing games do not poll. Hidden/offline reads are skipped and returning/reconnecting refreshes without recording plays. Decimal leaderboard rates and effective doubles/triples rankings. Synthetic services only; no hosted writes.`);
   } finally{if(browser)await browser.close();if(server)await new Promise(resolve=>server.close(resolve));}
 })().catch(error=>{console.error(error);process.exitCode=1;});

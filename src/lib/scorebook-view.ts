@@ -54,7 +54,7 @@ export type ConnectedGame = {
   };
 };
 export type ScorebookView = {
-  capabilities?: { manualBatting?: boolean; teamBeverage?: boolean; tournamentArchive?: boolean; tournamentStartTime?: boolean };
+  capabilities?: { manualBatting?: boolean; teamBeverage?: boolean; tournamentArchive?: boolean; tournamentStartTime?: boolean; hitTypes?: boolean };
   beverage?: BeverageState;
   teamId: string;
   seasonId: string;

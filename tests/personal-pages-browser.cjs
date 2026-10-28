@@ -89,7 +89,7 @@ const assert = require("node:assert/strict");
     await page.getByRole('heading',{name:'Team leaders',exact:true}).waitFor();
     await checkNavigation('Stats');
     const teamLeaders=page.getByRole('region',{name:'Team player leaderboard',exact:true});
-    assert.equal(await teamLeaders.locator('.leaderboard-summary button').count(),7);
+    assert.equal(await teamLeaders.locator('.leaderboard-summary button').count(),9);
     await teamLeaders.getByRole('button',{name:'View Hits rankings',exact:true}).click();
     await teamLeaders.getByRole('heading',{name:'Hits rankings',exact:true}).waitFor();
     assert(await teamLeaders.locator('.leaderboard-players li').count()>0);
@@ -102,7 +102,7 @@ const assert = require("node:assert/strict");
     await page.getByRole('heading',{name:'Tournament stats',exact:true}).waitFor();
     const leaderboard=page.getByRole('region',{name:'Tournament player leaderboard',exact:true});
     await leaderboard.waitFor();
-    assert.equal(await leaderboard.locator('.leaderboard-summary button').count(),7);
+    assert.equal(await leaderboard.locator('.leaderboard-summary button').count(),9);
     for(const metric of ['OBP%','Hits','HR','RBI','Beverages']){
       await leaderboard.getByRole('button',{name:'View '+metric+' rankings',exact:true}).click();
       const rows=await leaderboard.locator('.leaderboard-players li').count();

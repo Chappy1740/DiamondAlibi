@@ -2,6 +2,9 @@
 import { validScoreboard, type GameScoreboard } from "./game-scoreboard.ts";
 export const OUTCOMES = [
   "Hit",
+  "1B",
+  "2B",
+  "3B",
   "BB",
   "HBP",
   "ROE",
@@ -58,12 +61,18 @@ export const BOARD_LABELS: Record<keyof typeof EXTENDED_BOARD, string> = {
   strikeoutFoul: "Strikeout foul out (SOFO)", doublePlay: "Hit into double play",
 };
 export const OUTCOME_LABELS: Partial<Record<Outcome, string>> = {
+  Hit: "Hit (type not recorded)", "1B": "Single", "2B": "Double", "3B": "Triple",
   "K Looking": "Strikeout looking", "K Swinging": "Strikeout swinging", SOFO: "Strikeout foul out (SOFO)", DP: "Hit into double play",
 };
 export const EXTENDED_OUTCOME_RULES = {"K Looking":"strikeoutLooking", "K Swinging":"strikeoutSwinging", SOFO:"strikeoutFoul", DP:"doublePlay"} as const;
 export function isStrikeout(outcome: Outcome) { return outcome === "K" || outcome === "K Looking" || outcome === "K Swinging" || outcome === "SOFO"; }
 export function hasExtendedRules(board: Rules["board"]) { return EXTENDED_RULE_KEYS.every(key => typeof board[key] === "number"); }
 export function availableOutcomes(board: Rules["board"]): Outcome[] { return OUTCOMES.filter(outcome => !(outcome in EXTENDED_OUTCOME_RULES) || hasExtendedRules(board)); }
+/** Legacy outcomes stay readable/replayable, but are not offered for new slow-pitch entries. */
+export function scoringOutcomes(board: Rules["board"], hitTypes = true, historical?: Outcome): Outcome[] {
+  return availableOutcomes(board).filter(outcome =>
+    outcome === historical || (outcome !== "HBP" && (hitTypes ? outcome !== "Hit" : !["1B", "2B", "3B"].includes(outcome))));
+}
 export function extendedBoardFromColumns(rules: Record<string, unknown>): Partial<Pick<Rules["board"], typeof EXTENDED_RULE_KEYS[number]>> {
   const columns = ["strikeout_looking", "strikeout_swinging", "strikeout_foul", "double_play"];
   if (!columns.every(key => typeof rules[key] === "number" && Number.isInteger(rules[key]) && Math.abs(rules[key] as number) <= 100)) return {};
@@ -448,6 +457,9 @@ export function evaluateGame(game: Game, bands: string[]) {
       play.outcome === "Fence HR" && fenceUsed >= game.rules.fenceLimit;
     const hit =
       play.outcome === "Hit" ||
+      play.outcome === "1B" ||
+      play.outcome === "2B" ||
+      play.outcome === "3B" ||
       play.outcome === "ITP HR" ||
       (play.outcome === "Fence HR" && !over);
     t.PA++;

@@ -1,5 +1,5 @@
 "use client";
-import { BOARD_LABELS, extendedBoardFromColumns, availableOutcomes, OUTCOME_LABELS } from "@/lib/scoring";
+import { BOARD_LABELS, extendedBoardFromColumns, scoringOutcomes, OUTCOME_LABELS } from "@/lib/scoring";
 import { formatBaseballRate as rate } from "@/lib/baseball-rate";
 import { competitionGames, competitionPath, contextQuery } from "@/lib/competitions";
 import { revealInvalidField } from "@/lib/form-details";
@@ -89,7 +89,8 @@ export function ConnectedScorebook({
   const [auditStale, setAuditStale] = useState(false);
   const [leagueId, setLeagueId] = useState(initialLeagueId);
   const [overrideLimit, setOverrideLimit] = useState(false);
-  const [outcome, setOutcome] = useState<Outcome>("Hit"),
+  const defaultHit: Outcome = data?.snapshot.capabilities?.hitTypes ? "1B" : "Hit";
+  const [outcome, setOutcome] = useState<Outcome>(defaultHit),
     [runs, setRuns] = useState(0),
     [rbi, setRbi] = useState(0);
   const [audit, setAudit] = useState<{
@@ -343,7 +344,7 @@ export function ConnectedScorebook({
               ? "Previous save confirmed. The change was recorded once."
               : "Saved to the team scorebook.",
         );
-      if (loaded && !conflict && mode === "score" && (request as { change?: { type?: string } }).change?.type === "score") { setConfirmedPlays(value => value + 1); setOutcome("Hit"); setRuns(0); setRbi(0); countsEdited.current = false; setFirstBand(null); pendingPlay.current = null; setManualPlayer(""); setPlayerSearch(""); }
+      if (loaded && !conflict && mode === "score" && (request as { change?: { type?: string } }).change?.type === "score") { setConfirmedPlays(value => value + 1); setOutcome(defaultHit); setRuns(0); setRbi(0); countsEdited.current = false; setFirstBand(null); pendingPlay.current = null; setManualPlayer(""); setPlayerSearch(""); }
       return loaded && !conflict;
     } finally {
       lock.current = false;
@@ -386,6 +387,7 @@ export function ConnectedScorebook({
   });
   async function recordPlay(playerId: string, nextOutcome: Outcome, nextRuns: number, nextRbi: number, bandChoice = firstBand) {
     if (disabled || lock.current || !current || !data || current.game.completed) return false;
+    if (!scoringOutcomes({ ...DEFAULT_BOARD, ...extendedBoardFromColumns(current.rules) }, !!data.snapshot.capabilities?.hitTypes).includes(nextOutcome)) { setEntryError("That result is unavailable for this game. Refresh the scorebook."); return false; }
     if (!data.roster.some(player => player.id === playerId)) { setEntryError("Choose the player first."); return false; }
     if (!manual && playerId !== current.lineup[current.game.next_batter_position]) { setEntryError(`The lineup’s next batter is ${playerName(current.lineup[current.game.next_batter_position])}.`); return false; }
     if (![nextRuns, nextRbi].every(value => Number.isInteger(value) && value >= 0 && value <= 4) || nextRbi > nextRuns || ((nextOutcome === "Fence HR" || nextOutcome === "ITP HR") && nextRuns < 1)) { setEntryError("RBI cannot exceed runs. A home run must score at least one run."); return false; }
@@ -396,7 +398,7 @@ export function ConnectedScorebook({
     }
     setEntryError("");
     const accepted = await save(gameRequest(current, { type: "score", playId: crypto.randomUUID(), playerId, outcome: nextOutcome, runs: nextRuns, rbi: nextRbi, ...(needsBand ? { firstGameBand: bandChoice } : {}) }));
-    if (accepted && mode === "score") { setOutcome("Hit"); setRuns(0); setRbi(0); countsEdited.current = false; setFirstBand(null); pendingPlay.current = null; if (manual) { setManualPlayer(""); setPlayerSearch(""); } }
+    if (accepted && mode === "score") { setOutcome(defaultHit); setRuns(0); setRbi(0); countsEdited.current = false; setFirstBand(null); pendingPlay.current = null; if (manual) { setManualPlayer(""); setPlayerSearch(""); } }
     return accepted;
   }
   function pickOutcome(next: Outcome) {
@@ -410,7 +412,7 @@ export function ConnectedScorebook({
     if (!data || !current || disabled) return false;
     const result = parseNamedPlay(text, data.roster, battingPlayer);
     if (result.status !== "ok") { setEntryError(result.message); return false; }
-    if (!availableOutcomes({ ...DEFAULT_BOARD, ...extendedBoardFromColumns(current.rules) }).includes(result.outcome)) { setEntryError("This game does not have saved rules for that outcome."); return false; }
+    if (!scoringOutcomes({ ...DEFAULT_BOARD, ...extendedBoardFromColumns(current.rules) }, !!data.snapshot.capabilities?.hitTypes).includes(result.outcome)) { setEntryError("That result is unavailable for this game. Refresh the scorebook."); return false; }
     if (result.outcome === "K" && Object.keys(extendedBoardFromColumns(current.rules)).length === 4) { setEntryError("Choose strikeout looking, strikeout swinging, or SOFO."); return false; }
     setOutcome(result.outcome); setRuns(result.runs); setRbi(result.rbi);
     return recordPlay(result.playerId, result.outcome, result.runs, result.rbi);
@@ -760,7 +762,7 @@ export function ConnectedScorebook({
                       </label>
                       <input type="hidden" name="at-bat-rbi" value={rbi} />
                       {mode === "score" && <p className="quick-play-hint">Set RBI when needed, then tap the result to record.</p>}
-                      <BattingOutcomePicker extended={Object.keys(extendedBoardFromColumns(current.rules)).length === 4} value={outcome} disabled={disabled} onPick={mode === "score" ? pickOutcome : undefined} onChange={(next) => {
+                      <BattingOutcomePicker hitTypes={!!snapshot?.capabilities?.hitTypes} extended={Object.keys(extendedBoardFromColumns(current.rules)).length === 4} value={outcome} disabled={disabled} onPick={mode === "score" ? pickOutcome : undefined} onChange={(next) => {
                         setOutcome(next);
                         const hr = next === "Fence HR" || next === "ITP HR";
                         setRuns(hr ? 1 : 0);
@@ -918,7 +920,7 @@ export function ConnectedScorebook({
                           aria-label="Correct outcome"
                           defaultValue={row.outcome}
                         >
-                          {availableOutcomes({ ...DEFAULT_BOARD, ...extendedBoardFromColumns(current.rules) }).map((o) => (
+                          {scoringOutcomes({ ...DEFAULT_BOARD, ...extendedBoardFromColumns(current.rules) }, !!snapshot?.capabilities?.hitTypes, row.outcome).map((o) => (
                             <option key={o} value={o}>{OUTCOME_LABELS[o] ?? o}</option>
                           ))}
                         </select>
