@@ -1,4 +1,5 @@
 "use client";
+import { safeGameSetupReturn } from "@/lib/game-navigation";
 import { BOARD_LABELS, EXTENDED_BOARD } from "@/lib/scoring";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { beverageAction } from "@/app/club/beverage-actions";
@@ -8,10 +9,13 @@ const labels = BOARD_LABELS;
 export function BeverageControls({
   teamId,
   teamSettings = false,
+  returnHref,
 }: {
   teamId: string;
   teamSettings?: boolean;
+  returnHref?: string;
 }) {
+  const setupReturnHref = safeGameSetupReturn(returnHref, teamId);
   const [value, setValue] = useState<BeverageState | null>(null);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -65,6 +69,11 @@ export function BeverageControls({
       const current = await beverageAction({ type: "read", teamId });
       if (run !== generation.current) return;
       if (current.status === "ok") setValue(current.data);
+      // Only a confirmed save and authoritative finalized readback may resume setup.
+      if (result.status === "accepted" && current.status === "ok" && current.data.finalized && teamSettings && request.type === "change" && (request.change.type === "finalize" || request.change.type === "replace") && setupReturnHref) {
+        const target = setupReturnHref;
+        if (target) { window.location.assign(target); return; }
+      }
       if (result.status === "accepted" || result.status === "conflict")
         setEditing(false);
       setMessage(
@@ -130,6 +139,7 @@ export function BeverageControls({
     >
       {teamSettings ? (
         <>
+          {setupReturnHref && <a className="button secondary" href={setupReturnHref}>Back to game setup</a>}
           <div className="beverage-rules-heading">
             <h2>Current rules</h2>
             {value?.management?.canEdit && !editing && (

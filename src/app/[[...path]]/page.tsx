@@ -35,6 +35,6 @@ export default async function Page({
     ["", "games", "stats", "beverages", "more", "more/alibi", "more/beverage-rules"].includes(route) ||
     (route === "games/live" && query.sample === "1")
   )
-    return <PlayerDashboard {...await dashboardProps(route, query)} />;
+    return <PlayerDashboard {...await dashboardProps(route, query)} setupReturnHref={route === "more/beverage-rules" ? query.returnTo : undefined} />;
   redirect(route === "games/live" ? "/club/score" : "/club");
 }

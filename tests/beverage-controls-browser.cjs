@@ -27,7 +27,7 @@ const esbuild = require("esbuild"),
   if(window.__nextResult==='uncertain'){window.__nextResult='accepted';return{status:'uncertain',commandId:request.commandId}};
   return{status:'accepted',duplicate:false};
  };
- const root=createRoot(document.getElementById('app'));window.__render=team=>root.render(<BeverageControls teamId={team||teamId} teamSettings={q.has('team')} />);window.__render();
+ const root=createRoot(document.getElementById('app'));window.__render=team=>root.render(<BeverageControls teamId={team||teamId} teamSettings={q.has('team')} returnHref={q.get('returnTo')||undefined} />);window.__render();
  `,
       },
       bundle: true,
@@ -298,6 +298,17 @@ const esbuild = require("esbuild"),
     await page.getByRole('button',{name:'Save Beverage Rules',exact:true}).click();
     await page.waitForFunction(()=>window.__commits===1);
     assert.deepEqual(await page.evaluate(()=>window.__writes[0].change.rules),{strikeout:1,solo:1,bandSolo:-1,grandSlam:-1,overLimit:1,insidePark:-1,multiRun:0,strikeoutLooking:2,strikeoutSwinging:2,strikeoutFoul:1,doublePlay:1});
+
+    const setupTarget='/club/score?team=00000000-0000-4000-8000-000000000010&season=synthetic-season&setup=1&league=synthetic-league';
+    await page.goto(base+'?team&draft&returnTo='+encodeURIComponent(setupTarget));
+    await page.getByRole('button',{name:'Set Rules',exact:true}).click();
+    assert.equal(await page.getByRole('link',{name:'Back to game setup'}).getAttribute('href'),setupTarget);
+    await page.evaluate(()=>window.__nextResult='uncertain');
+    await page.getByRole('button',{name:'Finalize team Beverage Rules',exact:true}).click();
+    await page.getByText('Save not confirmed. Retry the same change.',{exact:true}).waitFor();
+    assert.notEqual(new URL(page.url()).pathname,'/club/score','Uncertain saves do not navigate');
+    await Promise.all([page.waitForURL(url=>url.pathname==='/club/score'),page.getByRole('button',{name:'Retry the same change',exact:true}).click()]);
+    assert.equal(new URL(page.url()).search, new URL(setupTarget,base).search);
 
     assert.deepEqual(errors, []);
     console.log(

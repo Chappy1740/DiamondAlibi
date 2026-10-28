@@ -20,6 +20,7 @@ export type DashboardQuery = {
   scope?: string;
   game?: string;
   shell?: string;
+  returnTo?: string;
   league?: string;
 };
 export async function dashboardProps(
