@@ -20,6 +20,8 @@ const assert = require("node:assert/strict");
         if(fixtureQuery.has('missing-balance'))delete data.snapshot.board.player;
         if(fixtureQuery.has('no-stats'))delete data.snapshot.totals.player;
         if(fixtureQuery.has('unlinked'))data.roster[0].user_id='unlinked-user';
+        if(fixtureQuery.has('no-team')){p.loaded=null;p.teams=[];p.seasons=[];p.teamId='';p.seasonId='';}
+        if(fixtureQuery.has('load-error')){p.loaded=null;p.error='Synthetic records could not be loaded.';}
         const context=new URLSearchParams({team:p.teamId,season:p.seasonId,scope:p.scope,...(p.sample?{sample:'1',player:p.userId}:{})}).toString();
         createRoot(document.getElementById('app')).render(<><PlayerDashboard {...p}/><BottomNavigationView pathname={location.pathname} context={context}/></>);` },
       bundle: true, write: false, platform: "browser", jsx: "automatic",
@@ -42,7 +44,12 @@ const assert = require("node:assert/strict");
       res.setHeader("content-type", req.url === "/bundle.js" ? "text/javascript" : "text/html");
       res.end(req.url === "/bundle.js" ? bundle.outputFiles[0].text : `<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Synthetic Home</title><style>${css}</style></head><body><div id="app"></div><script src="/bundle.js"></script></body></html>`);
     });
-    await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
+    await new Promise(resolve => server.listen(Number(process.env.HOME_PREVIEW_PORT) || 0, "127.0.0.1", resolve));
+    if (process.env.HOME_PREVIEW_PORT) {
+      console.log(`Synthetic Home preview: http://127.0.0.1:${server.address().port}`);
+      await new Promise(resolve => process.once("SIGINT", resolve));
+      return;
+    }
     const engine = process.env.BROWSER_ENGINE === "webkit" ? webkit : chromium;
     browser = await engine.launch({ headless: true, ...(engine === chromium && process.env.BROWSER_EXECUTABLE ? { executablePath: process.env.BROWSER_EXECUTABLE } : {}) });
     const page = await browser.newPage({ viewport: { width: 390, height: 844 }, ...(engine === webkit ? { isMobile: true, hasTouch: true } : {}) });
@@ -75,6 +82,21 @@ const assert = require("node:assert/strict");
       const controls = document.querySelector(".dashboard-context-panel").getBoundingClientRect();
       return heading.bottom <= actions.top && actions.bottom <= summary.top && summary.bottom <= controls.top && actions.bottom < 600;
     }), true);
+    // Fit actual content above the navigation, rather than hiding overflow.
+    async function assertHomeFits(width, height) {
+      await page.setViewportSize({width,height});
+      const fit = await page.evaluate(() => {
+        const nav = document.querySelector('.app-bottom-nav').getBoundingClientRect();
+        const content = Array.from(document.querySelectorAll('.workspace--home .topbar, .workspace--home .page-heading, .workspace--home .competition-entry, .workspace--home .home-season-card, .workspace--home .dashboard-context-panel')).map(el => ({name:el.className,top:el.getBoundingClientRect().top,bottom:el.getBoundingClientRect().bottom}));
+        return {height:innerHeight,scrollHeight:document.documentElement.scrollHeight,navTop:nav.top,content,clipped:Array.from(document.querySelectorAll('.workspace--home main, .workspace--home .content-wrap')).some(el=>['hidden','clip'].includes(getComputedStyle(el).overflowY))};
+      });
+      assert(fit.scrollHeight<=height+1 && fit.content.every(box=>box.top>=0 && box.bottom<=fit.navTop+1) && !fit.clipped, `Home fits ${width}x${height} without scrolling, clipping or navigation overlap: ${JSON.stringify(fit)}`);
+      const targets = await page.locator('.workspace--home a.button, .workspace--home button, .workspace--home select, .workspace--home .profile-menu > summary').evaluateAll(controls=>controls.map(el=>({name:el.getAttribute('aria-label')||el.textContent,height:el.getBoundingClientRect().height})).filter(el=>el.height>0));
+      assert(targets.every(el=>el.height>=44), `Visible Home touch targets remain at least 44px: ${JSON.stringify(targets)}`);
+    }
+    for (const [width, height] of [[320,568],[320,667],[375,667],[390,740],[390,844],[430,932],[800,900],[1440,900]]) await assertHomeFits(width,height);
+    await page.setViewportSize({width:390,height:844});
+    if(process.env.HOME_FIT_SCREENSHOT)await page.screenshot({path:process.env.HOME_FIT_SCREENSHOT});
     await page.addScriptTag({path:require.resolve('axe-core')});
     assert.deepEqual(await page.evaluate(async()=> (await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)}))),[]);
     if (process.env.LAYOUT_SCREENSHOT) {
@@ -136,7 +158,7 @@ const assert = require("node:assert/strict");
     assert.equal(await page.evaluate(()=>window.__refreshes),2,'Reconnect stays quiet while hidden');
     await page.evaluate(()=>{Object.defineProperty(document,'visibilityState',{configurable:true,value:'visible'});document.dispatchEvent(new Event('visibilitychange'))});
     await page.waitForFunction(()=>window.__refreshes===3);
-    await page.waitForFunction(()=>Array.from(document.querySelectorAll('button')).some(button=>button.textContent==='Refresh records'&&!button.disabled));
+    await page.waitForFunction(()=>Array.from(document.querySelectorAll('button')).some(button=>button.getAttribute('aria-label')==='Refresh records'&&!button.disabled));
     await page.setViewportSize({ width: 390, height: 844 });
     await page.locator(".bottom-nav").getByRole("link", { name: "Stats", exact: true }).click();
     await page.getByRole("heading", { name: "Team leaders" }).waitFor();
@@ -170,8 +192,15 @@ const assert = require("node:assert/strict");
     for(const [query,message] of [['no-stats','No recorded plate appearances in this view.'],['unlinked','No player record is linked to this account. Use your player-specific membership invite to link existing roster history.']]){
       await page.goto('http://127.0.0.1:'+server.address().port+'/?'+query+'=1');await page.getByText(message,{exact:true}).waitFor();
       assert.equal(await page.locator('.home-stat-row').count(),0,'Missing player statistics are never shown as zero');
+      await assertHomeFits(390,844);
+      await assertHomeFits(320,568);
+    }
+    for(const [query,message] of [['no-team','Your season starts here'],['load-error','Synthetic records could not be loaded.']]){
+      await page.goto('http://127.0.0.1:'+server.address().port+'/?'+query+'=1');await page.getByText(message,{exact:false}).waitFor();
+      await assertHomeFits(390,844);
+      await assertHomeFits(320,568);
     }
     assert.deepEqual(errors, []);
-    console.log(`PASS ${process.env.BROWSER_ENGINE || "chromium"} Home: heading/actions/summary before controls, complete long selected names at 320–1440px, native keyboard and form selection, own HR/credit only on signed-in Home, no brown notice or team activity, team/roster stats under bottom Stats, sample history under More with its sample notice, two rate tiles above four equal centered total/balance tiles, owed/credit/settled/missing balance and unlinked/empty states, automated accessibility, two-column content-sized controls, decimal OBP, no Home polling, quiet return/reconnect refresh and offline refresh handling. Synthetic data only.`);
+    console.log(`PASS ${process.env.BROWSER_ENGINE || "chromium"} Home: viewport fit from 320x568 to 1440x900 without clipping or navigation overlap, including populated/empty/unlinked/no-team/error states; 44px touch targets; complete long selected names at 320–1440px; native keyboard/form selection; personal-only signed stats/BEVs; unchanged sample/Stats/More navigation; automated accessibility; refresh/offline/reconnect behavior. Synthetic data only.`);
   } finally { if (browser) await browser.close(); if (server) await new Promise(resolve => server.close(resolve)); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
