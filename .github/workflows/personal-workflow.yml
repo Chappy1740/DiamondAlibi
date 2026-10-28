@@ -24,6 +24,7 @@ jobs:
       - name: Check known dependency vulnerabilities
         run: npm audit --audit-level=moderate
       - run: npm run typecheck
+      - run: node --test tests/worker-release.cjs
       - run: node --experimental-strip-types --test --test-isolation=none tests/*.test.ts tests/signout.cjs
       - run: node tests/optional-lineups-sql.cjs
       - run: node tests/team-beverage-sql.cjs

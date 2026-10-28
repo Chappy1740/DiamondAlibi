@@ -47,6 +47,54 @@ or message contents into this public-safe runbook.
 
 ## Release validation
 
+### Automatic Worker releases (owner requested October 27, 2026)
+
+The owner requested automatic deployment after approved main merges. This
+supersedes the earlier upload-only policy for Worker code once the following
+command is enabled. It does not authorize database migrations, authentication
+or access changes, spending, or unrelated releases.
+
+- Keep the existing build command `npm run build:worker` and credentials.
+- After this change passes PR/main validation, set the **Production deploy
+  command** in Cloudflare Settings > Builds to `npm run deploy:worker`.
+  Keep Previews Base and branch overrides validation-only
+  (`npx wrangler deploy --dry-run`); do not enable preview URLs.
+- `scripts/deploy-worker.cjs` requires Workers Builds' full source SHA, main
+  branch, build identity and matching Git checkout. It waits up to 15 minutes
+  for this exact commit's complete push-triggered `personal-workflow.yml`
+  success and its successful `validate` job. It rechecks the latest run/attempt
+  and current main immediately before using pinned Wrangler to deploy the
+  existing Worker. It records the source/run/build in the deployment log.
+- Failures, cancellations, skipped validation, missing/API/rate-limit evidence,
+  stale main, changed validation or timeout stop deployment. The gate uses the
+  public repository's read-only GitHub API without adding a GitHub secret.
+  Cloudflare's overall build limit is 20 minutes; if checks take longer,
+  retry the current main build after they pass. No automatic retry loop.
+- Migration files must match the reviewed Git tree in
+  `scripts/worker-release-policy.json`. Any migration addition/edit/removal
+  blocks release until separately approved database work is applied and
+  verified, then the fingerprint is updated in a reviewed PR. The fingerprint
+  is a source attestation, not a live database inspection. Do not update it
+  merely to make a blocked deployment pass.
+- A remote main update after the last check cannot be made atomic with the
+  provider deployment; keep main delivery serialized and verify the final
+  source/version/100% traffic receipt. A changed or uncertain receipt requires
+  investigation, not a blind promotion. Preserve the prior compatible version.
+
+Reuse decision (EYD-ARCH-001): retain the existing Node runtime, workflow,
+Workers Builds integration and pinned Wrangler. Cloudflare's custom deploy
+command alone does not wait for GitHub validation. A small native Node gate
+adds exact-source checks without a new library, credential, or service.
+Dependencies and lockfile are unchanged.
+
+References: [Cloudflare build configuration](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/),
+[build limits](https://developers.cloudflare.com/workers/ci-cd/builds/limits-and-pricing/),
+[GitHub workflow-run API](https://docs.github.com/en/rest/actions/workflow-runs).
+Local synthetic release-gate tests cover success/waiting and blocked failure,
+wrong/stale source, migration drift, missing checks, reruns and API failure.
+Dashboard enablement and a real successful automatic-deployment receipt must
+be recorded separately; source merge alone does not establish either.
+
 The workflow in draft PR #9 has triggers for pull requests, pushes to
 `main`, merge-queue groups and manual runs. It retains its scoring, disposable
 SQL, browser and Worker-build checks, adding the existing mocked password-reset
