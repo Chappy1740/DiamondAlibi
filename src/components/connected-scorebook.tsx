@@ -2,6 +2,7 @@
 import { BOARD_LABELS, extendedBoardFromColumns, scoringOutcomes, OUTCOME_LABELS } from "@/lib/scoring";
 import { formatBaseballRate as rate } from "@/lib/baseball-rate";
 import { competitionGames, competitionPath, contextQuery } from "@/lib/competitions";
+import { gameSetupHref } from "@/lib/game-navigation";
 import { revealInvalidField } from "@/lib/form-details";
 import { TournamentNextGame } from "@/components/tournament-next-game";
 import { tournamentContinuation } from "@/lib/tournament-continuation";
@@ -1047,7 +1048,7 @@ export function ConnectedScorebook({
               </table>
             </div>
           </details>}
-          {needsBeverageRules && (mode === "setup" || mode === "full") && <section className="card detail-card"><h2>Team Beverage Rules</h2><p>Finalize your team’s rules once before adding games.</p><a className="button primary" href={`/more/beverage-rules?${contextQuery(teamId, seasonId)}`}>Set team Beverage Rules</a></section>}
+          {needsBeverageRules && (mode === "setup" || mode === "full") && <section className="card detail-card"><h2>Team Beverage Rules</h2><p>Finalize your team’s rules once before adding games.</p><a className="button primary" href={`/more/beverage-rules?${new URLSearchParams({ team: teamId, season: seasonId, returnTo: gameSetupHref(teamId, seasonId, { league: leagueId, tournament: tournamentId }) })}`}>Set team Beverage Rules</a></section>}
           {!needsBeverageRules && !continuation && (mode === "setup" || mode === "full") && (
             <section className="card detail-card game-setup-card">
               {mode === "full" && <h2 id="new-game-setup" tabIndex={-1}>Set up a game</h2>}

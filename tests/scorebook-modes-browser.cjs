@@ -442,6 +442,13 @@ const assert = require("node:assert/strict");
     // Team rules are finalized once, never edited again during setup.
     await page.goto(`${base}/?page=1&team-beverage=1&unfinalized=1&tournament=synthetic-cup`);
     await page.getByRole('link',{name:'Set team Beverage Rules',exact:true}).waitFor();
+    const rulesUrl=new URL(await page.getByRole('link',{name:'Set team Beverage Rules',exact:true}).getAttribute('href'),base);
+    const resume=new URL(rulesUrl.searchParams.get('returnTo'),base);
+    assert.equal(resume.pathname,'/club/score');
+    assert.equal(resume.searchParams.get('team'),'synthetic-team');
+    assert.equal(resume.searchParams.get('season'),'synthetic-season');
+    assert.equal(resume.searchParams.get('tournament'),'synthetic-cup');
+    assert.equal(resume.searchParams.get('setup'),'1');
     assert.equal(await page.getByRole('button',{name:'Start Game 2',exact:true}).count(),0);
     assert.equal(await page.locator('input[name^="board-"]').count(),0);
     await page.goto(`${base}/?page=1&team-beverage=1&league=synthetic-league`);

@@ -20,6 +20,8 @@ import { GameContextPicker, type GameContextTeam } from "./game-context-picker";
 import { PersonalAlibis } from "./personal-alibis";
 import { GameScoreboardPanel } from "./game-scoreboard";
 import { connectedScoreboard } from "@/lib/game-scoreboard";
+import { CompactGameList } from "./compact-game-list";
+import { gameSetupHref, safeGameSetupReturn } from "@/lib/game-navigation";
 import { BeverageControls } from "./beverage-controls";
 
 type Option = { id: string; name: string };
@@ -39,6 +41,7 @@ export type DashboardProps = {
   leagueId?: string;
   gameContexts?: GameContextTeam[];
   gameContextError?: string;
+  setupReturnHref?: string;
 };
 const tabs = [
   { path: "", label: "Home", icon: House },
@@ -83,6 +86,11 @@ export function PlayerDashboard(p: DashboardProps) {
           ? "/review/scoring"
           : "/practice"
       : game ? `/club/score?${new URLSearchParams({ team: p.teamId, season: p.seasonId, game })}` : `/leagues?${query}`;
+  const addGameHref = gameSetupHref(p.teamId, p.seasonId, { league: selectedLeague?.id });
+  // Personal statistics scope must not hide the team’s games.
+  const visibleGames = loaded?.snapshot.games.filter(g =>
+    !selectedLeague || g.game.league_id === selectedLeague.id) ?? [];
+  const setupReturnHref = safeGameSetupReturn(p.setupReturnHref, p.teamId, p.seasonId);
   const navigation = (
     <>
       {tabs.map((t) => (
@@ -304,7 +312,10 @@ export function PlayerDashboard(p: DashboardProps) {
                       <Link className="button primary" href={`/leagues${selectedLeague ? `/${encodeURIComponent(selectedLeague.id)}` : ""}?${query}&view=games`}>League</Link>
                       <Link className="button primary" href={`/tournaments?${query}&from=games`}>Tournament</Link>
                     </div>
+                    {!p.sample && !p.review && !loaded.archived && <Link className="button primary" href={addGameHref}>Add game</Link>}
+                    {loaded.archived && <p className="micro">Archived season · game creation is unavailable.</p>}
                     {p.sample && <p className="micro">Sample games · fictional, read only.</p>}
+                    {visibleGames.length ? <CompactGameList games={visibleGames} gameHref={scoring} /> : <p>No games recorded in this view. {p.sample || p.review || loaded.archived ? "Choose another season or competition to view games." : "Select Add game to get started."}</p>}
                   </>
                 )}
                 {p.route === "stats" && (
@@ -380,7 +391,7 @@ export function PlayerDashboard(p: DashboardProps) {
                 </div>
               </section>
             )}
-            {p.route === "more/beverage-rules" && (p.sample || !p.userId ? <section className="card detail-card"><h2>Beverage Rules</h2><p>Sign in and select your team to view its current rules.</p></section> : p.teamId ? <BeverageControls key={p.teamId} teamId={p.teamId} teamSettings /> : <p>Select a team to view Beverage Rules.</p>)}
+            {p.route === "more/beverage-rules" && (p.sample || !p.userId ? <section className="card detail-card"><h2>Beverage Rules</h2><p>Sign in and select your team to view its current rules.</p></section> : p.teamId ? <BeverageControls key={p.teamId} teamId={p.teamId} teamSettings returnHref={setupReturnHref} /> : <p>Select a team to view Beverage Rules.</p>)}
             {p.route === "more/alibi" && <PersonalAlibis connected={!p.sample && !!p.userId} />}
             {p.route === "games" && <GameContextPicker
               teams={p.gameContexts ?? (team ? [{ ...team, seasons: p.seasons.map(option => ({ ...option, leagues: option.id === p.seasonId ? loaded?.snapshot.leagues ?? [] : [] })) }] : [])}

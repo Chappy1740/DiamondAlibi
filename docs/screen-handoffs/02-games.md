@@ -124,3 +124,14 @@ Reuse CompactGameList and the existing tournament entry card styles. Team/oppone
 Verification: typecheck and Worker build; Chromium/WebKit Games/League/Tournament flows, accessibility and context checks; text/button containment with inner spacing at 320–1440px, long unbroken names, three-digit scores and doubled card text. Built Next.js route/navigation checks also passed in Chromium and WebKit. Synthetic preview only; physical iPhone/hosted acceptance pending. Publication and deployment are owner-authorized; final delivery receipts remain required.
 
 Review artifacts include complete League game boxes, Tournament game boxes and Tournament list cards. Existing signed BEVs/statistics and immutable rule behavior are unchanged. No milestone closed.
+
+
+## Navigation fix — October 28, 2026
+
+Owner requested fewer clicks: Games lists the selected season’s games immediately with Add game; saving team rules from setup returns to that setup. Personal statistics scope does not hide games; an explicit selected league still filters the list. Source baseline: GitHub main b9b2153659bfe838323f3f093e05221309154764, freshly verified against the cloud snapshot.
+
+Reuse: CompactGameList, existing authorized snapshot, setup form and beverage save/readback. No product dependency, schema, scoring or rule-policy change. Return destinations are restricted to the local setup route and current team/season; no automatic return on uncertain, failed or conflict save. Archived/sample/review creation stays unavailable.
+
+Stage: locally verified; owner authorized commit and push on October 28, 2026. Merge and deployment are not authorized by that approval. Pinned dependencies restored with owner authorization; package/lockfile unchanged. Passed: seven focused unit tests; authorized dashboard-loader regression; Chromium Games/accessibility/320–1440px, Beverage controls including confirmed save/uncertain retry return, and scorebook/setup isolation/context regressions; typecheck and production Worker build. The browser ran in isolated Chromium 153 after the pinned Playwright Chromium download returned a truncated archive. WebKit and real-device/hosted acceptance remain pending; required PR CI must pass before merge. Original next-env.d.ts edit preserved after build. No hosted writes, credentials, provider settings or tracker milestones changed.
+
+Review: the navigation-only patch can be applied to the verified source baseline; revert only these scoped changes. Commit/push is owner-authorized; merge/deployment still requires separate explicit scope authorization under CONTRIBUTING.md.
