@@ -25,6 +25,7 @@ const assert = require("node:assert/strict");
       if(query.has('tournament-archived'))data.snapshot.tournaments[0].archived=true;
       if(query.has('start-time')){Object.assign(data.snapshot.tournaments[0],{firstGameTime:'08:00',firstGameZone:'America/Chicago'});data.snapshot.capabilities={...data.snapshot.capabilities,tournamentStartTime:true};const first=data.snapshot.games.find(g=>g.game.id==='cup-game');if(first)first.game.tournament_game_number=query.has('next-time')?2:1;}
       if(query.has('completed'))data.snapshot.games.forEach(g=>g.game.completed=true);if(query.has('archived'))data.archived=true;
+      if(query.has('over-limit-history')){const game=data.snapshot.games.find(g=>g.game.id===query.get('game'));game.evaluation.rows=[{id:'over-limit-play',playerId:'synthetic-player',outcome:'Fence HR',official:'OLHR',runs:1,rbi:1,voided:false,delta:3}];}
       window.__fixture=data;window.__audit=[{action:'hrLimit',reason:'Tournament game history',after:{game:{id:'cup-game'},fenceLimit:2}},{action:'hrLimit',reason:'League game history',after:{game:{id:'league-game'},fenceLimit:0}},{action:'band',tournamentId:'synthetic-cup',reason:'Cup Band history',before:true,after:false},{action:'start',reason:'Other game history',after:{gameId:'other-game'}}];
       if(query.has('leaderboard')){
         data.roster.push({id:'other-player',display_name:'Synthetic Blair with a very long roster nickname',is_guest:true});
@@ -305,6 +306,16 @@ const assert = require("node:assert/strict");
       assert.equal(await page.evaluate(()=>window.__writes.length),0,'Returning to scoring never records a play');
     }
     await page.setViewportSize({width:390,height:844});
+    await page.goto(`${base}/?mode=manage&game=league-game&over-limit-history=1`);
+    await page.getByText('Plate appearances · 1',{exact:true}).click();
+    const overLimitPlay=page.locator('.scorebook-play');
+    assert.equal(await overLimitPlay.locator('summary').innerText(),'Synthetic Player · Out');
+    await overLimitPlay.locator('summary').click();
+    await overLimitPlay.getByText('Beverage adjustment: +3',{exact:true}).waitFor();
+    await overLimitPlay.getByText('Over-limit fence home run — scored as an out. No runs or RBI credited. Correction fields retain the original entry.',{exact:true}).waitFor();
+    assert.equal(await overLimitPlay.getByLabel('Correct runs',{exact:true}).inputValue(),'1');
+    assert.equal(await overLimitPlay.getByLabel('Correct RBI',{exact:true}).inputValue(),'1');
+    assert.equal(await page.evaluate(()=>window.__writes.length),0,'Viewing an over-limit out preserves the original entry without a write');
     await page.goto(`${base}/?mode=full&game=league-game&league=synthetic-league`);
     await page.getByRole("button",{name:"Record plate appearance",exact:true}).waitFor();
     assert.equal(await page.getByRole("heading",{name:"Set up a game",exact:true}).count(),1);

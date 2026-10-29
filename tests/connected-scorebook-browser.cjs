@@ -868,7 +868,12 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
       .getByRole("button", { name: "Record plate appearance", exact: true })
       .click();
     await saved();
-    await page.getByText(/Synthetic Alex · OLHR/).waitFor();
+    const overLimitSummary=page.getByText('Synthetic Alex · Out',{exact:true});
+    await overLimitSummary.waitFor();
+    const overLimitResult=(await load()).data.snapshot.games[0].evaluation;
+    assert.equal(overLimitResult.rows.at(-1).official,'OLHR','Audited over-limit identity is retained');
+    assert.equal(overLimitResult.totals[id(101)].runs,0);
+    assert.equal(overLimitResult.totals[id(101)].RBI,0);
     await page
       .getByRole("button", { name: "Mark game complete", exact: true })
       .click();
@@ -886,7 +891,8 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
       .click();
     await saved();
     assert.equal((await load()).data.snapshot.games[0].game.team_runs, 9);
-    await page.getByText(/Synthetic Alex · OLHR/).click();
+    await page.getByText('Synthetic Alex · Out',{exact:true}).click();
+    await page.getByText('Over-limit fence home run — scored as an out. No runs or RBI credited. Correction fields retain the original entry.',{exact:true}).waitFor();
     await page
       .getByLabel("Correct outcome", { exact: true })
       .selectOption("Hit");

@@ -7,6 +7,7 @@ import { revealInvalidField } from "@/lib/form-details";
 import { TournamentNextGame } from "@/components/tournament-next-game";
 import { tournamentContinuation } from "@/lib/tournament-continuation";
 import { gameAudit } from "@/lib/game-audit";
+import { scoreRowSummary } from "@/lib/score-row-presentation";
 import { tournamentStartLabel } from "@/lib/tournament-start-time";
 import { ScorebookAudit } from "@/components/scorebook-audit";
 import { SavedGameRules } from "./saved-game-rules";
@@ -882,9 +883,9 @@ export function ConnectedScorebook({
               {current.evaluation.rows.map((row) => (
                 <details key={row.id} className="scorebook-play">
                   <summary>
-                    {playerName(row.playerId)} · {row.official} ·{" "}
-                    {row.voided ? "voided" : `${row.runs} runs, ${row.rbi} RBI`}
+                    {playerName(row.playerId)} · {scoreRowSummary(row)}
                   </summary>
+                  {!row.voided && row.official === "OLHR" && <p className="micro">Over-limit fence home run — scored as an out. No runs or RBI credited. Correction fields retain the original entry.</p>}
                   <p className="micro">
                     Beverage adjustment: {row.delta > 0 ? "+" : ""}
                     {row.delta}

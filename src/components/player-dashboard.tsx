@@ -1,4 +1,5 @@
 import { formatBaseballRate as rate } from "@/lib/baseball-rate";
+import { scoreRowSummary } from "@/lib/score-row-presentation";
 import Link from "next/link";
 import { ProfileMenu } from "./profile-menu";
 import { BrandLink } from "./brand-link";
@@ -226,7 +227,7 @@ export function PlayerDashboard(p: DashboardProps) {
                         <summary>
                           {loaded.roster.find((r) => r.id === row.playerId)
                             ?.display_name ?? "Player"}{" "}
-                          · {row.official} · {row.runs} runs · {row.rbi} RBI
+                          · {scoreRowSummary(row)}
                         </summary>
                         <p>
                           Beverage adjustment: {row.delta} ·{" "}
