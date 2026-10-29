@@ -242,3 +242,20 @@ data; do not revoke people, delete records or alter production automatically.
 This checklist is preparation only. No production release, new service,
 automated rollback, test email, restore, access expansion or spending is granted
 by the checklist itself.
+
+## Owner approval record: PR #33 (agent tandem rules)
+
+- Date: 2026-10-29
+- Approved by: Will (owner)
+- Scope approved: draft PR first, then merge to main and deploy
+  through the existing validation gate. Documentation only
+  (AGENTS.md tandem section + CLAUDE.md containing "@AGENTS.md").
+- Not approved: any app, dependency, database, auth/access or
+  provider-config change. This does not carry over to any other PR.
+- Result: merged as 9753ae3. Deployed via the gate (per the PR body).
+- Owner acceptance: Will accepted the merge and deploy himself.
+- Claude Code review (read-only): 2 files, +12/-0, nothing above the
+  tandem section changed. CI and deploy were not re-verified by
+  Claude. See PR #33 comment 6501827446.
+- Rule going forward: "Merge and deploy" approves only the PR named
+  in the message. A new PR needs a new approval.
