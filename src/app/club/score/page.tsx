@@ -86,7 +86,14 @@ export default async function ScorePage({
         <BrandLink href={`/?${context}`} />
         <ProfileMenu context={context} />
       </header>
-      <Link className="text-link" href={manageMode ? `/club/score?${context}&game=${encodeURIComponent(game!.game.id)}` : competitionId ? `${competitionPath(competitionKind, competitionId)}?${context}` : `/?${context}`}>{manageMode ? "Back to scoring" : competitionId ? `Back to ${competitionKind.toLowerCase()}` : "Home"}</Link>
+      {manageMode ? (
+        <nav className="game-details-navigation" aria-label="Game navigation">
+          <Link className="button primary" href={`/club/score?${context}&game=${encodeURIComponent(game!.game.id)}`}>Back to scoring</Link>
+          <Link className="button secondary" href={`/games?${context}`}>Games</Link>
+        </nav>
+      ) : (
+        <Link className="text-link" href={competitionId ? `${competitionPath(competitionKind, competitionId)}?${context}` : `/?${context}`}>{competitionId ? `Back to ${competitionKind.toLowerCase()}` : "Home"}</Link>
+      )}
       <div className={setupMode || manageMode ? "page-heading" : "scoring-page-heading"}>
         <div>
           <span className="eyebrow">{setupMode ? setupNumber ? `Game ${setupNumber} · Tournament` : query.tournament ? "New tournament game" : "New league game" : ""}</span>

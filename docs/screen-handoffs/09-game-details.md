@@ -83,3 +83,15 @@ A green build or inactive upload is not a live release. Preserve required checks
 9. Owner acceptance or explicit hold; agreed next screen.
 
 **Current outcome:** Documentation prepared only. No screen implementation, new acceptance pass or live release is claimed by this work package.
+
+## Game details navigation — October 28, 2026
+
+Owner brief: returning from details/history to scoring requires too much navigation. The existing small top link scrolls away. Reuse the existing validated selected-game route and native Next.js links: a sticky Game navigation bar provides a prominent Back to scoring button and a Games shortcut, preserving team/season and the exact game for scoring. No new dependency, scoring change, data write or schema change.
+
+Baseline: fresh GitHub main `2d09b3be41d9d3a79ed240922132f72d865ae82b` (PR #30). Compared every tracked snapshot file to the remote Git tree before editing; only the pre-existing `next-env.d.ts` differed. This cloud snapshot has no Git metadata; do not describe it as a checked-out branch. Preserve that generated-file edit.
+
+Files: `src/app/club/score/page.tsx`, scoped navigation styles in `src/app/globals.css`, `tests/scorebook-modes-browser.cjs`, and this receipt. Existing scoring/setup modes retain their links. Return links use the already-authorized game, not arbitrary redirect input. Keyboard scrolling reserves space above controls for the sticky navigation.
+
+Stage: locally verified, unpublished. Passed typecheck and the existing synthetic Chromium scorebook-modes suite, including league/tournament exact return destinations, Games context, sticky visible/hit-testable 44px targets after scrolling through audit/history at 320/390/430/800/1440px, keyboard activation returning to the same game's scoring controls, and zero scoring writes on navigation. Inspected the 390px local screenshot. Existing scoring, setup, retry/offline, isolation and audit regressions also pass. No real game modified. Automated WebKit, production build, hosted and physical-device acceptance remain pending; no milestone closed.
+
+Owner authorized commit, push and deployment on October 28, 2026 in response to the explicit commit/push/merge-after-checks/automatic-deployment request. Publication is in progress; merge remains gated on required exact-source CI. Revert only this four-file diff against the verified baseline; preserve earlier local work. Physical-phone navigation acceptance remains a separate final check.

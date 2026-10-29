@@ -272,7 +272,10 @@ const assert = require("node:assert/strict");
       assert.equal(await page.getByText('Reason: League game history',{exact:true}).count(),game==='league-game'?1:0);
       assert.equal(await page.getByText('Reason: Cup Band history',{exact:true}).count(),game==='cup-game'?1:0);
       assert.equal(await page.getByText('Reason: Other game history',{exact:true}).count(),0);
-      assert.equal(await page.getByRole('link',{name:'Back to scoring',exact:true}).getAttribute('href').then(h=>h.includes(`game=${game}`)),true);
+      const gameNav=page.getByRole('navigation',{name:'Game navigation',exact:true});
+      const returnToScoring=gameNav.getByRole('link',{name:'Back to scoring',exact:true});
+      assert.equal(await returnToScoring.getAttribute('href'),`/club/score?team=synthetic-team&season=synthetic-season&game=${game}`);
+      assert.equal(await gameNav.getByRole('link',{name:'Games',exact:true}).getAttribute('href'),'/games?team=synthetic-team&season=synthetic-season');
       const details=page.locator('.game-management');
       const savedRules=details.locator('.saved-game-rules');
       await savedRules.getByText('Saved Beverage Rules for this game',{exact:true}).click();
@@ -285,8 +288,21 @@ const assert = require("node:assert/strict");
       for(const width of [320,390,430,800,1440]){
         await page.setViewportSize({width,height:900});
         assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${game} management overflow at ${width}`);
+        await page.evaluate(()=>window.scrollTo(0,document.documentElement.scrollHeight));
+        assert(await gameNav.evaluate(nav=>{const r=nav.getBoundingClientRect();return r.top>=0&&r.bottom<innerHeight;}),'Game navigation stays visible at the end of history');
+        assert(await returnToScoring.evaluate(link=>{const r=link.getBoundingClientRect();return r.height>=44&&r.width>=44&&link.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),'Scoring shortcut remains touchable above game details');
       }
       assert.deepEqual(await page.evaluate(()=>window.__writes.filter(write=>write.type!=='audit')),[]);
+      if(process.env.GAME_DETAILS_NAV_SCREENSHOT && game==='cup-game'){
+        await page.setViewportSize({width:390,height:844});
+        await page.screenshot({path:process.env.GAME_DETAILS_NAV_SCREENSHOT});
+      }
+      await returnToScoring.focus();
+      await page.keyboard.press('Enter');
+      await page.waitForURL(`**/club/score?team=synthetic-team&season=synthetic-season&game=${game}`);
+      await page.getByRole('heading',{name:game==='cup-game'?'Cup opponent':'League opponent',exact:true}).waitFor();
+      assert.equal(await page.getByRole('group',{name:'Batting outcome',exact:true}).count(),1,'Return opens scoring for the selected game');
+      assert.equal(await page.evaluate(()=>window.__writes.length),0,'Returning to scoring never records a play');
     }
     await page.setViewportSize({width:390,height:844});
     await page.goto(`${base}/?mode=full&game=league-game&league=synthetic-league`);
