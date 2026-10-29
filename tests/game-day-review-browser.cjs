@@ -19,7 +19,8 @@ const assert=require('node:assert/strict');
     assert(ready,output);
     browser=await engine.launch({headless:true});
     const page=await browser.newPage({viewport:{width:390,height:844}});
-    page.on('pageerror',error=>errors.push(error.message));
+    // WebKit reports a Next.js prefetch (_rsc) aborted by navigation as a page error; ignore only that.
+    page.on('pageerror',error=>{if(!(/_rsc=/.test(error.message)&&/access control checks/.test(error.message)))errors.push(error.message)});
     const writes=[];page.on('request',request=>{if(request.method()!=='GET')writes.push(request.url())});
     const response=await page.goto(base+'/review/next');
     await page.waitForFunction(()=>!document.querySelector('.app-bottom-nav'));
