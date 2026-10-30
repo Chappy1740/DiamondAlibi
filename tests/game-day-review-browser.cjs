@@ -2,7 +2,20 @@
 const {chromium,webkit}=require('playwright');
 const {spawn}=require('node:child_process');
 const assert=require('node:assert/strict');
-(async()=>{
+function isNavigationPrefetchAbort({engine,base,navigating,method,url,prefetch,failure}) {
+  if(engine!=='webkit'||!navigating||method!=='GET'||prefetch!=='1'||!/abort|cancel/i.test(failure??''))return false;
+  try {
+    const parsed=new URL(url);
+    return parsed.origin===new URL(base).origin&&parsed.pathname==='/review'&&Boolean(parsed.searchParams.get('_rsc'));
+  } catch {return false;}
+}
+function isExpectedPrefetchPageError(message,engine,abortedPrefetches) {
+  if(engine!=='webkit'||!message.includes('access control checks'))return false;
+  const urls=message.match(/https?:\/\/[^\s'"<>]+/g)??[];
+  return urls.length===1&&abortedPrefetches.has(urls[0]);
+}
+module.exports={isNavigationPrefetchAbort,isExpectedPrefetchPageError};
+if(require.main===module)(async()=>{
   let app,browser;let output='';const errors=[];
   try {
     const engine=process.env.BROWSER_ENGINE==='webkit'?webkit:chromium;
@@ -19,10 +32,18 @@ const assert=require('node:assert/strict');
     assert(ready,output);
     browser=await engine.launch({headless:true});
     const page=await browser.newPage({viewport:{width:390,height:844}});
-    // WebKit reports a Next.js prefetch (_rsc) aborted by navigation as a page error; ignore only that.
-    page.on('pageerror',error=>{if(!(/_rsc=/.test(error.message)&&/access control checks/.test(error.message)))errors.push(error.message)});
+    const abortedPrefetches=new Set();let navigating=false;
+    page.on('pageerror',error=>errors.push(error.message));
+    // Correlate the exact WebKit error with a known prefetch cancelled during navigation.
+    page.on('requestfailed',request=>{
+      if(isNavigationPrefetchAbort({engine:engine.name(),base,navigating,method:request.method(),url:request.url(),prefetch:request.headers()['next-router-prefetch'],failure:request.failure()?.errorText}))abortedPrefetches.add(request.url());
+    });
+    async function navigate(action) {
+      navigating=true;
+      try {return await action();} finally {navigating=false;}
+    }
     const writes=[];page.on('request',request=>{if(request.method()!=='GET')writes.push(request.url())});
-    const response=await page.goto(base+'/review/next');
+    const response=await navigate(()=>page.goto(base+'/review/next'));
     await page.waitForFunction(()=>!document.querySelector('.app-bottom-nav'));
     assert.equal(await page.getByRole('navigation',{name:'Mobile primary',exact:true}).count(),0,'standalone owner screen has no game navigation overlay');
     const headers=response.headers();
@@ -67,7 +88,7 @@ const assert=require('node:assert/strict');
     await page.keyboard.press('Tab');
     assert.equal(await page.getByRole('button',{name:'Review sample result',exact:true}).evaluate(el=>el===document.activeElement),true);
     assert.deepEqual(writes,[],'proposal interaction cannot write game data');
-    await page.reload();
+    await navigate(()=>page.reload());
     assert.equal(await page.getByRole('checkbox',{name:'Career stats & rankings',exact:true}).isChecked(),false,'choices do not silently become saved preferences');
     await page.setViewportSize({width:390,height:844});
     await page.getByRole('heading',{name:'Easy at the field. Solid behind it.',exact:true}).waitFor();
@@ -77,11 +98,11 @@ const assert=require('node:assert/strict');
       await page.screenshot({path:process.env.REVIEW_SCREENSHOT.replace('.png','-viewport.png')});
     }
     // Frame protections must preserve the existing same-origin phone review.
-    await page.goto(base+'/review');
+    await navigate(()=>page.goto(base+'/review'));
     await page.frameLocator('iframe').getByRole('heading',{name:/Your game,/}).waitFor();
-    await page.getByRole('link',{name:'Review what’s next',exact:true}).click();
+    await navigate(()=>page.getByRole('link',{name:'Review what’s next',exact:true}).click());
     await page.getByRole('heading',{name:'Easy at the field. Solid behind it.',exact:true}).waitFor();
-    assert.deepEqual(errors,[]);
+    assert.deepEqual(errors.filter(message=>!isExpectedPrefetchPageError(message,engine.name(),abortedPrefetches)),[]);
     console.log(JSON.stringify({engine:engine.name(),headers:true,savedRules:true,proposalsNoWrites:true,widths:[320,390,430,800,1440],accessibility:true,keyboard:true,sameOriginReview:true}));
   } finally {if(browser)await browser.close();if(app)app.kill();}
 })().catch(error=>{console.error(error);process.exitCode=1});
