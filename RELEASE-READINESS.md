@@ -1,5 +1,17 @@
 # Release readiness and recovery
 
+## Current source checkpoint — October 30, 2026
+
+- Verified main before this branch: `189a176d7694248e75f740521eecfddf641c0d7c`, after PR #35. Its push-triggered Personal workflow validation succeeded: [run 40999095720](https://github.com/Chappy1740/DiamondAlibi/actions/runs/40999095720).
+- Main requires a PR and successful `validate` check, blocks deletion and force pushes, and requires resolved review threads. Independent approving reviews are not enforced by the ruleset; retain the documented review handshake.
+- This Codex branch continues the documentation-only continuity proposal from Claude PR #36 at `f1820c56ba6aedce84c068dc890521b5b18a0ec6`, preserves that branch, and points shared policy authority to eydren-governance.
+- The existing exact-main Worker deployment gate is preserved. Current deployed version, physical-phone acceptance and live product acceptance are UNKNOWN in this GitHub-only pass. The dated provider observations below do not establish their current state.
+- The native tracker and current screen handoff still own scope and acceptance. Next: review central governance, then this reference update; do not infer completion or replay a release approval from it.
+
+## Historical operational evidence
+
+The sections below are dated receipts and runbooks. Refresh provider state and exact authorization before executing a consequential action.
+
 This runbook supports existing tracker tasks M2-outgoing-email-brand, M5-7,
 M5-9, M5-10, M6-4 and M6-5. The tracker remains authoritative. This document
 does not approve release, broaden access, remove required features or change
