@@ -2,6 +2,8 @@
 
 ## November 3, 2026 — H1 / UAT A2 per-game stat line
 
+Owner relayed Claude's read-only review: no blockers; existing totals/rate reuse and the target numbers checked by hand. Owner requested lineup-order stat rows and one regression, authorized updating this same draft. The render sorts a new entries array by saved lineup position; scored players absent from the current lineup remain after listed batters, and manual/no-lineup games retain all rows in their prior order. Totals, lineup and stored plays are not mutated. H3 is separately approved as its own draft; H1 remains unmerged/undeployed.
+
 **Stage: Tested locally; owner acceptance pending.** H1 only. Baseline main `c19132d27d8656a3e92fa8d61cbbd1e742ba521a`; implementation branch `codex/h1-game-stat-line`. The owner authorized this isolated H1 branch/draft PR and its receipt. No merge, deployment, migration, hosted test, dependency change or H2–H8 implementation is authorized.
 
 ### Owner brief and delivered result

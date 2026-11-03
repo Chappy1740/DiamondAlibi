@@ -35,6 +35,7 @@ const assert = require("node:assert/strict");
           plays.push(...['1B','BB','SF','ROE',...(query.has('h1-hbp')?['HBP']:[])].map((outcome,i)=>({id:'h1-second-'+i,playerId:'second-player',outcome,runs:outcome==='SF'||outcome==='ROE'?1:0,rbi:outcome==='SF'?1:0,voided:false})));
         }
         game.evaluation=evaluateGame({id:game.game.id,opponent:game.game.opponent,kind:'Tournament',lineup:game.lineup,next:0,complete:false,rules:{version:'Synthetic H1 rules',fenceLimit:3,board:DEFAULT_BOARD},plays},[]);
+        if(query.has('h1-lineup-order'))game.lineup=['second-player','synthetic-player'];
         data.snapshot.totals={'synthetic-player':{...emptyTotals(),PA:99,H:99,HR:99,RBI:99,runs:99}};
         data.snapshot.games.find(g=>g.game.id==='league-game').evaluation.totals=data.snapshot.totals;
       }
@@ -109,6 +110,8 @@ const assert = require("node:assert/strict");
     await page.goto(base+'/?mode=manage&game=cup-game&h1-stats&h1-multiple&h1-hbp');
     await gameStats.waitFor();
     assert.deepEqual((await gameStats.locator('dd').allTextContents()).slice(6),['5','1','0','1','2','.600'],'Historical HBP keeps the established OBP calculation');
+    await page.goto(base+'/?mode=manage&game=cup-game&h1-stats&h1-multiple&h1-lineup-order');await gameStats.waitFor();
+    assert.deepEqual(await gameStats.locator('h4').allTextContents(),['Synthetic Second Player With A Very Long Name And UnbrokenNicknameABCDEFGHIJKLMNOPQRSTUVWXYZ','Synthetic Player'],'Game lines follow lineup order even when totals insertion order differs');
     await page.goto(base+'/?mode=manage&game=cup-game');
     await gameStats.getByText('No recorded plate appearances in this game.',{exact:true}).waitFor();
     assert.equal(await gameStats.locator('.game-stat-player').count(),0);
