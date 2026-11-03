@@ -1,5 +1,7 @@
 # 09 — Game details and history: Screen handoff
 
+**November 3 release update:** owner now authorizes publishing, merging and deploying H1 #45 with H3 #46 and the pending documentation through #46. H4 #47 remains excluded. See [current release handoff and completion receipt](00-WORKING-STANDARD.md#november-3-2026--uat-release-through-pr-46) and the release PR for `codex/uat-release-through-pr46` for actual source/check/activation state. Physical-phone A2 acceptance remains open; the original draft-only boundary below is historical.
+
 ## November 3, 2026 — H1 / UAT A2 per-game stat line
 
 Owner relayed Claude's read-only review: no blockers; existing totals/rate reuse and the target numbers checked by hand. Owner requested lineup-order stat rows and one regression, authorized updating this same draft. The render sorts a new entries array by saved lineup position; scored players absent from the current lineup remain after listed batters, and manual/no-lineup games retain all rows in their prior order. Totals, lineup and stored plays are not mutated. H3 is separately approved as its own draft; H1 remains unmerged/undeployed.

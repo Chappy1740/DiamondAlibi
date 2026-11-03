@@ -1,5 +1,7 @@
 # 10 — Stats: Screen handoff
 
+**November 3 release update:** owner now authorizes publishing, merging and deploying H3 #46 with H1 #45 and the pending documentation through #46. H4 #47 remains excluded. See [current release handoff and completion receipt](00-WORKING-STANDARD.md#november-3-2026--uat-release-through-pr-46) and the release PR for `codex/uat-release-through-pr46` for actual source/check/activation state. Physical-phone acceptance, including realistic numeric width and the hidden tap hint, remains open; the original draft-only boundary below is historical.
+
 ## November 3, 2026 — H3 compact Stats (owner-approved draft scope)
 
 **Stage: Tested locally; owner acceptance pending.** Same H3 branch/baseline/limits and full receipt as [01-home.md](01-home.md). Owner approved Home/Stats compaction and removal of "SO includes looking, swinging, and SOFO strikeouts." only, as one H3 draft. H1 remains a separate draft; no H2/H4–H8, merge, deployment, hosted test, migration or dependency change.

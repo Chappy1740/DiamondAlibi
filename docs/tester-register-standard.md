@@ -1,6 +1,6 @@
 # Diamond Alibi — Tester Register Standard
 
-Status: Proposed; owner-approved creation, pending PR review and merge.
+Status: Owner authorized adoption/publication with the November 3 release through PR #46. This source snapshot precedes combined CI/merge/live verification; see docs/screen-handoffs/00-WORKING-STANDARD.md and the codex/uat-release-through-pr46 release PR for the completion receipt. Individual tester readiness remains unverified.
 Created: 2026-10-31. Target pre-test: 2026-11-07.
 
 ## Security and source of truth
