@@ -1,6 +1,6 @@
 # 31 — Roast Club / Full Clubhouse Announcer — Owner requirements
 
-**Status:** Approved product direction; implementation NOT authorized. **Target pilot:** November 7, 2026 (conditional, not a delivery commitment).
+**Status:** Approved product direction; Roast Club implementation deferred until after the November 7, 2026 pilot. Documentation only; no implementation or merge authorization.
 **Related screen:** [08 — Live scorebook](08-scorebook.md). **Governance:** root `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, `00-WORKING-STANDARD.md`, EYD-ARCH-001 and EYD-PM-001.
 
 ## Purpose and owner decisions (November 3, 2026)
@@ -18,7 +18,7 @@ Add an optional, personalized **Roast Club — Full Clubhouse Announcer** to Dia
 ### Scoring and audio
 
 - Retain official abbreviations, authoritative scoring identifiers, stats, game history, rule versions, audit trail and scoring UX.
-- Proposed funny subtitles beneath official scoring codes; **resolve conflict with nonparticipant experience** before implementation: do not expose a nonparticipant to targeted roast labels.
+- **Owner decision, November 3:** Do not add funny subtitles to the main scoring buttons. Keep official codes and the uncluttered scoring interface. Personalized humor belongs only in the opt-in Roast Club presentation, after the pilot. Generic, non-targeted clubhouse copy may be considered separately if low-risk and tested.
 - For opted-in batters, after a **confirmed successful** scoring event, select a short curated event-specific line including a safe display name; show a nonblocking dismissible popup and, when enabled, speak via the designated scorer device's current audio output (including paired Bluetooth speaker).
 - One designated announcer device; explicit enable/mute; browser speech/audio restrictions and actual iPhone/Bluetooth operation require physical testing. No scoring dependence on audio.
 - Avoid repeated lines and duplicate callbacks/retries; handle failed saves, corrections, undo, rapid plays, refresh and pending audio. Recheck consent at playback.
@@ -26,7 +26,7 @@ Add an optional, personalized **Roast Club — Full Clubhouse Announcer** to Dia
 - Long-term content target: 20 curated clean lines per category (280 total); pilot candidate: 5–10 per category, contingent on audit. No runtime generative AI requirement.
 - Future settings under consideration: Off / Clean / Absolutely Savage Clean, per-player preferences, optional nicknames. Not yet approved for implementation.
 
-## Proposed clean scoring subtitles (review for fit and tone)
+## Archived scoring subtitle ideas — NOT for main scoring buttons
 
 | Code | Proposed subtitle |
 |---|---|
@@ -51,7 +51,13 @@ Examples of clean announcements (substitute an opted-in batter's safe display na
 - E: “{name}! That wasn't a hit. That was a charitable donation!”
 - Over-limit HR: “{name}! You hit it out of the park and still made an out. Remarkable!”
 
-These are content proposals, not approved final copy. Build a broader clean catalog only after scope approval.
+The subtitle table is historical creative reference only, not approved main-button UI. These are content proposals, not approved final copy. Build a broader clean catalog only after scope approval.
+
+## Additional consent and audio design decisions pending review
+
+- Removed/voided games or invalidated plays must not cause new announcements; determine whether already queued announcements can be cancelled or suppressed when removal/correction occurs. Avoid claiming that an already spoken announcement can be undone.
+- Define who controls the designated announcer device, how a session acquires/releases ownership, and how duplicate simultaneous announcers are prevented. No device ownership implementation is approved yet.
+- If consent cannot be verified at display/playback time, fail closed and say nothing.
 
 ## Scoring integrity acceptance
 
