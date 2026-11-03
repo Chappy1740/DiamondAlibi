@@ -123,3 +123,39 @@ pending-brief text above for hostname compatibility only.
 
 Reference: https://supabase.com/docs/guides/auth/redirect-urls . Related rollout
 receipt: RELEASE-READINESS.md; related acceptance: tracker M5-7.
+
+### Approved dependency unblock — November 2
+
+Hostname implementation is committed/pushed as
+`574c879f4dcf8dfb15220de0e8167926d1bb7565`, draft PR #41. The owner approved
+hostname commit/push/deployment earlier. Required run `41556959405` failed the
+existing dependency advisory step; notification PR #40 remains separate.
+
+In response to the exact proposal to update glob 14.0.2, minimatch 11.0.1 and
+their necessary lockfile entries before continuing the approved deployment,
+the owner replied "I approve". That scoped dependency update is now authorized;
+do not re-request hostname deployment approval. No audit bypass, force-fix,
+parent adapter downgrade, unrelated package upgrade or new service is allowed.
+
+EYD-ARCH-001 review: reusing the vulnerable installed versions leaves the
+mandatory gate failed; replacing the glob implementation or maintaining an
+application patch has more compatibility/maintenance cost. Select the upstream
+patched releases with exact npm overrides and review their necessary lockfile
+impact. npm registry and upstream releases show both patches published October
+27, 2026; Node engines `18 || 20 || >=22` include the project's Node 24 CI.
+Both use BlueOak-1.0.0, not MIT; preserve notices per THIRD-PARTY-NOTICES.md.
+path-scurry moves to 3.0.0 and @isaacs/nonrecursive-glob-match resolves to 1.0.3;
+obsolete nested glob 10/minimatch 9 and their unused dependencies are removed.
+No other direct package or adapter/runtime version changes.
+
+The hostname worktree now has its own pinned dependency installation. Its
+former node_modules junction was removed without touching the shared checkout.
+Codex validation in this session passed: clean pinned `npm ci` in the isolated
+worktree, `npm audit --audit-level=moderate` (zero vulnerabilities), TypeScript,
+password-reset mocks, 33 release-gate tests, installed glob async/sync/brace
+matching and minimatch/minifier-core load, and the normal `npm run build:worker`
+(Next/Turbopack and OpenNext packaging). This is local packaging evidence, not
+production activation. No shared dependency directory was modified.
+Next: publish this scoped update to PR #41, require exact-head CI, then merge
+and verify the existing exact-main deployment gate and active version. Existing
+hostname deployment approval remains valid; no real recovery email is implied.

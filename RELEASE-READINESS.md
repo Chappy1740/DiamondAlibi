@@ -7,6 +7,19 @@ push, and deploy". Commit/push and exact-source deployment through required
 checks are authorized. Dependency upgrades, notification PR #40, live schema,
 auth-provider changes, test mail, new services and paid actions are excluded.
 
+Subsequent scoped approval: owner replied "I approve" to the proposed upstream
+glob 14.0.2/minimatch 11.0.1 override and necessary lockfile update, permitting
+that security-gate unblock before continuing the already-approved hostname
+deployment. It does not authorize a force-fix, audit bypass, other dependency
+upgrade or notification PR #40 deployment. Review the lockfile transitive
+changes and BlueOak-1.0.0 notices in THIRD-PARTY-NOTICES.md; the current screen
+handoff records exact evidence and update ownership.
+
+The scoped override candidate passes a clean isolated install, audit (zero
+vulnerabilities), TypeScript/recovery/build-API checks, all 33 release-gate
+tests and the normal local Worker build. These are Codex local results; require
+fresh exact-head and merged-main validation before the already-approved deploy.
+
 Owner selected `diamondalibi.eydrenworks.com` and supplied screenshots of the
 Production-only route and retained old/new exact Supabase callback entries.
 A signed-out HTTPS request redirected to Cloudflare Access for this hostname.
