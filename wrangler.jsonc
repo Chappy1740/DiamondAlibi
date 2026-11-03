@@ -7,6 +7,11 @@
   "workers_dev": true,
   "preview_urls": false,
   "keep_vars": true,
+  "vars": {
+    "FEEDBACK_NOTIFICATION_FROM": "notifications@mail.eydrenworks.com",
+    "FEEDBACK_NOTIFICATION_INBOX_URL": "https://diamondalibi.eydrenworks.com/owner/feedback",
+    "FEEDBACK_NOTIFICATIONS_ENABLED": "false",
+  },
   "triggers": { "crons": ["*/5 * * * *"] },
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
   "services": [

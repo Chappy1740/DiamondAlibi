@@ -169,7 +169,7 @@ References: [OpenNext custom Worker](https://opennext.js.org/cloudflare/howtos/c
   dependency validation blocker with owner approval, and continue the guided
   new-domain authentication setup. No live notification activation occurred.
 
-## November 2 continuation — notification draft refreshed
+## November 2 continuation â€” notification draft refreshed
 
 Current main is `5964cd83f5f4208bad30efbee04f0b883b83e2e2` (PR #41),
 whose merged-source validation and gated Worker deployment passed. Full release
@@ -205,3 +205,22 @@ FEEDBACK_SUPABASE_SECRET_KEY as encrypted bindings; neither value was opened.
 Sender, destination, inbox URL and disabled switch remain to configure.
 Database migration, enabling notifications, production deployment and actual
 inbox-delivery acceptance remain pending their named live scope.
+
+### Wrangler runtime defaults - November 2
+
+Owner requested updating wrangler.jsonc after the dashboard directed them to
+source configuration. Declare only the verified-domain sender, protected new-host
+inbox URL and FEEDBACK_NOTIFICATIONS_ENABLED="false" in vars. Recipient and
+provider/database keys remain encrypted runtime secrets, never source values.
+This prepares draft PR #40; it does not activate notifications or approve live
+migration/merge/deployment/mail. Existing exact-main and migration gates remain.
+Integrated head 6034d3b968ee83667fce98d7df8a80daf41bb5aa passed exact-source
+GitHub run 41565874836 and Cloudflare build
+57d429f1-600f-4f6e-b21e-f92ffb42c3a1; this new config needs fresh head checks.
+Codex also corrected two Windows-encoded dashes introduced in the prior receipt
+to valid UTF-8. Continuity GREEN; continue this chat for remaining runtime
+recipient setup and the explicitly scoped activation review.
+
+Validation: pinned Wrangler deploy --dry-run passed and displayed the three
+expected non-secret vars; seven existing notification/config/Worker tests and
+whitespace checks passed. This was local only, without hosted changes or mail.
