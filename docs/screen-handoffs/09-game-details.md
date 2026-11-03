@@ -1,5 +1,46 @@
 # 09 — Game details and history: Screen handoff
 
+## November 3, 2026 — H1 / UAT A2 per-game stat line
+
+Owner relayed Claude's read-only review: no blockers; existing totals/rate reuse and the target numbers checked by hand. Owner requested lineup-order stat rows and one regression, authorized updating this same draft. The render sorts a new entries array by saved lineup position; scored players absent from the current lineup remain after listed batters, and manual/no-lineup games retain all rows in their prior order. Totals, lineup and stored plays are not mutated. H3 is separately approved as its own draft; H1 remains unmerged/undeployed.
+
+**Stage: Tested locally; owner acceptance pending.** H1 only. Baseline main `c19132d27d8656a3e92fa8d61cbbd1e742ba521a`; implementation branch `codex/h1-game-stat-line`. The owner authorized this isolated H1 branch/draft PR and its receipt. No merge, deployment, migration, hosted test, dependency change or H2–H8 implementation is authorized.
+
+### Owner brief and delivered result
+
+On Game details (`manage=1`), show each participating player's **PA, H, HR, RBI, R, OBP** at the top of the selected game card, above Game details & settings. No second placement on live scoring/setup. Empty game: explicit no-plate-appearances message. Each full player name sits above a compact six-column stat line.
+
+Reuse decision (EYD-ARCH-001): consume existing `current.evaluation.totals`, existing `rates` and `formatBaseballRate`. These already exclude voids/OLHR credits and handle BB/SF/ROE. A new calculation/library adds divergence and no needed capability; a small render/CSS extension suffices. No new fetch, effect, state, package or database contract.
+
+Original brief said BB/SF do not exist yet; current source already supports them. Do not recreate them. H1 preserves established historical HBP in OBP: without HBP, the shared formula is exactly (H + BB)/(AB + BB + SF), AB excludes BB/SF; historical HBP retains its existing handling. ROE remains an AB without a hit/OBP reach. No Rule 9 reinterpretation, future strikeout/DP/ROE enforcement or saved-rule version changes in this display patch.
+
+### Files and shared consumers
+
+- `src/components/connected-scorebook.tsx`: manage-mode-only stat region from selected-game authoritative totals.
+- `src/app/globals.css`: isolated `.game-stat-*` rules; no changes to shared Home/Stats/controls.
+- `tests/scorebook-modes-browser.cjs`: synthetic H1 fixture and focused display/state regressions, included by existing CI.
+- This existing matching handoff/receipt.
+
+Current scoring, typed/voice, setup, tournament/league management, history, saved rules, audit, Beverage and context remain governed by the existing regression suites. Broader local recovery notes in other handoffs, tracker, release record and corrected local PR #43 copies are intentionally excluded from H1 publication under the owner's no-push boundary.
+
+### Verification and acceptance
+
+Synthetic seven-row fixture: single, three legal one-run/one-RBI fence HRs, two over-limit HRs, one voided single. Display **PA 6 / H 4 / HR 3 / RBI 3 / R 3 / OBP .667**. This reproduces the supplied UAT target without reading or changing an owner's game.
+
+Coverage: unrelated game/season totals cannot leak in; second player with long/unbroken name; BB/SF/ROE and historical HBP; empty game; authoritative correction/void readback; zero display writes; keyboard order; offline retention and access-denied clearing; 320/390/430/800/1440px containment; no new scoring/setup placement.
+
+Codex local checks: typecheck, test:scoreboard (2), test:connected-scoring (7), test:connected-scorebook (disposable PostgreSQL + actual UI), Chromium scorebook-modes and tracker tests (4) passed. H1 Chromium screenshot visually inspected at 390px. Existing installed dependencies/browsers were reused; sandbox loopback restrictions required normal local browser execution permissions, not provider access or an install.
+
+All new H1 acceptance cases pass on installed WebKit with `H1_ONLY=1`; default CI still runs them plus the entire suite. An initial H1 offline assertion needed to wait for React's rendered disabled state; its assertion remains enforced. Full local WebKit subsequently timed out in existing typed-entry cases (disabled Record result), reproduced using both the unchanged main test and unchanged main scorebook component in a disposable harness. This is not a full WebKit-suite pass; exact-head Linux CI and owner device acceptance remain separate. No voice/scoring behavior or legacy assertion was weakened. Exact draft-head CI/publication receipts are recorded in the draft PR.
+
+Not owner-accepted, merged, deployed or hosted-tested. Physical iPhone A2 retest requires the owner's approved release and original UAT; synthetic results are not hosted acceptance. Current canonical tracker task completion remains unchanged.
+
+### Review, rollback and next action
+
+Claude Code reviews the H1 draft read-only; no independent review is claimed. Review exact branch head/checks in the PR before further action. Revert only this display patch if required; no schema/data rollback exists. Preserve prior local work and all other agents' branches. Stop after the draft; H2/H3 or any other brief needs a named new owner approval.
+
+Historical handoff below retains its original dates and superseded pending-brief language.
+
 **Status:** Ready for owner brief. **Owner's requested change:** Not yet supplied.
 **Current screen only:** Game details and history.
 **Route/view:** `/club/score?team=<id>&season=<id>&game=<existing-game-id>&manage=1`

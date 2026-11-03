@@ -122,6 +122,9 @@ export function ConnectedScorebook({
   );
   // A requested game that vanished must not silently select a different game.
   const current = selected ? games.find((g) => g.game.id === selected) : games[0];
+  const battingPositions = new Map((current?.lineup ?? []).map((id, index) => [id, index]));
+  const gameStatLines = Object.entries(current?.evaluation.totals ?? {}).filter(([, totals]) => totals.PA > 0)
+    .sort(([a], [b]) => (battingPositions.get(a) ?? Number.MAX_SAFE_INTEGER) - (battingPositions.get(b) ?? Number.MAX_SAFE_INTEGER));
   const visibleAudit = mode === "manage" ? current ? gameAudit(audit?.events ?? [], current.game.id, current.game.tournament_id) : [] : audit?.events ?? [];
   const tournamentArchived = snapshot?.tournaments.find(t => t.id === (current?.game.tournament_id || tournamentId))?.archived === true;
   const liveUpdates = Boolean((mode === "score" || mode === "full") && current && !current.game.completed && !data?.archived && !tournamentArchived);
@@ -775,6 +778,24 @@ export function ConnectedScorebook({
                   </form>
                 </>
               )}
+              {mode === "manage" && <section className="game-stat-lines" aria-label="Selected game player statistics">
+                <h3>Game stats</h3>
+                <p className="micro">This game only</p>
+                {gameStatLines.map(([id, totals]) => (
+                  <div className="game-stat-player" key={id}>
+                    <h4>{playerName(id)}</h4>
+                    <dl aria-label={`${playerName(id)} game stats`}>
+                      {[
+                        ["PA", totals.PA], ["H", totals.H], ["HR", totals.HR],
+                        ["RBI", totals.RBI], ["R", totals.runs], ["OBP", rate(rates(totals).OBP)],
+                      ].map(([label, value]) => <div key={label}>
+                        <dt>{label}</dt><dd>{value}</dd>
+                      </div>)}
+                    </dl>
+                  </div>
+                ))}
+                {!gameStatLines.length && <p>No recorded plate appearances in this game.</p>}
+              </section>}
               {mode !== "score" && <details className="game-management" open={mode === "full" || mode === "manage" || current.game.completed}>
                 <summary>Game details & settings</summary>
               <GameScoreboardPanel
