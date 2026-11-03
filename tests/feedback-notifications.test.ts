@@ -76,7 +76,7 @@ test("scheduler sends a private link with stable idempotency and acknowledges on
         new Headers(init?.headers).get("Idempotency-Key"),
         `feedback/${job.feedback_id}`,
       );
-      assert.equal(init?.redirect, "error");
+      assert.equal(init?.redirect, "manual");
       assert.ok(init?.signal);
       assert.deepEqual(JSON.parse(String(init?.body)), notificationEmail(job));
       return Response.json({ id: "synthetic-provider-receipt" });

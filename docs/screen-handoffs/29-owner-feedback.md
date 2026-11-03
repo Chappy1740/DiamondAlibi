@@ -272,3 +272,39 @@ Fresh release-config checks: TypeScript, eleven feedback/SQL/Worker tests,
 original API/SQL regressions, all 33 release-gate tests, four tracker tests and
 pinned Wrangler deploy --dry-run passed. Dry run shows the runtime database URL
 and enabled flag. These checks do not establish active traffic or mail delivery.
+
+## Notification activation runtime correction - November 2
+
+PR #40 merged as c3a3ee1f92d02b1ce106de2c38031d1aacee10bf; exact-main
+GitHub validation 41571833625 passed. Initial Cloudflare build
+542fa037-c0b7-4552-a17f-d80eadf002e5 stopped on GitHub metadata HTTP 403;
+the identical-source gated retry f4e3bcad-d262-4cf3-8058-e10e608f44db passed.
+Version 9a02ceba-ed83-4869-8628-fbebe6d16ba1 is verified at 100% traffic,
+with dispatch=true, runtime database URL and five-minute cron. Production
+custom hostname remains attached; both URLs retain signed-out Access redirects.
+
+The single approved synthetic feedback 03ffd3e2-ee97-4b54-91ad-6f218ec8d30d
+was attempted at 03:35:16 UTC November 3, using the correct frozen sender and
+private recipient. It recorded provider_unavailable without acceptance. No
+actual inbox delivery is claimed. It remains queued under the original bounded
+retry/idempotency policy; do not create another test or reset its attempts.
+
+Codex diagnosed a source defect: Cloudflare Workers rejects redirect="error"
+at Request construction, before any outbound request. The Node fetch mock did
+not model that platform limitation. Use redirect="manual"; existing non-2xx
+handling rejects redirects without forwarding credentials to another origin.
+Official evidence: https://developers.cloudflare.com/workers/runtime-apis/request/ .
+
+Narrow corrective branch codex/feedback-worker-redirect starts from merged main.
+This is completion of the owner's approved notification deployment/test scope,
+not a new feature, service, schema, credential or Access change. Reuse installed
+Miniflare/workerd through its exported compatibility adapter; no dependency
+install/update. Real workerd regression intercepts all outbound requests and
+verifies success plus redirect refusal/credential containment. Original mode
+was reproduced failing to reach the synthetic provider; manual passes both cases.
+TypeScript and fourteen focused feedback/runtime/API/SQL checks pass.
+
+Continuity GREEN: approval, migration mapping, live source/version, failed test
+and correction are recorded in the existing handoff. Next: publish the focused
+correction, require fresh head/main checks, deploy through the existing gate and
+observe the same synthetic job's retry. No key changes are needed for this fix.
