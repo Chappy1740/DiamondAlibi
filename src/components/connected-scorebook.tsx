@@ -775,6 +775,24 @@ export function ConnectedScorebook({
                   </form>
                 </>
               )}
+              {mode === "manage" && <section className="game-stat-lines" aria-label="Selected game player statistics">
+                <h3>Game stats</h3>
+                <p className="micro">This game only</p>
+                {Object.entries(current.evaluation.totals).filter(([, totals]) => totals.PA > 0).map(([id, totals]) => (
+                  <div className="game-stat-player" key={id}>
+                    <h4>{playerName(id)}</h4>
+                    <dl aria-label={`${playerName(id)} game stats`}>
+                      {[
+                        ["PA", totals.PA], ["H", totals.H], ["HR", totals.HR],
+                        ["RBI", totals.RBI], ["R", totals.runs], ["OBP", rate(rates(totals).OBP)],
+                      ].map(([label, value]) => <div key={label}>
+                        <dt>{label}</dt><dd>{value}</dd>
+                      </div>)}
+                    </dl>
+                  </div>
+                ))}
+                {!Object.values(current.evaluation.totals).some(totals => totals.PA > 0) && <p>No recorded plate appearances in this game.</p>}
+              </section>}
               {mode !== "score" && <details className="game-management" open={mode === "full" || mode === "manage" || current.game.completed}>
                 <summary>Game details & settings</summary>
               <GameScoreboardPanel
