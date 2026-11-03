@@ -145,3 +145,26 @@ References: [OpenNext custom Worker](https://opennext.js.org/cloudflare/howtos/c
 [Cloudflare scheduled handler](https://developers.cloudflare.com/workers/runtime-apis/handlers/scheduled/),
 [Resend send API](https://resend.com/docs/api-reference/emails/send-email),
 [Resend idempotency](https://resend.com/docs/dashboard/emails/idempotency-keys).
+
+### Publication and validation receipt — November 2
+
+- Committed and pushed as `88fc3fac614b3b1e4424f509172ae21726b289b8`;
+  [draft PR #40](https://github.com/Chappy1740/DiamondAlibi/pull/40).
+  This receipt update adds documentation only to that same approved branch.
+- Cloudflare branch build `83c07526-c58c-49e0-ad2d-aad5b482bc13` passed for
+  `88fc3fa`, establishing hosted Worker packaging for that exact candidate.
+  It does not establish production deployment or migration acceptance.
+- GitHub run `41555238834`, job `125652404450`, failed at the existing
+  dependency advisory check before the application tests. It reports moderate
+  glob/minimatch advisories GHSA-3g3m-2fjr-6pw4 and GHSA-g3hv-75wg-m249.
+  This feature did not change dependencies or the lockfile. Do not bypass the
+  audit or run an unreviewed force-fix; dependency changes need scoped review.
+- Owner added the production-only custom hostname. A fresh signed-out HTTPS
+  request to `https://diamondalibi.eydrenworks.com/` returned 302 to the configured
+  Cloudflare Access login for that hostname. Actual new-host app sign-in and
+  feedback have not been accepted. Source inspection also finds password-reset
+  origin validation still restricted to the old Worker hostname; preparing the
+  new-host origin and auth redirect settings is separate from PR #40.
+- Continuity remains GREEN. Next: retain PR #40 in draft, resolve the scoped
+  dependency validation blocker with owner approval, and continue the guided
+  new-domain authentication setup. No live notification activation occurred.

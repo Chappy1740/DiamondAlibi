@@ -8,6 +8,12 @@ deployment, live migration/provider configuration and real email. Owner also
 chose `diamondalibi.eydrenworks.com` for a guided app-domain setup; that hostname
 does not change the owner email destination or activate a route in this PR.
 
+Publication checkpoint: draft PR #40, implementation source `88fc3fa`.
+Cloudflare branch packaging passed; GitHub run `41555238834` failed at the
+existing glob/minimatch advisory gate before application tests. Do not merge,
+bypass the gate, or upgrade dependencies without a scoped reviewed change.
+Details and exact evidence are in the current screen handoff receipt.
+
 See the current receipt in `docs/screen-handoffs/29-owner-feedback.md` for the
 owner brief, baseline, checks and limitations. New feedback must notify the
 owner, while Booth Reviews remains the private message record. This candidate
