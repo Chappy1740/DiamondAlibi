@@ -1,5 +1,19 @@
 # 10 — Stats: Screen handoff
 
+**November 3 release update:** owner now authorizes publishing, merging and deploying H3 #46 with H1 #45 and the pending documentation through #46. H4 #47 remains excluded. See [current release handoff and completion receipt](00-WORKING-STANDARD.md#november-3-2026--uat-release-through-pr-46) and the release PR for `codex/uat-release-through-pr46` for actual source/check/activation state. Physical-phone acceptance, including realistic numeric width and the hidden tap hint, remains open; the original draft-only boundary below is historical.
+
+## November 3, 2026 — H3 compact Stats (owner-approved draft scope)
+
+**Stage: Tested locally; owner acceptance pending.** Same H3 branch/baseline/limits and full receipt as [01-home.md](01-home.md). Owner approved Home/Stats compaction and removal of "SO includes looking, swinging, and SOFO strikeouts." only, as one H3 draft. H1 remains a separate draft; no H2/H4–H8, merge, deployment, hosted test, migration or dependency change.
+
+Stats reuses the existing nine category leaders and all single-stat rankings. A `workspace--stats` class scopes the two-column category grid, compact names/counts and ranking spacing to /stats. Every category, full player name, unknown historical value, tied rank, signed Beverage amount, scope control and existing keyboard focus behavior remains. Numeric values stay on one line. The fixture's summary takes less vertical space than nine prior 64px rows, without clipping controls or names.
+
+The SO explanatory paragraph is removed from the shared PlayerLeaderboard as expressly requested, also affecting League/Tournament consumers. Their card/ranking layouts and team-summary fonts retain their prior styling; their existing automated suites remain in required CI. Warnings for unknown historical hit/DP counts remain, since missing data must not appear as zero. No formula, sort/ranking policy, correction, rule version, save path, participation or balance changed.
+
+Local Chromium/WebKit checks cover sample/connected Stats, nine categories, two columns at 320/390/800/1440px, full names and values, reduced height, keyboard category entry/Back focus and WCAG checks. Existing sample dashboard test also passes against loopback sample pages, retaining season/scope/Board checks. Unit and Home evidence are in 01-home.md. Physical iPhone, owner acceptance, merge/deployment remain open. Exact-head full CI/publication receipts are recorded in the H3 draft PR.
+
+Older dated Stats briefs below remain historical; broader tracker/release recovery notes stay local/unpushed.
+
 **Status:** Shared BEV behavior verified; broader Stats audit remains open. **Requested change:** Keep signed BEVs and lead with the highest positive amount owed.
 **Current screen only:** Stats.
 **Route/view:** `/stats`
