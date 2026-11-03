@@ -1,5 +1,28 @@
 # Release readiness and recovery
 
+## November 2 continuation � notification draft refreshed
+
+Current main is `5964cd83f5f4208bad30efbee04f0b883b83e2e2` (PR #41),
+whose merged-source validation and gated Worker deployment passed. Full release
+receipt: https://github.com/Chappy1740/DiamondAlibi/pull/41 . Owner confirmed
+new-host sign-in/clubhouse/games load and then confirmed saving the new Site URL.
+This supersedes older hostname-candidate and advisory-blocker statements below.
+Password recovery at the new hostname is not yet hosted-tested.
+
+Owner screenshot shows `mail.eydrenworks.com` verified in Resend. After a guided
+sending-only/domain-restricted key setup, owner reported saving
+`FEEDBACK_RESEND_API_KEY` in the existing Worker. No key value was read, stored
+in this repository, or independently verified by that report. This does not
+approve notification migration, merge/deployment, enabling dispatch or real mail.
+
+Codex is refreshing draft PR #40 with the already-deployed hostname/dependency
+fixes, preserving both release records and the migration approval gate. No new
+package choice, live database write or notification activation is included.
+Continuity GREEN: actual branch, clean starting tree, remote heads and other
+open PRs were checked; no conflicting active feedback writer was found.
+Next: focused validation of the integrated draft, then complete runtime settings
+while dispatch stays disabled and request the exact live activation scope.
+
 ## November 2 owner feedback alerts — local candidate, not activated
 
 Owner approved commit, push and a draft PR for this exact notification candidate
@@ -65,6 +88,47 @@ Local evidence: focused unit/disposable SQL/API tests, actual-component
 Chromium/WebKit and production Next webpack build pass. Windows Worker adapter
 packaging fails on junction-backed native `sharp` resolution, so normal Linux
 CI Worker packaging is still required. No live email or provider change tested.
+
+## November 2 custom hostname — guided setup, code candidate local only
+
+Owner subsequently approved the scoped hostname package: "approve, commit,
+push, and deploy". Commit/push and exact-source deployment through required
+checks are authorized. Dependency upgrades, notification PR #40, live schema,
+auth-provider changes, test mail, new services and paid actions are excluded.
+
+Subsequent scoped approval: owner replied "I approve" to the proposed upstream
+glob 14.0.2/minimatch 11.0.1 override and necessary lockfile update, permitting
+that security-gate unblock before continuing the already-approved hostname
+deployment. It does not authorize a force-fix, audit bypass, other dependency
+upgrade or notification PR #40 deployment. Review the lockfile transitive
+changes and BlueOak-1.0.0 notices in THIRD-PARTY-NOTICES.md; the current screen
+handoff records exact evidence and update ownership.
+
+The scoped override candidate passes a clean isolated install, audit (zero
+vulnerabilities), TypeScript/recovery/build-API checks, all 33 release-gate
+tests and the normal local Worker build. These are Codex local results; require
+fresh exact-head and merged-main validation before the already-approved deploy.
+
+Owner selected `diamondalibi.eydrenworks.com` and supplied screenshots of the
+Production-only route and retained old/new exact Supabase callback entries.
+A signed-out HTTPS request redirected to Cloudflare Access for this hostname.
+This establishes routing/protection, not app sign-in or password recovery.
+
+The live password-reset request allowlist still accepts only the old Worker
+hostname. `codex/diamond-alibi-hostname` locally adds the new exact HTTPS origin
+and focused mocked regression checks, based on main
+`e46cc42086d675fc2fd89ffb474801690e0a11ae`. No library or schema change is needed.
+See `docs/screen-handoffs/21-forgot-password.md` for the current scope, checks and
+receipt. The notification implementation remains separate in draft PR #40.
+
+Keep the existing Site URL while this candidate awaits its own publication,
+review, successful required checks and named deployment approval. After release,
+verify new-host app sign-in, change Site URL to the new HTTPS root within owner
+approval, retain the old redirect entry, and perform only an explicitly approved
+single recovery test. No real reset email was sent for the local checks.
+The current npm glob/minimatch advisory gate remains enforced; do not bypass
+it or upgrade dependencies under this hostname patch. Rollback uses the prior
+Site URL and original app URL while retaining both exact callback entries.
 
 ## Current source checkpoint — October 30, 2026
 
@@ -337,3 +401,17 @@ by the checklist itself.
   Claude. See PR #33 comment 6501827446.
 - Rule going forward: "Merge and deploy" approves only the PR named
   in the message. A new PR needs a new approval.
+
+### Fresh integrated-draft verification
+
+Codex reran TypeScript, all eleven feedback/outbox/Worker tests, original feedback
+API/SQL checks, Chromium and WebKit notification component checks, four tracker
+checks, password-reset mocks and all 33 release-gate tests; all passed.
+Pinned isolated install and npm audit passed (zero vulnerabilities). Normal
+Next/Turbopack + OpenNext Worker packaging also passed, superseding the earlier
+Windows junction limitation for this integrated candidate. No live writes/mail.
+Fresh Cloudflare runtime settings show both FEEDBACK_RESEND_API_KEY and
+FEEDBACK_SUPABASE_SECRET_KEY as encrypted bindings; neither value was opened.
+Sender, destination, inbox URL and disabled switch remain to configure.
+Database migration, enabling notifications, production deployment and actual
+inbox-delivery acceptance remain pending their named live scope.

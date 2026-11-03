@@ -168,3 +168,40 @@ References: [OpenNext custom Worker](https://opennext.js.org/cloudflare/howtos/c
 - Continuity remains GREEN. Next: retain PR #40 in draft, resolve the scoped
   dependency validation blocker with owner approval, and continue the guided
   new-domain authentication setup. No live notification activation occurred.
+
+## November 2 continuation — notification draft refreshed
+
+Current main is `5964cd83f5f4208bad30efbee04f0b883b83e2e2` (PR #41),
+whose merged-source validation and gated Worker deployment passed. Full release
+receipt: https://github.com/Chappy1740/DiamondAlibi/pull/41 . Owner confirmed
+new-host sign-in/clubhouse/games load and then confirmed saving the new Site URL.
+This supersedes older hostname-candidate and advisory-blocker statements below.
+Password recovery at the new hostname is not yet hosted-tested.
+
+Owner screenshot shows `mail.eydrenworks.com` verified in Resend. After a guided
+sending-only/domain-restricted key setup, owner reported saving
+`FEEDBACK_RESEND_API_KEY` in the existing Worker. No key value was read, stored
+in this repository, or independently verified by that report. This does not
+approve notification migration, merge/deployment, enabling dispatch or real mail.
+
+Codex is refreshing draft PR #40 with the already-deployed hostname/dependency
+fixes, preserving both release records and the migration approval gate. No new
+package choice, live database write or notification activation is included.
+Continuity GREEN: actual branch, clean starting tree, remote heads and other
+open PRs were checked; no conflicting active feedback writer was found.
+Next: focused validation of the integrated draft, then complete runtime settings
+while dispatch stays disabled and request the exact live activation scope.
+
+### Fresh integrated-draft verification
+
+Codex reran TypeScript, all eleven feedback/outbox/Worker tests, original feedback
+API/SQL checks, Chromium and WebKit notification component checks, four tracker
+checks, password-reset mocks and all 33 release-gate tests; all passed.
+Pinned isolated install and npm audit passed (zero vulnerabilities). Normal
+Next/Turbopack + OpenNext Worker packaging also passed, superseding the earlier
+Windows junction limitation for this integrated candidate. No live writes/mail.
+Fresh Cloudflare runtime settings show both FEEDBACK_RESEND_API_KEY and
+FEEDBACK_SUPABASE_SECRET_KEY as encrypted bindings; neither value was opened.
+Sender, destination, inbox URL and disabled switch remain to configure.
+Database migration, enabling notifications, production deployment and actual
+inbox-delivery acceptance remain pending their named live scope.
