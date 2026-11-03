@@ -1,5 +1,94 @@
 # Release readiness and recovery
 
+## November 2 continuation — notification draft refreshed
+
+Current main is `5964cd83f5f4208bad30efbee04f0b883b83e2e2` (PR #41),
+whose merged-source validation and gated Worker deployment passed. Full release
+receipt: https://github.com/Chappy1740/DiamondAlibi/pull/41 . Owner confirmed
+new-host sign-in/clubhouse/games load and then confirmed saving the new Site URL.
+This supersedes older hostname-candidate and advisory-blocker statements below.
+Password recovery at the new hostname is not yet hosted-tested.
+
+Owner screenshot shows `mail.eydrenworks.com` verified in Resend. After a guided
+sending-only/domain-restricted key setup, owner reported saving
+`FEEDBACK_RESEND_API_KEY` in the existing Worker. No key value was read, stored
+in this repository, or independently verified by that report. This does not
+approve notification migration, merge/deployment, enabling dispatch or real mail.
+
+Codex is refreshing draft PR #40 with the already-deployed hostname/dependency
+fixes, preserving both release records and the migration approval gate. No new
+package choice, live database write or notification activation is included.
+Continuity GREEN: actual branch, clean starting tree, remote heads and other
+open PRs were checked; no conflicting active feedback writer was found.
+Next: focused validation of the integrated draft, then complete runtime settings
+while dispatch stays disabled and request the exact live activation scope.
+
+## November 2 owner feedback alerts — local candidate, not activated
+
+Owner approved commit, push and a draft PR for this exact notification candidate
+on November 2 ("yes approve and commit"). That approval excludes merge,
+deployment, live migration/provider configuration and real email. Owner also
+chose `diamondalibi.eydrenworks.com` for a guided app-domain setup; that hostname
+does not change the owner email destination or activate a route in this PR.
+
+Publication checkpoint: draft PR #40, implementation source `88fc3fa`.
+Cloudflare branch packaging passed; GitHub run `41555238834` failed at the
+existing glob/minimatch advisory gate before application tests. Do not merge,
+bypass the gate, or upgrade dependencies without a scoped reviewed change.
+Details and exact evidence are in the current screen handoff receipt.
+
+See the current receipt in `docs/screen-handoffs/29-owner-feedback.md` for the
+owner brief, baseline, checks and limitations. New feedback must notify the
+owner, while Booth Reviews remains the private message record. This candidate
+reuses the existing Resend provider and Worker with no added dependency/service.
+The destination is an owner-confirmed server setting, not an inferred account
+email and not a source-controlled personal address.
+
+Activation order, after named live approval and successful normal Linux CI:
+
+1. Review/apply `20261103003240_feedback_owner_notifications.sql` once, then
+   verify the installed definitions/ACLs, transactional enqueue and unchanged
+   existing feedback/scoring/privacy. Historical feedback is not backfilled.
+2. Configure server-only `FEEDBACK_RESEND_API_KEY` using an approved sending key
+   for the existing verified sending domain; do not read/reuse an SMTP secret
+   from this worktree. Configure `FEEDBACK_NOTIFICATION_FROM` (bare verified
+   sender address), `FEEDBACK_NOTIFICATION_TO` (owner-confirmed mailbox), and
+   `FEEDBACK_NOTIFICATION_INBOX_URL` (protected HTTPS `/owner/feedback`, no token
+   or query). Keep `FEEDBACK_NOTIFICATIONS_ENABLED` off during preparation.
+3. After approved database verification, update the existing migration-tree
+   fingerprint through the reviewed process. Do not bypass the deployment gate.
+4. Approve/deploy the exact reviewed source and existing Worker's proposed cron
+   (`*/5 * * * *`). Verify fetch routes, Access and owner-only inbox still work.
+   No new domain, public preview URL, team permission or paid upgrade is implied.
+5. Turn `FEEDBACK_NOTIFICATIONS_ENABLED=true` only within the live approval.
+   Verify all settings, actual Cron Trigger activation and a named synthetic
+   feedback/email test at the exact approved destination. Inspect the saved
+   notification receipt, provider acceptance and actual inbox delivery separately.
+   Existing provider quotas remain shared; do not enable paid usage to clear a
+   backlog. This schedule adds up to 288 small invocations per day.
+
+Acceptance: a new saved suggestion/question/issue queues one alert; the generic
+email points to Booth Reviews; retries do not create another feedback record;
+provider failures retain feedback and show pending/needs-attention status;
+unauthorized readers cannot see messages, destinations or delivery receipts.
+Alerts do not contain the sender name or message. A provider receipt is never
+labelled delivered. Automatic retry ends after twelve attempts or 23 hours from
+first attempt; inspect unresolved rows rather than blindly re-emailing them.
+Changing destination after the first attempt does not redirect an existing job.
+
+Rollback/stop: disable `FEEDBACK_NOTIFICATIONS_ENABLED` and the cron under the
+approved scope if privacy, sending or quota behavior fails. Preserve feedback,
+notification receipts and queued jobs; do not purge messages or reset attempts.
+Prior application versions can still save feedback with the enqueue trigger in
+place; their owner inbox simply lacks delivery status. No database rollback or
+message resend is automatic. Restoring alerts after an idempotency window has
+expired needs review of any uncertain provider acceptance first.
+
+Local evidence: focused unit/disposable SQL/API tests, actual-component
+Chromium/WebKit and production Next webpack build pass. Windows Worker adapter
+packaging fails on junction-backed native `sharp` resolution, so normal Linux
+CI Worker packaging is still required. No live email or provider change tested.
+
 ## November 2 custom hostname — guided setup, code candidate local only
 
 Owner subsequently approved the scoped hostname package: "approve, commit,
@@ -312,3 +401,84 @@ by the checklist itself.
   Claude. See PR #33 comment 6501827446.
 - Rule going forward: "Merge and deploy" approves only the PR named
   in the message. A new PR needs a new approval.
+
+### Fresh integrated-draft verification
+
+Codex reran TypeScript, all eleven feedback/outbox/Worker tests, original feedback
+API/SQL checks, Chromium and WebKit notification component checks, four tracker
+checks, password-reset mocks and all 33 release-gate tests; all passed.
+Pinned isolated install and npm audit passed (zero vulnerabilities). Normal
+Next/Turbopack + OpenNext Worker packaging also passed, superseding the earlier
+Windows junction limitation for this integrated candidate. No live writes/mail.
+Fresh Cloudflare runtime settings show both FEEDBACK_RESEND_API_KEY and
+FEEDBACK_SUPABASE_SECRET_KEY as encrypted bindings; neither value was opened.
+Sender, destination, inbox URL and disabled switch remain to configure.
+Database migration, enabling notifications, production deployment and actual
+inbox-delivery acceptance remain pending their named live scope.
+
+### Wrangler runtime defaults - November 2
+
+Owner requested updating wrangler.jsonc after the dashboard directed them to
+source configuration. Declare only the verified-domain sender, protected new-host
+inbox URL and FEEDBACK_NOTIFICATIONS_ENABLED="false" in vars. Recipient and
+provider/database keys remain encrypted runtime secrets, never source values.
+This prepares draft PR #40; it does not activate notifications or approve live
+migration/merge/deployment/mail. Existing exact-main and migration gates remain.
+Integrated head 6034d3b968ee83667fce98d7df8a80daf41bb5aa passed exact-source
+GitHub run 41565874836 and Cloudflare build
+57d429f1-600f-4f6e-b21e-f92ffb42c3a1; this new config needs fresh head checks.
+Codex also corrected two Windows-encoded dashes introduced in the prior receipt
+to valid UTF-8. Continuity GREEN; continue this chat for remaining runtime
+recipient setup and the explicitly scoped activation review.
+
+Validation: pinned Wrangler deploy --dry-run passed and displayed the three
+expected non-secret vars; seven existing notification/config/Worker tests and
+whitespace checks passed. This was local only, without hosted changes or mail.
+
+## Approved activation - November 2, 2026
+
+Owner replied "i approve, commit, push, deploy" to the exact queue migration,
+required release configuration, PR #40 merge/deployment, five-minute dispatch
+and one synthetic feedback alert to the previously confirmed private recipient
+from notifications@mail.eydrenworks.com. Earlier draft-only holds are superseded
+for this scope. No historical email batch, extra recipient, new service or paid
+upgrade is authorized. Existing credentials and Access stay in place.
+
+Before activation Codex verified head 73957a01b512fc8edb72e25de82c592ab3cb633b
+passed GitHub 41570300517 and Cloudflare 8fcf270c-1671-44de-abf7-bb510873c1f9.
+Fresh remote main remains 5964cd83f5f4208bad30efbee04f0b883b83e2e2; starting
+notification worktree was clean and other open branches do not overlap.
+
+Approved source 20261103003240_feedback_owner_notifications.sql was applied
+once by Supabase MCP as recorded version 20261103031503, name
+feedback_owner_notifications. This provider-assigned timestamp differs from
+the source filename; retain this mapping and do not apply it again. Fresh
+checks confirm the trigger, empty search paths/security-invoker functions, RLS,
+no anon/authenticated read or claim access, and service-only access. Supabase
+default ACLs retain the service role's full table privileges, as on the existing
+feedback table; no public grant is present. Security advisors report only the
+expected RLS/no-policy informational class for service-only tables, including
+this table; no new warning/error class.
+
+No historical rows were queued. One approved synthetic feedback was created via
+the existing submission RPC, ID 03ffd3e2-ee97-4b54-91ad-6f218ec8d30d; its
+notification is queued for the post-release acceptance test. No player/team data
+is in the test. No alert has been sent yet.
+
+Release configuration now records approved migration tree
+6dc55326d3dfc1ff283fcbd08ea03bf043b2c882 and enables dispatch. The scheduled
+handler also needs NEXT_PUBLIC_SUPABASE_URL in runtime vars; build-only URL
+substitution is insufficient for its env argument. The public project URL is
+therefore declared alongside the sender/inbox URL. Recipient and keys remain
+encrypted runtime secrets. Normal exact-head and exact-main gates still apply.
+
+Continuity GREEN: scope, approvals, source/database mapping and synthetic test
+are recorded. Next action: validate/push this release candidate, merge only
+after its required checks, verify live version/cron, then inspect only the named
+synthetic notification receipt and actual destination inbox. Rollback disables
+dispatch/cron and preserves feedback, queue and receipts.
+
+Fresh release-config checks: TypeScript, eleven feedback/SQL/Worker tests,
+original API/SQL regressions, all 33 release-gate tests, four tracker tests and
+pinned Wrangler deploy --dry-run passed. Dry run shows the runtime database URL
+and enabled flag. These checks do not establish active traffic or mail delivery.

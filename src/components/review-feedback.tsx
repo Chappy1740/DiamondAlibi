@@ -3,6 +3,7 @@ import Link from "next/link";
 import { BrandLink } from "@/components/brand-link";
 import { useRef, useState } from "react";
 import type { FeedbackKind, FeedbackRecord } from "@/lib/feedback";
+import { feedbackAlertStatus } from "@/lib/feedback";
 
 export function ReviewFeedback({
   ready,
@@ -40,7 +41,9 @@ export function ReviewFeedback({
         throw new Error(
           result.error ?? "Not confirmed as sent. Please try again.",
         );
-      setNotice("Sent to the owner. Thanks for helping improve Diamond Alibi!");
+      setNotice(
+        "Saved to the owner's inbox. Thanks for helping improve Diamond Alibi!",
+      );
       setMessage("");
       retry.current = null;
     } catch (error) {
@@ -138,6 +141,7 @@ export function OwnerFeedbackInbox() {
   const [page, setPage] = useState(0);
   const [more, setMore] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [alertsConfigured, setAlertsConfigured] = useState(true);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   async function load(nextPage = page) {
@@ -152,6 +156,7 @@ export function OwnerFeedbackInbox() {
       if (!response.ok) throw new Error(result.error);
       setItems(result.items);
       setMore(result.more);
+      setAlertsConfigured(result.alertsConfigured === true);
       setPage(nextPage);
       setLoaded(true);
     } catch {
@@ -202,6 +207,12 @@ export function OwnerFeedbackInbox() {
         {busy ? "Loading…" : loaded ? "Refresh inbox" : "Open inbox"}
       </button>
       <p role="status">{notice}</p>
+      {loaded && !alertsConfigured && (
+        <p role="status">
+          Email alerts are not configured. Feedback is still saved in this
+          inbox.
+        </p>
+      )}
       {loaded && !items.length && <p>No messages yet.</p>}
       {items.map((item) => (
         <article className="panel" key={item.id}>
@@ -213,6 +224,7 @@ export function OwnerFeedbackInbox() {
             {new Date(item.created_at).toLocaleString()}
           </p>
           <p className="feedback-message">{item.message}</p>
+          <p className="micro">{feedbackAlertStatus(item)}</p>
           <button
             className="button secondary"
             disabled={busy}

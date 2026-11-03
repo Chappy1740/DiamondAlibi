@@ -159,3 +159,14 @@ production activation. No shared dependency directory was modified.
 Next: publish this scoped update to PR #41, require exact-head CI, then merge
 and verify the existing exact-main deployment gate and active version. Existing
 hostname deployment approval remains valid; no real recovery email is implied.
+
+## November 2 release and owner acceptance
+
+PR #41 merged as `5964cd83f5f4208bad30efbee04f0b883b83e2e2`. Exact-main
+validation 41558163897 and gated Cloudflare build
+2aa72f08-d42e-4efa-a661-e3487f9d2b19 succeeded; version
+8e7da978-7d7f-4ea2-a4e0-a4d4b2e8987f was verified at 100% traffic.
+Owner confirmed new-host sign-in/clubhouse/games load and saving the Site URL.
+These are owner-reported acceptance, not an agent-issued recovery test.
+Canonical completion receipt: https://github.com/Chappy1740/DiamondAlibi/pull/41 .
+New-host password recovery and notification email remain untested live.
