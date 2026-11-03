@@ -39,7 +39,7 @@ const fs = require("node:fs");
     await page
       .getByRole("heading", { name: "Plate appearances", exact: true })
       .waitFor();
-    assert.equal(await page.locator("details").count(), 48);
+    assert.equal(await page.locator(".detail-card details").count(), 48);
     await page
       .getByRole("navigation", { name: "Mobile primary" })
       .getByRole("link", { name: "Home", exact: true })
@@ -57,9 +57,9 @@ const fs = require("node:fs");
     const nav = page.getByRole("navigation", { name: "Mobile primary" });
     await nav.getByRole("link", { name: "Stats", exact: true }).click();
     await page
-      .getByRole("heading", { name: "Team summary", exact: true })
+      .getByRole("heading", { name: "Team leaders", exact: true })
       .waitFor();
-    assert.equal(await page.locator("tbody tr").count(), 12);
+    assert.equal(await page.locator(".leaderboard-summary button").count(), 9);
     assert.equal(
       await page
         .getByRole("columnheader", { name: "AVG", exact: true })
@@ -71,7 +71,7 @@ const fs = require("node:fs");
       .selectOption("League");
     await page.getByRole("button", { name: "Apply context" }).click();
     await page
-      .getByText("16 league games in Season 2026", { exact: true })
+      .locator(".leaderboard-scope").filter({ hasText: "Season 2026 · League" })
       .waitFor();
     await nav.getByRole("link", { name: "Beverage", exact: true }).click();
     await page
@@ -101,12 +101,9 @@ const fs = require("node:fs");
     );
     await nav.getByRole("link", { name: "Games", exact: true }).click();
     await page
-      .getByRole("heading", { name: "Tournaments", exact: true })
+      .getByRole("heading", { name: "Games", exact: true })
       .waitFor();
-    assert.equal(
-      await page.getByText(/3-game guaranteed · \d+ games recorded/).count(),
-      2,
-    );
+    assert((await page.locator(".game-entry-row").count()) > 16, "Games retains the current season's league and tournament records");
     for (const width of [320, 390, 430, 1280]) {
       await page.setViewportSize({ width, height: 844 });
       assert.equal(
@@ -119,7 +116,7 @@ const fs = require("node:fs");
     await page.setViewportSize({ width: 390, height: 844 });
     await nav.getByRole("link", { name: "Stats", exact: true }).click();
     await page
-      .getByRole("heading", { name: "Team summary", exact: true })
+      .getByRole("heading", { name: "Team leaders", exact: true })
       .waitFor();
     await page.addScriptTag({
       content: fs.readFileSync(require.resolve("axe-core/axe.min.js"), "utf8"),
@@ -142,7 +139,7 @@ const fs = require("node:fs");
     });
     assert.deepEqual(errors, []);
     console.log(
-      "PASS: sample main tabs, 12 players, four seasons, guarantee/game history, shared scopes/Board, phone widths and accessibility. No live records written.",
+      "PASS: sample main tabs, 12 players, four seasons, current game history and category leaders, shared scopes/Board, phone widths and accessibility. No live records written.",
     );
   } finally {
     await browser.close();

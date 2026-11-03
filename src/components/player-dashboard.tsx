@@ -175,7 +175,7 @@ export function PlayerDashboard(p: DashboardProps) {
         <span className="rail-caption">THE STATS DON’T LIE.</span>
         <nav aria-label="Desktop primary">{navigation}</nav>
       </aside>
-      <div className={`workspace${fitHome ? " workspace--home" : ""}`}>
+      <div className={`workspace${fitHome ? " workspace--home" : ""}${p.route === "stats" ? " workspace--stats" : ""}`}>
         <header className="topbar">
           <BrandLink className={p.route.includes("/") ? "" : "header-logo"} href={href("")} variant={p.route.includes("/") ? "compact" : "primary"} />
           {p.review ? <Link className="button secondary" href="/review" target="_top">Review hub</Link>

@@ -81,7 +81,6 @@ export function PlayerLeaderboard({
     <section className="tournament-leaderboard" aria-label={regionLabel}>
       <h2>{metric ? `${labels[metric]} rankings` : title}</h2>
       <p className="micro leaderboard-scope">{scopeLabel}</p>
-      <p className="micro">SO includes looking, swinging, and SOFO strikeouts.</p>
       {players.some(row => leaderboardValue(row, "2B") == null || leaderboardValue(row, "3B") == null) && <p className="micro">Some older hits did not record a hit type. Unavailable doubles and triples show — and are unranked.</p>}
       {players.some(row => leaderboardValue(row, "DP") == null) && <p className="micro">Some older games did not record double plays. Unavailable DP counts show — and are unranked.</p>}
       {metric == null ? (

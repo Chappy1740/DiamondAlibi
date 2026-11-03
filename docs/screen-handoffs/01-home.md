@@ -1,5 +1,25 @@
 # 01 — Home: Screen handoff
 
+## November 3, 2026 — H3 Home/Stats compaction (owner-approved draft scope)
+
+**Stage: Tested locally; owner acceptance pending.** Branch `codex/h3-home-stats-compaction`, based independently on main `c19132d27d8656a3e92fa8d61cbbd1e742ba521a`. H1 PR #45 is separate and unmerged. Owner specifically approved H3 only, including removal of the SO explanation, as its own draft PR; no merge/deploy, migration, hosted test, new dependency or H2/H4–H8 implementation.
+
+Home otherwise stays as accepted: shrink only its numeric statistics one step, preserve all tiles/captions, personal account/scoping, signed Beverage balance, native context controls, navigation and viewport fit. Connected counts 24 -> 22px and rates 28 -> 26px; short screens 22 -> 20px. Sample Home counts reduce the existing responsive 22–28px range to 20–26px, rates 32 -> 30px. Competition team summaries retain their existing sizes.
+
+Reuse decision (EYD-ARCH-001): reuse PlayerDashboard markup, existing native layout/CSS and PlayerLeaderboard, with a Stats-route class for scoped compaction. A new layout library or duplicated stat renderer adds no capability; small scoped CSS and removal of one explanatory paragraph suffice. No formula, data loader, scoring, ranking, saved rules or dependency change.
+
+Files: `src/app/globals.css`, `src/components/player-dashboard.tsx`, `src/components/tournament-leaderboard.tsx`, `tests/home-layout-browser.cjs`, `tests/dashboard-browser.cjs`, this receipt and 10-stats.md. Stats details/shared-consumer coverage are in [10-stats.md](10-stats.md).
+
+Codex local evidence: typecheck; test:season-scoring (6); test:sample-seasons (6); requested test:browser on explicit synthetic sample routes; full Home/Stats component suite in Chromium and WebKit. Checks cover connected/sample, 320–1440px, Home viewport fit (including 320x568), all statistics and signed credits, nine Stats categories/two columns, reduced summary height, single-line numeric values, long names, 44px controls, keyboard category/Back focus, accessibility, context and offline/error/empty states. Synthetic 390px Home/Stats screenshots visually reviewed. No physical-device or hosted acceptance claimed.
+
+The requested legacy dashboard test had stale expectations for a removed Stats table, the old Games arrival view and a global details count including the profile menu. Assertions now target the existing nine-category leaderboard, current selected-scope label/game list and the original 48 history rows inside their card. Existing season/scope/Beverage isolation checks remain. No Games product behavior changed.
+
+Installed dependencies/browsers reused, no install/upgrade. Local Turbopack cannot resolve the shared-dependency junction; the existing webpack option served the isolated loopback preview successfully without config changes. Exact-head normal Linux/Worker CI and branch validation are recorded in the draft PR. No hosted credentials/connections were used.
+
+Matching source/check receipts and exact draft head live in the H3 PR description, avoiding a post-validation code commit just to insert its own hash. Stage remains Tested until owner acceptance; no milestones closed. Revert only this presentation diff if needed. Broader local recovery records remain unpushed. Claude reviews the draft read-only. Stop after the draft and request a named next-item decision.
+
+Older dated Home briefs below remain historical and do not broaden this approval.
+
 **Current status (October 27):** Home viewport-fit refinement locally verified and owner reviewed; owner has now authorized its protected-preview release together with the full-roster picker fix. Release is in progress. **Current owner request:** "the home page should not scroll, everthing should fit on the screen".
 **Current screen only:** Home.
 **Route/view:** `/`
