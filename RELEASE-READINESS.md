@@ -1,5 +1,46 @@
 # Release readiness and recovery
 
+## November 2 custom hostname — guided setup, code candidate local only
+
+Owner subsequently approved the scoped hostname package: "approve, commit,
+push, and deploy". Commit/push and exact-source deployment through required
+checks are authorized. Dependency upgrades, notification PR #40, live schema,
+auth-provider changes, test mail, new services and paid actions are excluded.
+
+Subsequent scoped approval: owner replied "I approve" to the proposed upstream
+glob 14.0.2/minimatch 11.0.1 override and necessary lockfile update, permitting
+that security-gate unblock before continuing the already-approved hostname
+deployment. It does not authorize a force-fix, audit bypass, other dependency
+upgrade or notification PR #40 deployment. Review the lockfile transitive
+changes and BlueOak-1.0.0 notices in THIRD-PARTY-NOTICES.md; the current screen
+handoff records exact evidence and update ownership.
+
+The scoped override candidate passes a clean isolated install, audit (zero
+vulnerabilities), TypeScript/recovery/build-API checks, all 33 release-gate
+tests and the normal local Worker build. These are Codex local results; require
+fresh exact-head and merged-main validation before the already-approved deploy.
+
+Owner selected `diamondalibi.eydrenworks.com` and supplied screenshots of the
+Production-only route and retained old/new exact Supabase callback entries.
+A signed-out HTTPS request redirected to Cloudflare Access for this hostname.
+This establishes routing/protection, not app sign-in or password recovery.
+
+The live password-reset request allowlist still accepts only the old Worker
+hostname. `codex/diamond-alibi-hostname` locally adds the new exact HTTPS origin
+and focused mocked regression checks, based on main
+`e46cc42086d675fc2fd89ffb474801690e0a11ae`. No library or schema change is needed.
+See `docs/screen-handoffs/21-forgot-password.md` for the current scope, checks and
+receipt. The notification implementation remains separate in draft PR #40.
+
+Keep the existing Site URL while this candidate awaits its own publication,
+review, successful required checks and named deployment approval. After release,
+verify new-host app sign-in, change Site URL to the new HTTPS root within owner
+approval, retain the old redirect entry, and perform only an explicitly approved
+single recovery test. No real reset email was sent for the local checks.
+The current npm glob/minimatch advisory gate remains enforced; do not bypass
+it or upgrade dependencies under this hostname patch. Rollback uses the prior
+Site URL and original app URL while retaining both exact callback entries.
+
 ## Current source checkpoint — October 30, 2026
 
 - Verified main before this branch: `189a176d7694248e75f740521eecfddf641c0d7c`, after PR #35. Its push-triggered Personal workflow validation succeeded: [run 40999095720](https://github.com/Chappy1740/DiamondAlibi/actions/runs/40999095720).

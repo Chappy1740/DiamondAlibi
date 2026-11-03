@@ -100,6 +100,44 @@ const { pathToFileURL } = require("node:url");
       calls[0][1].redirectTo,
       origin + "/auth/callback?next=/reset-password",
     );
+    origin = "https://diamondalibi.eydrenworks.com";
+    calls.length = 0;
+    assert.ok(
+      (
+        await requestPasswordReset(
+          {},
+          form({ email: "synthetic@example.invalid" }),
+        )
+      ).message,
+    );
+    assert.equal(calls.length, 1);
+    assert.equal(
+      calls[0][1].redirectTo,
+      origin + "/auth/callback?next=/reset-password",
+    );
+    for (const hostileOrigin of [
+      "http://diamondalibi.eydrenworks.com",
+      "https://diamondalibi.eydrenworks.com.attacker.invalid",
+      "https://attacker.invalid/diamondalibi.eydrenworks.com",
+      "https://diamondalibi.eydrenworks.com:444",
+    ]) {
+      origin = hostileOrigin;
+      calls.length = 0;
+      assert.ok(
+        (
+          await requestPasswordReset(
+            {},
+            form({ email: "synthetic@example.invalid" }),
+          )
+        ).error,
+      );
+      assert.equal(
+        calls.length,
+        0,
+        "untrusted origins must not issue reset mail",
+      );
+    }
+    origin = "https://diamondalibi.eydrenworks.com";
     failed = true;
     assert.ok(
       (

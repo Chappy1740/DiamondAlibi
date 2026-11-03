@@ -2,8 +2,8 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 73,
-  updatedAt: "2026-10-23",
+  revision: 74,
+  updatedAt: "2026-11-02",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
   release: {
@@ -732,7 +732,7 @@ export const projectTracker: ProjectTracker = {
           status: "in_progress",
           evidence:
             "October 22: owner approved the recommended fixes. Leaked-password protection alone was enabled in the Diamond Alibi Supabase Email provider; saved dashboard readback and a fresh security-advisor result confirm the disabled-protection warning is removed. Existing Pro entitlement supports it. No accounts, passwords, schema or other auth settings were changed. This verifies configuration, not hosted authentication behavior.",
-          next: "Complete separately approved isolated weak-password rejection and strong-password/sign-in/recovery acceptance using only synthetic identity data; see RELEASE-READINESS.md. No account creation, reset email or password mutation is implied by configuration verification.",
+          next: "November 2: owner selected diamondalibi.eydrenworks.com. Production route and signed-out HTTPS/Access redirect were verified; owner screenshots show old and new exact callback entries retained. New-host password-reset origin compatibility is implemented and locally mock-tested on codex/diamond-alibi-hostname, but publication, required CI, deployment, Site URL switch and hosted sign-in/recovery acceptance remain open. See docs/screen-handoffs/21-forgot-password.md and RELEASE-READINESS.md. Retain separately approved isolated weak-password rejection and strong-password/sign-in/recovery acceptance using only synthetic identity data. No real account/reset/password mutation is implied by local verification.",
           kind: "acceptance",
         },
         {

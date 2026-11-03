@@ -80,3 +80,82 @@ A green build or inactive upload is not a live release. Preserve required checks
 9. Owner acceptance or explicit hold; agreed next screen.
 
 **Current outcome:** Documentation prepared only. No screen implementation, new acceptance pass or live release is claimed by this work package.
+
+## November 2, 2026 — custom hostname compatibility, local candidate
+
+Owner chose `diamondalibi.eydrenworks.com` on the existing domain and requested
+a guided setup. This paragraph supplies the scoped brief; it supersedes the
+pending-brief text above for hostname compatibility only.
+
+- Continuity: GREEN. Actual branch `codex/diamond-alibi-hostname`, baseline and
+  checked remote main `e46cc42086d675fc2fd89ffb474801690e0a11ae`. The separate
+  notification branch/draft PR #40 is preserved and is not part of this diff.
+  Open PRs #38–#40 do not change the forgot-password action or its focused test.
+- Owner screenshot shows the custom hostname attached to Production only.
+  Fresh signed-out HTTPS read returned 302 to Cloudflare Access login for this
+  hostname; no certificate bypass or public-access change was needed.
+- Later owner screenshot shows the retained old reset callback and both exact
+  new-host callbacks in Supabase Redirect URLs. Site URL remains on the existing
+  Worker hostname pending coordinated release and hosted acceptance.
+- Implemented locally: add only the exact new HTTPS origin to the existing
+  password-reset request allowlist. Keep the original HTTPS origin and existing
+  local-development behavior. No arbitrary Host, wildcard or submitted URL is
+  accepted as an email destination.
+- EYD-ARCH-001: reuse the existing origin check and installed esbuild/Supabase
+  mocks. A library or replacement auth flow adds no needed capability. No
+  dependency, schema, provider secret or sending service change is proposed.
+- Tested locally: `node tests/password-reset.cjs` passes with existing flow and
+  both valid origins, correct new-host callback, HTTP/lookalike/path/port denial
+  before any mocked mail call. TypeScript passes. No real account, reset email,
+  password, session or hosted auth setting was changed by the agent.
+- Owner approval November 2: after the scoped hostname draft request, owner
+  said "approve, commit, push, and deploy". This grants publication and deployment
+  of the hostname patch through the existing reviewed/validated release process.
+  It does not authorize notification PR #40, dependency upgrades, live schema
+  changes, auth-provider configuration, test email, new services or spending.
+- Stage: Implemented and locally Tested; publication/deployment approved but
+  not yet completed and not hosted-accepted.
+- Next: publish this scoped PR and inspect exact-source checks; preserve the
+  existing dependency advisory gate. Before switching Site URL, deploy the
+  approved hostname support, keep old callbacks, then accept actual new-host
+  sign-in and an explicitly approved single recovery test. Do not repeat the
+  tester feedback submission while email notifications remain undeployed.
+
+Reference: https://supabase.com/docs/guides/auth/redirect-urls . Related rollout
+receipt: RELEASE-READINESS.md; related acceptance: tracker M5-7.
+
+### Approved dependency unblock — November 2
+
+Hostname implementation is committed/pushed as
+`574c879f4dcf8dfb15220de0e8167926d1bb7565`, draft PR #41. The owner approved
+hostname commit/push/deployment earlier. Required run `41556959405` failed the
+existing dependency advisory step; notification PR #40 remains separate.
+
+In response to the exact proposal to update glob 14.0.2, minimatch 11.0.1 and
+their necessary lockfile entries before continuing the approved deployment,
+the owner replied "I approve". That scoped dependency update is now authorized;
+do not re-request hostname deployment approval. No audit bypass, force-fix,
+parent adapter downgrade, unrelated package upgrade or new service is allowed.
+
+EYD-ARCH-001 review: reusing the vulnerable installed versions leaves the
+mandatory gate failed; replacing the glob implementation or maintaining an
+application patch has more compatibility/maintenance cost. Select the upstream
+patched releases with exact npm overrides and review their necessary lockfile
+impact. npm registry and upstream releases show both patches published October
+27, 2026; Node engines `18 || 20 || >=22` include the project's Node 24 CI.
+Both use BlueOak-1.0.0, not MIT; preserve notices per THIRD-PARTY-NOTICES.md.
+path-scurry moves to 3.0.0 and @isaacs/nonrecursive-glob-match resolves to 1.0.3;
+obsolete nested glob 10/minimatch 9 and their unused dependencies are removed.
+No other direct package or adapter/runtime version changes.
+
+The hostname worktree now has its own pinned dependency installation. Its
+former node_modules junction was removed without touching the shared checkout.
+Codex validation in this session passed: clean pinned `npm ci` in the isolated
+worktree, `npm audit --audit-level=moderate` (zero vulnerabilities), TypeScript,
+password-reset mocks, 33 release-gate tests, installed glob async/sync/brace
+matching and minimatch/minifier-core load, and the normal `npm run build:worker`
+(Next/Turbopack and OpenNext packaging). This is local packaging evidence, not
+production activation. No shared dependency directory was modified.
+Next: publish this scoped update to PR #41, require exact-head CI, then merge
+and verify the existing exact-main deployment gate and active version. Existing
+hostname deployment approval remains valid; no real recovery email is implied.
