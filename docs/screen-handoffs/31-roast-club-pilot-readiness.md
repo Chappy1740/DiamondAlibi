@@ -1,37 +1,36 @@
-# Roast Club — November 7 Pilot Readiness (planning)
+# Roast Club — November 7 Pilot Readiness and Owner Decision
 
-**Status:** Conditional proposal only. No Roast Club audit, implementation, real iPhone audio test or pilot acceptance is claimed.
+**Owner decision (November 3, 2026):** Defer personalized Roast Club, consent storage, popups and Bluetooth audio until after the November 7 tournament pilot. Prioritize stable tournament scoring. This replaces the earlier proposed November 4–5 Roast Club implementation schedule. Documentation-only authorization; no code, migration, deployment or merge authorized.
 
-## Priority and decision gate
+## Saturday pilot: CONDITIONAL GO (Claude read-only UAT assessment)
 
-Tournament scoring reliability outranks announcer novelty. Claude's existing pilot UTA and current verified repository/release evidence must be reconciled before a GO decision. Historical concerns (verify whether still open): tournament game creation/continuation, navigation back to game, per-game box score, Beverage adjustment UX, tester authentication, cross-device scoring, voice readiness and over-limit HR OUT-only behavior.
+- A1 and A3 passed on laptop, including over-limit fence HR as OUT without runs or RBI. This is reported UAT evidence, not independently retested here.
+- A2 failed: per-game stat line absent. A4 failed: scoring flow and screen clutter. H1–H5 need implementation and retest before Thursday's go/no-go.
+- Batch 2 on hold; C–F not run. Tournament continuation, cross-device, voice and some navigation remain unverified.
+- H6 (new outcomes) and H7 (remove any game) require migrations and hosted verification according to Claude; choose priority based on actual tournament blocker and available validation window, not arbitrary order.
+- H1–H8 decisions, Beverage values (BB 0, SF −1, ROE 0), and remove-any-game decision were identified by Claude as chat/UTA-only; **do not invent their full specifications**. Reconcile the actual UTA and current branch evidence, then record approved details in the existing canonical handoff/tracker under separately appropriate scope.
 
-## Proposed sequence, subject to owner approval
+## Allow low-risk fun, but not at the expense of scoring
 
-1. **Nov 3 — Read-only discovery:** verify current branch/head, active work and UTA; audit scoring save lifecycle, opt-in patterns, audio and reuse; return evidence-backed GO / CONDITIONAL GO / NO-GO.
-2. **Nov 4 — If approved:** isolated labels, consent and visual roasts using existing components; synthetic regression coverage.
-3. **Nov 5 — If approved:** one-device audio integration and real iPhone/Bluetooth verification; consent/queue/failure tests.
-4. **Nov 6 — Decision:** regression, accessibility, pilot rehearsal and rollback/mute verification; release only by separately approved exact scope.
-5. **Nov 7 — Pilot:** use the verified stable build; disable/defer Roast Club if any consent, audio or scoring issue persists.
+- Preserve existing Beverage Board and established Diamond Alibi clubhouse voice.
+- Optional clean, **generic, nonpersonalized** empty-state or game-day copy may be proposed only if it fits existing UI, does not add clutter, needs no migration, and passes focused tests.
+- No funny subtitles on main scoring buttons (owner decision). No personalized jokes, targeted announcements, consent shortcuts, or Bluetooth audio before the post-pilot feature.
+- Suggested generic copy (proposal only): “The stats don't lie. The excuses are already warming up.”
+- Stop optional fun work if H1–H5, UAT, or release readiness is at risk.
 
-## Minimum candidate acceptance criteria
+## After the pilot: proposed sequence (requires separate authorization)
 
-- Individual affirmative opt-in OFF by default; opt-out cancels pending and future visual/spoken roasts; consent rechecked before playback.
-- No roast of nonparticipants, including on shared speaker; no unconsented public opt-out message.
-- 13 visible scoring actions plus special over-limit HR outcome mapped correctly; curated clean SFW lines only.
-- No toast/speech on failed or duplicate saves; no scoring blocked by popup/audio.
-- Single active announcer, user-activated audio, mute, Bluetooth pairing test on real iPhone and a no-audio fallback.
-- Existing scoring/undo/rule/HR limit/DP/SF/Beverage Board/analytics unaffected.
-- No live testing or deployment without explicit scoped authorization.
+1. Reuse account-linked Beverage opt-in UX pattern, but use a separate server-authoritative consent store; default OFF, self-service opt-in and immediate opt-out.
+2. Visual popups only for confirmed non-duplicate score changes, deduplicated by play ID; no targeted output without verified current consent. No popup for failed/duplicate saves or removed/invalidated games.
+3. One designated announcer device, explicit session ownership and mute; real iPhone/Bluetooth/speech tests; nonblocking playback queue with consent recheck and cancellation.
+4. Broader clean content catalog, nicknames and advanced preferences later.
 
-## Known risks / unknowns
+## Go/no-go and evidence
 
-- Existing UTA status and open work are not independently reconciled in this document.
-- Browser text-to-speech may require user activation and may behave differently with iOS/Bluetooth.
-- Consent storage, authorization and stale cross-device state require source inspection.
-- Popup text under buttons may be too long; official codes and accessible names must stay clear.
-- Real-world pilot deadline is not evidence of readiness.
+- Thursday: require verified H1–H5 acceptance and A2/A4 retest; then continue the pilot UTA's remaining batches as time permits. Saturday uses only a stable, approved and tested build.
+- Do not infer browser speech support, real iPhone acceptance, hosted scoring success, PR checks, or deployment from laptop tests or draft documentation.
+- Follow `AGENTS.md`, `CONTRIBUTING.md`, `RELEASE-READINESS.md`, `src/data/project-tracker.ts`, existing `docs/screen-handoffs/` records and EYD-PM-001 continuity rules. Claude's UTA is to be reconciled, not replaced.
 
-## Governance and handoff
+## Authorization boundary
 
-Read `AGENTS.md`, `CONTRIBUTING.md`, `RELEASE-READINESS.md`, `src/data/project-tracker.ts`, `docs/screen-handoffs/00-WORKING-STANDARD.md` and `08-scorebook.md`; consult Claude's existing UTA. Follow EYD-ARCH-001 reuse-before-build, EYD-PM-001 continuity, and one writer per task. This document supplements, not replaces, the canonical pilot UTA or release readiness. No source code, tests, schema, providers, release settings or deployments are authorized by this documentation.
+Owner approved this planning direction and documentation PR preparation. No implementation, migration, live test, merge, deployment or provider change is authorized by these documents. Do not edit other agents' active branches.
