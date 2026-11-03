@@ -51,6 +51,8 @@ jobs:
           printf '%s\n' 'Acquire::Retries "3";' 'Acquire::https::Timeout "30";' 'Acquire::http::Timeout "30";' | sudo tee /etc/apt/apt.conf.d/80-ci-network >/dev/null
       - run: npx playwright install --with-deps chromium webkit
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+      - run: node tests/feedback-notifications-browser.cjs
+      - run: BROWSER_ENGINE=webkit node tests/feedback-notifications-browser.cjs
       - run: node tests/personal-workflow-browser.cjs
       - run: node tests/home-layout-browser.cjs
       - run: BROWSER_ENGINE=webkit node tests/home-layout-browser.cjs

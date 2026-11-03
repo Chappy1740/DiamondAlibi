@@ -138,7 +138,9 @@ const { pathToFileURL } = require("node:url");
       400,
     );
     assert.equal(dbCalls, before);
-    assert.equal((await api.GET(request("GET", owner))).status, 200);
+    const inboxResponse = await api.GET(request("GET", owner));
+    assert.equal(inboxResponse.status, 200);
+    assert.equal((await inboxResponse.json()).alertsConfigured, false);
     assert.equal(
       (await api.PATCH(request("PATCH", owner, { id, reviewed: true }))).status,
       200,

@@ -1,5 +1,65 @@
 # Release readiness and recovery
 
+## November 2 owner feedback alerts — local candidate, not activated
+
+Owner approved commit, push and a draft PR for this exact notification candidate
+on November 2 ("yes approve and commit"). That approval excludes merge,
+deployment, live migration/provider configuration and real email. Owner also
+chose `diamondalibi.eydrenworks.com` for a guided app-domain setup; that hostname
+does not change the owner email destination or activate a route in this PR.
+
+See the current receipt in `docs/screen-handoffs/29-owner-feedback.md` for the
+owner brief, baseline, checks and limitations. New feedback must notify the
+owner, while Booth Reviews remains the private message record. This candidate
+reuses the existing Resend provider and Worker with no added dependency/service.
+The destination is an owner-confirmed server setting, not an inferred account
+email and not a source-controlled personal address.
+
+Activation order, after named live approval and successful normal Linux CI:
+
+1. Review/apply `20261103003240_feedback_owner_notifications.sql` once, then
+   verify the installed definitions/ACLs, transactional enqueue and unchanged
+   existing feedback/scoring/privacy. Historical feedback is not backfilled.
+2. Configure server-only `FEEDBACK_RESEND_API_KEY` using an approved sending key
+   for the existing verified sending domain; do not read/reuse an SMTP secret
+   from this worktree. Configure `FEEDBACK_NOTIFICATION_FROM` (bare verified
+   sender address), `FEEDBACK_NOTIFICATION_TO` (owner-confirmed mailbox), and
+   `FEEDBACK_NOTIFICATION_INBOX_URL` (protected HTTPS `/owner/feedback`, no token
+   or query). Keep `FEEDBACK_NOTIFICATIONS_ENABLED` off during preparation.
+3. After approved database verification, update the existing migration-tree
+   fingerprint through the reviewed process. Do not bypass the deployment gate.
+4. Approve/deploy the exact reviewed source and existing Worker's proposed cron
+   (`*/5 * * * *`). Verify fetch routes, Access and owner-only inbox still work.
+   No new domain, public preview URL, team permission or paid upgrade is implied.
+5. Turn `FEEDBACK_NOTIFICATIONS_ENABLED=true` only within the live approval.
+   Verify all settings, actual Cron Trigger activation and a named synthetic
+   feedback/email test at the exact approved destination. Inspect the saved
+   notification receipt, provider acceptance and actual inbox delivery separately.
+   Existing provider quotas remain shared; do not enable paid usage to clear a
+   backlog. This schedule adds up to 288 small invocations per day.
+
+Acceptance: a new saved suggestion/question/issue queues one alert; the generic
+email points to Booth Reviews; retries do not create another feedback record;
+provider failures retain feedback and show pending/needs-attention status;
+unauthorized readers cannot see messages, destinations or delivery receipts.
+Alerts do not contain the sender name or message. A provider receipt is never
+labelled delivered. Automatic retry ends after twelve attempts or 23 hours from
+first attempt; inspect unresolved rows rather than blindly re-emailing them.
+Changing destination after the first attempt does not redirect an existing job.
+
+Rollback/stop: disable `FEEDBACK_NOTIFICATIONS_ENABLED` and the cron under the
+approved scope if privacy, sending or quota behavior fails. Preserve feedback,
+notification receipts and queued jobs; do not purge messages or reset attempts.
+Prior application versions can still save feedback with the enqueue trigger in
+place; their owner inbox simply lacks delivery status. No database rollback or
+message resend is automatic. Restoring alerts after an idempotency window has
+expired needs review of any uncertain provider acceptance first.
+
+Local evidence: focused unit/disposable SQL/API tests, actual-component
+Chromium/WebKit and production Next webpack build pass. Windows Worker adapter
+packaging fails on junction-backed native `sharp` resolution, so normal Linux
+CI Worker packaging is still required. No live email or provider change tested.
+
 ## Current source checkpoint — October 30, 2026
 
 - Verified main before this branch: `189a176d7694248e75f740521eecfddf641c0d7c`, after PR #35. Its push-triggered Personal workflow validation succeeded: [run 40999095720](https://github.com/Chappy1740/DiamondAlibi/actions/runs/40999095720).

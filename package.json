@@ -10,7 +10,7 @@
     "preview:worker": "opennextjs-cloudflare preview --ip 127.0.0.1 --port 3002",
     "start": "next start --hostname 127.0.0.1",
     "typecheck": "tsc --noEmit",
-    "test:feedback": "node --experimental-strip-types --test tests/feedback.test.ts && node tests/feedback-api.cjs && node tests/feedback-sql.cjs",
+    "test:feedback": "node --experimental-strip-types --test --test-isolation=none tests/feedback.test.ts tests/feedback-notifications.test.ts tests/feedback-notifications-sql.test.ts tests/feedback-worker.test.ts && node tests/feedback-api.cjs && node tests/feedback-sql.cjs",
     "test:project-status": "node --experimental-strip-types --test tests/project-status.test.ts",
     "test:project-status-browser": "node tests/project-status-browser.cjs",
     "test:team-review": "node tests/team-review-browser.cjs",

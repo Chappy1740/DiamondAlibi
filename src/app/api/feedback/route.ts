@@ -4,6 +4,7 @@ import {
 } from "@/lib/feedback-access";
 import { feedbackStore } from "@/lib/feedback-store";
 import { feedbackSubjectHash, parseFeedback } from "@/lib/feedback";
+import { notificationConfig } from "@/lib/feedback-notifications";
 export const dynamic = "force-dynamic";
 function reply(body: unknown, status = 200) {
   return Response.json(body, {
@@ -113,12 +114,18 @@ export async function GET(request: Request) {
       return reply({ error: "Invalid page." }, 400);
     const { data, error } = await feedbackStore()
       .from("review_feedback")
-      .select("id,kind,message,name,created_at,reviewed")
+      .select(
+        "id,kind,message,name,created_at,reviewed,review_feedback_notifications(accepted_at,attempts,first_attempt_at,last_failure)",
+      )
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })
       .range(page * 50, page * 50 + 50);
     if (error) throw error;
-    return reply({ items: data.slice(0, 50), more: data.length > 50 });
+    return reply({
+      items: data.slice(0, 50),
+      more: data.length > 50,
+      alertsConfigured: notificationConfig(process.env) !== null,
+    });
   } catch {
     return reply({ error: "Inbox unavailable. Try again later." }, 503);
   }

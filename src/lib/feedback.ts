@@ -9,7 +9,32 @@ export type FeedbackInput = {
 export type FeedbackRecord = FeedbackInput & {
   created_at: string;
   reviewed: boolean;
+  review_feedback_notifications?: {
+    accepted_at: string | null;
+    attempts: number;
+    first_attempt_at: string | null;
+    last_failure: string | null;
+  } | null;
 };
+
+export function feedbackAlertStatus(
+  item: Pick<FeedbackRecord, "review_feedback_notifications">,
+  now = Date.now(),
+) {
+  const job = item.review_feedback_notifications;
+  if (!job) return "Email alerts were not enabled for this earlier submission.";
+  if (job.accepted_at)
+    return "Email alert accepted by the mail provider; inbox delivery is not confirmed.";
+  if (
+    job.attempts >= 12 ||
+    (job.first_attempt_at &&
+      now - Date.parse(job.first_attempt_at) >= 23 * 60 * 60 * 1000)
+  )
+    return "Email alert needs attention. This feedback is safely saved here.";
+  return job.last_failure
+    ? "Email alert pending automatic retry. This feedback is safely saved here."
+    : "Email alert queued. This feedback is safely saved here.";
+}
 export function parseFeedback(value: unknown): FeedbackInput | null {
   if (!value || typeof value !== "object") return null;
   const row = value as Record<string, unknown>;
