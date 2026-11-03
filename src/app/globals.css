@@ -8,6 +8,9 @@
   --yellow: #ffe600;
   --muted: #a1b6c6;
   --border: #24435a;
+  --ui-text-small: .75rem;
+  --ui-text-body: .875rem;
+  --ui-text-large: 1.375rem;
   color-scheme: dark;
   font-family: Inter, Arial, sans-serif;
 }
@@ -1862,9 +1865,9 @@ blockquote {
 .dashboard-context-panel { margin-block: 20px; padding-top: 4px; border-top: 1px solid var(--border); }
 .dashboard-context-panel .dashboard-notice { margin-bottom: 0; }
 .dashboard-select { overflow: hidden; min-width: 0; max-width: 100%; position: relative; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 10px 12px; background: var(--surface); color: var(--white); border: 1px solid var(--border); border-radius: 8px; }
-.dashboard-select-value { flex: 1; min-width: 0; font-size: 16px; line-height: 1.5; overflow-wrap: anywhere; }
-.dashboard-select > svg { flex: none; }
-.dashboard-select > select { margin: 0; min-width: 0; min-inline-size: 0; max-width: 100%; appearance: none; -webkit-appearance: none; position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.dashboard-select-value { flex: 1; min-width: 0; font-size: var(--ui-text-body); line-height: 1.5; overflow-wrap: normal; word-break: normal; hyphens: none; white-space: normal; }
+.dashboard-select-value > svg { float: right; margin: 2px 0 0 8px; }
+.dashboard-select > select { margin: 0; min-width: 0; min-inline-size: 0; max-width: 100%; font-size: 16px; appearance: none; -webkit-appearance: none; position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
 .dashboard-select:focus-within { outline: 2px solid var(--teal); outline-offset: 3px; }
 .dashboard-selected-context { color: var(--muted); font-size: 12px; }
 .content-wrap main, .content-wrap .page-heading > div { min-width: 0; }
@@ -2168,3 +2171,12 @@ body:has(.workspace--home) { padding-bottom: 0; }
 .regular-roster .button { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
 
 .team-invitations summary { min-height: 44px; display: list-item; align-content: center; cursor: pointer; }
+
+/* H4's three-size scale is limited to Home, Games, Stats and Beverage. */
+.workspace--type-scale { font-size: var(--ui-text-body); }
+.workspace--type-scale :is(h1, h2, .home-personal-summary .home-stat strong, .game-entry-score, .balance) { font-size: var(--ui-text-large); }
+.workspace--type-scale :is(p, .button, .game-entry-name, .leaderboard-player > strong),
+.workspace--type-scale .leaderboard-counts strong { font-size: var(--ui-text-body); }
+.workspace--type-scale :is(.micro, .eyebrow, .home-stat dt, .dashboard-select-label, .game-entry-status, .leaderboard-player > .micro, .leaderboard-badge, .leaderboard-beverage small) { font-size: var(--ui-text-small); }
+.workspace--type-scale .dashboard-context-action > button { font-size: var(--ui-text-body); }
+/* Native inputs retain their existing 16px platform treatment and 44px targets. */
