@@ -2,7 +2,7 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 75,
+  revision: 76,
   updatedAt: "2026-11-02",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
@@ -104,7 +104,7 @@ export const projectTracker: ProjectTracker = {
           status: "in_progress",
           evidence:
             "Phone sample history and isolated twelve-player practice released; five approved reviewers have ongoing One-time PIN access. The saved policy was reopened and verified on October 10 with the existing preview association and 24-hour sessions. Owner confirmed review history and practice scoring passed on phone on October 10; Will confirmed October 12 that the separate reviewer test login on his phone displays sample players and switches seasons. Will then confirmed a synthetic practice plate appearance was recorded and visible in the scorebook. In response to the reload check, Will provided a screenshot showing the recorded synthetic hit still in the scorebook. Owner-controlled reviewer test login, sample history, scoring and reload persistence passed; the five teammates individual results remain pending.",
-          next: "November 2 owner-reported pilot acceptance: one invited tester passed account linking and could see team games; this does not complete every tester's acceptance. Challenge the Call reported submission success, revealing that the existing feature saves to Booth Reviews without email alerts. Owner requested notification emails. A scoped candidate on codex/feedback-owner-alerts adds durable alerts/retries and owner status; local focused checks and prior branch packaging pass; draft PR #40 is published and is being integrated with deployed PR #41. Owner reported saving the Resend runtime secret after verified sending-domain setup. Live notification migration/configuration, exact-source deployment and inbox-delivery acceptance remain open. See docs/screen-handoffs/29-owner-feedback.md and RELEASE-READINESS.md. Preserve unresolved earlier reviewer acceptance, including Morgan's code-email issue; do not repeat accepted scoring merely to retest access.",
+          next: "November 2 owner-reported pilot acceptance: one invited tester passed account linking and could see team games; this does not complete every tester's acceptance. Challenge the Call reported submission success, revealing that the existing feature saves to Booth Reviews without email alerts. Owner requested notification emails. A scoped candidate on codex/feedback-owner-alerts adds durable alerts/retries and owner status; local focused checks and prior branch packaging pass; draft PR #40 is published and is being integrated with deployed PR #41. Owner reported saving the Resend runtime secret after verified sending-domain setup. Owner approved live activation; notification migration is installed as provider version 20261103031503 with RLS/service-only checks passed. One approved synthetic feedback is queued; release configuration, exact-source deployment and inbox-delivery acceptance remain in progress. See docs/screen-handoffs/29-owner-feedback.md and RELEASE-READINESS.md. Preserve unresolved earlier reviewer acceptance, including Morgan's code-email issue; do not repeat accepted scoring merely to retest access.",
           kind: "work",
         },
         {

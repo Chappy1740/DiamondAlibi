@@ -434,3 +434,51 @@ recipient setup and the explicitly scoped activation review.
 Validation: pinned Wrangler deploy --dry-run passed and displayed the three
 expected non-secret vars; seven existing notification/config/Worker tests and
 whitespace checks passed. This was local only, without hosted changes or mail.
+
+## Approved activation - November 2, 2026
+
+Owner replied "i approve, commit, push, deploy" to the exact queue migration,
+required release configuration, PR #40 merge/deployment, five-minute dispatch
+and one synthetic feedback alert to the previously confirmed private recipient
+from notifications@mail.eydrenworks.com. Earlier draft-only holds are superseded
+for this scope. No historical email batch, extra recipient, new service or paid
+upgrade is authorized. Existing credentials and Access stay in place.
+
+Before activation Codex verified head 73957a01b512fc8edb72e25de82c592ab3cb633b
+passed GitHub 41570300517 and Cloudflare 8fcf270c-1671-44de-abf7-bb510873c1f9.
+Fresh remote main remains 5964cd83f5f4208bad30efbee04f0b883b83e2e2; starting
+notification worktree was clean and other open branches do not overlap.
+
+Approved source 20261103003240_feedback_owner_notifications.sql was applied
+once by Supabase MCP as recorded version 20261103031503, name
+feedback_owner_notifications. This provider-assigned timestamp differs from
+the source filename; retain this mapping and do not apply it again. Fresh
+checks confirm the trigger, empty search paths/security-invoker functions, RLS,
+no anon/authenticated read or claim access, and service-only access. Supabase
+default ACLs retain the service role's full table privileges, as on the existing
+feedback table; no public grant is present. Security advisors report only the
+expected RLS/no-policy informational class for service-only tables, including
+this table; no new warning/error class.
+
+No historical rows were queued. One approved synthetic feedback was created via
+the existing submission RPC, ID 03ffd3e2-ee97-4b54-91ad-6f218ec8d30d; its
+notification is queued for the post-release acceptance test. No player/team data
+is in the test. No alert has been sent yet.
+
+Release configuration now records approved migration tree
+6dc55326d3dfc1ff283fcbd08ea03bf043b2c882 and enables dispatch. The scheduled
+handler also needs NEXT_PUBLIC_SUPABASE_URL in runtime vars; build-only URL
+substitution is insufficient for its env argument. The public project URL is
+therefore declared alongside the sender/inbox URL. Recipient and keys remain
+encrypted runtime secrets. Normal exact-head and exact-main gates still apply.
+
+Continuity GREEN: scope, approvals, source/database mapping and synthetic test
+are recorded. Next action: validate/push this release candidate, merge only
+after its required checks, verify live version/cron, then inspect only the named
+synthetic notification receipt and actual destination inbox. Rollback disables
+dispatch/cron and preserves feedback, queue and receipts.
+
+Fresh release-config checks: TypeScript, eleven feedback/SQL/Worker tests,
+original API/SQL regressions, all 33 release-gate tests, four tracker tests and
+pinned Wrangler deploy --dry-run passed. Dry run shows the runtime database URL
+and enabled flag. These checks do not establish active traffic or mail delivery.

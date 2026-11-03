@@ -8,9 +8,10 @@
   "preview_urls": false,
   "keep_vars": true,
   "vars": {
+    "NEXT_PUBLIC_SUPABASE_URL": "https://twfyeoywjexxnhnluomv.supabase.co",
     "FEEDBACK_NOTIFICATION_FROM": "notifications@mail.eydrenworks.com",
     "FEEDBACK_NOTIFICATION_INBOX_URL": "https://diamondalibi.eydrenworks.com/owner/feedback",
-    "FEEDBACK_NOTIFICATIONS_ENABLED": "false",
+    "FEEDBACK_NOTIFICATIONS_ENABLED": "true",
   },
   "triggers": { "crons": ["*/5 * * * *"] },
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
