@@ -122,7 +122,8 @@ export async function dispatchFeedbackNotifications(
         },
         body: JSON.stringify(notificationEmail(job)),
         signal: AbortSignal.timeout(10000),
-        redirect: "error",
+        // Workers supports manual/follow only. Keep credentials on this origin.
+        redirect: "manual",
       });
       if (response.ok) {
         const result = await response.json();
