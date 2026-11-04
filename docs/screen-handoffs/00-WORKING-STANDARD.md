@@ -1,5 +1,9 @@
 # Diamond Alibi — Screen-by-screen working standard
 
+## November 3, 2026 — H3 tie wording refinement
+
+Owner accepted the Stats card appearance after #50 and requested **amount – Tied**, without the number of tied players. Current brief/receipt: [10-stats.md](10-stats.md#november-3-2026--h3-tie-wording), release readiness and tracker revision 80. `codex/stats-tied-label` starts from deployed main `4452beadb6f7a83f459a518db91f464f6a185a46`; continuing H3 delivery authorization covers this presentation refinement. Local checks pass; exact CI/merge/activation and owner tie-label acceptance remain pending at this source snapshot, with final evidence in the correction PR. H2 #49/H4 #47 stay excluded drafts; repo-only agent UAT sharing remains. Continuity GREEN; continue this chat through delivery and return to owner UAT.
+
 ## November 3, 2026 — H3 Stats card correction
 
 Owner's phone UAT follow-up replaces the compact card's repeated category caption with **count – leader** beside its identifying circle. Current brief, source, limits, validation and completion-receipt contract: [10-stats.md](10-stats.md#november-3-2026--h3-phone-follow-up-count--leader), synchronized with `RELEASE-READINESS.md` and tracker revision 79. Branch `codex/stats-count-leader` starts from deployed release #48 / main `07e68783081b3c3439be5903abb7904432cbef33`; H2 #49 and H4 #47 remain separate drafts, excluded. The original H3 delivery authorization continues for this requested presentation correction. Local checks pass; exact-source CI, merge, deployment and owner phone acceptance are separate stages recorded in that branch's PR completion receipt. No hosted writes, credentials/access changes, new dependency or other feature is authorized. Continuity GREEN; continue this chat through the scoped release and return to owner UAT.

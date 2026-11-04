@@ -121,7 +121,7 @@ export function PlayerLeaderboard({
                   {compactSummary && <><span className="leaderboard-counts">{value}</span><span className="leaderboard-separator" aria-hidden="true"> – </span></>}
                   <strong>
                     {leaders.length > 1
-                      ? `${leaders.length} tied`
+                      ? (compactSummary ? "Tied" : `${leaders.length} tied`)
                       : (leader?.name ?? "No recorded value")}
                   </strong>
                   {!compactSummary && <span className="micro">{labels[key]}</span>}
