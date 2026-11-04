@@ -1,5 +1,171 @@
 # 08 — Live scorebook: Screen handoff
 
+## November 4, 2026 — H5 final reconciliation for pilot review
+
+**Recovered; GREEN. H5 rung: Tested locally; exact-head CI pending.** Owner says
+“finish 52”; original scoped reconciliation authority covers conflict resolution,
+tests, commit/push and GitHub handoffs. Earlier #52 merge-only approval is retained
+but does not authorize automatic deployment. The existing main release gate can
+deploy on merge, so hold #52 for explicit combined merge/deployment approval.
+No migration, provider/access change, dependency change or hosted write.
+
+Verified clean Codex branch: `codex/h5-scorebook-flow`, prior head
+`33e280a4aa8e64d4a30e7d8e28ad071d1822b03b`; original H5
+`701117177e02575e69bdcf80f1acf7a116912b07` remains in history.
+Integrate current main `c91205053ac66f11d9e4dee675ed320b44edc463`
+with a history-preserving branch merge and ordinary push. Only concurrent
+RELEASE-READINESS.md, 00-WORKING-STANDARD.md and tracker receipts conflict;
+preserve both histories. H5 application code remains byte-identical to the
+original H5 head; the CSS/test integration also retains current main changes.
+
+Preserve Runs 0–4, draft then Send, exact-ID authoritative five-second receipt,
+OUT-only over-limit HR, retry/locking/ordered-batter guards and established
+server scoring rules. Retain deployed H4 typography/dropdowns, H2 navigation,
+#57 modest saved/unknown scores and two-column single-label competition leaders,
+and approved Home/Stats count–leader / amount–Tied. Reuse existing components,
+commands, native controls, CSS and installed pinned dependencies. No new feature.
+Claude Roast Club #53–#56 remains independently owned and untouched; #55/#56
+share scorebook surfaces and require their own later integration/revalidation.
+
+Current main is the completed #57 release source; its final receipt supersedes
+older preparation snapshots: [#57 completion](https://github.com/Chappy1740/DiamondAlibi/pull/57#issuecomment-6632233228),
+CI `41839541730`, build `c43bbef2-e67d-471c-8b75-fa44bce1eff2`,
+Worker `722067b5-9dc3-4845-af3e-f3cafd8938e2` recorded Ready at 100%.
+This is recorded release evidence, not a fresh provider/phone observation.
+H4 #47 and H2 #49 already merged/deployed under their separate owner approvals.
+
+Fresh Codex local checks on this reconciliation: typecheck, all 130 unit tests,
+33 release-gate tests, complete scorebook modes in Chromium/WebKit, Games flow
+in Chromium/WebKit (including 99–98, modest unknown labels and compact leaders),
+Home/Stats in Chromium/WebKit, and connected UI/disposable SQL all PASS.
+Initial sandbox unit failure was dependency-junction access; the authorized
+rerun with existing dependencies passed. No install or assertion weakening.
+H5 fixes the typed-entry reset path and complete WebKit scorebook now passes;
+this is new evidence, distinct from #57's earlier unchanged-baseline failure.
+
+Fresh local results and full exact-head CI are finalized in
+[PR #52](https://github.com/Chappy1740/DiamondAlibi/pull/52), the completion receipt
+for exact SHA, changed files, checks, mergeability and review findings. No inline
+review threads existed at recovery; independent review remains unverified.
+Physical phone, microphone, hosted authenticated and cross-device acceptance
+remain UNKNOWN. Optional fun labels/group names remain deferred. No milestone
+closes. Next: push reconciled head, pass full exact-head CI and return only #52
+for final release approval. Continue this chat while scope/evidence agree.
+
+<!-- Earlier preparation and release snapshots below retain their historical scope. -->
+
+## November 3, 2026 — Reconciliation update
+
+Current main is `c38d4cf483eded68f1b63294898644c9aac14054`. The original H5
+receipt below is historical. Reconciliation preserves all H5 code and main's
+newer Stats changes. Authorization, dependencies and limitations are in the
+[current working standard](00-WORKING-STANDARD.md#november-3-2026--pilot-pr-reconciliation-h5-checkpoint);
+[PR #52](https://github.com/Chappy1740/DiamondAlibi/pull/52) is the exact-head
+completion receipt for fresh checks, review findings and mergeability. No release.
+
+## November 3, 2026 — H5 Scorebook draft
+
+Owner approved H5 only as its own draft PR from current main: Runs 0–4
+buttons, scoring flow, Send, five-second “This is the play that was recorded”,
+and Game details styled as a button. The thirteen fun labels and three group
+names were explicitly last priority and cut first if late; that optional copy
+pass is deferred because exact wording was not supplied. Existing outcome
+names and Hits/Outs/Other remain. H6–H8 are excluded.
+
+Baseline: `4452beadb6f7a83f459a518db91f464f6a185a46`, freshly fetched main,
+which includes the H3 Stats correction after release #48 / `07e6878`.
+Branch: `codex/h5-scorebook-flow`. No H2/H4 commits are included. PR #47 must
+precede #49 in any later authorized merge, because H2 uses H4's body-text token.
+Neither PR is changed by H5.
+
+### Behavior and reuse
+
+Normal scoring uses player → outcome → Runs/RBI → Send. Outcome taps, Runs
+0–4 buttons and first-tournament Band choices prepare an editable draft without
+sending a scoring command. The full roster, optional search and ordered lineup
+remain. No outcome starts selected; Send requires a player and chosen result.
+Typed results use “Use result”; recognized speech prepares the same draft.
+Send submits through the existing guarded command, revision and retry path.
+The existing runs/RBI validation, HR defaults, capability guards and server
+rules are unchanged. No rule version or migration is needed. If an ordered
+batter advances during refresh, the prior draft cannot be sent for that batter.
+
+After a successful command and readback, the exact saved play ID is looked up
+in the selected game's authoritative rows. Its roster name and official result
+appear below the game heading for five seconds. Over-limit HR displays Out
+without raw run/RBI credit. Pending, invalid, conflicting, unconfirmed and
+failed-read saves do not create that receipt; a missing saved row also cannot
+produce it. A confirmed save resets the draft; retry preserves command and play
+identity. The timer cleans up on replacement/unmount and game changes clear it.
+Game details remains a native context-preserving link with button styling.
+
+Reuse decision (EYD-ARCH-001): extend ConnectedScorebook, BattingOutcomePicker,
+VoicePlayEntry, scoreRowSummary and existing native controls/CSS. A replacement
+widget or third-party library adds no value here. No dependency was installed
+or upgraded. Legacy full-mode entry, setup, management, saved rules, audited
+corrections, statistics, Beverage calculations and server authorization remain
+outside the H5 behavior change.
+
+### Verification and completion receipt
+
+Stage: Tested locally; draft publication and full exact-head CI receipt are
+recorded in the PR for this branch after publication. The source snapshot does
+not claim merge, deployment or owner acceptance. Codex uses synthetic localhost
+fixtures and the existing installed dependencies/browsers. Chromium scorebook
+modes in Chromium and WebKit, the disposable connected UI/SQL regression,
+typecheck, and 27 scoring/parser/service/tracker tests pass. H5 cases cover all
+13 capability-supported outcomes, Runs 0–4,
+RBI/HR boundaries, no-write selections, keyboard Send, five-second receipt,
+official OLHR, invalid/conflict/uncertain/delayed/failed-read/missing-row cases,
+same-ID retry, offline controls, ordered-batter refresh and 320–1440px/enlarged
+text. The 390px synthetic draft and saved-receipt previews were visually
+inspected. Full exact-head CI is finalized in the PR receipt.
+
+Changed files: connected-scorebook.tsx, batting-outcome-picker.tsx,
+voice-play-entry.tsx, globals.css, scorebook-modes-browser.cjs, this handoff,
+00-WORKING-STANDARD.md, RELEASE-READINESS.md and project-tracker.ts. Shared
+full/setup/manage modes and their legacy controls are checked; no other picker
+or voice-entry consumers exist. Tracker revision 80 links this receipt without
+closing a milestone. Screenshots/logs are ignored local artifacts.
+
+Retest on this candidate using synthetic data:
+1. Choose a roster player and Triple. Tap Runs 4 and RBI 2. No play is recorded
+   until Send. Send once: expect one saved row and the player's `3B · 4 runs,
+   2 RBI` receipt for five seconds, followed by an empty next-player draft.
+2. Try Runs 1 with RBI 2, or a zero-run HR. Expect the existing validation error
+   and no command. Keep these established rules.
+3. Type a named result and choose Use result, or recognize a supported voice
+   result. Review/edit the draft and choose any required Band before Send.
+   Ambiguous/unknown names cannot send. Real-device microphone acceptance is
+   still unknown; no live microphone or hosted scoring test was run.
+4. Verify pending/error/conflict has no recorded-play receipt. An uncertain
+   save exposes Retry the same change, retaining the original command. After
+   confirmation there is one effective play, never an extra play from selection.
+5. Open Game details with keyboard or touch. Verify the same team/season/game
+   and existing Back to scoring navigation. At 320px, scroll to Send and Game
+   details; both remain usable above the fixed navigation.
+
+Approvals: implement, verify locally, commit/push and publish the H5-only draft.
+No merge, deploy, migration, hosted test, new dependency or H6–H8. Stop and ask
+before any server-side runs/RBI rule change. No such change was needed.
+Rollback is a revert of this H5 presentation/interaction diff; no data rollback.
+Next owner action: review this draft. Physical-phone/hosted/cross-device
+acceptance and pilot readiness remain open. Continuity GREEN: continue through
+the exact-head draft receipt; no new chat is required.
+
+### Earlier UAT source receipt — main 07e6878
+
+[PR #48](https://github.com/Chappy1740/DiamondAlibi/pull/48) records
+`07e68783081b3c3439be5903abb7904432cbef33` as deployed, Ready at 100% traffic,
+Worker prefix `1fde797e`, through Cloudflare build
+`831818e3-1389-494c-b6ed-9f38a411bd8e`. Full Worker UUID: unknown in that record.
+Hostname: `diamondalibi.eydrenworks.com` (existing workers.dev bookmark also
+supported). Exact-main validation run `41743150437` passed. This is existing
+release evidence, not a fresh provider observation or a claim about what a phone
+has loaded now. Current H5 baseline is later main `4452bead`; H5 is not deployed.
+
+Older entries below are historical where superseded by this H5 brief.
+
 **Current status (October 27):** PR #27's Home/full-roster release is activated. New slow-pitch hit-type work is locally verified and owner approved for publication, deployment and its database migration; release in progress. **Current owner request:** remove HBP and add doubles/triples for tracking.
 **Current screen only:** Live scorebook.
 **Route/view:** `/club/score?team=<id>&season=<id>&game=<existing-game-id>`

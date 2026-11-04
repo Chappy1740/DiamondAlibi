@@ -47,7 +47,7 @@ export function BattingOutcomePicker({
 }: {
   extended?: boolean;
   hitTypes?: boolean;
-  value: Outcome;
+  value: Outcome | null;
   onChange: (outcome: Outcome) => void;
   disabled: boolean;
   onPick?: (outcome: Outcome) => void;

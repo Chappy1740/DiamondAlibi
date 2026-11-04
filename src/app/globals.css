@@ -1843,6 +1843,9 @@ blockquote {
 .at-bat-card .voice-play-note, .at-bat-card .quick-play-hint { font-size: 11px; line-height: 1.4; margin: 6px 0; color: var(--muted); }
 .at-bat-card .entry-error { color: #ffd4bd; font-size: 13px; margin: 8px 0; }
 .game-details-link { display: inline-block; margin-top: 12px; min-height: 44px; padding-block: 12px; }
+.recorded-play { margin-block: 12px; padding: 12px; border: 1px solid var(--teal); border-radius: 8px; background: var(--surface); overflow-wrap: anywhere; }
+.recorded-play p { margin: 6px 0 0; }
+.play-draft { margin: 4px 0; overflow-wrap: anywhere; }
 .game-details-navigation {
   position: sticky;
   top: 0;

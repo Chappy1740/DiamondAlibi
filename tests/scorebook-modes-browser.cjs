@@ -49,7 +49,18 @@ const assert = require("node:assert/strict");
         createRoot(document.getElementById('app')).render(<CompetitionPage kind={query.has('league-page')?'League':'Tournament'} id={query.has('league-page')?'synthetic-league':'synthetic-cup'} data={{route:'tournaments',sample:false,userId:'synthetic-user',teams:[{id:'synthetic-team',name:'Synthetic Team'}],seasons:[{id:'synthetic-season',name:'Synthetic Season',archived:false}],teamId:'synthetic-team',seasonId:'synthetic-season',scope:'Overall',loaded:data}}/>);
       }else if(query.has('page')) ScorePage({searchParams:Promise.resolve({setup:query.has('scoring-page')||query.has('manage-page')?undefined:'1',manage:query.has('manage-page')?'1':undefined,game:query.has('manage-page')?(query.get('game')||'cup-game'):query.has('scoring-page')?'cup-game':undefined,tournament:query.get('tournament')||undefined,league:query.get('league')||undefined})}).then(ui=>createRoot(document.getElementById('app')).render(ui));
       else
-      createRoot(document.getElementById('app')).render(<main className="connected-wrap"><h1>Synthetic scorebook</h1><ConnectedScorebook storageKey="synthetic.mode-test" teamId="synthetic-team" seasonId="synthetic-season" initial={{status:'ok',data}} mode={query.get('mode')||'score'} initialGameId={query.get('game')||''} initialLeagueId={query.get('league')||''} initialTournamentId={query.get('tournament')||''} submitAction={async(input)=>{window.__writes.push(input);return query.has('quick')?{status:'ok',data:{status:'ok'}}:{status:'invalid'}}} reloadAction={async()=>{window.__reloads++;return{status:'ok',data:structuredClone(data)}}}/></main>);
+      createRoot(document.getElementById('app')).render(<main className="connected-wrap"><h1>Synthetic scorebook</h1><ConnectedScorebook storageKey="synthetic.mode-test" teamId="synthetic-team" seasonId="synthetic-season" initial={{status:'ok',data}} mode={query.get('mode')||'score'} managementHref='/club/score?team=synthetic-team&season=synthetic-season&manage=1' initialGameId={query.get('game')||''} initialLeagueId={query.get('league')||''} initialTournamentId={query.get('tournament')||''} submitAction={async(input)=>{
+        window.__writes.push(input);
+        if(!query.has('quick'))return{status:'invalid'};
+        if(window.__saveFault==='conflict')return{status:'ok',data:{status:'conflict'}};
+        if(window.__saveFault==='invalid')return{status:'invalid'};
+        const game=data.snapshot.games.find(game=>game.game.id===input.gameId),c=input.change;
+        const duplicate=game?.evaluation.rows.some(row=>row.id===c?.playId);
+        if(c?.type==='score'&&!duplicate&&!window.__skipRow)game.evaluation.rows.push({id:c.playId,playerId:c.playerId,outcome:c.outcome,runs:c.runs,rbi:c.rbi,voided:false,official:window.__official||c.outcome,delta:0});
+        if(window.__saveFault==='delayed')await new Promise(resolve=>window.__release=resolve);
+        if(window.__saveFault==='uncertain')return{status:'uncertain'};
+        return{status:'ok',data:{status:'ok',duplicate}};
+      }} reloadAction={async()=>{window.__reloads++;return window.__reloadStatus==='ok'?{status:'ok',data:structuredClone(data)}:{status:window.__reloadStatus}}}/></main>);
     `},bundle:true,write:false,platform:"browser",jsx:"automatic",plugins:[{name:"synthetic-page-context",setup(build){
       build.onResolve({filter:/^(next\/(headers|navigation|link|image)|@\/lib\/supabase\/server|@\/app\/(club\/scoring-actions|login\/actions))$/},args=>({path:args.path,namespace:"synthetic"}));
       build.onLoad({filter:/.*/,namespace:"synthetic"},args=>({loader:"tsx",resolveDir:process.cwd(),contents:
@@ -124,6 +135,121 @@ const assert = require("node:assert/strict");
     if(process.env.H1_ONLY === '1'){
       console.log(`PASS ${process.env.BROWSER_ENGINE || 'chromium'} H1 selected-game stats: 6/4/3/3/3/.667, voids/OLHR, isolation, multiple players, BB/SF/ROE/legacy HBP, refresh, offline/access denial, keyboard and 320–1440px. Synthetic localhost only.`);
       return;
+    }
+    // H5: one editable draft and one explicit Send, with an authoritative receipt.
+    {
+      const send=page.getByRole('button',{name:'Send',exact:true});
+      const receipt=page.locator('.recorded-play');
+      const open=async(extra='')=>{
+        await page.goto(base+'/?mode=score&quick=1&game=league-game&extended=1'+extra);
+        await page.getByRole('group',{name:'Batting outcome',exact:true}).waitFor();
+      };
+      await open();
+      await page.getByRole('button',{name:'Single',exact:true}).click();
+      await page.evaluate(()=>{
+        window.__fixture.roster.push({id:'next-player',display_name:'Next Player',is_guest:false});
+        const game=window.__fixture.snapshot.games.find(g=>g.game.id==='league-game');
+        game.lineup.push('next-player'); game.game.next_batter_position=1;
+      });
+      await page.getByRole('button',{name:'Refresh scorebook',exact:true}).click();
+      await page.getByRole('heading',{name:'Next batter: Next Player',exact:true}).waitFor();
+      assert(await send.isDisabled(),'Another scorer advancing the batter clears the old draft');
+      assert.equal(await page.locator('.batting-outcomes [aria-pressed="true"]').count(),0);
+      assert.equal(await page.evaluate(()=>window.__writes.length),0);
+      await open('&manual=1&full-roster=1');
+      assert(await send.isDisabled(),'Send requires a player and a chosen result');
+      assert.equal(await page.locator('.batting-outcomes [aria-pressed="true"]').count(),0,'No accidental default result');
+      await page.getByRole('button',{name:'Roster Player 11',exact:true}).click();
+      for(const name of ['Single','Double','Triple','Fence home run','Inside-the-park HR','Strikeout swinging','Strikeout looking','Strikeout foul out','Hit into double play','Out','Walk','Sacrifice fly','Reached on error']){
+        await page.getByRole('button',{name,exact:true}).click();
+        assert.equal(await page.locator('.batting-outcomes [aria-pressed="true"]').count(),1);
+      }
+      for(const count of [0,1,2,3,4]){
+        await page.getByRole('button',{name:count+' runs',exact:true}).click();
+        assert.equal(await page.getByRole('button',{name:count+' runs',exact:true}).getAttribute('aria-pressed'),'true');
+      }
+      assert.equal(await page.evaluate(()=>window.__writes.length),0,'All choices prepare without writing');
+      await page.getByRole('button',{name:'Triple',exact:true}).click();
+      await page.getByRole('button',{name:'2 RBI',exact:true}).click();
+      await page.getByRole('button',{name:'1 runs',exact:true}).click();
+      await send.click();
+      await page.getByText('RBI cannot exceed runs. A home run must score at least one run.',{exact:true}).waitFor();
+      assert.equal(await page.evaluate(()=>window.__writes.length),0,'Existing runs/RBI boundary still applies');
+      await page.getByRole('button',{name:'4 runs',exact:true}).click();
+      await send.focus(); await page.keyboard.press('Enter');
+      await receipt.waitFor();
+      assert.match(await receipt.innerText(),/This is the play that was recorded\s+Roster Player 11 · 3B · 4 runs, 2 RBI/);
+      if(process.env.H5_RECEIPT_SCREENSHOT)await receipt.screenshot({path:process.env.H5_RECEIPT_SCREENSHOT});
+      assert.equal(await page.evaluate(()=>window.__writes.length),1);
+      assert(await send.isDisabled(),'A confirmed save resets the next draft');
+      await page.waitForTimeout(1000);
+      assert(await receipt.isVisible(),'Receipt remains visible during its five-second window');
+      await receipt.waitFor({state:'hidden',timeout:6000});
+      await open();
+      await page.getByRole('button',{name:'Fence home run',exact:true}).click();
+      await page.getByRole('button',{name:'0 runs',exact:true}).click();
+      await send.click();
+      assert.equal(await page.evaluate(()=>window.__writes.length),0,'Zero-run home run is still rejected');
+      await page.getByRole('button',{name:'1 runs',exact:true}).click();
+      await page.evaluate(()=>window.__official='OLHR');
+      await send.click();
+      await receipt.waitFor();
+      assert.match(await receipt.innerText(),/Synthetic Player · Out$/,'Receipt uses official saved OLHR result');
+      assert.doesNotMatch(await receipt.innerText(),/runs|RBI/);
+      for(const fault of ['invalid','conflict','uncertain','delayed','missing-row','read-failed']){
+        await open();
+        await page.getByRole('button',{name:'Single',exact:true}).click();
+        await page.evaluate(fault=>{
+          window.__saveFault=fault;
+          if(fault==='missing-row')window.__skipRow=true;
+          if(fault==='read-failed')window.__reloadStatus='unavailable';
+        },fault);
+        if(fault==='delayed'){
+          await page.evaluate(()=>{const form=document.querySelector('.at-bat-form');form.requestSubmit();form.requestSubmit();});
+          await page.waitForFunction(()=>!!window.__release);
+          assert.equal(await page.evaluate(()=>window.__writes.length),1,'Repeated Send shares the write lock');
+          assert.equal(await receipt.count(),0,'Pending save has no receipt');
+          await page.evaluate(()=>window.__release());
+          await receipt.waitFor();
+        }else{
+          await send.click();
+          await page.waitForFunction(()=>!document.querySelector('[aria-label="Refresh scorebook"]').disabled);
+          assert.equal(await receipt.count(),0,fault+' cannot claim a recorded play');
+          if(fault==='uncertain'){
+            await page.getByRole('button',{name:'Retry the same change',exact:true}).waitFor();
+            await page.evaluate(()=>window.__saveFault='');
+            await page.getByRole('button',{name:'Retry the same change',exact:true}).click();
+            await receipt.waitFor();
+            assert.equal(await page.evaluate(()=>window.__writes[0].commandId===window.__writes[1].commandId),true,'Retry keeps command identity');
+            assert.equal(await page.evaluate(()=>window.__fixture.snapshot.games.find(g=>g.game.id==='league-game').evaluation.rows.length),1,'Retry records once');
+          }
+        }
+      }
+      await open('&manual=1&full-roster=1');
+      await page.getByRole('button',{name:'Roster Player 11',exact:true}).click();
+      await page.getByRole('button',{name:'Double',exact:true}).click();
+      for(const width of [320,390,430,800,1440]){
+        await page.setViewportSize({width,height:900});
+        await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+        assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'H5 fits '+width);
+        assert(await page.locator('.at-bat-form button,.game-details-link').evaluateAll(nodes=>nodes.every(el=>{const r=el.getBoundingClientRect();return r.width>=44&&r.height>=44&&el.scrollWidth<=el.clientWidth;})),'H5 targets and text fit '+width);
+      }
+      await page.setViewportSize({width:320,height:844});
+      await page.evaluate(()=>document.documentElement.style.fontSize='24px');
+      assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Enlarged text fits');
+      await page.evaluate(()=>document.documentElement.style.fontSize='');
+      const gameDetails=page.getByRole('link',{name:'Game details',exact:true});
+      assert.equal(await gameDetails.getAttribute('href'),'/club/score?team=synthetic-team&season=synthetic-season&manage=1&game=league-game');
+      assert.match(await gameDetails.getAttribute('class'),/button/);
+      await send.scrollIntoViewIfNeeded();
+      assert(await send.evaluate(el=>{const r=el.getBoundingClientRect();return r.bottom<=document.querySelector('.app-bottom-nav').getBoundingClientRect().top;}),'Send stays reachable above navigation');
+      await page.setViewportSize({width:390,height:844});
+      if(process.env.H5_SCREENSHOT)await page.screenshot({path:process.env.H5_SCREENSHOT,fullPage:true});
+      await page.evaluate(()=>{Object.defineProperty(navigator,'onLine',{configurable:true,value:false});window.dispatchEvent(new Event('offline'));});
+      await page.waitForFunction(()=>document.querySelector('.at-bat-form button').disabled);
+      assert(await send.isDisabled(),'Offline blocks Send');
+      assert.equal(await page.evaluate(()=>window.__writes.length),0,'Draft and layout inspection never write');
+      console.log('PASS H5 draft/Send, 13 outcomes, Runs 0–4, unchanged RBI/HR boundaries, five-second authoritative receipt, OLHR, invalid/conflict/uncertain/delayed/read-failed/missing-row, same-ID retry, keyboard, button navigation and 320–1440px.');
     }
     // A saved venue-local opener time is shown in scoring/details, never copied to Game 2.
     for(const mode of ['score','manage']){
@@ -230,6 +356,8 @@ const assert = require("node:assert/strict");
     assert.equal(await page.evaluate(()=>window.__writes.length),0,'Choosing/searching players never records a play');
     await rosterPicker.getByRole('button',{name:'Roster Player 11',exact:true}).click();
     await page.getByRole('button',{name:'Single',exact:true}).click();
+    assert.equal(await page.evaluate(()=>window.__writes.length),0,'Result selection prepares a draft');
+    await page.getByRole('button',{name:'Send',exact:true}).click();
     await page.getByText('Saved to the team scorebook.',{exact:true}).waitFor();
     assert.equal(await page.evaluate(()=>window.__writes[0].change.playerId),'roster-player-11','A player past the former limit receives their own play');
     assert.equal(await rosterPicker.getByRole('button').count(),11,'The roster remains available after saving');
@@ -237,10 +365,12 @@ const assert = require("node:assert/strict");
     await page.goto(`${base}/?mode=score&quick=1&game=league-game`);
     await page.getByRole("group",{name:"Batting outcome",exact:true}).waitFor();
     await page.getByRole("button",{name:"Single",exact:true}).click();
+    await page.getByRole('button',{name:'Send',exact:true}).click();
     await page.getByText("Saved to the team scorebook.",{exact:true}).waitFor();
     assert.equal(await page.evaluate(()=>window.__writes.length),1);
     await page.getByRole("button",{name:"2 RBI",exact:true}).click();
     await page.getByRole("button",{name:"Fence home run",exact:true}).click();
+    await page.getByRole('button',{name:'Send',exact:true}).click();
     await page.waitForFunction(()=>window.__writes.length===2 && !document.querySelector('.batting-outcomes button').disabled);
     assert.deepEqual(await page.evaluate(()=>{const c=window.__writes[1].change;return[c.playerId,c.outcome,c.runs,c.rbi]}),['synthetic-player','Fence HR',2,2]);
     assert.equal(await page.locator('input[name="at-bat-rbi"]').inputValue(),'0');
@@ -258,6 +388,7 @@ const assert = require("node:assert/strict");
       const before=await page.evaluate(()=>window.__writes.length);
       await page.getByRole('button',{name:'2 RBI',exact:true}).click();
       await page.getByRole('button',{name,exact:true}).click();
+      await page.getByRole('button',{name:'Send',exact:true}).click();
       await page.waitForFunction(n=>window.__writes.length===n+1&&!document.querySelector('.batting-outcomes button').disabled,before);
       assert.deepEqual(await page.evaluate(()=>{const c=window.__writes.at(-1).change;return[c.outcome,c.runs,c.rbi]}),[value,2,2]);
     }
@@ -266,37 +397,44 @@ const assert = require("node:assert/strict");
     assert.equal(await page.getByRole('button',{name:'Double',exact:true}).count(),0,'unsupported server cannot receive new outcomes');
     assert.equal(await page.getByRole('button',{name:'Hit by pitch',exact:true}).count(),0);
     await page.getByLabel('Player and result',{exact:true}).fill('Synthetic Player double');
-    await page.getByRole('button',{name:'Record result',exact:true}).click();
+    await page.getByRole('button',{name:'Use result',exact:true}).click();
     assert.equal(await page.evaluate(()=>window.__writes.length),0,'typed entry also respects server capability');
     await page.goto(`${base}/?mode=score&quick=1&game=league-game`);
     for(const text of ['Synthetic Player double','Synthetic Player triple 2 RBI']){
       const before=await page.evaluate(()=>window.__writes.length);
       await page.getByLabel('Player and result',{exact:true}).fill(text);
-      await page.getByRole('button',{name:'Record result',exact:true}).click();
+      await page.getByRole('button',{name:'Use result',exact:true}).click();
+      assert.equal(await page.evaluate(()=>window.__writes.length),before,'Typed result waits for Send');
+      await page.getByRole('button',{name:'Send',exact:true}).click();
       await page.waitForFunction(n=>window.__writes.length===n+1&&!document.querySelector('.batting-outcomes button').disabled,before);
       assert.equal(await page.evaluate(()=>window.__writes.at(-1).change.outcome),text.includes('double')?'2B':'3B');
     }
     await page.getByLabel('Player and result',{exact:true}).fill('Synthetic Player hit by pitch');
-    await page.getByRole('button',{name:'Record result',exact:true}).click();
+    await page.getByRole('button',{name:'Use result',exact:true}).click();
     assert.equal(await page.evaluate(()=>window.__writes.length),2,'HBP is not accepted through new typed/voice entry');
     assert.equal(await page.locator('.game-management,.at-bat-history,.game-switcher').count(),0);
     await page.goto(`${base}/?mode=score&quick=1&manual=1&voice=1&first-band=1&game=cup-game`);
     await page.getByRole("button",{name:"Speak a result",exact:true}).waitFor();
     await page.getByLabel('Player and result',{exact:true}).fill('Adam home run 2 RBI');
-    await page.getByRole('button',{name:'Record result',exact:true}).click();
+    await page.getByRole('button',{name:'Use result',exact:true}).click();
     await page.getByRole('group',{name:'First tournament Band choice',exact:true}).waitFor();
     assert.equal(await page.evaluate(()=>window.__writes.length),0);
     await page.getByRole('button',{name:'No Band',exact:true}).click();
+    assert.equal(await page.evaluate(()=>window.__writes.length),0,'Band choice waits for Send');
+    await page.getByRole('button',{name:'Send',exact:true}).click();
     await page.getByText('Saved to the team scorebook.',{exact:true}).waitFor();
     assert.deepEqual(await page.evaluate(()=>{const c=window.__writes[0].change;return[c.playerId,c.outcome,c.runs,c.rbi,c.firstGameBand]}),['adam-player','Fence HR',2,2,false]);
     assert.equal(await page.getByLabel('Player and result',{exact:true}).inputValue(),'');
     await page.getByLabel('Player and result',{exact:true}).fill('Unknown hit');
-    await page.getByRole('button',{name:'Record result',exact:true}).click();
+    await page.getByRole('button',{name:'Use result',exact:true}).click();
     assert.equal(await page.evaluate(()=>window.__writes.length),1);
     // Recognition final events must be consumed once; permission/error/late-offline events cannot save.
     await page.goto(`${base}/?mode=score&quick=1&manual=1&voice=1&game=league-game`);
     await page.getByRole('button',{name:'Speak a result',exact:true}).click();
     await page.evaluate(()=>{const r=window.__recognition;const event={results:[{isFinal:true,0:{transcript:'Adam hit'}}]};r.onresult(event);r.onresult(event)});
+    await page.waitForFunction(()=>document.querySelector('.play-draft')?.textContent.includes('Adam Jones'));
+    assert.equal(await page.evaluate(()=>window.__writes.length),0,'Voice result waits for Send');
+    await page.getByRole('button',{name:'Send',exact:true}).click();
     await page.getByText('Saved to the team scorebook.',{exact:true}).waitFor();
     assert.equal(await page.evaluate(()=>window.__writes.length),1);
     await page.getByRole('button',{name:'Speak a result',exact:true}).click();
@@ -608,11 +746,12 @@ const assert = require("node:assert/strict");
     if(process.env.OUTCOME_SCREENSHOT)await page.locator('.batting-outcomes').screenshot({path:process.env.OUTCOME_SCREENSHOT});
     for(const [i,name] of ['Strikeout looking','Strikeout swinging','Strikeout foul out','Hit into double play'].entries()){
       await page.getByRole('button',{name,exact:true}).click();
+      await page.getByRole('button',{name:'Send',exact:true}).click();
       await page.waitForFunction(count=>window.__writes.length===count&&!document.querySelector('.batting-outcomes button').disabled,i+1);
     }
     assert.deepEqual(await page.evaluate(()=>window.__writes.map(w=>[w.change.outcome,w.change.runs,w.change.rbi])),[['K Looking',0,0],['K Swinging',0,0],['SOFO',0,0],['DP',0,0]]);
     await page.getByLabel('Player and result',{exact:true}).fill('strikeout');
-    await page.getByRole('button',{name:'Record result',exact:true}).click();
+    await page.getByRole('button',{name:'Use result',exact:true}).click();
     await page.getByText('Choose strikeout looking, strikeout swinging, or SOFO.',{exact:true}).waitFor();
     assert.equal(await page.evaluate(()=>window.__writes.length),4,'unspecified strikeout cannot guess the subtype');
     await page.goto(`${base}/?mode=manage&extended=1&game=league-game`);
@@ -671,6 +810,6 @@ const assert = require("node:assert/strict");
     await page.getByRole('heading',{name:'Synthetic scorebook',exact:true}).waitFor();
     assert.equal(await page.getByLabel('Tournament',{exact:true}).getByRole('option',{name:'M3-5 Synthetic Cup',exact:true}).count(),0,'archived tournaments are absent from new-game choices');
     assert.equal(await page.evaluate(()=>window.__writes.length),0);
-    console.log(`PASS ${process.env.BROWSER_ENGINE || "chromium"} compact at-bat: RBI before instant results; settings/history absent from scorer, separate game-details link. Legacy draft selection/save preserved; all scoring choices reachable above fixed navigation. Grouped outcome buttons: explicit 1B/2B/3B, no HBP, supported-server guards and ten base choices, selected/keyboard state, HR defaults/reset, no write until confirmed, unchanged score payload, offline disabling and readable touch targets at 320–1440px. Compact setup: actual page heading, first/next-game primary actions above the fold, native date containment, hidden-field validation, preserved HR/Bands payloads and prominent uncertain/offline handling. Score/setup modes: selected competition isolation, no unrelated scoring during setup, inherited zero/2 limits, opponent-only tournament continuation, collapsed statistics/audit, missing-game denial and mobile overflow. Live polling only for active, visible, online games; completed/setup/manage/archived/missing games do not poll. Hidden/offline reads are skipped and returning/reconnecting refreshes without recording plays. Decimal leaderboard rates and effective doubles/triples rankings. Synthetic services only; no hosted writes.`);
+    console.log(`PASS ${process.env.BROWSER_ENGINE || "chromium"} scorebook modes: H5 draft/Send and confirmed receipt; manual/ordered batters, full roster, typed/native voice, Band selection, hit-type capability guards, legacy full-mode recording, setup, management/history, isolation, saved rules, live polling, rankings, offline states and 320–1440px layout. Synthetic services only; no hosted writes.`);
   } finally{if(browser)await browser.close();if(server)await new Promise(resolve=>server.close(resolve));}
 })().catch(error=>{console.error(error);process.exitCode=1;});

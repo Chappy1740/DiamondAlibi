@@ -1,5 +1,59 @@
 # Diamond Alibi — Screen-by-screen working standard
 
+## November 4, 2026 — H5 final reconciliation for pilot review
+
+**Recovered; GREEN. H5 rung: Tested locally; exact-head CI pending.** Owner says
+“finish 52”; original scoped reconciliation authority covers conflict resolution,
+tests, commit/push and GitHub handoffs. Earlier #52 merge-only approval is retained
+but does not authorize automatic deployment. The existing main release gate can
+deploy on merge, so hold #52 for explicit combined merge/deployment approval.
+No migration, provider/access change, dependency change or hosted write.
+
+Verified clean Codex branch: `codex/h5-scorebook-flow`, prior head
+`33e280a4aa8e64d4a30e7d8e28ad071d1822b03b`; original H5
+`701117177e02575e69bdcf80f1acf7a116912b07` remains in history.
+Integrate current main `c91205053ac66f11d9e4dee675ed320b44edc463`
+with a history-preserving branch merge and ordinary push. Only concurrent
+RELEASE-READINESS.md, 00-WORKING-STANDARD.md and tracker receipts conflict;
+preserve both histories. H5 application code remains byte-identical to the
+original H5 head; the CSS/test integration also retains current main changes.
+
+Preserve Runs 0–4, draft then Send, exact-ID authoritative five-second receipt,
+OUT-only over-limit HR, retry/locking/ordered-batter guards and established
+server scoring rules. Retain deployed H4 typography/dropdowns, H2 navigation,
+#57 modest saved/unknown scores and two-column single-label competition leaders,
+and approved Home/Stats count–leader / amount–Tied. Reuse existing components,
+commands, native controls, CSS and installed pinned dependencies. No new feature.
+Claude Roast Club #53–#56 remains independently owned and untouched; #55/#56
+share scorebook surfaces and require their own later integration/revalidation.
+
+Current main is the completed #57 release source; its final receipt supersedes
+older preparation snapshots: [#57 completion](https://github.com/Chappy1740/DiamondAlibi/pull/57#issuecomment-6632233228),
+CI `41839541730`, build `c43bbef2-e67d-471c-8b75-fa44bce1eff2`,
+Worker `722067b5-9dc3-4845-af3e-f3cafd8938e2` recorded Ready at 100%.
+This is recorded release evidence, not a fresh provider/phone observation.
+H4 #47 and H2 #49 already merged/deployed under their separate owner approvals.
+
+Fresh Codex local checks on this reconciliation: typecheck, all 130 unit tests,
+33 release-gate tests, complete scorebook modes in Chromium/WebKit, Games flow
+in Chromium/WebKit (including 99–98, modest unknown labels and compact leaders),
+Home/Stats in Chromium/WebKit, and connected UI/disposable SQL all PASS.
+Initial sandbox unit failure was dependency-junction access; the authorized
+rerun with existing dependencies passed. No install or assertion weakening.
+H5 fixes the typed-entry reset path and complete WebKit scorebook now passes;
+this is new evidence, distinct from #57's earlier unchanged-baseline failure.
+
+Fresh local results and full exact-head CI are finalized in
+[PR #52](https://github.com/Chappy1740/DiamondAlibi/pull/52), the completion receipt
+for exact SHA, changed files, checks, mergeability and review findings. No inline
+review threads existed at recovery; independent review remains unverified.
+Physical phone, microphone, hosted authenticated and cross-device acceptance
+remain UNKNOWN. Optional fun labels/group names remain deferred. No milestone
+closes. Next: push reconciled head, pass full exact-head CI and return only #52
+for final release approval. Continue this chat while scope/evidence agree.
+
+<!-- Earlier preparation and release snapshots below retain their historical scope. -->
+
 ## November 4, 2026 — Games display correction prepared locally
 
 Owner phone feedback requests a smaller score/unavailable label and the existing
@@ -169,6 +223,58 @@ All records/transport were synthetic/local. No hosted writes, migration, new dep
 Exact review head, full CI and branch-check receipts live in the H4 draft PR; passing branch validation is not deployment. Claude reviews read-only. Preserve H1's unpushed broader recovery notes and all other branches. Revert only this H4 diff relative to H3 if needed; no data rollback. Current approval excludes H2/H5–H8, merges, deployments, migrations, hosted tests and dependencies. Stop after this draft for the next named approval. Continuity GREEN for the scoped stacked draft; broader pilot acceptance remains open.
 
 Older working-standard entries below retain their historical scope.
+
+<!-- Historical H5 preparation snapshot retained from its branch. -->
+
+## November 3, 2026 — Pilot PR reconciliation (H5 checkpoint)
+
+**Recovered; GREEN. Ready for review, no release authorization.** Owner authorizes
+scoped reconciliation, conflict resolution, tests, commit/push and PR/handoff
+updates for #52, #47 and #49 only. No PR merge, deployment, production migration,
+provider change or unrelated feature work. Claude's Roast Club work is excluded.
+Verified main: `c38d4cf483eded68f1b63294898644c9aac14054`.
+H5 source: `701117177e02575e69bdcf80f1acf7a116912b07` on
+`codex/h5-scorebook-flow`; original history is retained without force push.
+
+The H5/main conflict was only concurrent receipts in RELEASE-READINESS.md,
+00-WORKING-STANDARD.md and project-tracker.ts. Preserve both histories and main's
+Stats count–leader / amount–Tied behavior and owner-reported appearance acceptance.
+H5 scoring components, receipt guards, OUT-only over-limit HR presentation,
+server scoring rules and tests are unchanged from the original H5 head.
+Reuse: existing components, commands, CSS and installed pinned dependencies.
+
+Rung: **Tested** locally by Codex in this reconciliation session: typecheck,
+130 unit tests, 33 release-gate tests, Chromium/WebKit scorebook and Home/Stats,
+and connected UI + disposable SQL regression passed. Initial sandbox dependency
+access failure was rerun successfully with existing dependencies; no install.
+Full exact-head CI remains pending until the linked PR receipt records its pass.
+Fresh local checks and full exact-head CI, full review SHA, changed files and
+mergeability are the completion receipt in [PR #52](https://github.com/Chappy1740/DiamondAlibi/pull/52).
+Do not infer a new pass or live version from older passing checks. Physical phone,
+actual microphone, hosted authenticated and cross-device acceptance remain UNKNOWN.
+No milestone closes. This session may continue: scope and evidence are coherent.
+
+Next: validate/push H5, reconcile H4 #47 onto main with an H4-only diff, then
+integrate the updated H4 base into dependent H2 #49. Keep all three draft.
+For a later separately approved release prioritize #52; #47 must precede #49.
+After an approved #47 merge, retarget #49 to main, reconcile and rerun full CI;
+no retarget or release is implied now. Final PR receipts carry current exact SHAs.
+
+## November 3, 2026 — H5 Scorebook draft only
+
+Owner approved H5 from current main `4452beadb6f7a83f459a518db91f464f6a185a46`
+on `codex/h5-scorebook-flow`: Runs 0–4 buttons, player/result/counts → Send,
+five-second authoritative recorded-play receipt and Game details button styling.
+The optional thirteen fun labels/three group names are deferred under the
+owner's cut-first instruction. Exact brief, verification, exclusions, UAT source
+receipt and completion contract: [08-scorebook.md](08-scorebook.md#november-3-2026--h5-scorebook-draft),
+linked by release readiness and tracker revision 80. Existing controls, commands,
+parser and official-row presentation are reused. No server runs/RBI rule changes
+were needed; stop and ask before any such change. Publish this scope as a draft
+only: no merge/deploy/migration/hosted test/new dependency/H6–H8. H4 #47 must
+precede H2 #49 in a later authorized merge; neither branch is changed. The H5 PR
+records final exact-head CI and draft readback. Local automated tests are not
+physical-phone acceptance. Continuity GREEN; finish the draft receipt here.
 
 ## November 3, 2026 — H3 tie wording refinement
 
