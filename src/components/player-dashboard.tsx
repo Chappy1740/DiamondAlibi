@@ -21,7 +21,6 @@ import { GameContextPicker, type GameContextTeam } from "./game-context-picker";
 import { PersonalAlibis } from "./personal-alibis";
 import { GameScoreboardPanel } from "./game-scoreboard";
 import { connectedScoreboard } from "@/lib/game-scoreboard";
-import { CompactGameList } from "./compact-game-list";
 import { gameSetupHref, safeGameSetupReturn } from "@/lib/game-navigation";
 import { BeverageControls } from "./beverage-controls";
 
@@ -88,9 +87,6 @@ export function PlayerDashboard(p: DashboardProps) {
           : "/practice"
       : game ? `/club/score?${new URLSearchParams({ team: p.teamId, season: p.seasonId, game })}` : `/leagues?${query}`;
   const addGameHref = gameSetupHref(p.teamId, p.seasonId, { league: selectedLeague?.id });
-  // Personal statistics scope must not hide the team’s games.
-  const visibleGames = loaded?.snapshot.games.filter(g =>
-    !selectedLeague || g.game.league_id === selectedLeague.id) ?? [];
   const setupReturnHref = safeGameSetupReturn(p.setupReturnHref, p.teamId, p.seasonId);
   const navigation = (
     <>
@@ -308,15 +304,13 @@ export function PlayerDashboard(p: DashboardProps) {
                 )}
                 {p.route === "games" && (
                   <>
-                    {selectedLeague && <p className="micro">League: {selectedLeague.name}</p>}
                     <div className="competition-entry games-entry" aria-label="Choose game type">
                       <Link className="button primary" href={`/leagues${selectedLeague ? `/${encodeURIComponent(selectedLeague.id)}` : ""}?${query}&view=games`}>League</Link>
                       <Link className="button primary" href={`/tournaments?${query}&from=games`}>Tournament</Link>
+                      {!p.sample && !p.review && !loaded.archived && <Link className="button primary" href={addGameHref}>Add game</Link>}
                     </div>
-                    {!p.sample && !p.review && !loaded.archived && <Link className="button primary" href={addGameHref}>Add game</Link>}
                     {loaded.archived && <p className="micro">Archived season · game creation is unavailable.</p>}
                     {p.sample && <p className="micro">Sample games · fictional, read only.</p>}
-                    {visibleGames.length ? <CompactGameList games={visibleGames} gameHref={scoring} /> : <p>No games recorded in this view. {p.sample || p.review || loaded.archived ? "Choose another season or competition to view games." : "Select Add game to get started."}</p>}
                   </>
                 )}
                 {p.route === "stats" && (

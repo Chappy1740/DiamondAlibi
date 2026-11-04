@@ -1,5 +1,93 @@
 # 02 — Games: Screen handoff
 
+## November 3 H2 — Games cleanup and clickable cards
+
+Stage: Tested locally; prepared for the owner-authorized draft PR. No merge or
+release. Exact PR number, review-head SHA and final CI links are recorded in the
+H2 draft PR's UAT receipt after publication; they are unknown at this checkpoint.
+
+Owner approved H2 only, then chose "Two across on phones; three on
+tablet/desktop" after requesting clickable cards without Enter buttons. This
+supersedes the October 28 immediate-list requirement for this candidate. Remote
+main was refreshed to `07e68783081b3c3439be5903abb7904432cbef33`, whose release
+record includes work through PR #46 and explicitly excludes H4. Git ancestry
+confirms H3 is included. H2 is isolated on `codex/h2-games-cleanup`, based on H4
+`14bea97aed53b4a22ba6fb7ec738b76b8ead5efb` / draft PR #47. Its draft targets H4
+so the review diff contains H2 only. H4 remains draft/unmerged; reconcile the
+stack with main and run normal release checks before separately approved delivery.
+This work does not change another branch, release worktree or hosted environment.
+
+### Delivered behavior and reuse
+
+Games starts with League, Tournament and Add game when creation is permitted.
+The closed Choose team or league dialog sits below the options, using Home's
+bordered control treatment. Existing native links, GameContextPicker and setup
+helpers preserve context, Cancel/Escape, active-game resume and read-only or
+archived restrictions. No new state, request, dependency or scoring workflow.
+
+League and Tournament views reuse CompactGameList. Each visible game card is
+one native link; tapping its padding, clicking its text or using keyboard Enter
+opens the same game. There is no separate Enter button. The link retains a
+meaningful opponent/date/status name, saved score and first-game start time,
+with a visible focus outline. The grid has two columns below 640px and three
+from 640px upward, 12px padding and gaps, existing 14px body/22px score tokens,
+full opponent names and at least 44px touch targets. Saved zero and unavailable
+scores retain their meanings. Tournament selection cards are unchanged.
+
+### Verification
+
+Passed locally: typecheck, test:browser, test:connected-scorebook,
+test:practice-season, and Games flow in Chromium and WebKit. Regression checks
+cover the arrival arrangement, picker below options at 320–1440px, two/three
+columns, no extra Enter button, exact game/context URL from keyboard and card
+padding, focus outline, accessibility, long/unbroken names, enlarged text,
+three-digit/zero/unavailable scores, context/isolation, empty/archived/sample
+states and tournament continuation. Tournament start-time browser suites passed
+both engines. All test identities, transport and database records were disposable
+or synthetic; no hosted test was run.
+
+A WebKit-only card containment failure was found and fixed by removing an
+unnecessary nested grid from the list item. Final tests measure content against
+the clickable card's own bounds. Chromium review screenshots were inspected.
+Screenshots/logs remain ignored local artifacts, not proof of physical-device
+acceptance. Existing pinned dependencies and installed browsers were reused.
+The generated next-env edit is excluded from delivery.
+
+### Files and UAT A4 retest
+
+Changed files: src/components/player-dashboard.tsx,
+src/components/compact-game-list.tsx, src/app/globals.css,
+tests/games-flow-browser.cjs, tests/dashboard-browser.cjs,
+tests/personal-pages-browser.cjs, and this matching handoff.
+
+1. Review the H2 candidate, not the unchanged live site. Open Games in a writable
+   synthetic team/season: League, Tournament, Add game, then the context button;
+   no immediate game list. Sample/review/archived contexts cannot add games.
+2. Choose League. In the synthetic fixture expect three cards: 12–8 Final,
+   0–0 Live, and 7–10 Final. At 320/390px expect two across; at 800px expect three.
+   Names and scores stay inside their cards, with no Enter buttons.
+3. Tap the Live card or its padding; verify the correct game/team/season opens.
+   On laptop, Tab must visibly outline the card and Enter must open that game.
+4. Return to Games, choose Tournament, open a tournament game and return.
+   Existing add/continuation links and Game 1's saved start time must remain.
+5. Cancel/Escape the context dialog: no context change, trigger focus restored.
+   Apply another team/season/league: return to the same compact Games choices.
+
+Known gaps: real phone, hosted authenticated, cross-device and deployment
+acceptance remain unverified. Built personal-pages expectation was updated;
+normal Linux CI must verify it before delivery. No tracker milestone closed.
+Highest rung is Tested, never Owner-accepted. Database migration: none.
+Deployed: not deployed.
+
+Approval used: owner-approved H2 as its own draft PR, plus the explicit
+clickable-card and two-phone/three-wider layout choice. No merge, deploy,
+migration, hosted test, provider change, new dependency or H5–H8 work approved.
+Next owner item: review H2's draft and retest A4 on its exact candidate.
+Revert only the H2 diff relative to H4 if needed; no data rollback.
+
+Continuity GREEN: evidence and scope are verified. Finish the exact-head draft
+receipt, then stop. A new chat is not needed; no live release is claimed.
+
 **Status:** Games layout locally reviewed; publication preparation complete. **Requested change:** Games begins with League and Tournament choices; records appear only after a choice.
 **Current screen only:** Games.
 **Route/view:** `/games`

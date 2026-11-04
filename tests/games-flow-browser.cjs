@@ -151,11 +151,12 @@ const assert = require("node:assert/strict");
     }
     async function comfortableCards(){
       const problems=await page.locator('.game-entry-row,.tournament-entry').evaluateAll(cards=>cards.flatMap(card=>{
-        const bounds=card.getBoundingClientRect(),name=card.querySelector('.game-entry-name')||card.querySelector('strong'),score=card.querySelector('.game-entry-score'),button=card.querySelector('.button');
+        const bounds=(card.querySelector('.game-entry-card')||card).getBoundingClientRect(),name=card.querySelector('.game-entry-name')||card.querySelector('strong'),score=card.querySelector('.game-entry-score'),button=card.querySelector('.button');
         const errors=[];
+        const inset=card.matches('.game-entry-row')?12:15;
         for(const element of [name,score,button].filter(Boolean)){
           const box=element.getBoundingClientRect();
-          if(box.left<bounds.left+15||box.right>bounds.right-15||box.top<bounds.top+15||box.bottom>bounds.bottom-15||element.scrollWidth>element.clientWidth+1)errors.push('Content must fit with inner spacing');
+          if(box.left<bounds.left+inset||box.right>bounds.right-inset||box.top<bounds.top+inset||box.bottom>bounds.bottom-inset||element.scrollWidth>element.clientWidth+1)errors.push(`Content must fit with inner spacing: ${element.className}, ${JSON.stringify({card:{left:bounds.left,right:bounds.right,top:bounds.top,bottom:bounds.bottom},element:{left:box.left,right:box.right,top:box.top,bottom:box.bottom},scroll:element.scrollWidth,client:element.clientWidth})}`);
         }
         if(name&&score&&name.getBoundingClientRect().bottom+4>score.getBoundingClientRect().top)errors.push('Team name and score need separate lines');
         if(button&&name){const a=name.getBoundingClientRect(),b=button.getBoundingClientRect();if(a.bottom>b.top&&a.top<b.bottom&&a.right+12>b.left)errors.push('Enter overlaps the name');}
@@ -166,9 +167,14 @@ const assert = require("node:assert/strict");
     async function sizes(){
       for(const width of [320,390,430,800,1440]){
         await page.setViewportSize({width,height:900});
+        await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
         assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`No overflow at ${width}px on ${page.url()}`);
         await comfortableCards();
-        for(const button of await page.locator('.games-entry .button,.game-entry-row .button,.competition-link').all()){
+        if(await page.locator('.game-entry-card').count()){
+          const columns=await page.locator('.game-entry-list').first().evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length);
+          assert.equal(columns,width<640?2:3,'Owner choice: two clickable cards on phones, three on wider screens');
+        }
+        for(const button of await page.locator('.games-entry .button,.game-entry-card,.competition-link').all()){
           const b=await button.boundingBox();assert(b&&b.width>=44&&b.height>=44,'Touch targets');
         }
       }
@@ -190,9 +196,9 @@ const assert = require("node:assert/strict");
       if(name.endsWith('-tournament-games')||name.endsWith('-league-stats'))await page.setViewportSize({width:390,height:844});
     }}
     await page.goto(`${base}/games?${context}`);await ready();
-    assert.deepEqual(await page.locator('.games-entry a').allTextContents(),['League','Tournament']);
-    assert.equal(await page.locator('.game-entry-row').count(),7,'Selected season games are visible immediately');
-    assert.equal(await page.getByText('Pitch Please',{exact:false}).count(),1);
+    assert.deepEqual(await page.locator('.games-entry a').allTextContents(),['League','Tournament','Add game']);
+    assert.equal(await page.locator('.game-entry-row').count(),0,'Arrival waits for a competition choice');
+    assert.equal(await page.getByText('Pitch Please',{exact:false}).count(),0);
     const addGame = new URL(await page.getByRole('link',{name:'Add game',exact:true}).getAttribute('href'),base);
     assert.equal(addGame.pathname,'/club/score');
     assert.equal(addGame.searchParams.get('team'),'sample-team');
@@ -201,6 +207,12 @@ const assert = require("node:assert/strict");
     await sizes(); await accessible();
     const pickerButton=page.getByRole('button',{name:'Choose team or league',exact:true});
     assert.equal(await pickerButton.count(),1,'Clear button replaces the disclosure');
+    for(const width of [320,390,800,1440]){
+      await page.setViewportSize({width,height:900});
+      const options=await page.locator('.games-entry').boundingBox(),pickerBox=await pickerButton.boundingBox();
+      assert(options&&pickerBox&&pickerBox.y>=options.y+options.height,'Context sits below all three arrival choices');
+    }
+    await page.setViewportSize({width:390,height:844});
     assert.equal(await page.getByRole('dialog').count(),0,'Picker starts closed');
     await pickerButton.click();
     const picker=page.getByRole('dialog',{name:'Choose team or league',exact:true});
@@ -227,7 +239,7 @@ const assert = require("node:assert/strict");
     await Promise.all([page.waitForURL(url=>url.searchParams.get('league')==='thursday-league'),picker.getByRole('button',{name:'Use selection',exact:true}).click()]);await ready();
     assert.equal(new URL(page.url()).pathname,'/games','Apply returns to Games, not creation');
     assert.equal(new URL(page.url()).searchParams.get('league'),'thursday-league');
-    assert.equal(await page.locator('.game-entry-row').count(),2,'Selected league games are visible immediately');
+    assert.equal(await page.locator('.game-entry-row').count(),0,'Applying context keeps arrival compact');
     assert.equal(new URL(await page.getByRole('link',{name:'Add game',exact:true}).getAttribute('href'),base).searchParams.get('league'),'thursday-league');
     await page.getByRole('link',{name:'League',exact:true}).click();await ready();
     assert.equal(new URL(page.url()).pathname,'/leagues/thursday-league');
@@ -239,7 +251,7 @@ const assert = require("node:assert/strict");
     await picker.getByLabel('League',{exact:true}).selectOption('west-league');
     await Promise.all([page.waitForURL(url=>url.searchParams.get('team')==='west-team'),picker.getByRole('button',{name:'Use selection',exact:true}).click()]);await ready();
     const changed=new URL(page.url());assert.equal(changed.searchParams.get('team'),'west-team');assert.equal(changed.searchParams.get('season'),'west-season');assert.equal(changed.searchParams.get('league'),'west-league');assert.equal(changed.searchParams.get('scope'),'Tournament');
-    assert.equal(await page.locator('.games-entry a').count(),2);
+    assert.equal(await page.locator('.games-entry a').count(),3);
     assert.equal(await page.getByRole('link',{name:'Tournament',exact:true}).getAttribute('href').then(h=>new URL(h,base).searchParams.get('team')),'west-team');
     await page.goto(`${base}/games?${context}&case=picker-error`);await ready();
     await page.getByRole('button',{name:'Choose team or league',exact:true}).click();
@@ -281,7 +293,8 @@ const assert = require("node:assert/strict");
     assert.equal(await page.locator('.game-entry-row').count(),3,'Only League games, regardless of personal stats scope');
     assert.deepEqual(await page.locator('.game-entry-status').allTextContents(),['Final','Live','Final']);
     assert.equal(await page.getByText('Your team’s score first.',{exact:true}).count(),1);
-    assert.match(await page.locator('.game-entry-row').first().innerText(),/Pitch Please\s+12–8\s+Enter/);
+    assert.match(await page.locator('.game-entry-row').first().innerText(),/Pitch Please\s+12–8/);
+    assert.equal(await page.locator('.game-entry-row .button').count(),0,'The card is the link, without a separate Enter control');
     assert.match(await page.locator('.game-entry-row').nth(1).innerText(),/Base Invaders\s+0–0/,'Recorded zero is valid');
     assert.equal(await page.getByText('Diamond Dogs',{exact:false}).count(),0);
     for(const link of await page.locator('.game-entry-row a').all()){
@@ -290,8 +303,19 @@ const assert = require("node:assert/strict");
       assert(url.searchParams.get('game'));
     }
     await sizes();await accessible();await capture('games-simple-league');
+    const leagueUrl=page.url();
+    const liveCard=page.locator('.game-entry-card').nth(1),liveHref=await liveCard.getAttribute('href');
+    await liveCard.focus();
+    assert.equal(await liveCard.evaluate(el=>getComputedStyle(el).outlineStyle),'solid','Keyboard focus visibly outlines the card');
+    await page.keyboard.press('Enter');await ready();
+    assert.equal(page.url(),new URL(liveHref,base).href,'Keyboard Enter opens the same live game and context');
+    await page.goto(leagueUrl);await ready();
+    const card=page.locator('.game-entry-card').first(),cardBox=await card.boundingBox(),cardHref=await card.getAttribute('href');
+    await card.click({position:{x:cardBox.width-5,y:cardBox.height-5}});await ready();
+    assert.equal(page.url(),new URL(cardHref,base).href,'Tapping the card padding also opens its game');
+    await page.goto(leagueUrl);await ready();
     await page.getByRole('link',{name:'Games',exact:true}).first().click();await ready();
-    assert.equal(await page.locator('.game-entry-row').count(),7,'Return to Games shows season games');
+    assert.equal(await page.locator('.game-entry-row').count(),0,'Return to Games restores the competition choices');
     await page.getByRole('link',{name:'Tournament',exact:true}).click();await ready();
     assert.deepEqual(await page.locator('.competition-link strong').allTextContents(),['Riverside Classic','Friday Night Lights','Upcoming Cup']);
     assert.equal(await page.locator('.game-entry-row,form.club-form').count(),0,'Tournaments are cards; form opens separately');
@@ -420,7 +444,7 @@ const assert = require("node:assert/strict");
     await page.locator('.game-entry-row a').first().click();await ready();
     await page.getByRole('heading',{name:/Sample scorebook · Diamond Dogs/}).waitFor();
     await nav.getByRole('link',{name:'Games',exact:true}).click();await ready();
-    assert.equal(await page.locator('.game-entry-row').count(),7,'Sample Games also shows read-only season games');
+    assert.equal(await page.locator('.game-entry-row').count(),0,'Sample Games also waits for a competition choice');
     assert.equal(await page.getByRole('link',{name:'Add game',exact:true}).count(),0);
     await page.goto(`${base}/leagues?view=games&case=denied`);await ready();
     assert.equal(await page.locator('.game-entry-row,form.club-form').count(),0);
@@ -505,9 +529,9 @@ const assert = require("node:assert/strict");
       assert.equal(await page.getByRole('link',{name:'Add game',exact:true}).count(),0,'Unavailable or read-only context has no creation link');
     }
     await page.goto(`${base}/games?case=empty`);await ready();
-    await page.getByText('No games recorded in this view.',{exact:false}).waitFor();
+    assert.equal(await page.locator('.game-entry-row').count(),0,'Empty arrival has the same choices');
     assert.equal(await page.getByRole('link',{name:'Add game',exact:true}).count(),1);
     assert.deepEqual(writes,[],'No network mutations');assert.deepEqual(errors,[]);
-    console.log(`Games flow passed (${engine===webkit?'WebKit':'Chromium'}): immediate game list and setup entry, compact scores, tournament/create paths, context, isolation, empty/archived/read-only states, mobile layout, accessibility. No backend writes.`);
+    console.log(`Games flow passed (${engine===webkit?'WebKit':'Chromium'}): competition choices and setup entry, scores, tournament/create paths, context below options, isolation, empty/archived/read-only states, mobile layout, accessibility. No backend writes.`);
   } finally {if(browser)await browser.close();if(server)await new Promise(resolve=>server.close(resolve));}
 })().catch(error=>{console.error(error);process.exitCode=1});
