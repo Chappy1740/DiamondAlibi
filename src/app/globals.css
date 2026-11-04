@@ -2102,22 +2102,32 @@ body:has(.workspace--home) { padding-bottom: 0; }
 
 /* Games: choose a competition before showing any games. */
 .games-entry .button { min-height: 52px; }
+.games-entry > .button:last-child:nth-child(3) { grid-column: 1 / -1; }
+@media (min-width: 480px) {
+  .games-entry { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .games-entry > .button:last-child:nth-child(3) { grid-column: auto; }
+}
 .games-context { margin-block: 20px; }
 .games-context > summary { min-height: 44px; padding-block: 12px; cursor: pointer; color: var(--muted); }
 .games-context .dashboard-context-panel { margin-top: 12px; }
-.game-entry-list { display: grid; gap: 12px; list-style: none; padding: 0; margin-block: 16px; }
-.game-entry-row,
+.game-entry-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; list-style: none; padding: 0; margin-block: 16px; }
+@media (min-width: 640px) {
+  .game-entry-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.game-entry-row { min-width: 0; }
+.game-entry-card { display: block; min-width: 0; min-height: 44px; padding: 12px; color: inherit; text-decoration: none; }
+.game-entry-card:hover { border-color: var(--teal); }
+.game-entry-card:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
 .tournament-entry { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 20px; min-width: 0; }
 .game-entry-row p { margin: 0; overflow-wrap: anywhere; line-height: 1.4; }
-.game-entry-name { font-size: 1rem; }
+.game-entry-name { font-size: var(--ui-text-body); }
 .game-entry-score { font-size: 1.375rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-.game-entry-row .button,
 .tournament-entry .button { flex: 0 1 auto; max-width: 100%; min-height: 48px; margin: 0 0 0 auto; padding-inline: 18px; font-size: 1rem; white-space: normal; overflow-wrap: anywhere; }
 .tournament-entry > strong { flex: 1 1 12rem; min-width: 0; font-size: 1rem; line-height: 1.4; }
 .competition-link strong { overflow-wrap: anywhere; }
 
 .game-score-key { margin: 12px 0 0; color: var(--muted); font-size: 13px; }
-.game-entry-details { display: grid; gap: 8px; min-width: 0; flex: 1 1 12rem; }
+.game-entry-details { display: grid; gap: 4px; min-width: 0; }
 .game-entry-status { color: var(--muted); font-size: 12px; line-height: 1.5; }
 .game-entry-status--live { color: var(--teal); font-weight: 700; }
 
@@ -2140,8 +2150,8 @@ body:has(.workspace--home) { padding-bottom: 0; }
 .tournament-team-summary [data-credit="true"] { color: var(--teal); }
 
 /* Games context selection reuses the native modal and wrapping select fields. */
-.games-team-picker { margin-block: 24px; }
-.games-team-picker > .button { width: 100%; min-height: 48px; }
+.games-team-picker { margin-block: 20px; padding-top: 12px; border-top: 1px solid var(--border); }
+.games-team-picker > .button { width: 100%; min-height: 48px; margin: 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--white); font-size: var(--ui-text-body); font-weight: 400; line-height: 1.5; text-align: left; justify-content: flex-start; }
 .games-team-dialog { width: min(520px, calc(100% - 24px)); box-sizing: border-box; overflow-y: auto; padding: 20px; }
 .games-team-dialog h2 { margin-top: 0; font-size: 20px; }
 .games-team-dialog .micro { font-size: 14px; }

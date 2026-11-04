@@ -43,7 +43,7 @@ const assert = require("node:assert/strict");
     await checkNavigation('Home');
     await nav.getByRole('link',{name:'Games',exact:true}).click();
     await page.getByRole('heading',{name:'Games',level:1,exact:true}).waitFor();
-    assert((await page.locator('.game-entry-row').count())>16,'Games immediately shows League and Tournament records for the selected season');
+    assert.equal(await page.locator('.game-entry-row').count(),0,'Games waits for a competition choice');
     assert.equal(await page.getByRole('link',{name:'Add game',exact:true}).count(),0,'Sample history remains read only');
     await page.getByRole('link',{name:'League',exact:true}).click();
     await page.getByRole('heading',{name:'League',level:1,exact:true}).waitFor();

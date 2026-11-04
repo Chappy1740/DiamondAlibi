@@ -103,7 +103,7 @@ const fs = require("node:fs");
     await page
       .getByRole("heading", { name: "Games", exact: true })
       .waitFor();
-    assert((await page.locator(".game-entry-row").count()) > 16, "Games retains the current season's league and tournament records");
+    assert.equal(await page.locator(".game-entry-row").count(), 0, "Games waits for League or Tournament selection");
     for (const width of [320, 390, 430, 1280]) {
       await page.setViewportSize({ width, height: 844 });
       assert.equal(
