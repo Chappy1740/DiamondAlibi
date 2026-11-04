@@ -22,7 +22,7 @@ export function CompactGameList({ games, gameHref, firstGameStart }: {
             <span className={`game-entry-status${g.game.completed ? "" : " game-entry-status--live"}`}>{g.game.completed ? "Final" : "Live"}</span>
             <p className="game-entry-name"><strong>{g.game.opponent}</strong></p>
             {start && <p className="micro">Game 1 · {g.playedOn} · {start}</p>}
-            <p className="game-entry-score" aria-label={scoreLabel}>
+            <p className={`game-entry-score${score ? "" : " game-entry-score--unavailable"}`} aria-label={scoreLabel}>
               {score ? `${score.teamRuns}–${score.opponentRuns}` : "Score unavailable"}
             </p>
           </div>

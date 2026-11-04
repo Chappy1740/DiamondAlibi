@@ -61,6 +61,11 @@ const assert = require("node:assert/strict");
         if(c==='no-league')data.snapshot.games=[...tournament,...friday];
         if(c==='empty'){data.snapshot.games=[];data.snapshot.tournaments=[];}
         if(c==='missing-score')delete league[0].game.team_runs;
+        if(c==='two-digit-score'){league[0].game.team_runs=99;league[0].game.opponent_runs=98;}
+        if(q.has('long-leaders')){
+          const previewNames=['Alexandria Montgomery-Santiago','Gabriella Kensington-Ramirez','Benjamin Wellington-Castillo','Isabella Harrington-Morales','Sebastian Montgomery-Rivera','Valentina Kensington-Santiago','Nathaniel Wellington-Ramirez','Anastasia Harrington-Castillo','Christopher Montgomery-Morales','Penelope Kensington-Rivera','Maximilian Wellington-Santiago','Genevieve Harrington-Ramirez'];
+          data.roster.forEach((player,i)=>player.display_name=previewNames[i%previewNames.length]);
+        }
         if(c==='stats'){
           data.snapshot.games=[...league,...tournament];data.snapshot.games.forEach(g=>{g.evaluation.totals={};g.evaluation.rows=[]});
           league[0].evaluation.totals={'sample-player-1':{...emptyTotals(),PA:100,AB:100,H:99,HR:99,RBI:99,board:999}};
@@ -170,6 +175,18 @@ const assert = require("node:assert/strict");
         await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
         assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`No overflow at ${width}px on ${page.url()}`);
         await comfortableCards();
+        for(const leaders of await page.locator('.leaderboard-summary').all()){
+          assert.equal(await leaders.locator('button').count(),9,'Competition leaders retain all nine categories');
+          assert.equal(await leaders.evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length),2,'League/Tournament leaders use two columns at '+width);
+          assert.equal(await leaders.locator('.leaderboard-player > .micro').count(),0,'The circle is the only visible category label');
+          assert(await leaders.locator('button').evaluateAll(nodes=>{
+            const first=nodes[0].getBoundingClientRect(),second=nodes[1].getBoundingClientRect(),third=nodes[2].getBoundingClientRect();
+            return Math.abs(first.top-second.top)<1&&second.left>first.left&&third.top>first.top&&nodes.every(button=>{
+              const text=button.querySelector('.leaderboard-player'),box=button.getBoundingClientRect();
+              return box.height>=44&&text.scrollWidth<=text.clientWidth+1&&/^[0-9.−—-]/.test(text.textContent);
+            });
+          }),'Compact leaders flow across each pair with readable count-first text');
+        }
         if(await page.locator('.game-entry-card').count()){
           const columns=await page.locator('.game-entry-list').first().evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length);
           assert.equal(columns,width<640?2:3,'Owner choice: two clickable cards on phones, three on wider screens');
@@ -511,6 +528,30 @@ const assert = require("node:assert/strict");
       await page.goto(`${base}/leagues/${tail}`);await ready();
       assert.equal(await page.locator('.league-season-stats,.game-entry-row').count(),0,'Unknown or mismatched league context fails closed');
       await page.getByRole('alert').waitFor();
+    }
+    await page.goto(`${base}/leagues?view=games&case=two-digit-score`);await ready();
+    const numericScore=page.locator('.game-entry-score').first();
+    assert.equal(await numericScore.innerText(),'99–98');
+    for(const width of [320,390,430]){
+      await page.setViewportSize({width,height:844});
+      assert(await numericScore.evaluate(el=>{const r=document.createRange();r.selectNodeContents(el);return r.getClientRects().length===1&&parseFloat(getComputedStyle(el).fontSize)<=16;}),'Two-digit scores fit one modest line at '+width);
+    }
+    await page.goto(`${base}/leagues?view=games&case=missing-score&long-leaders=1`);await ready();
+    const unavailable=page.locator('.game-entry-score').first();
+    assert.equal(await unavailable.innerText(),'Score unavailable','Missing totals stay unknown rather than fabricated zeroes');
+    for(const width of [320,390,430]){
+      await page.setViewportSize({width,height:844});
+      assert(await unavailable.evaluate(el=>{
+        if(parseFloat(getComputedStyle(el).fontSize)>14.1)return false;
+        const text=el.firstChild;
+        return Array.from(text.textContent.matchAll(/[^ ]+/g)).every(word=>{const r=document.createRange();r.setStart(text,word.index);r.setEnd(text,word.index+word[0].length);return r.getClientRects().length===1;});
+      }),'Unavailable text is small and its words do not split at '+width);
+    }
+    await sizes();await accessible();
+    if(process.env.GAMES_FIX_SCREENSHOTS){
+      await page.setViewportSize({width:390,height:844});
+      await page.locator('.game-entry-list').screenshot({path:path.join(process.env.GAMES_FIX_SCREENSHOTS,'small-score-fallback.png')});
+      await page.locator('.tournament-leaderboard').screenshot({path:path.join(process.env.GAMES_FIX_SCREENSHOTS,'two-column-league-leaders.png')});
     }
     for(const route of ['/leagues?view=games','/tournaments/sample-tournament-7','/tournaments?from=games']){
       await page.goto(`${base}${route}&case=card-long`);await ready();

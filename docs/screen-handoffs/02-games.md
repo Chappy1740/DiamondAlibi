@@ -1,5 +1,77 @@
 # 02 — Games: Screen handoff
 
+## November 4, 2026 — Games score size and compact competition leaders
+
+**Recovered; AMBER verification. Implemented; owner authorizes commit/push/draft PR for full CI, release pending.**
+Owner phone screenshots report oversized, broken "Score unavailable" on game
+cards and League player leaders still repeating the category in a single column.
+Requested result: compact score space sufficient for XX–XX; use the existing
+Stats two-column cards with the category badge once, then amount–leader.
+Apply the shared competition presentation to League/Tournament selected and
+overall leaders; preserve all source totals, rankings, ties, scope and navigation.
+
+Verified baseline: main `c788fa7e9a6c23ffc085a6ba2f09f96cde2829e7`, deployed
+by [#49](https://github.com/Chappy1740/DiamondAlibi/pull/49#issuecomment-6628049176)
+as Worker `94a56d98-aaa5-4ea8-8682-77299600445d`, verified at 100% traffic.
+Current correction is on `codex/games-score-leader-layout`, in an isolated
+worktree based on that exact main. Owner replied "Continue" after the concrete
+commit/push/draft-PR proposal; this authorizes that scoped publication and full CI.
+Merge/deployment remain separate and unapproved. This correction is not live.
+The supplied photos are owner-reported UI defects, not acceptance of the fix.
+
+Reuse decision: existing CompactGameList and PlayerLeaderboard compactSummary,
+existing LeagueSeasonStats/TournamentSeasonStats and native CSS. Numeric scores
+use 16px; unavailable text uses the existing 14px body token. Do not fabricate
+zeroes, cap saved scores at 99, change score sourcing or add a replacement widget.
+The compact component now owns its existing two-column CSS instead of requiring
+the Stats workspace class. Competition consumers opt into that existing mode.
+No new state, requests, dependency, scoring/server formula/rule or data change.
+
+Fresh Codex checks: typecheck and 24 scoreboard/leaderboard/tracker tests pass.
+Games Chromium/WebKit passes: 99–98 fits one line at 320/390/430px, small missing
+score words remain intact, all nine category cards in two columns without repeated
+labels across League/Tournament views, full names, keyboard/focus, scope, signed
+credits, unknowns, accessibility and 320–1440px/enlarged card text. Existing
+Home/Stats Chromium/WebKit and the full Chromium scorebook consumer suite pass.
+The tournament smoke assertion was updated to the requested compact Tied/name
+markup, keeping all numeric/ranking/isolation assertions. Full WebKit scorebook
+smoke FAILS at its unchanged typed-entry Record result control remaining disabled
+(line 269). The same failure was freshly reproduced on the prior H2 application
+baseline (c622917, old smoke line 267); connected-scorebook, voice-play-entry and
+that test path are unchanged between that baseline and current main. No scoring
+code was changed or assertion weakened to hide it. Full Linux CI for this local
+correction is UNKNOWN until an authorized publication; do not claim all checks
+passed. The requested Games display regressions pass both engines.
+Synthetic 390px fallback and long-name/tied/unknown leader previews visually
+inspected; images/logs stay local. Physical-phone fix acceptance remains UNKNOWN.
+
+Authorization: owner requested this correction and continued the proposed
+commit/push/draft-PR publication for full CI. Existing #49 merge/deployment
+approval applied to that merged PR only; this follow-up still needs a separate
+merge/deployment decision under CONTRIBUTING.md. No merge, deploy, hosted
+login/write, migration, provider/access change or test email is part of this
+publication. #52 and Claude Roast Club branches/PRs are untouched.
+No milestone closes. Existing release gate and approved isolation remain.
+
+Active Claude PR #55 has separate appended popup CSS and a test-plugin insertion;
+read-only overlap inspection found no same-line change in this correction. No
+Claude branch/PR was changed.
+
+Completion receipt: the draft PR for `codex/games-score-leader-layout` records
+its exact head, full CI, files, review findings, limits and approval scope.
+The focused local checks above are prior-session Codex evidence; fresh Linux CI
+will be recorded there, without attributing a prior check to this session.
+Sample preview names now use ordinary synthetic full names without numeric
+suffixes. PNGs stay local under local-backups/games-display-fix-20261104.
+Current source baseline remains c788fa7.
+
+Next: commit/push the exact correction, open its draft PR and complete full Linux
+CI. Record any failure without weakening checks or changing scoring to hide it.
+Return the validated candidate for a separate owner merge/deployment decision.
+Continue this chat: source, requirements and limits are durably recorded.
+
+<!-- Earlier release and preparation snapshots below remain historical. -->
+
 ## November 3, 2026 — H4 merged; H2 retargeted to main
 
 **Recovered; GREEN. H4 rung: Merged. H2 candidate: Tested locally after retarget.**
