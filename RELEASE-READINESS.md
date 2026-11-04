@@ -1,5 +1,38 @@
 # Release readiness and recovery
 
+## November 3, 2026 — Pilot PR reconciliation (H4 checkpoint)
+
+**Recovered; GREEN. Ready for review; no release.** Owner authorizes scoped
+reconciliation, tests, commit/push and GitHub records for #52/#47/#49 only.
+No PR merges, deployments, production migrations, provider/dependency changes
+or unrelated features. Claude Roast Club branches/PRs are excluded.
+Main: `c38d4cf483eded68f1b63294898644c9aac14054`. H4 original head:
+`14bea97aed53b4a22ba6fb7ec738b76b8ead5efb`, retained in branch history.
+Retarget #47 from old H3 to main; retain only H4 and its reconciliation records.
+CSS conflict: independent appended H4 typography and main game-stat-lines blocks;
+keep both, plus current Stats count–leader / amount–Tied markup and all newer tests.
+Reuse existing DashboardSelect, PlayerDashboard, native controls, CSS and packages.
+
+Rung: **Tested** locally by Codex: typecheck, 22 tracker/leaderboard tests,
+Home/Stats and Games Chromium/WebKit, Chromium scorebook and Beverage controls
+passed. Full exact-head CI remains pending until the PR receipt records it.
+Fresh local tests, full exact-head CI,
+SHA/files, review findings and mergeability are the completion receipt in
+[PR #47](https://github.com/Chappy1740/DiamondAlibi/pull/47).
+No review threads or submitted reviews existed at recovery; independent review,
+physical phone, hosted authenticated and cross-device acceptance remain UNKNOWN.
+No milestone closes. Current #52 head is
+`33e280a4aa8e64d4a30e7d8e28ad071d1822b03b`; it remains independent of H4.
+
+Next: validate/push H4, then integrate its verified head into dependent H2 #49.
+Keep #49 based on H4 with an H2-only diff. Later proposed order: #52, refresh and
+revalidate #47 against resulting main, #47, then retarget #49 to main and revalidate.
+Every release action requires separate owner approval. Current exact-head receipts:
+[#52](https://github.com/Chappy1740/DiamondAlibi/pull/52),
+[#47](https://github.com/Chappy1740/DiamondAlibi/pull/47),
+[#49](https://github.com/Chappy1740/DiamondAlibi/pull/49).
+Continue this chat: authority, evidence and history are coherent.
+
 ## November 3 H3 tie wording
 
 Owner says Stats look good after #50 and requests **amount – Tied** instead of a count of tied leaders. This is owner acceptance of the card appearance, with tie wording still open. `codex/stats-tied-label`, from deployed main `4452beadb6f7a83f459a518db91f464f6a185a46`, changes only the compact summary wording and retains all tied players in the ranking view. Current brief/receipt is [10-stats.md](docs/screen-handoffs/10-stats.md#november-3-2026--h3-tie-wording), synchronized with the working standard and tracker revision 80. Existing H3 presentation delivery authorization continues; H2 #49/H4 #47 remain excluded drafts. Local typecheck, 22 tracker/leaderboard checks and Chromium/WebKit Home/Stats pass; exact-source CI, merge and active verification remain pending at this source snapshot and are recorded in the correction PR. Prior compatible #50 Worker prefix `90f2bf8a` remains the rollback point. No scoring, ranking policy, schema, dependency, hosted write or auth/access/provider change.

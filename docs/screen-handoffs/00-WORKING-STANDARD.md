@@ -1,5 +1,72 @@
 # Diamond Alibi — Screen-by-screen working standard
 
+## November 3, 2026 — Pilot PR reconciliation (H4 checkpoint)
+
+**Recovered; GREEN. Ready for review; no release.** Owner authorizes scoped
+reconciliation, tests, commit/push and GitHub records for #52/#47/#49 only.
+No PR merges, deployments, production migrations, provider/dependency changes
+or unrelated features. Claude Roast Club branches/PRs are excluded.
+Main: `c38d4cf483eded68f1b63294898644c9aac14054`. H4 original head:
+`14bea97aed53b4a22ba6fb7ec738b76b8ead5efb`, retained in branch history.
+Retarget #47 from old H3 to main; retain only H4 and its reconciliation records.
+CSS conflict: independent appended H4 typography and main game-stat-lines blocks;
+keep both, plus current Stats count–leader / amount–Tied markup and all newer tests.
+Reuse existing DashboardSelect, PlayerDashboard, native controls, CSS and packages.
+
+Rung: **Tested** locally by Codex: typecheck, 22 tracker/leaderboard tests,
+Home/Stats and Games Chromium/WebKit, Chromium scorebook and Beverage controls
+passed. Full exact-head CI remains pending until the PR receipt records it.
+Fresh local tests, full exact-head CI,
+SHA/files, review findings and mergeability are the completion receipt in
+[PR #47](https://github.com/Chappy1740/DiamondAlibi/pull/47).
+No review threads or submitted reviews existed at recovery; independent review,
+physical phone, hosted authenticated and cross-device acceptance remain UNKNOWN.
+No milestone closes. Current #52 head is
+`33e280a4aa8e64d4a30e7d8e28ad071d1822b03b`; it remains independent of H4.
+
+Next: validate/push H4, then integrate its verified head into dependent H2 #49.
+Keep #49 based on H4 with an H2-only diff. Later proposed order: #52, refresh and
+revalidate #47 against resulting main, #47, then retarget #49 to main and revalidate.
+Every release action requires separate owner approval. Current exact-head receipts:
+[#52](https://github.com/Chappy1740/DiamondAlibi/pull/52),
+[#47](https://github.com/Chappy1740/DiamondAlibi/pull/47),
+[#49](https://github.com/Chappy1740/DiamondAlibi/pull/49).
+Continue this chat: authority, evidence and history are coherent.
+
+<!-- Historical H4 receipt; baseline/checks below predate reconciliation. -->
+
+## November 3, 2026 — H4 dropdown fit and three-size scale
+
+**Stage: Tested locally; owner acceptance pending.** Owner said to start H4 while H3 is reviewed unless blocked. H3 does not block development: `codex/h4-dropdown-type-scale` starts from verified H3 head `7b52b44c803528717ccd2e368206f72e2b308526`; its draft PR targets `codex/h3-home-stats-compaction` (#46), so its review diff is **H4 only**. Main remains `c19132d27d8656a3e92fa8d61cbbd1e742ba521a`. H3 is still unmerged; H4 delivery depends on that branch and must be reconciled/retargeted after an authorized H3 merge, not merged independently to bypass review.
+
+### Approved result and reuse
+
+H4 only: full selected dropdown names wrap at word boundaries without automatic hyphens or mid-word breaks. Keep native keyboard/touch selection, accessible labels, selected values, disabled state, form data and existing 44px controls. Existing two-column Home context layout and full-name contract remain.
+
+Reuse DashboardSelect and native CSS instead of a replacement select widget or dependency. Its decorative arrow formerly occupied a separate flex column for every text line; the 320px fixture showed that this squeezed words such as "exceptionally" beyond the available line. Moving the same aria-hidden icon into the visible text area allows later lines the full field width. Normal wrap/word-break and hyphens:none replace overflow-wrap:anywhere. No selection state/event/API changes. Native selects explicitly retain their 16px platform sizing.
+
+Define three rem-based tokens in globals.css: small .75rem (12px), body .875rem (14px), large 1.375rem (22px at the default root size). Apply them through `workspace--type-scale` only to current Home, Games, Stats and Beverage content, including existing headings, summary values, captions and buttons. Native form controls retain their existing platform treatment. No font-family/asset rewrite, global app typography conversion, H2 Games restructuring, H5 scoring flow or H8 opt-out/balance swap. Existing H3 compact layouts/categories are reused rather than rebuilt.
+
+### Files and consumers
+
+- `src/components/dashboard-select.tsx`: decorative arrow placement only; same native select and visible option text.
+- `src/app/globals.css`: word wrapping, arrow flow, three tokens and route-scoped application.
+- `src/components/player-dashboard.tsx`: class on Home/Games/Stats/Beverage only.
+- `tests/home-layout-browser.cjs`: full-name/word-boundary regression at 320–1440px and updated expectations for H4's bounded values; optional 320px screenshot.
+- This existing working-standard receipt.
+
+All DashboardSelect consumers were inspected: PlayerDashboard Team/Season/Statistics/Sample player, GameContextPicker Season/League, ConnectedScorebook game chooser. Unrelated native select forms were not converted. Existing Games/scorebook suites check adjacent consumers. The changed shared component does not change server authorization, scoring, saved rules, HR/Bands, stats, Beverage accounting or historical data.
+
+### Verification and limits
+
+Codex local typecheck and test:browser passed. Chromium **and WebKit** Home/Stats suites passed complete selected names, no ellipsis/clipping, one rectangle per word, no automatic hyphens, native keyboard/form values, two-column context layout, 44px controls, Home fit down to 320x568, sample/connected/empty/error/offline states and accessibility. Existing Games flow passed both engines, including context selection, long/enlarged text and 320–1440px. Existing Chromium scorebook modes passed. Existing Beverage controls passed synthetic unchanged-save, replacement, opt-out/rejoin, duplicate/retry, conflict/offline and permission cases.
+
+All records/transport were synthetic/local. No hosted writes, migration, new dependency, provider/access change, merge or deployment. Existing packages/browsers were reused. Local test:browser used the established webpack option on a temporary loopback preview with database configuration blank; no source/config change was needed. The generated next-env edit is excluded. 320px long-name and 390px Home screenshots were visually inspected; no real iPhone acceptance is claimed.
+
+Exact review head, full CI and branch-check receipts live in the H4 draft PR; passing branch validation is not deployment. Claude reviews read-only. Preserve H1's unpushed broader recovery notes and all other branches. Revert only this H4 diff relative to H3 if needed; no data rollback. Current approval excludes H2/H5–H8, merges, deployments, migrations, hosted tests and dependencies. Stop after this draft for the next named approval. Continuity GREEN for the scoped stacked draft; broader pilot acceptance remains open.
+
+Older working-standard entries below retain their historical scope.
+
 ## November 3, 2026 — H3 tie wording refinement
 
 Owner accepted the Stats card appearance after #50 and requested **amount – Tied**, without the number of tied players. Current brief/receipt: [10-stats.md](10-stats.md#november-3-2026--h3-tie-wording), release readiness and tracker revision 80. `codex/stats-tied-label` starts from deployed main `4452beadb6f7a83f459a518db91f464f6a185a46`; continuing H3 delivery authorization covers this presentation refinement. Local checks pass; exact CI/merge/activation and owner tie-label acceptance remain pending at this source snapshot, with final evidence in the correction PR. H2 #49/H4 #47 stay excluded drafts; repo-only agent UAT sharing remains. Continuity GREEN; continue this chat through delivery and return to owner UAT.

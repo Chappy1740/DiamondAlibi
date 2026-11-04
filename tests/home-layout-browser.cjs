@@ -64,7 +64,7 @@ const assert = require("node:assert/strict");
     await page.goto(`http://127.0.0.1:${server.address().port}`);
     await page.getByRole("heading", { name: "Your game, Test Player." }).waitFor();
     await page.evaluate(()=>document.fonts.ready);
-    assert.deepEqual(await page.locator('.home-stat-row strong').evaluateAll(nodes=>nodes.map(el=>getComputedStyle(el).fontSize)),['26px','26px','22px','22px','22px','22px'],'Home numbers shrink one size without changing tiles');
+    assert.deepEqual(await page.locator('.home-stat-row strong').evaluateAll(nodes=>nodes.map(el=>getComputedStyle(el).fontSize)),Array(6).fill('22px'),'H4 bounds Home numbers to the shared large size without changing tiles');
     assert.match(await page.locator('.home-stat').last().innerText(),/BEVs\s+-2/);
     assert.equal(await page.locator('.home-stat-note').count(),0,'Compact total tiles have no balance qualifiers or blank note rows');
     assert.equal(await page.locator(".dashboard-notice").count(), 0);
@@ -131,11 +131,13 @@ const assert = require("node:assert/strict");
       assert(Math.abs(controls[0].left-controls[2].left)<1 && Math.abs(controls[1].left-controls[3].left)<1 && controls[2].top>controls[0].bottom,'Context stays in two columns at '+width+'px');
       if(width<=430)assert(controls[2].height<controls[0].height,'Short options and action do not inherit the long-name row height at '+width+'px');
       assert.equal(bounds.document <= bounds.viewport, true, `${width}px overflow: ${JSON.stringify(bounds)}`);
+      if(width===320 && process.env.DROPDOWN_SCREENSHOT)await page.locator('.dashboard-context-panel').screenshot({path:process.env.DROPDOWN_SCREENSHOT});
       assert.equal(await page.locator(".dashboard-select-value").evaluateAll(values => values.every(el => {
         const text = document.createRange(); text.selectNodeContents(el);
         const box = el.getBoundingClientRect();
         return getComputedStyle(el).textOverflow !== "ellipsis" && el.scrollHeight <= el.clientHeight && Array.from(text.getClientRects()).every(line => line.left >= box.left - 1 && line.right <= box.right + 1);
       })), true, `Complete selected names fit at ${width}px`);
+      assert(await page.locator('.dashboard-select-value').evaluateAll(values=>values.every(el=>{const css=getComputedStyle(el),text=el.lastChild;return css.hyphens==='none'&&css.wordBreak==='normal'&&css.overflowWrap==='normal'&&Array.from(text.textContent.matchAll(/[^\s-]+/g)).every(match=>{const range=document.createRange();range.setStart(text,match.index);range.setEnd(text,match.index+match[0].length);return range.getClientRects().length===1;});})),'Selected names wrap only between words at '+width+'px');
     }
     assert.equal(await page.locator(".dashboard-select-value").first().innerText(), "M3-5 Synthetic Test with an exceptionally long team name");
     assert.match(await page.locator(".dashboard-select-value").nth(1).innerText(), /long history name · history$/);
@@ -224,7 +226,7 @@ const assert = require("node:assert/strict");
     assert.equal(await page.getByRole('button',{name:'Refresh records',exact:true}).count(),0);
     await page.setViewportSize({width:320,height:844});
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'Sample Home still fits');
-    assert.deepEqual(await page.locator('.home-stat-row--rates strong').evaluateAll(nodes=>nodes.map(el=>getComputedStyle(el).fontSize)),['30px','30px'],'Sample Home shrinks its rate values too');
+    assert.deepEqual(await page.locator('.home-stat-row--rates strong').evaluateAll(nodes=>nodes.map(el=>getComputedStyle(el).fontSize)),['22px','22px'],'Sample Home uses the same bounded large size');
     for(const [query,value] of [['owed','4'],['settled','0'],['missing-balance','—']]){
       await page.goto('http://127.0.0.1:'+server.address().port+'/?'+query+'=1');
       const beverage=page.locator('.home-stat-row--counts .home-stat').last();
