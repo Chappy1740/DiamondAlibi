@@ -317,6 +317,7 @@ export function PlayerDashboard(p: DashboardProps) {
                   <PlayerLeaderboard
                     key={`${p.teamId}:${p.seasonId}:${p.scope}`}
                     title="Team leaders"
+                    compactSummary
                     regionLabel="Team player leaderboard"
                     scopeLabel={`${team?.name ?? "Your team"} · ${season?.name ?? "Selected season"} · ${p.scope}`}
                     players={teamLeaderboard(loaded, p.teamId, p.seasonId, p.scope)}

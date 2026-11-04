@@ -1,5 +1,7 @@
 # 01 — Home: Screen handoff
 
+**November 3 release update:** owner now authorizes publishing, merging and deploying H3 #46 with H1 #45 and the pending documentation through #46. H4 #47 remains excluded. See [current release handoff and completion receipt](00-WORKING-STANDARD.md#november-3-2026--uat-release-through-pr-46) and the release PR for `codex/uat-release-through-pr46` for actual source/check/activation state. Physical-phone acceptance remains open; the original draft-only boundary below is historical.
+
 ## November 3, 2026 — H3 Home/Stats compaction (owner-approved draft scope)
 
 **Stage: Tested locally; owner acceptance pending.** Branch `codex/h3-home-stats-compaction`, based independently on main `c19132d27d8656a3e92fa8d61cbbd1e742ba521a`. H1 PR #45 is separate and unmerged. Owner specifically approved H3 only, including removal of the SO explanation, as its own draft PR; no merge/deploy, migration, hosted test, new dependency or H2/H4–H8 implementation.

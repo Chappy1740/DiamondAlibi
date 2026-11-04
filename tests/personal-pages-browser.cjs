@@ -36,7 +36,7 @@ const assert = require("node:assert/strict");
         await page.setViewportSize({width,height:900});
         const menu=await nav.boundingBox();assert(menu&&Math.abs(menu.y+menu.height-900)<2,'menu stays at viewport bottom');
         for(const link of await nav.getByRole('link').all()){const b=await link.boundingBox();assert(b.width>=44&&b.height>=44)}
-        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${new URL(page.url()).pathname}${new URL(page.url()).search} fits at ${width}px`);
       }
       await page.setViewportSize({width:390,height:844});
     }

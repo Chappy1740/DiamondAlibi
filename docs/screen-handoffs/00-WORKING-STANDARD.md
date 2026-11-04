@@ -1,5 +1,84 @@
 # Diamond Alibi — Screen-by-screen working standard
 
+## November 3, 2026 — Pilot PR reconciliation (H2 dependent checkpoint)
+
+**Recovered; GREEN. Ready for review; no release.** Owner authorizes scoped
+reconciliation, tests, commit/push and GitHub-backed handoffs for #52/#47/#49.
+No PR merges, deployments, production migrations, provider/dependency changes,
+or unrelated features. Claude Roast Club branches and PRs remain untouched.
+Main: `c38d4cf483eded68f1b63294898644c9aac14054`.
+H5 #52: `33e280a4aa8e64d4a30e7d8e28ad071d1822b03b`, based on main.
+H4 #47: `3114f47d5aef47a4183ccdf91061fe01b6cfaf41`, now based on main.
+H2 original: `50f8cc4d365ae0a95db7bdeff5291ce02b897596`, retained in history.
+
+H2 integrates that exact H4 head with no conflict. Keep #49 targeting
+`codex/h4-dropdown-type-scale`; its application/test diff is the same original
+seven-file H2 scope, plus reconciliation records. No H5 code is included.
+Retain H4's body-text token, current main Home/Stats and all existing consumers.
+Reuse CompactGameList, PlayerDashboard, native links/CSS and installed packages.
+Two cards across on phones, three from 640px, whole-card keyboard/touch links,
+full context, saved scores and sample/review/archived restrictions remain.
+
+Rung: **Tested** locally by Codex: typecheck, 22 tracker/leaderboard tests,
+Games/Home/Stats/tournament-time Chromium and WebKit, connected UI/disposable
+SQL, practice-season and sample dashboard checks passed. Preview-only generated
+next-env changes were excluded. Full new-head CI remains pending in the PR.
+All H2 application/test added/removed lines match the original H2 diff exactly.
+Fresh local checks, full exact-head CI, exact SHA/files, review findings and
+mergeability are the completion receipt in [PR #49](https://github.com/Chappy1740/DiamondAlibi/pull/49).
+No review threads/submitted reviews existed at recovery; independent review and
+physical phone, hosted authenticated and cross-device acceptance remain UNKNOWN.
+No milestones close. Current exact-head receipts:
+[#52](https://github.com/Chappy1740/DiamondAlibi/pull/52),
+[#47](https://github.com/Chappy1740/DiamondAlibi/pull/47),
+[#49](https://github.com/Chappy1740/DiamondAlibi/pull/49).
+
+Next: validate/push H2, finish all three CI receipts and return for owner review.
+Proposed smallest separately approved release sequence: #52; refresh/revalidate
+#47 against resulting main; #47; then retarget #49 to main, reconcile and rerun
+full CI before #49. Never retarget #49 prematurely or treat current H4-based CI
+as validation of a future main-based candidate. No release action is done here.
+Continue this chat: scope, authority, evidence and retained history agree.
+
+<!-- Earlier checkpoint/requirements below are historical. -->
+
+## November 3, 2026 — Pilot PR reconciliation (H4 checkpoint)
+
+**Recovered; GREEN. Ready for review; no release.** Owner authorizes scoped
+reconciliation, tests, commit/push and GitHub records for #52/#47/#49 only.
+No PR merges, deployments, production migrations, provider/dependency changes
+or unrelated features. Claude Roast Club branches/PRs are excluded.
+Main: `c38d4cf483eded68f1b63294898644c9aac14054`. H4 original head:
+`14bea97aed53b4a22ba6fb7ec738b76b8ead5efb`, retained in branch history.
+Retarget #47 from old H3 to main; retain only H4 and its reconciliation records.
+CSS conflict: independent appended H4 typography and main game-stat-lines blocks;
+keep both, plus current Stats count–leader / amount–Tied markup and all newer tests.
+Reuse existing DashboardSelect, PlayerDashboard, native controls, CSS and packages.
+
+Rung: **Tested** locally by Codex: typecheck, 22 tracker/leaderboard tests,
+Home/Stats and Games Chromium/WebKit, Chromium scorebook and Beverage controls
+passed. Full exact-head CI remains pending until the PR receipt records it.
+Fresh local tests, full exact-head CI,
+SHA/files, review findings and mergeability are the completion receipt in
+[PR #47](https://github.com/Chappy1740/DiamondAlibi/pull/47).
+No review threads or submitted reviews existed at recovery; independent review,
+physical phone, hosted authenticated and cross-device acceptance remain UNKNOWN.
+No milestone closes. Current #52 head is
+`33e280a4aa8e64d4a30e7d8e28ad071d1822b03b`; it remains independent of H4.
+
+Next: validate/push H4, then integrate its verified head into dependent H2 #49.
+Keep #49 based on H4 with an H2-only diff. Later proposed order: #52, refresh and
+revalidate #47 against resulting main, #47, then retarget #49 to main and revalidate.
+Every release action requires separate owner approval. Dry-run H5 + H4
+integration reports only RELEASE-READINESS.md, 00-WORKING-STANDARD.md and
+project-tracker.ts conflicts; retain both scopes when later refreshing H4. Current exact-head receipts:
+[#52](https://github.com/Chappy1740/DiamondAlibi/pull/52),
+[#47](https://github.com/Chappy1740/DiamondAlibi/pull/47),
+[#49](https://github.com/Chappy1740/DiamondAlibi/pull/49).
+Continue this chat: authority, evidence and history are coherent.
+
+<!-- Historical H4 receipt; baseline/checks below predate reconciliation. -->
+
 ## November 3, 2026 — H4 dropdown fit and three-size scale
 
 **Stage: Tested locally; owner acceptance pending.** Owner said to start H4 while H3 is reviewed unless blocked. H3 does not block development: `codex/h4-dropdown-type-scale` starts from verified H3 head `7b52b44c803528717ccd2e368206f72e2b308526`; its draft PR targets `codex/h3-home-stats-compaction` (#46), so its review diff is **H4 only**. Main remains `c19132d27d8656a3e92fa8d61cbbd1e742ba521a`. H3 is still unmerged; H4 delivery depends on that branch and must be reconciled/retargeted after an authorized H3 merge, not merged independently to bypass review.
@@ -31,6 +110,28 @@ All records/transport were synthetic/local. No hosted writes, migration, new dep
 Exact review head, full CI and branch-check receipts live in the H4 draft PR; passing branch validation is not deployment. Claude reviews read-only. Preserve H1's unpushed broader recovery notes and all other branches. Revert only this H4 diff relative to H3 if needed; no data rollback. Current approval excludes H2/H5–H8, merges, deployments, migrations, hosted tests and dependencies. Stop after this draft for the next named approval. Continuity GREEN for the scoped stacked draft; broader pilot acceptance remains open.
 
 Older working-standard entries below retain their historical scope.
+
+## November 3, 2026 — H3 tie wording refinement
+
+Owner accepted the Stats card appearance after #50 and requested **amount – Tied**, without the number of tied players. Current brief/receipt: [10-stats.md](10-stats.md#november-3-2026--h3-tie-wording), release readiness and tracker revision 80. `codex/stats-tied-label` starts from deployed main `4452beadb6f7a83f459a518db91f464f6a185a46`; continuing H3 delivery authorization covers this presentation refinement. Local checks pass; exact CI/merge/activation and owner tie-label acceptance remain pending at this source snapshot, with final evidence in the correction PR. H2 #49/H4 #47 stay excluded drafts; repo-only agent UAT sharing remains. Continuity GREEN; continue this chat through delivery and return to owner UAT.
+
+## November 3, 2026 — H3 Stats card correction
+
+Owner's phone UAT follow-up replaces the compact card's repeated category caption with **count – leader** beside its identifying circle. Current brief, source, limits, validation and completion-receipt contract: [10-stats.md](10-stats.md#november-3-2026--h3-phone-follow-up-count--leader), synchronized with `RELEASE-READINESS.md` and tracker revision 79. Branch `codex/stats-count-leader` starts from deployed release #48 / main `07e68783081b3c3439be5903abb7904432cbef33`; H2 #49 and H4 #47 remain separate drafts, excluded. The original H3 delivery authorization continues for this requested presentation correction. Local checks pass; exact-source CI, merge, deployment and owner phone acceptance are separate stages recorded in that branch's PR completion receipt. No hosted writes, credentials/access changes, new dependency or other feature is authorized. Continuity GREEN; continue this chat through the scoped release and return to owner UAT.
+
+## November 3, 2026 — UAT release through PR #46
+
+**Owner release authorization:** commit, push, publish, merge and deploy the pending work through PR #46 so owner UAT can continue. H4 / PR #47 is excluded from this release; its already-published draft stays unmerged and undeployed. This supersedes the earlier draft-only delivery limits for the included PRs, not their product scope.
+
+**Recovered; continuity GREEN.** Continue this chat through release verification. Codex freshly fetched main `c19132d27d8656a3e92fa8d61cbbd1e742ba521a`, inspected all open PRs, their exact heads, checks and review threads, and combined #38, #39, #43, #44, #45 and #46 on `codex/uat-release-through-pr46`. Original Codex/Claude branches remain intact. Their original commits are retained as merge parents; no H4 commit is included. The old #38/#39 failures were dependency-audit failures on their older baseline; current main already includes the approved #41 dependency correction. Combined-source CI must pass before merge; the existing exact-main Worker gate remains mandatory.
+
+**UAT sharing decision:** Claude/Codex coordination is repo-only. Results, commit IDs, URLs and acceptance states belong in the shared repository records; screenshots and notes belong in the PR. Neither agent gets a login, Access seat, service token or other credential for hosted UAT/live app testing. The existing Access-protected Worker remains the owner's UAT surface; no new site, preview URL or access change is authorized. Use synthetic or explicitly marked pilot data, never real customer data or PII. This entry and `src/data/project-tracker.ts` synchronize the decision in `RELEASE-READINESS.md`, addressing the open #44 continuity finding.
+
+**Release preparation receipt:** H1 #45 provides the per-game stat line and saved-lineup ordering; H3 #46 compacts Home/Stats and removes the shared SO sentence. #38 adopts the AI-content dependency rule, #39 the private tester-register standard, #43 defers Roast Club until after the November 7 pilot, and #44 records repo-only UAT sharing. None implements Roast Club, H2 or H4–H8. No migration, hosted scoring write, authentication/provider change, new dependency, invitation or test email is part of this release. Existing scoring, isolation, credits, saved rules and required checks remain intact.
+
+**Stage at this source snapshot: Tested locally; full combined CI and live verification pending.** Codex freshly passed typecheck, 16 tracker/sample/personal/season checks, Home/Stats Chromium and WebKit, and the full Chromium scorebook-modes suite on the combined source. Installed dependencies/browsers were reused with a local dependency junction and loopback-only synthetic fixtures; no installs or hosted writes. H1/H3 exact original heads already have successful full CI; the owner relayed independent read-only reviews without blockers. Codex's combined-head checks, merged SHA, exact-main run, deployment/build ID and active-version/traffic receipt are to be recorded in the release PR for `codex/uat-release-through-pr46`; that PR is the completion receipt linked by this handoff, release readiness and tracker. Do not infer current traffic from a branch build or a draft PR. Physical-phone H1/H3 acceptance, A2/A4 retest and the remaining pilot UTA stay open.
+
+**Next:** pass combined CI, merge this release preserving source ancestry, let the existing gated main build deploy, verify its exact source and active traffic, then have the owner refresh the existing phone site and resume A2/H1 and H3 checks. If release fails, preserve the prior compatible deployed source `c19132d` / Worker `02bdcb3a-f4e6-439a-94d7-d356c2bc5350`; rollback only this presentation/documentation release, with no database rollback. Older dated instructions below are historical where superseded here.
 
 Prepared October 23, 2026. These are screen work packages, not permission to change all screens.
 
