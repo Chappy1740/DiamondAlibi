@@ -1,5 +1,25 @@
 # Release readiness and recovery
 
+## November 3 H5 — Scorebook draft, no release
+
+`codex/h5-scorebook-flow` is based on current main
+`4452beadb6f7a83f459a518db91f464f6a185a46`. Owner authorized H5 only as a draft:
+Runs 0–4, draft flow/Send, five-second confirmed official-play receipt and Game
+details button. Optional fun labels/group names are deferred as the first cut.
+Scope, local evidence, retest and completion receipt are in
+[08-scorebook.md](docs/screen-handoffs/08-scorebook.md#november-3-2026--h5-scorebook-draft),
+the working standard and tracker revision 80; final exact-head checks are recorded
+in the H5 PR. No server-side runs/RBI rules changed. No merge, deploy, migration,
+hosted test, dependency or H6–H8 is authorized. H4 #47 must precede H2 #49 for its
+body-text token; both remain separate drafts. Preserve the existing release gate.
+
+Earlier UAT source `07e68783081b3c3439be5903abb7904432cbef33` was recorded
+deployed in [PR #48](https://github.com/Chappy1740/DiamondAlibi/pull/48): Worker
+prefix `1fde797e`, 100% traffic, build `831818e3-1389-494c-b6ed-9f38a411bd8e`,
+hostname `diamondalibi.eydrenworks.com`, successful main run `41743150437`.
+Full Worker UUID and current-phone loaded version are unknown. This historical
+receipt does not establish current provider traffic or H5 deployment.
+
 ## November 3 H3 phone correction — count – leader
 
 Owner requested that Stats cards use the circle as their category label and display **count – leader** beside it. `codex/stats-count-leader` follows deployed release #48 / main `07e68783081b3c3439be5903abb7904432cbef33`; its current brief and receipt are in [10-stats.md](docs/screen-handoffs/10-stats.md#november-3-2026--h3-phone-follow-up-count--leader), linked from `00-WORKING-STANDARD.md` and tracker revision 79. Existing H3 release authorization continues for this presentation correction only. H2 #49 and H4 #47 remain separate drafts and are excluded. Local typecheck, 22 tracker/leaderboard checks, Home/Stats Chromium/WebKit and Chromium shared-scorebook checks pass. Full head/main CI and active deployment verification remain pending at this source snapshot; the correction PR records their final receipt. Owner phone acceptance is open. Prior compatible release #48 was verified at Worker prefix `1fde797e`, 100% traffic. No scoring, migration, dependency, hosted write or access/auth/provider change is included.

@@ -109,6 +109,9 @@ export function ConnectedScorebook({
   const [entryError, setEntryError] = useState("");
   const countsEdited = useRef(false);
   const [confirmedPlays, setConfirmedPlays] = useState(0);
+  const [outcomeChosen, setOutcomeChosen] = useState(false);
+  const [outcomePlayer, setOutcomePlayer] = useState("");
+  const [recordedPlay, setRecordedPlay] = useState<{ gameId: string; player: string; summary: string } | null>(null);
   const pendingPlay = useRef<{ playerId: string; outcome: Outcome; runs: number; rbi: number } | null>(null);
   const snapshot = data?.snapshot;
   const allGames = snapshot?.games ?? [];
@@ -130,7 +133,23 @@ export function ConnectedScorebook({
   const liveUpdates = Boolean((mode === "score" || mode === "full") && current && !current.game.completed && !data?.archived && !tournamentArchived);
   const manual = current?.game.batting_mode === "manual";
   const battingPlayer = manual ? manualPlayer : current?.lineup[current.game.next_batter_position] ?? "";
-  useEffect(() => { setManualPlayer(""); setPlayerSearch(""); setFirstBand(null); setEntryError(""); pendingPlay.current = null; }, [current?.game.id]);
+  // A refresh can advance an ordered batter before the draft-reset effect runs.
+  const hasDraftOutcome = outcomeChosen && (manual || outcomePlayer === battingPlayer);
+  useEffect(() => {
+    setManualPlayer(""); setPlayerSearch(""); setFirstBand(null); setEntryError(""); pendingPlay.current = null;
+    if (mode === "score") {
+      setOutcomeChosen(false); setRuns(0); setRbi(0); countsEdited.current = false; setRecordedPlay(null);
+    }
+  }, [mode, current?.game.id]);
+  useEffect(() => {
+    if (!recordedPlay) return;
+    const timer = window.setTimeout(() => setRecordedPlay(null), 5000);
+    return () => window.clearTimeout(timer);
+  }, [recordedPlay]);
+  useEffect(() => {
+    if (mode !== "score" || manual) return;
+    setOutcomeChosen(false); setRuns(0); setRbi(0); countsEdited.current = false;
+  }, [mode, manual, battingPlayer]);
   const playerName = (id: string) =>
     data?.roster.find((p) => p.id === id)?.display_name ??
     "Former roster player";
@@ -149,15 +168,15 @@ export function ConnectedScorebook({
   const routineMessage = /^(Scorebook loaded\.|Scorebook refreshed\.|Latest scorebook reviewed\.|Saved to the team scorebook\.|Previous save confirmed\.|Saving…|Set up Game )/.test(message);
   const needsAttention = !online || paused || review || uncertain || !routineMessage;
   useEffect(() => setOverrideLimit(false), [kind, tournamentId, leagueId]);
-  async function read(nextScope = scope): Promise<boolean> {
+  async function read(nextScope = scope): Promise<LoadedScorebook | null> {
     try {
       const result = await reloadAction(teamId, seasonId, nextScope);
-      if (!mounted.current) return false;
+      if (!mounted.current) return null;
       if (result.status === "ok") {
         setData(result.data);
         setScope(nextScope);
         setPaused(false);
-        return true;
+        return result.data;
       }
       setPaused(true);
       if (
@@ -180,7 +199,7 @@ export function ConnectedScorebook({
         );
       }
     }
-    return false;
+    return null;
   }
   async function refresh(nextScope = scope) {
     if (lock.current || !navigator.onLine) return;
@@ -273,6 +292,7 @@ export function ConnectedScorebook({
       return;
     }
     pending.current = request;
+    setRecordedPlay(null);
     setMessage("Saving…");
     try {
       let result: ConnectedResult;
@@ -349,8 +369,19 @@ export function ConnectedScorebook({
               ? "Previous save confirmed. The change was recorded once."
               : "Saved to the team scorebook.",
         );
-      if (loaded && !conflict && mode === "score" && (request as { change?: { type?: string } }).change?.type === "score") { setConfirmedPlays(value => value + 1); setOutcome(defaultHit); setRuns(0); setRbi(0); countsEdited.current = false; setFirstBand(null); pendingPlay.current = null; setManualPlayer(""); setPlayerSearch(""); }
-      return loaded && !conflict;
+      if (loaded && !conflict && mode === "score") {
+        const submitted = request as { gameId?: string; change?: { type?: string; playId?: string } };
+        if (submitted.change?.type === "score") {
+          // The receipt must describe the saved official row, never draft inputs.
+          const savedGame = loaded.snapshot.games.find(game => game.game.id === submitted.gameId);
+          const row = savedGame?.evaluation.rows.find(play => play.id === submitted.change?.playId);
+          if (savedGame && row) {
+            setRecordedPlay({ gameId: savedGame.game.id, player: loaded.roster.find(player => player.id === row.playerId)?.display_name ?? "Former roster player", summary: scoreRowSummary(row) });
+          }
+          setConfirmedPlays(value => value + 1); setOutcomeChosen(false); setOutcome(defaultHit); setRuns(0); setRbi(0); countsEdited.current = false; setFirstBand(null); pendingPlay.current = null; setManualPlayer(""); setPlayerSearch("");
+        }
+      }
+      return Boolean(loaded) && !conflict;
     } finally {
       lock.current = false;
       if (mounted.current) setBusy(false);
@@ -411,16 +442,21 @@ export function ConnectedScorebook({
     const nextRuns = countsEdited.current ? Math.max(runs, hr ? 1 : 0) : hr ? 1 : 0;
     const nextRbi = countsEdited.current ? rbi : hr ? 1 : 0;
     setOutcome(next); setRuns(nextRuns); setRbi(nextRbi);
-    void recordPlay(battingPlayer, next, nextRuns, nextRbi);
+    setOutcomeChosen(true); setOutcomePlayer(battingPlayer); setEntryError(""); pendingPlay.current = null;
   }
   async function spokenPlay(text: string) {
     if (!data || !current || disabled) return false;
+    setOutcomeChosen(false);
     const result = parseNamedPlay(text, data.roster, battingPlayer);
     if (result.status !== "ok") { setEntryError(result.message); return false; }
     if (!scoringOutcomes({ ...DEFAULT_BOARD, ...extendedBoardFromColumns(current.rules) }, !!data.snapshot.capabilities?.hitTypes).includes(result.outcome)) { setEntryError("That result is unavailable for this game. Refresh the scorebook."); return false; }
     if (result.outcome === "K" && Object.keys(extendedBoardFromColumns(current.rules)).length === 4) { setEntryError("Choose strikeout looking, strikeout swinging, or SOFO."); return false; }
+    if (!manual && result.playerId !== battingPlayer) { setEntryError(`The lineup’s next batter is ${playerName(battingPlayer)}.`); return false; }
+    if (manual && result.playerId !== manualPlayer) setFirstBand(null);
+    if (manual) { setManualPlayer(result.playerId); setPlayerSearch(""); }
     setOutcome(result.outcome); setRuns(result.runs); setRbi(result.rbi);
-    return recordPlay(result.playerId, result.outcome, result.runs, result.rbi);
+    countsEdited.current = true; setOutcomeChosen(true); setOutcomePlayer(result.playerId); setEntryError(""); pendingPlay.current = null;
+    return false;
   }
   function bandFields(tour: string | null, game?: ConnectedGame) {
     return data?.roster.map((p, index) => {
@@ -730,6 +766,10 @@ export function ConnectedScorebook({
                   ? "Final — corrections remain available"
                   : "Live"}
               </p>
+              {mode === "score" && recordedPlay?.gameId === current.game.id && <div className="recorded-play" role="status">
+                <strong>This is the play that was recorded</strong>
+                <p>{recordedPlay.player} · {recordedPlay.summary}</p>
+              </div>}
               {!current.game.completed && mode !== "manage" && (
                 <>
                   {manual ? <div className="manual-batter">
@@ -741,39 +781,48 @@ export function ConnectedScorebook({
                         .map(player => <button type="button" key={player.id} disabled={disabled} aria-pressed={manualPlayer === player.id} onClick={() => { setManualPlayer(player.id); setPlayerSearch(""); setFirstBand(null); pendingPlay.current = null; setEntryError(""); }}>{player.display_name}</button>)}
                     </div>
                   </div> : <h3>Next batter: {playerName(battingPlayer)}</h3>}
-                  {mode === "score" && <VoicePlayEntry disabled={disabled} resetKey={confirmedPlays} onResult={spokenPlay} />}
+                  {mode === "score" && <VoicePlayEntry key={`${current.game.id}:${confirmedPlays}`} disabled={disabled} onResult={spokenPlay} submitLabel="Use result" />}
                   {entryError && <p className="entry-error" role="alert">{entryError}</p>}
                   {manual && manualPlayer && current.game.kind === "Tournament" && !data?.bands.some(band => band.tournament_id === current.game.tournament_id && band.player_id === manualPlayer) && <div className="first-band-choice" role="group" aria-label="First tournament Band choice">
                     <span>HR Band for {playerName(manualPlayer)}?</span>
-                    {[false,true].map(choice => <button key={String(choice)} type="button" disabled={disabled} aria-pressed={firstBand === choice} onClick={() => { setFirstBand(choice); const draft = pendingPlay.current; if (draft) void recordPlay(draft.playerId,draft.outcome,draft.runs,draft.rbi,choice); }}>{choice ? "Has Band" : "No Band"}</button>)}
+                    {[false,true].map(choice => <button key={String(choice)} type="button" disabled={disabled} aria-pressed={firstBand === choice} onClick={() => { setFirstBand(choice); setEntryError(""); const draft = pendingPlay.current; if (draft && mode !== "score") void recordPlay(draft.playerId,draft.outcome,draft.runs,draft.rbi,choice); }}>{choice ? "Has Band" : "No Band"}</button>)}
                   </div>}
                   <form
                     className="club-form at-bat-form"
                     onSubmit={(e) => {
                       formData(e);
+                      if (mode === "score" && !hasDraftOutcome) { setEntryError("Choose the result first."); return; }
                       void recordPlay(battingPlayer, outcome, runs, rbi);
                     }}
                   >
                     <fieldset disabled={disabled}>
+                      {mode === "score" && <p className="quick-play-hint">Choose the player and result, check Runs and RBI, then Send.</p>}
+                      {mode === "score" && <BattingOutcomePicker hitTypes={!!snapshot?.capabilities?.hitTypes} extended={Object.keys(extendedBoardFromColumns(current.rules)).length === 4} value={hasDraftOutcome ? outcome : null} disabled={disabled} onPick={pickOutcome} onChange={pickOutcome} />}
+                      {mode === "score" && <div className="at-bat-rbi" role="group" aria-label="Runs on this play">
+                        <span>Runs</span>
+                        <div className="rbi-buttons">
+                          {[0, 1, 2, 3, 4].map(value => <button key={value} type="button" aria-label={`${value} runs`} aria-pressed={runs === value} disabled={disabled} onClick={() => { countsEdited.current = true; setRuns(value); setEntryError(""); }}>{value}</button>)}
+                        </div>
+                      </div>}
                       <div className="at-bat-rbi" role="group" aria-label="RBI on this play">
                         <span>RBI</span>
                         <div className="rbi-buttons">
                           {[0, 1, 2, 3, 4].map((value) => <button key={value} type="button" aria-label={`${value} RBI`} aria-pressed={rbi === value} disabled={disabled} onClick={() => { countsEdited.current = true; setRbi(value); setRuns(Math.max(runs, value)); }}>{value} RBI</button>)}
                         </div>
                       </div>
-                      <label className="at-bat-runs">
+                      {mode !== "score" && <label className="at-bat-runs">
                         Runs on this play
                         <input type="number" min={0} max={4} value={runs} onChange={(e) => { countsEdited.current = true; setRuns(Number(e.target.value)); }} required />
-                      </label>
+                      </label>}
                       <input type="hidden" name="at-bat-rbi" value={rbi} />
-                      {mode === "score" && <p className="quick-play-hint">Set RBI when needed, then tap the result to record.</p>}
-                      <BattingOutcomePicker hitTypes={!!snapshot?.capabilities?.hitTypes} extended={Object.keys(extendedBoardFromColumns(current.rules)).length === 4} value={outcome} disabled={disabled} onPick={mode === "score" ? pickOutcome : undefined} onChange={(next) => {
+                      {mode !== "score" && <BattingOutcomePicker hitTypes={!!snapshot?.capabilities?.hitTypes} extended={Object.keys(extendedBoardFromColumns(current.rules)).length === 4} value={outcome} disabled={disabled} onChange={(next) => {
                         setOutcome(next);
                         const hr = next === "Fence HR" || next === "ITP HR";
                         setRuns(hr ? 1 : 0);
                         setRbi(hr ? 1 : 0);
-                      }} />
-                      {mode !== "score" && <button className="button primary">Record plate appearance</button>}
+                      }} />}
+                      {mode === "score" && <p className="play-draft" aria-live="polite">{battingPlayer ? playerName(battingPlayer) : "Choose a player"} · {hasDraftOutcome ? OUTCOME_LABELS[outcome] ?? outcome : "Choose a result"} · {runs} runs, {rbi} RBI</p>}
+                      <button className="button primary" disabled={disabled || (mode === "score" && (!battingPlayer || !hasDraftOutcome))}>{mode === "score" ? "Send" : "Record plate appearance"}</button>
                     </fieldset>
                   </form>
                 </>
@@ -894,7 +943,7 @@ export function ConnectedScorebook({
                   </button>
                 </>}
               </details>}
-              {mode === "score" && managementHref && <a className="text-link game-details-link" href={`${managementHref}&game=${encodeURIComponent(current.game.id)}`}>Game details</a>}
+              {mode === "score" && managementHref && <a className="button secondary game-details-link" href={`${managementHref}&game=${encodeURIComponent(current.game.id)}`}>Game details</a>}
               {mode !== "score" && <details className="at-bat-history" open={mode === "full" || current.game.completed}>
                 <summary>Plate appearances · {current.evaluation.rows.length}</summary>
               <h3>Plate appearances</h3>

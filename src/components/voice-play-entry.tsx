@@ -9,14 +9,13 @@ type Recognition = {
   start(): void; stop(): void; abort(): void;
 };
 type VoiceWindow = Window & { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition };
-export function VoicePlayEntry({ disabled, resetKey = 0, onResult }: { disabled: boolean; resetKey?: number; onResult(text: string): Promise<boolean | undefined> }) {
+export function VoicePlayEntry({ disabled, onResult, submitLabel = "Record result" }: { disabled: boolean; submitLabel?: string; onResult(text: string): Promise<boolean | undefined> }) {
   const [text, setText] = useState(""), [available, setAvailable] = useState(false), [listening, setListening] = useState(false), [error, setError] = useState("");
   const generation = useRef(0);
   const recognition = useRef<Recognition | null>(null), callback = useRef(onResult), blocked = useRef(disabled), mounted = useRef(true);
   callback.current = onResult; blocked.current = disabled;
   useEffect(() => { mounted.current = true; const w = window as VoiceWindow; setAvailable(Boolean(w.SpeechRecognition || w.webkitSpeechRecognition)); return () => { mounted.current = false; generation.current++; recognition.current?.abort(); }; }, []);
   useEffect(() => { if (disabled) { generation.current++; recognition.current?.abort(); setListening(false); } }, [disabled]);
-  useEffect(() => { generation.current++; recognition.current?.abort(); setListening(false); setText(""); }, [resetKey]);
   async function submit(value: string) {
     if (blocked.current || !mounted.current || !value.trim()) return;
     setText(value);
@@ -43,7 +42,7 @@ export function VoicePlayEntry({ disabled, resetKey = 0, onResult }: { disabled:
     <div className="voice-play-controls">
       <input aria-label="Player and result" value={text} maxLength={200} placeholder="Alex double · Alex triple 2 RBI" disabled={disabled || listening} onChange={event => setText(event.target.value)} onKeyDown={event => { if (event.key === "Enter") { event.preventDefault(); void submit(text); } }} />
       {available && <button type="button" className="button secondary" disabled={disabled || listening} aria-label="Speak a result" onClick={listen}><Mic size={18} aria-hidden /></button>}
-      <button type="button" className="button secondary" disabled={disabled || listening || !text.trim()} onClick={() => void submit(text)}>Record result</button>
+      <button type="button" className="button secondary" disabled={disabled || listening || !text.trim()} onClick={() => void submit(text)}>{submitLabel}</button>
     </div>
     <p className="voice-play-note">{listening ? "Listening…" : available ? "Voice uses your browser’s speech service. Diamond Alibi does not save audio." : "Type the result or use your keyboard’s dictation."}</p>
     {error && <p role="alert">{error}</p>}

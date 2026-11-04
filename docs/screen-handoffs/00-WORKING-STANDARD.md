@@ -1,5 +1,21 @@
 # Diamond Alibi — Screen-by-screen working standard
 
+## November 3, 2026 — H5 Scorebook draft only
+
+Owner approved H5 from current main `4452beadb6f7a83f459a518db91f464f6a185a46`
+on `codex/h5-scorebook-flow`: Runs 0–4 buttons, player/result/counts → Send,
+five-second authoritative recorded-play receipt and Game details button styling.
+The optional thirteen fun labels/three group names are deferred under the
+owner's cut-first instruction. Exact brief, verification, exclusions, UAT source
+receipt and completion contract: [08-scorebook.md](08-scorebook.md#november-3-2026--h5-scorebook-draft),
+linked by release readiness and tracker revision 80. Existing controls, commands,
+parser and official-row presentation are reused. No server runs/RBI rule changes
+were needed; stop and ask before any such change. Publish this scope as a draft
+only: no merge/deploy/migration/hosted test/new dependency/H6–H8. H4 #47 must
+precede H2 #49 in a later authorized merge; neither branch is changed. The H5 PR
+records final exact-head CI and draft readback. Local automated tests are not
+physical-phone acceptance. Continuity GREEN; finish the draft receipt here.
+
 ## November 3, 2026 — H3 Stats card correction
 
 Owner's phone UAT follow-up replaces the compact card's repeated category caption with **count – leader** beside its identifying circle. Current brief, source, limits, validation and completion-receipt contract: [10-stats.md](10-stats.md#november-3-2026--h3-phone-follow-up-count--leader), synchronized with `RELEASE-READINESS.md` and tracker revision 79. Branch `codex/stats-count-leader` starts from deployed release #48 / main `07e68783081b3c3439be5903abb7904432cbef33`; H2 #49 and H4 #47 remain separate drafts, excluded. The original H3 delivery authorization continues for this requested presentation correction. Local checks pass; exact-source CI, merge, deployment and owner phone acceptance are separate stages recorded in that branch's PR completion receipt. No hosted writes, credentials/access changes, new dependency or other feature is authorized. Continuity GREEN; continue this chat through the scoped release and return to owner UAT.
