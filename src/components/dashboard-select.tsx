@@ -25,9 +25,9 @@ function SelectedField({ label, accessibleLabel, name, value, options, disabled,
       <span className="dashboard-select-label">{label}</span>
       <span className="dashboard-select">
         <span className="dashboard-select-value" aria-hidden="true">
+          <ChevronDown size={18} aria-hidden="true" />
           {options.find((option) => option.id === selected)?.name ?? "Choose an option"}
         </span>
-        <ChevronDown size={18} aria-hidden="true" />
         <select aria-label={accessibleLabel ?? label} name={name} value={selected} disabled={disabled} onChange={(event) => {
           setSelected(event.target.value);
           onChange?.(event.target.value);

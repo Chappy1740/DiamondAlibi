@@ -14,17 +14,19 @@ export function CompactGameList({ games, gameHref, firstGameStart }: {
     <ul className="game-entry-list" aria-label="Games">
     {games.map((g) => {
       const score = connectedScoreboard(g.game);
+      const scoreLabel = score ? `Score: our team ${score.teamRuns}, opponent ${score.opponentRuns}` : "Score unavailable";
       const start = g.game.kind === "Tournament" && g.game.tournament_game_number === 1 && firstGameStart ? tournamentStartLabel(firstGameStart) : null;
-      return <li className="card game-entry-row" key={g.game.id}>
-        <div className="game-entry-details">
-          <span className={`game-entry-status${g.game.completed ? "" : " game-entry-status--live"}`}>{g.game.completed ? "Final" : "Live"}</span>
-          <p className="game-entry-name"><strong>{g.game.opponent}</strong></p>
-          {start && <p className="micro">Game 1 · {g.playedOn} · {start}</p>}
-          <p className="game-entry-score" aria-label={score ? `Score: our team ${score.teamRuns}, opponent ${score.opponentRuns}` : "Score unavailable"}>
-            {score ? `${score.teamRuns}–${score.opponentRuns}` : "Score unavailable"}
-          </p>
-        </div>
-        <Link className="button primary" href={gameHref(g.game.id)} aria-label={`Enter game against ${g.game.opponent}, ${g.playedOn}${g.game.completed ? ", final" : ", active"}`}>Enter</Link>
+      return <li className="game-entry-row" key={g.game.id}>
+        <Link className="card game-entry-card" href={gameHref(g.game.id)} aria-label={`Enter game against ${g.game.opponent}, ${g.playedOn}${g.game.completed ? ", final" : ", active"}. ${scoreLabel}${start ? `. Game 1 starts ${start}` : ""}`}>
+          <div className="game-entry-details">
+            <span className={`game-entry-status${g.game.completed ? "" : " game-entry-status--live"}`}>{g.game.completed ? "Final" : "Live"}</span>
+            <p className="game-entry-name"><strong>{g.game.opponent}</strong></p>
+            {start && <p className="micro">Game 1 · {g.playedOn} · {start}</p>}
+            <p className={`game-entry-score${score ? "" : " game-entry-score--unavailable"}`} aria-label={scoreLabel}>
+              {score ? `${score.teamRuns}–${score.opponentRuns}` : "Score unavailable"}
+            </p>
+          </div>
+        </Link>
       </li>;
     })}
     </ul>

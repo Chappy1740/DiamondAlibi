@@ -289,7 +289,9 @@ const assert = require("node:assert/strict");
     await page.goto(`${base}/?leaderboard=1`);
     const leaders=page.getByRole('region',{name:'Tournament player leaderboard',exact:true});await leaders.waitFor();
     assert.equal(await leaders.locator('.leaderboard-summary button').count(),9);
-    assert.deepEqual((await leaders.locator('.leaderboard-summary button:not(:disabled) .leaderboard-player strong').allTextContents()).slice(0,5),['2 tied','2 tied','Synthetic Player','Synthetic Blair with a very long roster nickname','Synthetic Blair with a very long roster nickname']);
+    assert.equal(await leaders.locator('.leaderboard-summary').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length),2,'The tournament consumer reuses the two-column Stats layout');
+    assert.equal(await leaders.locator('.leaderboard-summary .leaderboard-player > .micro').count(),0,'Tournament categories are labeled only by their badges');
+    assert.deepEqual((await leaders.locator('.leaderboard-summary button:not(:disabled) .leaderboard-player > strong').allTextContents()).slice(0,5),['Tied','Tied','Synthetic Player','Synthetic Blair with a very long roster nickname','Synthetic Blair with a very long roster nickname']);
     assert.deepEqual((await leaders.locator('.leaderboard-summary .leaderboard-counts strong').allTextContents()).slice(0,5),['.667','2','1','2','2']);
     assert.equal(await leaders.locator('.leaderboard-players').count(),0,'leaders first, not the full ranking');
     async function onlyMetric(label,values){

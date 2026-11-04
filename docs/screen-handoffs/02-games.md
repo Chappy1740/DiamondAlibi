@@ -1,5 +1,247 @@
 # 02 — Games: Screen handoff
 
+## November 4, 2026 — Games score size and compact competition leaders
+
+**Recovered; AMBER verification. Implemented; owner authorizes commit/push/draft PR for full CI, release pending.**
+Owner phone screenshots report oversized, broken "Score unavailable" on game
+cards and League player leaders still repeating the category in a single column.
+Requested result: compact score space sufficient for XX–XX; use the existing
+Stats two-column cards with the category badge once, then amount–leader.
+Apply the shared competition presentation to League/Tournament selected and
+overall leaders; preserve all source totals, rankings, ties, scope and navigation.
+
+Verified baseline: main `c788fa7e9a6c23ffc085a6ba2f09f96cde2829e7`, deployed
+by [#49](https://github.com/Chappy1740/DiamondAlibi/pull/49#issuecomment-6628049176)
+as Worker `94a56d98-aaa5-4ea8-8682-77299600445d`, verified at 100% traffic.
+Current correction is on `codex/games-score-leader-layout`, in an isolated
+worktree based on that exact main. Owner replied "Continue" after the concrete
+commit/push/draft-PR proposal; this authorizes that scoped publication and full CI.
+Merge/deployment remain separate and unapproved. This correction is not live.
+The supplied photos are owner-reported UI defects, not acceptance of the fix.
+
+Reuse decision: existing CompactGameList and PlayerLeaderboard compactSummary,
+existing LeagueSeasonStats/TournamentSeasonStats and native CSS. Numeric scores
+use 16px; unavailable text uses the existing 14px body token. Do not fabricate
+zeroes, cap saved scores at 99, change score sourcing or add a replacement widget.
+The compact component now owns its existing two-column CSS instead of requiring
+the Stats workspace class. Competition consumers opt into that existing mode.
+No new state, requests, dependency, scoring/server formula/rule or data change.
+
+Fresh Codex checks: typecheck and 24 scoreboard/leaderboard/tracker tests pass.
+Games Chromium/WebKit passes: 99–98 fits one line at 320/390/430px, small missing
+score words remain intact, all nine category cards in two columns without repeated
+labels across League/Tournament views, full names, keyboard/focus, scope, signed
+credits, unknowns, accessibility and 320–1440px/enlarged card text. Existing
+Home/Stats Chromium/WebKit and the full Chromium scorebook consumer suite pass.
+The tournament smoke assertion was updated to the requested compact Tied/name
+markup, keeping all numeric/ranking/isolation assertions. Full WebKit scorebook
+smoke FAILS at its unchanged typed-entry Record result control remaining disabled
+(line 269). The same failure was freshly reproduced on the prior H2 application
+baseline (c622917, old smoke line 267); connected-scorebook, voice-play-entry and
+that test path are unchanged between that baseline and current main. No scoring
+code was changed or assertion weakened to hide it. Full Linux CI for this local
+correction is UNKNOWN until an authorized publication; do not claim all checks
+passed. The requested Games display regressions pass both engines.
+Synthetic 390px fallback and long-name/tied/unknown leader previews visually
+inspected; images/logs stay local. Physical-phone fix acceptance remains UNKNOWN.
+
+Authorization: owner requested this correction and continued the proposed
+commit/push/draft-PR publication for full CI. Existing #49 merge/deployment
+approval applied to that merged PR only; this follow-up still needs a separate
+merge/deployment decision under CONTRIBUTING.md. No merge, deploy, hosted
+login/write, migration, provider/access change or test email is part of this
+publication. #52 and Claude Roast Club branches/PRs are untouched.
+No milestone closes. Existing release gate and approved isolation remain.
+
+Active Claude PR #55 has separate appended popup CSS and a test-plugin insertion;
+read-only overlap inspection found no same-line change in this correction. No
+Claude branch/PR was changed.
+
+Completion receipt: the draft PR for `codex/games-score-leader-layout` records
+its exact head, full CI, files, review findings, limits and approval scope.
+The focused local checks above are prior-session Codex evidence; fresh Linux CI
+will be recorded there, without attributing a prior check to this session.
+Sample preview names now use ordinary synthetic full names without numeric
+suffixes. PNGs stay local under local-backups/games-display-fix-20261104.
+Current source baseline remains c788fa7.
+
+Next: commit/push the exact correction, open its draft PR and complete full Linux
+CI. Record any failure without weakening checks or changing scoring to hide it.
+Return the validated candidate for a separate owner merge/deployment decision.
+Continue this chat: source, requirements and limits are durably recorded.
+
+<!-- Earlier release and preparation snapshots below remain historical. -->
+
+## November 3, 2026 — H4 merged; H2 retargeted to main
+
+**Recovered; GREEN. H4 rung: Merged. H2 candidate: Tested locally after retarget.**
+Owner explicitly approved merging and automatically deploying #47 only, and
+asked whether to do #49 next. H4 merged as
+`d469091a88550af3d560e9ac5341acd083b08b34`, retaining reviewed H4
+`3114f47d5aef47a4183ccdf91061fe01b6cfaf41`; their source trees are identical.
+Main CI is pending; initial Worker build
+`117831c9-9029-410c-b13b-1a6a52fe17db` failed without a version receipt.
+Failure cause/current traffic are UNKNOWN at this source snapshot; the
+[H4 completion receipt](https://github.com/Chappy1740/DiamondAlibi/pull/47)
+records their eventual result, build and version. No deployment claim is made here.
+No production migration, provider configuration, dependency or unrelated change.
+
+H2 #49 now targets `main`, baseline
+`d469091a88550af3d560e9ac5341acd083b08b34`. Former H2 head
+`c622917c4913e2acf603196c3ce8c322d66a99f3` and the original H2/H4 commits
+are retained. Integrating merged main produced no conflicts or application/test
+changes. H2 remains the original Games navigation/card scope, plus its current
+reconciliation records. Existing components, native links/CSS and packages reused.
+Main's approved Home/Stats and H4 dropdown/type scale remain intact; no H5 code.
+
+Original reconciliation authorization covers this retarget, corrections, tests,
+commit/push and GitHub records. #49 remains draft: its merge/deployment is NOT
+approved by the owner's question. #52 remains unmerged; its prior merge-only
+permission does not authorize automatic deployment. Claude Roast Club branches
+and PRs are excluded and untouched. No milestone closes.
+
+Fresh Codex local checks: typecheck, four tracker tests and Games flow in both
+Chromium and WebKit passed. H2 application/test content is identical to former
+head c622917. Exact new H2 SHA, complete main-based CI, changed files, mergeability
+and outstanding phone/hosted/cross-device acceptance are the completion receipt
+in [PR #49](https://github.com/Chappy1740/DiamondAlibi/pull/49).
+Earlier H4-based passing runs below are historical evidence, not validation of
+this new candidate. Continue this chat: authorization, source and records agree.
+Next: finish approved #47 release verification and main-based #49 validation,
+then return #49 for a separate owner merge/deployment decision. No #49 release.
+
+<!-- Earlier snapshots below retain their historical scope. -->
+
+## November 3, 2026 — Pilot PR reconciliation (H2 dependent checkpoint)
+
+**Recovered; GREEN. Ready for review; no release.** Owner authorizes scoped
+reconciliation, tests, commit/push and GitHub-backed handoffs for #52/#47/#49.
+No PR merges, deployments, production migrations, provider/dependency changes,
+or unrelated features. Claude Roast Club branches and PRs remain untouched.
+Main: `c38d4cf483eded68f1b63294898644c9aac14054`.
+H5 #52: `33e280a4aa8e64d4a30e7d8e28ad071d1822b03b`, based on main.
+H4 #47: `3114f47d5aef47a4183ccdf91061fe01b6cfaf41`, now based on main.
+H2 original: `50f8cc4d365ae0a95db7bdeff5291ce02b897596`, retained in history.
+
+H2 integrates that exact H4 head with no conflict. Keep #49 targeting
+`codex/h4-dropdown-type-scale`; its application/test diff is the same original
+seven-file H2 scope, plus reconciliation records. No H5 code is included.
+Retain H4's body-text token, current main Home/Stats and all existing consumers.
+Reuse CompactGameList, PlayerDashboard, native links/CSS and installed packages.
+Two cards across on phones, three from 640px, whole-card keyboard/touch links,
+full context, saved scores and sample/review/archived restrictions remain.
+
+Rung: **Tested** locally by Codex: typecheck, 22 tracker/leaderboard tests,
+Games/Home/Stats/tournament-time Chromium and WebKit, connected UI/disposable
+SQL, practice-season and sample dashboard checks passed. Preview-only generated
+next-env changes were excluded. Full new-head CI remains pending in the PR.
+All H2 application/test added/removed lines match the original H2 diff exactly.
+Fresh local checks, full exact-head CI, exact SHA/files, review findings and
+mergeability are the completion receipt in [PR #49](https://github.com/Chappy1740/DiamondAlibi/pull/49).
+No review threads/submitted reviews existed at recovery; independent review and
+physical phone, hosted authenticated and cross-device acceptance remain UNKNOWN.
+No milestones close. Current exact-head receipts:
+[#52](https://github.com/Chappy1740/DiamondAlibi/pull/52),
+[#47](https://github.com/Chappy1740/DiamondAlibi/pull/47),
+[#49](https://github.com/Chappy1740/DiamondAlibi/pull/49).
+
+Next: validate/push H2, finish all three CI receipts and return for owner review.
+Proposed smallest separately approved release sequence: #52; refresh/revalidate
+#47 against resulting main; #47; then retarget #49 to main, reconcile and rerun
+full CI before #49. Never retarget #49 prematurely or treat current H4-based CI
+as validation of a future main-based candidate. No release action is done here.
+Continue this chat: scope, authority, evidence and retained history agree.
+
+<!-- Earlier checkpoint/requirements below are historical. -->
+
+## November 3 H2 — Games cleanup and clickable cards
+
+Stage: Tested locally; prepared for the owner-authorized draft PR. No merge or
+release. Exact PR number, review-head SHA and final CI links are recorded in the
+H2 draft PR's UAT receipt after publication; they are unknown at this checkpoint.
+
+Owner approved H2 only, then chose "Two across on phones; three on
+tablet/desktop" after requesting clickable cards without Enter buttons. This
+supersedes the October 28 immediate-list requirement for this candidate. Remote
+main was refreshed to `07e68783081b3c3439be5903abb7904432cbef33`, whose release
+record includes work through PR #46 and explicitly excludes H4. Git ancestry
+confirms H3 is included. H2 is isolated on `codex/h2-games-cleanup`, based on H4
+`14bea97aed53b4a22ba6fb7ec738b76b8ead5efb` / draft PR #47. Its draft targets H4
+so the review diff contains H2 only. H4 remains draft/unmerged; reconcile the
+stack with main and run normal release checks before separately approved delivery.
+This work does not change another branch, release worktree or hosted environment.
+
+### Delivered behavior and reuse
+
+Games starts with League, Tournament and Add game when creation is permitted.
+The closed Choose team or league dialog sits below the options, using Home's
+bordered control treatment. Existing native links, GameContextPicker and setup
+helpers preserve context, Cancel/Escape, active-game resume and read-only or
+archived restrictions. No new state, request, dependency or scoring workflow.
+
+League and Tournament views reuse CompactGameList. Each visible game card is
+one native link; tapping its padding, clicking its text or using keyboard Enter
+opens the same game. There is no separate Enter button. The link retains a
+meaningful opponent/date/status name, saved score and first-game start time,
+with a visible focus outline. The grid has two columns below 640px and three
+from 640px upward, 12px padding and gaps, existing 14px body/22px score tokens,
+full opponent names and at least 44px touch targets. Saved zero and unavailable
+scores retain their meanings. Tournament selection cards are unchanged.
+
+### Verification
+
+Passed locally: typecheck, test:browser, test:connected-scorebook,
+test:practice-season, and Games flow in Chromium and WebKit. Regression checks
+cover the arrival arrangement, picker below options at 320–1440px, two/three
+columns, no extra Enter button, exact game/context URL from keyboard and card
+padding, focus outline, accessibility, long/unbroken names, enlarged text,
+three-digit/zero/unavailable scores, context/isolation, empty/archived/sample
+states and tournament continuation. Tournament start-time browser suites passed
+both engines. All test identities, transport and database records were disposable
+or synthetic; no hosted test was run.
+
+A WebKit-only card containment failure was found and fixed by removing an
+unnecessary nested grid from the list item. Final tests measure content against
+the clickable card's own bounds. Chromium review screenshots were inspected.
+Screenshots/logs remain ignored local artifacts, not proof of physical-device
+acceptance. Existing pinned dependencies and installed browsers were reused.
+The generated next-env edit is excluded from delivery.
+
+### Files and UAT A4 retest
+
+Changed files: src/components/player-dashboard.tsx,
+src/components/compact-game-list.tsx, src/app/globals.css,
+tests/games-flow-browser.cjs, tests/dashboard-browser.cjs,
+tests/personal-pages-browser.cjs, and this matching handoff.
+
+1. Review the H2 candidate, not the unchanged live site. Open Games in a writable
+   synthetic team/season: League, Tournament, Add game, then the context button;
+   no immediate game list. Sample/review/archived contexts cannot add games.
+2. Choose League. In the synthetic fixture expect three cards: 12–8 Final,
+   0–0 Live, and 7–10 Final. At 320/390px expect two across; at 800px expect three.
+   Names and scores stay inside their cards, with no Enter buttons.
+3. Tap the Live card or its padding; verify the correct game/team/season opens.
+   On laptop, Tab must visibly outline the card and Enter must open that game.
+4. Return to Games, choose Tournament, open a tournament game and return.
+   Existing add/continuation links and Game 1's saved start time must remain.
+5. Cancel/Escape the context dialog: no context change, trigger focus restored.
+   Apply another team/season/league: return to the same compact Games choices.
+
+Known gaps: real phone, hosted authenticated, cross-device and deployment
+acceptance remain unverified. Built personal-pages expectation was updated;
+normal Linux CI must verify it before delivery. No tracker milestone closed.
+Highest rung is Tested, never Owner-accepted. Database migration: none.
+Deployed: not deployed.
+
+Approval used: owner-approved H2 as its own draft PR, plus the explicit
+clickable-card and two-phone/three-wider layout choice. No merge, deploy,
+migration, hosted test, provider change, new dependency or H5–H8 work approved.
+Next owner item: review H2's draft and retest A4 on its exact candidate.
+Revert only the H2 diff relative to H4 if needed; no data rollback.
+
+Continuity GREEN: evidence and scope are verified. Finish the exact-head draft
+receipt, then stop. A new chat is not needed; no live release is claimed.
+
 **Status:** Games layout locally reviewed; publication preparation complete. **Requested change:** Games begins with League and Tournament choices; records appear only after a choice.
 **Current screen only:** Games.
 **Route/view:** `/games`

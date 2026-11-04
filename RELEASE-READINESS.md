@@ -1,5 +1,197 @@
 # Release readiness and recovery
 
+## November 4, 2026 — H5 final reconciliation for pilot review
+
+**Recovered; GREEN. H5 rung: Tested locally; exact-head CI pending.** Owner says
+“finish 52”; original scoped reconciliation authority covers conflict resolution,
+tests, commit/push and GitHub handoffs. Earlier #52 merge-only approval is retained
+but does not authorize automatic deployment. The existing main release gate can
+deploy on merge, so hold #52 for explicit combined merge/deployment approval.
+No migration, provider/access change, dependency change or hosted write.
+
+Verified clean Codex branch: `codex/h5-scorebook-flow`, prior head
+`33e280a4aa8e64d4a30e7d8e28ad071d1822b03b`; original H5
+`701117177e02575e69bdcf80f1acf7a116912b07` remains in history.
+Integrate current main `c91205053ac66f11d9e4dee675ed320b44edc463`
+with a history-preserving branch merge and ordinary push. Only concurrent
+RELEASE-READINESS.md, 00-WORKING-STANDARD.md and tracker receipts conflict;
+preserve both histories. H5 application code remains byte-identical to the
+original H5 head; the CSS/test integration also retains current main changes.
+
+Preserve Runs 0–4, draft then Send, exact-ID authoritative five-second receipt,
+OUT-only over-limit HR, retry/locking/ordered-batter guards and established
+server scoring rules. Retain deployed H4 typography/dropdowns, H2 navigation,
+#57 modest saved/unknown scores and two-column single-label competition leaders,
+and approved Home/Stats count–leader / amount–Tied. Reuse existing components,
+commands, native controls, CSS and installed pinned dependencies. No new feature.
+Claude Roast Club #53–#56 remains independently owned and untouched; #55/#56
+share scorebook surfaces and require their own later integration/revalidation.
+
+Current main is the completed #57 release source; its final receipt supersedes
+older preparation snapshots: [#57 completion](https://github.com/Chappy1740/DiamondAlibi/pull/57#issuecomment-6632233228),
+CI `41839541730`, build `c43bbef2-e67d-471c-8b75-fa44bce1eff2`,
+Worker `722067b5-9dc3-4845-af3e-f3cafd8938e2` recorded Ready at 100%.
+This is recorded release evidence, not a fresh provider/phone observation.
+H4 #47 and H2 #49 already merged/deployed under their separate owner approvals.
+
+Fresh Codex local checks on this reconciliation: typecheck, all 130 unit tests,
+33 release-gate tests, complete scorebook modes in Chromium/WebKit, Games flow
+in Chromium/WebKit (including 99–98, modest unknown labels and compact leaders),
+Home/Stats in Chromium/WebKit, and connected UI/disposable SQL all PASS.
+Initial sandbox unit failure was dependency-junction access; the authorized
+rerun with existing dependencies passed. No install or assertion weakening.
+H5 fixes the typed-entry reset path and complete WebKit scorebook now passes;
+this is new evidence, distinct from #57's earlier unchanged-baseline failure.
+
+Fresh local results and full exact-head CI are finalized in
+[PR #52](https://github.com/Chappy1740/DiamondAlibi/pull/52), the completion receipt
+for exact SHA, changed files, checks, mergeability and review findings. No inline
+review threads existed at recovery; independent review remains unverified.
+Physical phone, microphone, hosted authenticated and cross-device acceptance
+remain UNKNOWN. Optional fun labels/group names remain deferred. No milestone
+closes. Next: push reconciled head, pass full exact-head CI and return only #52
+for final release approval. Continue this chat while scope/evidence agree.
+
+<!-- Earlier preparation and release snapshots below retain their historical scope. -->
+
+## November 4, 2026 — Games display correction prepared locally
+
+Owner phone feedback requests a smaller score/unavailable label and the existing
+two-column, single-category-label Stats presentation for competition leaders.
+Current brief, preservation rules, local checks/previews and completion receipt:
+[Games handoff](docs/screen-handoffs/02-games.md#november-4-2026--games-score-size-and-compact-competition-leaders), synchronized with tracker revision 85.
+Local uncommitted branch `codex/games-score-leader-layout` starts from deployed
+main `c788fa7e9a6c23ffc085a6ba2f09f96cde2829e7` / #49. Reuse existing
+components/CSS; no calculations, score cap, dependencies, hosted writes or
+provider/database changes. This correction is not live. Owner continued the proposed commit/push/draft PR
+for full CI. Merge/deployment still require a separate scoped decision under
+CONTRIBUTING.md; prior #49 delivery approval is historical. #52 and Claude Roast Club untouched; no milestone closes.
+AMBER: focused Games/Home/Stats tests pass both engines and Chromium scorebook
+passes; full WebKit scorebook also fails on unchanged baseline typed entry.
+Details/retest are in the linked local receipt. Return the concrete correction
+for draft publication/full CI, then separate release review after passing checks.
+
+<!-- Earlier release and preparation snapshots below remain historical. -->
+
+## November 3, 2026 — H4 merged; H2 retargeted to main
+
+**Recovered; GREEN. H4 rung: Merged. H2 candidate: Tested locally after retarget.**
+Owner explicitly approved merging and automatically deploying #47 only, and
+asked whether to do #49 next. H4 merged as
+`d469091a88550af3d560e9ac5341acd083b08b34`, retaining reviewed H4
+`3114f47d5aef47a4183ccdf91061fe01b6cfaf41`; their source trees are identical.
+Main CI is pending; initial Worker build
+`117831c9-9029-410c-b13b-1a6a52fe17db` failed without a version receipt.
+Failure cause/current traffic are UNKNOWN at this source snapshot; the
+[H4 completion receipt](https://github.com/Chappy1740/DiamondAlibi/pull/47)
+records their eventual result, build and version. No deployment claim is made here.
+No production migration, provider configuration, dependency or unrelated change.
+
+H2 #49 now targets `main`, baseline
+`d469091a88550af3d560e9ac5341acd083b08b34`. Former H2 head
+`c622917c4913e2acf603196c3ce8c322d66a99f3` and the original H2/H4 commits
+are retained. Integrating merged main produced no conflicts or application/test
+changes. H2 remains the original Games navigation/card scope, plus its current
+reconciliation records. Existing components, native links/CSS and packages reused.
+Main's approved Home/Stats and H4 dropdown/type scale remain intact; no H5 code.
+
+Original reconciliation authorization covers this retarget, corrections, tests,
+commit/push and GitHub records. #49 remains draft: its merge/deployment is NOT
+approved by the owner's question. #52 remains unmerged; its prior merge-only
+permission does not authorize automatic deployment. Claude Roast Club branches
+and PRs are excluded and untouched. No milestone closes.
+
+Fresh Codex local checks: typecheck, four tracker tests and Games flow in both
+Chromium and WebKit passed. H2 application/test content is identical to former
+head c622917. Exact new H2 SHA, complete main-based CI, changed files, mergeability
+and outstanding phone/hosted/cross-device acceptance are the completion receipt
+in [PR #49](https://github.com/Chappy1740/DiamondAlibi/pull/49).
+Earlier H4-based passing runs below are historical evidence, not validation of
+this new candidate. Continue this chat: authorization, source and records agree.
+Next: finish approved #47 release verification and main-based #49 validation,
+then return #49 for a separate owner merge/deployment decision. No #49 release.
+
+<!-- Earlier snapshots below retain their historical scope. -->
+
+## November 3, 2026 — Pilot PR reconciliation (H2 dependent checkpoint)
+
+**Recovered; GREEN. Ready for review; no release.** Owner authorizes scoped
+reconciliation, tests, commit/push and GitHub-backed handoffs for #52/#47/#49.
+No PR merges, deployments, production migrations, provider/dependency changes,
+or unrelated features. Claude Roast Club branches and PRs remain untouched.
+Main: `c38d4cf483eded68f1b63294898644c9aac14054`.
+H5 #52: `33e280a4aa8e64d4a30e7d8e28ad071d1822b03b`, based on main.
+H4 #47: `3114f47d5aef47a4183ccdf91061fe01b6cfaf41`, now based on main.
+H2 original: `50f8cc4d365ae0a95db7bdeff5291ce02b897596`, retained in history.
+
+H2 integrates that exact H4 head with no conflict. Keep #49 targeting
+`codex/h4-dropdown-type-scale`; its application/test diff is the same original
+seven-file H2 scope, plus reconciliation records. No H5 code is included.
+Retain H4's body-text token, current main Home/Stats and all existing consumers.
+Reuse CompactGameList, PlayerDashboard, native links/CSS and installed packages.
+Two cards across on phones, three from 640px, whole-card keyboard/touch links,
+full context, saved scores and sample/review/archived restrictions remain.
+
+Rung: **Tested** locally by Codex: typecheck, 22 tracker/leaderboard tests,
+Games/Home/Stats/tournament-time Chromium and WebKit, connected UI/disposable
+SQL, practice-season and sample dashboard checks passed. Preview-only generated
+next-env changes were excluded. Full new-head CI remains pending in the PR.
+All H2 application/test added/removed lines match the original H2 diff exactly.
+Fresh local checks, full exact-head CI, exact SHA/files, review findings and
+mergeability are the completion receipt in [PR #49](https://github.com/Chappy1740/DiamondAlibi/pull/49).
+No review threads/submitted reviews existed at recovery; independent review and
+physical phone, hosted authenticated and cross-device acceptance remain UNKNOWN.
+No milestones close. Current exact-head receipts:
+[#52](https://github.com/Chappy1740/DiamondAlibi/pull/52),
+[#47](https://github.com/Chappy1740/DiamondAlibi/pull/47),
+[#49](https://github.com/Chappy1740/DiamondAlibi/pull/49).
+
+Next: validate/push H2, finish all three CI receipts and return for owner review.
+Proposed smallest separately approved release sequence: #52; refresh/revalidate
+#47 against resulting main; #47; then retarget #49 to main, reconcile and rerun
+full CI before #49. Never retarget #49 prematurely or treat current H4-based CI
+as validation of a future main-based candidate. No release action is done here.
+Continue this chat: scope, authority, evidence and retained history agree.
+
+<!-- Earlier checkpoint/requirements below are historical. -->
+
+## November 3, 2026 — Pilot PR reconciliation (H4 checkpoint)
+
+**Recovered; GREEN. Ready for review; no release.** Owner authorizes scoped
+reconciliation, tests, commit/push and GitHub records for #52/#47/#49 only.
+No PR merges, deployments, production migrations, provider/dependency changes
+or unrelated features. Claude Roast Club branches/PRs are excluded.
+Main: `c38d4cf483eded68f1b63294898644c9aac14054`. H4 original head:
+`14bea97aed53b4a22ba6fb7ec738b76b8ead5efb`, retained in branch history.
+Retarget #47 from old H3 to main; retain only H4 and its reconciliation records.
+CSS conflict: independent appended H4 typography and main game-stat-lines blocks;
+keep both, plus current Stats count–leader / amount–Tied markup and all newer tests.
+Reuse existing DashboardSelect, PlayerDashboard, native controls, CSS and packages.
+
+Rung: **Tested** locally by Codex: typecheck, 22 tracker/leaderboard tests,
+Home/Stats and Games Chromium/WebKit, Chromium scorebook and Beverage controls
+passed. Full exact-head CI remains pending until the PR receipt records it.
+Fresh local tests, full exact-head CI,
+SHA/files, review findings and mergeability are the completion receipt in
+[PR #47](https://github.com/Chappy1740/DiamondAlibi/pull/47).
+No review threads or submitted reviews existed at recovery; independent review,
+physical phone, hosted authenticated and cross-device acceptance remain UNKNOWN.
+No milestone closes. Current #52 head is
+`33e280a4aa8e64d4a30e7d8e28ad071d1822b03b`; it remains independent of H4.
+
+Next: validate/push H4, then integrate its verified head into dependent H2 #49.
+Keep #49 based on H4 with an H2-only diff. Later proposed order: #52, refresh and
+revalidate #47 against resulting main, #47, then retarget #49 to main and revalidate.
+Every release action requires separate owner approval. Dry-run H5 + H4
+integration reports only RELEASE-READINESS.md, 00-WORKING-STANDARD.md and
+project-tracker.ts conflicts; retain both scopes when later refreshing H4. Current exact-head receipts:
+[#52](https://github.com/Chappy1740/DiamondAlibi/pull/52),
+[#47](https://github.com/Chappy1740/DiamondAlibi/pull/47),
+[#49](https://github.com/Chappy1740/DiamondAlibi/pull/49).
+Continue this chat: authority, evidence and history are coherent.
+
+<!-- Historical H5 preparation snapshot retained from its branch. -->
+
 ## November 3, 2026 — Pilot PR reconciliation (H5 checkpoint)
 
 **Recovered; GREEN. Ready for review, no release authorization.** Owner authorizes
