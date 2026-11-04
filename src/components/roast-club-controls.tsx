@@ -78,7 +78,7 @@ export function RoastClubControls({ teamId }: { teamId: string }) {
         <strong>{value.optedIn ? "You're in Roast Club" : "Roast Club is off for you"}</strong>
       </p>
       <p className="micro">
-        Optional. When it is on, clean, funny lines about your at-bats may be shown to the team.
+        Optional. When it is on, clean, funny lines about your at-bats may be shown to the team, and read aloud if the scorer turns on the announcer.
         Turn it off any time and it stops right away. It never changes your stats or scoring.
       </p>
       <button

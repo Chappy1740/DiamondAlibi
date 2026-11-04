@@ -2,7 +2,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { roastClubAction } from "@/app/club/roast-club-actions";
 import { createRoastPlanner } from "@/lib/roast-club";
-import { planConfirmedRoast, type SnapshotGame } from "@/lib/roast-club-flow";
+import { confirmedScore, planConfirmedRoast, type SnapshotGame } from "@/lib/roast-club-flow";
+import { ANNOUNCER_STORAGE_KEY, announcerActive, createSpeaker, neutralLine, parsePrefs } from "@/lib/roast-announcer";
 import type { RoastClubState } from "@/lib/roast-club-consent";
 
 export type RoastAnnounce = {
@@ -13,6 +14,21 @@ export type RoastAnnounce = {
 };
 
 const SHOW_MS = 7000;
+
+/** One speaker per page, built on the browser’s own speech. Null when the browser has none. */
+let pageSpeaker: ReturnType<typeof createSpeaker> | null = null;
+export function getSpeaker() {
+  if (pageSpeaker) return pageSpeaker;
+  const synth = typeof window !== "undefined" && "speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined" ? window.speechSynthesis : null;
+  pageSpeaker = createSpeaker({
+    synth,
+    makeUtterance: (text, volume) => { const u = new SpeechSynthesisUtterance(text); u.volume = volume; return u; },
+  });
+  return pageSpeaker;
+}
+export function readAnnouncerPrefs() {
+  try { return parsePrefs(window.localStorage.getItem(ANNOUNCER_STORAGE_KEY)); } catch { return parsePrefs(null); }
+}
 
 /** Owns the popup. Never throws, never blocks scoring, and says nothing when in doubt. */
 export function useRoastClub(teamId: string) {
@@ -72,6 +88,15 @@ export function useRoastClub(teamId: string) {
           cachedConsent: cache.current,
           readConsent,
         });
+        // Speech: only on the one designated, unmuted device for this exact game. Failures are silent.
+        try {
+          const prefs = readAnnouncerPrefs();
+          if (announcerActive(prefs, req.gameId) && input.receipt.duplicate !== true && input.receipt.status !== "conflict") {
+            const score = confirmedScore(input.games, req.gameId, req.change.playId);
+            const spoken = decision.kind === "show" && prefs.speakRoasts ? decision.text : score ? neutralLine(score.outcome, score.overLimitFenceHr) : null;
+            if (spoken) getSpeaker().say(req.commandId, spoken, prefs.volume);
+          }
+        } catch { /* speech is optional */ }
         if (decision.kind !== "show" || !alive.current) return;
         setLine(decision.text);
         if (timer.current) clearTimeout(timer.current);
