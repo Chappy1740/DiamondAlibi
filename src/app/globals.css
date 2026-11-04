@@ -1947,12 +1947,14 @@ blockquote {
 
 /* Stats categories fit in two columns; competition-page layouts stay unchanged. */
 .workspace--stats .leaderboard-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.workspace--stats .leaderboard-summary button { display: grid; grid-template-columns: 44px minmax(0, 1fr); grid-template-areas: "badge player" "counts player"; align-content: start; gap: 4px 8px; min-height: 88px; padding: 8px; border: 1px solid var(--border); border-radius: 8px; }
+.workspace--stats .leaderboard-summary button { display: grid; grid-template-columns: 32px minmax(0, 1fr); grid-template-areas: "badge player"; align-content: center; gap: 8px; min-height: 64px; padding: 8px; border: 1px solid var(--border); border-radius: 8px; }
 .workspace--stats .leaderboard-summary .leaderboard-badge { grid-area: badge; width: 32px; height: 32px; font-size: .75rem; }
-.workspace--stats .leaderboard-summary .leaderboard-player { grid-area: player; gap: 2px; }
+.workspace--stats .leaderboard-summary .leaderboard-player { grid-area: player; display: block; font-size: .875rem; line-height: 1.3; }
 .workspace--stats .leaderboard-summary .leaderboard-player > strong { font-size: .875rem; line-height: 1.3; }
-.workspace--stats .leaderboard-summary .leaderboard-player > .micro { font-size: .75rem; line-height: 1.3; }
-.workspace--stats .leaderboard-summary .leaderboard-counts { grid-area: counts; min-width: 0; max-width: 100%; margin: 0; overflow-wrap: anywhere; }
+.workspace--stats .leaderboard-summary .leaderboard-counts { display: inline; min-width: 0; margin: 0; }
+.workspace--stats .leaderboard-summary .leaderboard-counts span { display: inline; font-size: inherit; text-align: inherit; }
+.workspace--stats .leaderboard-summary .leaderboard-counts strong { font-size: inherit; }
+.workspace--stats .leaderboard-summary .leaderboard-beverage small::before { content: " "; }
 .workspace--stats .leaderboard-summary .leaderboard-counts strong { white-space: nowrap; line-height: 1.25; }
 .workspace--stats .leaderboard-summary .leaderboard-arrow { display: none; }
 .workspace--stats .leaderboard-players li { padding-block: .5rem; }

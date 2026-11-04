@@ -1,5 +1,9 @@
 # Diamond Alibi — Screen-by-screen working standard
 
+## November 3, 2026 — H3 Stats card correction
+
+Owner's phone UAT follow-up replaces the compact card's repeated category caption with **count – leader** beside its identifying circle. Current brief, source, limits, validation and completion-receipt contract: [10-stats.md](10-stats.md#november-3-2026--h3-phone-follow-up-count--leader), synchronized with `RELEASE-READINESS.md` and tracker revision 79. Branch `codex/stats-count-leader` starts from deployed release #48 / main `07e68783081b3c3439be5903abb7904432cbef33`; H2 #49 and H4 #47 remain separate drafts, excluded. The original H3 delivery authorization continues for this requested presentation correction. Local checks pass; exact-source CI, merge, deployment and owner phone acceptance are separate stages recorded in that branch's PR completion receipt. No hosted writes, credentials/access changes, new dependency or other feature is authorized. Continuity GREEN; continue this chat through the scoped release and return to owner UAT.
+
 ## November 3, 2026 — UAT release through PR #46
 
 **Owner release authorization:** commit, push, publish, merge and deploy the pending work through PR #46 so owner UAT can continue. H4 / PR #47 is excluded from this release; its already-published draft stays unmerged and undeployed. This supersedes the earlier draft-only delivery limits for the included PRs, not their product scope.

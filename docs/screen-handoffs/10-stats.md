@@ -1,5 +1,17 @@
 # 10 — Stats: Screen handoff
 
+## November 3, 2026 — H3 phone follow-up: count – leader
+
+Owner phone feedback: the circle already identifies HR, BEV and each other category, so the card must read **count – leader**. Stats now opts into the existing PlayerLeaderboard's compact summary: circle, then the unbroken value, separator and full leader name. The repeated category caption is removed. The nine-category/two-column layout, tied-leader indication, signed BEV credit/owed note, unknown-value warnings, rankings and keyboard focus remain. Values no longer occupy the old fixed 44px column below the circle. Long names wrap inside the remaining text space.
+
+Reuse decision: extend the existing summary rendering with an optional compact-summary prop and native inline text; no new renderer, state, calculation, data request or dependency. Only Stats opts in; League/Tournament retain their existing default summary and ranking markup/layout. H2 #49 and H4 #47 remain separate drafts and are excluded from this correction.
+
+Branch `codex/stats-count-leader`, based on deployed main `07e68783081b3c3439be5903abb7904432cbef33` / release PR #48. The owner's follow-up refines H3 during phone UAT; delivery continues the existing H3 commit/push/publication/deployment authorization in this chat. No migration, hosted test/write, provider/access/auth change, new dependency or other H-item implementation is included.
+
+**Stage at this source snapshot: Tested locally; full CI, merge and delivery verification pending.** Codex freshly passed typecheck, 22 tracker/leaderboard checks, Home/Stats Chromium and WebKit at 320/390/800/1440px, plus the Chromium shared scorebook/competition suite. Tests check count-before-name text, sole badge category label, counts beside the circle, numeric containment, long names, -12345 scoped BEV credit, all nine categories/two columns, 44px targets, unknowns, keyboard/Back focus and accessibility. Synthetic 390px and wide-value 320px screenshots were visually checked; installed dependencies/browsers reused. No real-phone acceptance is claimed.
+
+Completion receipt: the PR for `codex/stats-count-leader` records exact head/main validation and active Worker/build/traffic evidence, linked by this handoff, `00-WORKING-STANDARD.md`, `RELEASE-READINESS.md` and tracker revision 79. Next: normal exact-source release checks, then owner refreshes Stats on the existing protected phone site and checks that every card reads circle → count – leader. Prior compatible release is #48 / main `07e6878`, Worker prefix `1fde797e` at its verified 100% traffic observation. Revert only this presentation diff if necessary; no database rollback. Continuity GREEN; continue this chat through the scoped correction.
+
 **November 3 release update:** owner now authorizes publishing, merging and deploying H3 #46 with H1 #45 and the pending documentation through #46. H4 #47 remains excluded. See [current release handoff and completion receipt](00-WORKING-STANDARD.md#november-3-2026--uat-release-through-pr-46) and the release PR for `codex/uat-release-through-pr46` for actual source/check/activation state. Physical-phone acceptance, including realistic numeric width and the hidden tap hint, remains open; the original draft-only boundary below is historical.
 
 ## November 3, 2026 — H3 compact Stats (owner-approved draft scope)
