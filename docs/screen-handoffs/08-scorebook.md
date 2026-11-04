@@ -1,5 +1,14 @@
 # 08 — Live scorebook: Screen handoff
 
+## November 3, 2026 — Reconciliation update
+
+Current main is `c38d4cf483eded68f1b63294898644c9aac14054`. The original H5
+receipt below is historical. Reconciliation preserves all H5 code and main's
+newer Stats changes. Authorization, dependencies and limitations are in the
+[current working standard](00-WORKING-STANDARD.md#november-3-2026--pilot-pr-reconciliation-h5-checkpoint);
+[PR #52](https://github.com/Chappy1740/DiamondAlibi/pull/52) is the exact-head
+completion receipt for fresh checks, review findings and mergeability. No release.
+
 ## November 3, 2026 — H5 Scorebook draft
 
 Owner approved H5 only as its own draft PR from current main: Runs 0–4

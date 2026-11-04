@@ -1,5 +1,39 @@
 # Release readiness and recovery
 
+## November 3, 2026 — Pilot PR reconciliation (H5 checkpoint)
+
+**Recovered; GREEN. Ready for review, no release authorization.** Owner authorizes
+scoped reconciliation, conflict resolution, tests, commit/push and PR/handoff
+updates for #52, #47 and #49 only. No PR merge, deployment, production migration,
+provider change or unrelated feature work. Claude's Roast Club work is excluded.
+Verified main: `c38d4cf483eded68f1b63294898644c9aac14054`.
+H5 source: `701117177e02575e69bdcf80f1acf7a116912b07` on
+`codex/h5-scorebook-flow`; original history is retained without force push.
+
+The H5/main conflict was only concurrent receipts in RELEASE-READINESS.md,
+00-WORKING-STANDARD.md and project-tracker.ts. Preserve both histories and main's
+Stats count–leader / amount–Tied behavior and owner-reported appearance acceptance.
+H5 scoring components, receipt guards, OUT-only over-limit HR presentation,
+server scoring rules and tests are unchanged from the original H5 head.
+Reuse: existing components, commands, CSS and installed pinned dependencies.
+
+Rung: **Tested** locally by Codex in this reconciliation session: typecheck,
+130 unit tests, 33 release-gate tests, Chromium/WebKit scorebook and Home/Stats,
+and connected UI + disposable SQL regression passed. Initial sandbox dependency
+access failure was rerun successfully with existing dependencies; no install.
+Full exact-head CI remains pending until the linked PR receipt records its pass.
+Fresh local checks and full exact-head CI, full review SHA, changed files and
+mergeability are the completion receipt in [PR #52](https://github.com/Chappy1740/DiamondAlibi/pull/52).
+Do not infer a new pass or live version from older passing checks. Physical phone,
+actual microphone, hosted authenticated and cross-device acceptance remain UNKNOWN.
+No milestone closes. This session may continue: scope and evidence are coherent.
+
+Next: validate/push H5, reconcile H4 #47 onto main with an H4-only diff, then
+integrate the updated H4 base into dependent H2 #49. Keep all three draft.
+For a later separately approved release prioritize #52; #47 must precede #49.
+After an approved #47 merge, retarget #49 to main, reconcile and rerun full CI;
+no retarget or release is implied now. Final PR receipts carry current exact SHAs.
+
 ## November 3 H5 — Scorebook draft, no release
 
 `codex/h5-scorebook-flow` is based on current main
@@ -19,6 +53,10 @@ prefix `1fde797e`, 100% traffic, build `831818e3-1389-494c-b6ed-9f38a411bd8e`,
 hostname `diamondalibi.eydrenworks.com`, successful main run `41743150437`.
 Full Worker UUID and current-phone loaded version are unknown. This historical
 receipt does not establish current provider traffic or H5 deployment.
+
+## November 3 H3 tie wording
+
+Owner says Stats look good after #50 and requests **amount – Tied** instead of a count of tied leaders. This is owner acceptance of the card appearance, with tie wording still open. `codex/stats-tied-label`, from deployed main `4452beadb6f7a83f459a518db91f464f6a185a46`, changes only the compact summary wording and retains all tied players in the ranking view. Current brief/receipt is [10-stats.md](docs/screen-handoffs/10-stats.md#november-3-2026--h3-tie-wording), synchronized with the working standard and tracker revision 80. Existing H3 presentation delivery authorization continues; H2 #49/H4 #47 remain excluded drafts. Local typecheck, 22 tracker/leaderboard checks and Chromium/WebKit Home/Stats pass; exact-source CI, merge and active verification remain pending at this source snapshot and are recorded in the correction PR. Prior compatible #50 Worker prefix `90f2bf8a` remains the rollback point. No scoring, ranking policy, schema, dependency, hosted write or auth/access/provider change.
 
 ## November 3 H3 phone correction — count – leader
 

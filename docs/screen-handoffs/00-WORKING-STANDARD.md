@@ -1,5 +1,39 @@
 # Diamond Alibi — Screen-by-screen working standard
 
+## November 3, 2026 — Pilot PR reconciliation (H5 checkpoint)
+
+**Recovered; GREEN. Ready for review, no release authorization.** Owner authorizes
+scoped reconciliation, conflict resolution, tests, commit/push and PR/handoff
+updates for #52, #47 and #49 only. No PR merge, deployment, production migration,
+provider change or unrelated feature work. Claude's Roast Club work is excluded.
+Verified main: `c38d4cf483eded68f1b63294898644c9aac14054`.
+H5 source: `701117177e02575e69bdcf80f1acf7a116912b07` on
+`codex/h5-scorebook-flow`; original history is retained without force push.
+
+The H5/main conflict was only concurrent receipts in RELEASE-READINESS.md,
+00-WORKING-STANDARD.md and project-tracker.ts. Preserve both histories and main's
+Stats count–leader / amount–Tied behavior and owner-reported appearance acceptance.
+H5 scoring components, receipt guards, OUT-only over-limit HR presentation,
+server scoring rules and tests are unchanged from the original H5 head.
+Reuse: existing components, commands, CSS and installed pinned dependencies.
+
+Rung: **Tested** locally by Codex in this reconciliation session: typecheck,
+130 unit tests, 33 release-gate tests, Chromium/WebKit scorebook and Home/Stats,
+and connected UI + disposable SQL regression passed. Initial sandbox dependency
+access failure was rerun successfully with existing dependencies; no install.
+Full exact-head CI remains pending until the linked PR receipt records its pass.
+Fresh local checks and full exact-head CI, full review SHA, changed files and
+mergeability are the completion receipt in [PR #52](https://github.com/Chappy1740/DiamondAlibi/pull/52).
+Do not infer a new pass or live version from older passing checks. Physical phone,
+actual microphone, hosted authenticated and cross-device acceptance remain UNKNOWN.
+No milestone closes. This session may continue: scope and evidence are coherent.
+
+Next: validate/push H5, reconcile H4 #47 onto main with an H4-only diff, then
+integrate the updated H4 base into dependent H2 #49. Keep all three draft.
+For a later separately approved release prioritize #52; #47 must precede #49.
+After an approved #47 merge, retarget #49 to main, reconcile and rerun full CI;
+no retarget or release is implied now. Final PR receipts carry current exact SHAs.
+
 ## November 3, 2026 — H5 Scorebook draft only
 
 Owner approved H5 from current main `4452beadb6f7a83f459a518db91f464f6a185a46`
@@ -15,6 +49,10 @@ only: no merge/deploy/migration/hosted test/new dependency/H6–H8. H4 #47 must
 precede H2 #49 in a later authorized merge; neither branch is changed. The H5 PR
 records final exact-head CI and draft readback. Local automated tests are not
 physical-phone acceptance. Continuity GREEN; finish the draft receipt here.
+
+## November 3, 2026 — H3 tie wording refinement
+
+Owner accepted the Stats card appearance after #50 and requested **amount – Tied**, without the number of tied players. Current brief/receipt: [10-stats.md](10-stats.md#november-3-2026--h3-tie-wording), release readiness and tracker revision 80. `codex/stats-tied-label` starts from deployed main `4452beadb6f7a83f459a518db91f464f6a185a46`; continuing H3 delivery authorization covers this presentation refinement. Local checks pass; exact CI/merge/activation and owner tie-label acceptance remain pending at this source snapshot, with final evidence in the correction PR. H2 #49/H4 #47 stay excluded drafts; repo-only agent UAT sharing remains. Continuity GREEN; continue this chat through delivery and return to owner UAT.
 
 ## November 3, 2026 — H3 Stats card correction
 

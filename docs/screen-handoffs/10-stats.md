@@ -1,5 +1,13 @@
 # 10 — Stats: Screen handoff
 
+## November 3, 2026 — H3 tie wording
+
+Owner phone feedback after #50: **"the stats look good"**, then requested amount followed by **Tied**, e.g. Hits 12 Tied. This accepts the count–leader card appearance as owner-reported evidence; it does not close broader Stats/pilot acceptance. Compact Stats summaries now read **12 – Tied**, replacing the number of tied players such as "2 tied". The identifying circle, actual amount, full individual rankings and Back focus remain. League/Tournament default summaries retain their existing wording.
+
+Branch `codex/stats-tied-label`, from deployed main `4452beadb6f7a83f459a518db91f464f6a185a46` / #50, active Worker prefix `90f2bf8a` at the prior verification. Reuse the existing summary conditional; no new component, state, request, calculation or dependency. Continue the existing H3 presentation commit/push/merge/deployment authorization for this phone-UAT refinement only. H2 #49/H4 #47 remain separate drafts, excluded; no migration, hosted write/test, auth/access/provider change or new email is included.
+
+**Stage at this source snapshot: Tested locally; full CI, merge, activation and owner tie-label acceptance pending.** Fresh Codex checks: TypeScript, whitespace, 22 tracker/leaderboard tests, Home/Stats Chromium and WebKit. The synthetic tie case asserts **12 – Tied**, then opens Hits to verify both named players still show 12 and Back restores focus. Existing 320–1440px, wide signed BEV, full names, keyboard and accessibility checks pass. Installed dependencies/browsers reused. Completion receipt: the PR for `codex/stats-tied-label`, linked by this handoff, `00-WORKING-STANDARD.md`, `RELEASE-READINESS.md` and tracker revision 80, records exact-source CI and active Worker/build evidence. Next: gated delivery, then owner refreshes Stats and checks a tied category. Revert only this wording diff if needed; no database rollback. Continuity GREEN; continue this chat.
+
 ## November 3, 2026 — H3 phone follow-up: count – leader
 
 Owner phone feedback: the circle already identifies HR, BEV and each other category, so the card must read **count – leader**. Stats now opts into the existing PlayerLeaderboard's compact summary: circle, then the unbroken value, separator and full leader name. The repeated category caption is removed. The nine-category/two-column layout, tied-leader indication, signed BEV credit/owed note, unknown-value warnings, rankings and keyboard focus remain. Values no longer occupy the old fixed 44px column below the circle. Long names wrap inside the remaining text space.
