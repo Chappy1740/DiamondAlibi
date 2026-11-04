@@ -15,6 +15,7 @@ const assert = require("node:assert/strict");
         const data={archived:false,roster:[{id:'player',user_id:'synthetic-user',display_name:'Test Player',is_guest:false},{id:'teammate',user_id:'other-user',display_name:'Other Synthetic Player',is_guest:false}],snapshot:{teamId:'team',seasonId:'season',scope:'Overall',games:[{game:{id:'other-game',kind:'League',opponent:'Other synthetic opponent',completed:false,next_batter_position:0},lineup:['teammate'],playedOn:'2026-10-13'}],totals:{player:{...emptyTotals(),PA:4,AB:4,H:1,HR:1,RBI:3},teammate:{...emptyTotals(),PA:20,AB:20,H:9,HR:9,RBI:9}},board:{player:-2},tournaments:[],leagues:[]}};
         const p={route:location.pathname.slice(1),sample:location.search.includes('sample=1'),userId:'synthetic-user',teams:[{id:'team',name:'M3-5 Synthetic Test'},{id:'long',name:long}],seasons:[{id:'season',name:'M3-5 Synthetic Season',archived:false},{id:'history',name:'Synthetic Season with an exceptionally long history name',archived:true}],teamId:'team',seasonId:'season',scope:'Overall',loaded:data};
         const fixtureQuery=new URLSearchParams(location.search);
+        if(fixtureQuery.has('tied-stats')){Object.assign(data.snapshot.totals.player,{PA:20,AB:20,H:12});data.snapshot.totals.teammate.H=12;}
         if(fixtureQuery.has('wide-stats')){data.roster[1].display_name='Alexandria Montgomery-Santiago';Object.assign(data.snapshot.totals.teammate,{PA:25000,AB:21000,H:12345,HR:1234,RBI:12345,board:-12345});data.snapshot.totals.player.board=-23456;}
         if(fixtureQuery.has('owed'))data.snapshot.board.player=4;
         if(fixtureQuery.has('settled'))data.snapshot.board.player=0;
@@ -192,6 +193,14 @@ const assert = require("node:assert/strict");
     const firstCategory=leaders.getByRole('button',{name:'View OBP% rankings',exact:true});await firstCategory.focus();await page.keyboard.press('Enter');await leaders.getByRole('heading',{name:'OBP% rankings',exact:true}).waitFor();await leaders.getByRole('button',{name:'← Back to leaders',exact:true}).click();assert.equal(await firstCategory.evaluate(el=>el===document.activeElement),true,'Compact cards retain keyboard selection and return focus');
     await page.addScriptTag({path:require.resolve('axe-core')});
     assert.deepEqual(await page.evaluate(async()=> (await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations.map(v=>v.id)),[]);
+    await page.goto('http://127.0.0.1:'+server.address().port+'/stats?tied-stats=1');await page.getByRole('heading',{name:'Team leaders',exact:true}).waitFor();
+    const tiedHits=leaders.getByRole('button',{name:'View Hits rankings',exact:true});
+    assert.equal(await tiedHits.locator('.leaderboard-player').textContent(),'12 – Tied','The amount leads; Tied replaces the number of tied players');
+    await tiedHits.click();await leaders.getByRole('heading',{name:'Hits rankings',exact:true}).waitFor();
+    assert.deepEqual(await leaders.locator('.leaderboard-counts strong').allTextContents(),['12','12'],'Opening a tied category retains every tied amount');
+    assert.deepEqual((await leaders.locator('.leaderboard-player strong').allTextContents()).sort(),['Other Synthetic Player','Test Player']);
+    await leaders.getByRole('button',{name:'← Back to leaders',exact:true}).click();
+    assert.equal(await tiedHits.evaluate(el=>el===document.activeElement),true,'Back returns focus to the tied category');
     await page.goto('http://127.0.0.1:'+server.address().port+'/stats?wide-stats=1');await page.getByRole('heading',{name:'Team leaders',exact:true}).waitFor();
     for(const width of [320,390,800,1440]){
       await page.setViewportSize({width,height:900});
