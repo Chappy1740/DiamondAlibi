@@ -52,6 +52,6 @@ function CompetitionSeasonStats({ data, team, season, seasonName, kind, competit
       </div> : <p>{individual ? `No recorded plate appearances in this ${noun}.` : `No recorded ${noun} plate appearances this season.`}</p>}
     </section>
     {stats.players.length > 0 && <PlayerLeaderboard key={`${kind}:${team}:${season}:${competitionId ?? "overall"}`} players={stats.players}
-      title="Player leaders" scopeLabel={scope} regionLabel={individual ? `${kind} player leaderboard` : `Overall ${noun} player leaderboard`} />}
+      compactSummary title="Player leaders" scopeLabel={scope} regionLabel={individual ? `${kind} player leaderboard` : `Overall ${noun} player leaderboard`} />}
   </section>;
 }

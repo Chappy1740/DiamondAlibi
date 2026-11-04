@@ -80,7 +80,7 @@ export function PlayerLeaderboard({
   }, [metric]);
   const rows = metric ? rankTournamentPlayers(players, metric) : [];
   return (
-    <section className="tournament-leaderboard" aria-label={regionLabel}>
+    <section className={`tournament-leaderboard${compactSummary ? " tournament-leaderboard--compact" : ""}`} aria-label={regionLabel}>
       <h2>{metric ? `${labels[metric]} rankings` : title}</h2>
       <p className="micro leaderboard-scope">{scopeLabel}</p>
       {players.some(row => leaderboardValue(row, "2B") == null || leaderboardValue(row, "3B") == null) && <p className="micro">Some older hits did not record a hit type. Unavailable doubles and triples show — and are unranked.</p>}
@@ -189,6 +189,7 @@ export function TournamentLeaderboard({
       title="Player leaders"
       scopeLabel="This tournament only"
       regionLabel="Tournament player leaderboard"
+      compactSummary
     />
   );
 }

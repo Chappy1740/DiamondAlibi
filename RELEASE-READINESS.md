@@ -1,5 +1,24 @@
 # Release readiness and recovery
 
+## November 4, 2026 — Games display correction prepared locally
+
+Owner phone feedback requests a smaller score/unavailable label and the existing
+two-column, single-category-label Stats presentation for competition leaders.
+Current brief, preservation rules, local checks/previews and completion receipt:
+[Games handoff](docs/screen-handoffs/02-games.md#november-4-2026--games-score-size-and-compact-competition-leaders), synchronized with tracker revision 85.
+Local uncommitted branch `codex/games-score-leader-layout` starts from deployed
+main `c788fa7e9a6c23ffc085a6ba2f09f96cde2829e7` / #49. Reuse existing
+components/CSS; no calculations, score cap, dependencies, hosted writes or
+provider/database changes. This correction is not live. Owner continued the proposed commit/push/draft PR
+for full CI. Merge/deployment still require a separate scoped decision under
+CONTRIBUTING.md; prior #49 delivery approval is historical. #52 and Claude Roast Club untouched; no milestone closes.
+AMBER: focused Games/Home/Stats tests pass both engines and Chromium scorebook
+passes; full WebKit scorebook also fails on unchanged baseline typed entry.
+Details/retest are in the linked local receipt. Return the concrete correction
+for draft publication/full CI, then separate release review after passing checks.
+
+<!-- Earlier release and preparation snapshots below remain historical. -->
+
 ## November 3, 2026 — H4 merged; H2 retargeted to main
 
 **Recovered; GREEN. H4 rung: Merged. H2 candidate: Tested locally after retarget.**
