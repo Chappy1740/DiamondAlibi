@@ -59,11 +59,13 @@ export function PlayerLeaderboard({
   scopeLabel,
   title,
   regionLabel,
+  compactSummary = false,
 }: {
   players: TournamentPlayer[];
   scopeLabel: string;
   title: string;
   regionLabel: string;
+  compactSummary?: boolean;
 }) {
   const [metric, setMetric] = useState<LeaderboardMetric | null>(null);
   const lastMetric = useRef<LeaderboardMetric | null>(null);
@@ -93,6 +95,11 @@ export function PlayerLeaderboard({
             const ranked = rankTournamentPlayers(players, key);
             const leaders = ranked.filter((row) => row.rank === 1);
             const leader = leaders[0];
+            const value = leader ? (
+              <MetricValue row={leader} metric={key} showLabel={false} />
+            ) : (
+              <span>—</span>
+            );
             return (
               <button
                 key={key}
@@ -110,21 +117,16 @@ export function PlayerLeaderboard({
                 <span className="leaderboard-badge" aria-hidden="true">
                   {badges[key]}
                 </span>
-                <span className="leaderboard-player">
+                <span className={`leaderboard-player${compactSummary ? " leaderboard-player--count-first" : ""}`}>
+                  {compactSummary && <><span className="leaderboard-counts">{value}</span><span className="leaderboard-separator" aria-hidden="true"> – </span></>}
                   <strong>
                     {leaders.length > 1
-                      ? `${leaders.length} tied`
+                      ? (compactSummary ? "Tied" : `${leaders.length} tied`)
                       : (leader?.name ?? "No recorded value")}
                   </strong>
-                  <span className="micro">{labels[key]}</span>
+                  {!compactSummary && <span className="micro">{labels[key]}</span>}
                 </span>
-                <span className="leaderboard-counts">
-                  {leader ? (
-                    <MetricValue row={leader} metric={key} showLabel={false} />
-                  ) : (
-                    <span>—</span>
-                  )}
-                </span>
+                {!compactSummary && <span className="leaderboard-counts">{value}</span>}
                 <span className="leaderboard-arrow" aria-hidden="true">
                   ›
                 </span>

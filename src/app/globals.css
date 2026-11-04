@@ -17,6 +17,7 @@
 
 .project-status { max-width: 1000px; }
 .project-status .detail-card { max-width: none; margin-block: 24px; }
+.project-status p { overflow-wrap: anywhere; }
 .project-status progress { width: 100%; height: 18px; accent-color: var(--green); }
 .status-filter label { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .status-filter select { min-height: 44px; background: var(--surface); color: var(--white); padding: 10px; border: 1px solid var(--muted); border-radius: 8px; font: inherit; max-width: 100%; }
@@ -1950,12 +1951,14 @@ blockquote {
 
 /* Stats categories fit in two columns; competition-page layouts stay unchanged. */
 .workspace--stats .leaderboard-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.workspace--stats .leaderboard-summary button { display: grid; grid-template-columns: 44px minmax(0, 1fr); grid-template-areas: "badge player" "counts player"; align-content: start; gap: 4px 8px; min-height: 88px; padding: 8px; border: 1px solid var(--border); border-radius: 8px; }
+.workspace--stats .leaderboard-summary button { display: grid; grid-template-columns: 32px minmax(0, 1fr); grid-template-areas: "badge player"; align-content: center; gap: 8px; min-height: 64px; padding: 8px; border: 1px solid var(--border); border-radius: 8px; }
 .workspace--stats .leaderboard-summary .leaderboard-badge { grid-area: badge; width: 32px; height: 32px; font-size: .75rem; }
-.workspace--stats .leaderboard-summary .leaderboard-player { grid-area: player; gap: 2px; }
+.workspace--stats .leaderboard-summary .leaderboard-player { grid-area: player; display: block; font-size: .875rem; line-height: 1.3; }
 .workspace--stats .leaderboard-summary .leaderboard-player > strong { font-size: .875rem; line-height: 1.3; }
-.workspace--stats .leaderboard-summary .leaderboard-player > .micro { font-size: .75rem; line-height: 1.3; }
-.workspace--stats .leaderboard-summary .leaderboard-counts { grid-area: counts; min-width: 0; max-width: 100%; margin: 0; overflow-wrap: anywhere; }
+.workspace--stats .leaderboard-summary .leaderboard-counts { display: inline; min-width: 0; margin: 0; }
+.workspace--stats .leaderboard-summary .leaderboard-counts span { display: inline; font-size: inherit; text-align: inherit; }
+.workspace--stats .leaderboard-summary .leaderboard-counts strong { font-size: inherit; }
+.workspace--stats .leaderboard-summary .leaderboard-beverage small::before { content: " "; }
 .workspace--stats .leaderboard-summary .leaderboard-counts strong { white-space: nowrap; line-height: 1.25; }
 .workspace--stats .leaderboard-summary .leaderboard-arrow { display: none; }
 .workspace--stats .leaderboard-players li { padding-block: .5rem; }
@@ -2171,6 +2174,16 @@ body:has(.workspace--home) { padding-bottom: 0; }
 .regular-roster .button { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
 
 .team-invitations summary { min-height: 44px; display: list-item; align-content: center; cursor: pointer; }
+
+/* Game details: authoritative totals for this game, with each name above its line. */
+.game-stat-lines { margin-block: 20px; min-width: 0; }
+.game-stat-lines h3 { margin-bottom: 4px; }
+.game-stat-player { min-width: 0; padding-block: 12px; border-bottom: 1px solid var(--border); }
+.game-stat-player h4 { margin: 0 0 8px; overflow-wrap: anywhere; }
+.game-stat-player dl { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; margin: 0; text-align: center; }
+.game-stat-player dl > div { min-width: 0; }
+.game-stat-player dt { color: var(--muted); font-size: 12px; }
+.game-stat-player dd { margin: 4px 0 0; font-size: 14px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 
 /* H4's three-size scale is limited to Home, Games, Stats and Beverage. */
 .workspace--type-scale { font-size: var(--ui-text-body); }

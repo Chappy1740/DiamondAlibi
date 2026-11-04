@@ -27,6 +27,18 @@ const assert = require("node:assert/strict");
       if(query.has('completed'))data.snapshot.games.forEach(g=>g.game.completed=true);if(query.has('archived'))data.archived=true;
       if(query.has('over-limit-history')){const game=data.snapshot.games.find(g=>g.game.id===query.get('game'));game.evaluation.rows=[{id:'over-limit-play',playerId:'synthetic-player',outcome:'Fence HR',official:'OLHR',runs:1,rbi:1,voided:false,delta:3}];}
       window.__fixture=data;window.__audit=[{action:'hrLimit',reason:'Tournament game history',after:{game:{id:'cup-game'},fenceLimit:2}},{action:'hrLimit',reason:'League game history',after:{game:{id:'league-game'},fenceLimit:0}},{action:'band',tournamentId:'synthetic-cup',reason:'Cup Band history',before:true,after:false},{action:'start',reason:'Other game history',after:{gameId:'other-game'}}];
+      if(query.has('h1-stats')){
+        const game=data.snapshot.games.find(g=>g.game.id==='cup-game');
+        const plays=[['1B',0,0,false],['Fence HR',1,1,false],['Fence HR',1,1,false],['Fence HR',1,1,false],['Fence HR',1,1,false],['Fence HR',1,1,false],['1B',0,0,true]].map(([outcome,runs,rbi,voided],i)=>({id:'h1-play-'+i,playerId:'synthetic-player',outcome,runs,rbi,voided}));
+        if(query.has('h1-multiple')){
+          data.roster.push({id:'second-player',display_name:'Synthetic Second Player With A Very Long Name And UnbrokenNicknameABCDEFGHIJKLMNOPQRSTUVWXYZ',is_guest:false});
+          plays.push(...['1B','BB','SF','ROE',...(query.has('h1-hbp')?['HBP']:[])].map((outcome,i)=>({id:'h1-second-'+i,playerId:'second-player',outcome,runs:outcome==='SF'||outcome==='ROE'?1:0,rbi:outcome==='SF'?1:0,voided:false})));
+        }
+        game.evaluation=evaluateGame({id:game.game.id,opponent:game.game.opponent,kind:'Tournament',lineup:game.lineup,next:0,complete:false,rules:{version:'Synthetic H1 rules',fenceLimit:3,board:DEFAULT_BOARD},plays},[]);
+        if(query.has('h1-lineup-order'))game.lineup=['second-player','synthetic-player'];
+        data.snapshot.totals={'synthetic-player':{...emptyTotals(),PA:99,H:99,HR:99,RBI:99,runs:99}};
+        data.snapshot.games.find(g=>g.game.id==='league-game').evaluation.totals=data.snapshot.totals;
+      }
       if(query.has('leaderboard')){
         data.roster.push({id:'other-player',display_name:'Synthetic Blair with a very long roster nickname',is_guest:true});
         const cupGame=data.snapshot.games.find(g=>g.game.id==='cup-game');cupGame.evaluation.totals={'synthetic-player':{...emptyTotals(),PA:3,AB:3,H:2,HR:1,RBI:1,board:-1},'other-player':{...emptyTotals(),PA:3,AB:3,H:2,HR:0,RBI:2,board:2}};
@@ -63,6 +75,56 @@ const assert = require("node:assert/strict");
       window.setInterval=(fn,delay,...args)=>{if(delay!==15000)return original(fn,delay,...args);window.__polls.set(--id,fn);return id};
       window.clearInterval=timer=>{if(!window.__polls.delete(timer))clear(timer)};
     });
+    // H1: render authoritative selected-game totals, never raw inputs or season totals.
+    await page.goto(base+'/?page=1&manage-page=1&game=cup-game&h1-stats');
+    const gameStats=page.getByRole('region',{name:'Selected game player statistics',exact:true});
+    await gameStats.waitFor();
+    assert.deepEqual(await gameStats.locator('dt').allTextContents(),['PA','H','HR','RBI','R','OBP']);
+    assert.deepEqual(await gameStats.locator('dd').allTextContents(),['6','4','3','3','3','.667'],'Voided single and two OLHR inputs earn no credited runs/RBI/hits');
+    assert.equal(await gameStats.evaluate(el=>!!(el.compareDocumentPosition(document.querySelector('.game-management'))&Node.DOCUMENT_POSITION_FOLLOWING)),true,'Stat line precedes Game details & settings');
+    assert.equal(await page.evaluate(()=>window.__writes.length),0,'Viewing stats never writes');
+    await page.getByRole('button',{name:'Refresh scorebook',exact:true}).focus();
+    await page.keyboard.press('Tab');
+    assert.equal(await page.locator('.game-management > summary').evaluate(el=>el===document.activeElement),true,'Read-only stats add no keyboard stops');
+    await page.evaluate(()=>{const t=window.__fixture.snapshot.games.find(g=>g.game.id==='cup-game').evaluation.totals['synthetic-player'];Object.assign(t,{PA:5,AB:5,H:3});});
+    await page.getByRole('button',{name:'Refresh scorebook',exact:true}).click();
+    await page.waitForFunction(()=>document.querySelector('.game-stat-player dd')?.textContent==='5');
+    assert.deepEqual(await gameStats.locator('dd').allTextContents(),['5','3','3','3','3','.600'],'Authoritative correction/void readback updates the line');
+    await page.evaluate(()=>{Object.defineProperty(navigator,'onLine',{configurable:true,value:false});window.dispatchEvent(new Event('offline'));});
+    await page.waitForFunction(()=>document.querySelector('[aria-label="Refresh scorebook"]').disabled);
+    assert.equal(await page.getByRole('button',{name:'Refresh scorebook',exact:true}).isDisabled(),true);
+    assert.equal(await gameStats.isVisible(),true,'Existing offline warning retains previously loaded stats');
+    await page.evaluate(()=>{window.__reloadStatus='access-denied';Object.defineProperty(navigator,'onLine',{configurable:true,value:true});window.dispatchEvent(new Event('online'));});
+    await gameStats.waitFor({state:'hidden'});
+    await page.getByText('Team access is no longer available.',{exact:true}).waitFor();
+    await page.goto(base+'/?page=1&manage-page=1&game=cup-game&h1-stats&h1-multiple');
+    await gameStats.waitFor();
+    assert.deepEqual(await gameStats.locator('dd').allTextContents(),['6','4','3','3','3','.667','4','1','0','1','2','.500'],'BB and SF exclude AB; ROE is not a hit or OBP reach');
+    for(const width of [320,390,430,800,1440]){
+      await page.setViewportSize({width,height:900});
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'H1 long names fit '+width);
+      assert.equal(await gameStats.locator('h4,dt,dd').evaluateAll(nodes=>nodes.every(el=>el.scrollWidth<=el.clientWidth)),true,'H1 text is contained at '+width);
+    }
+    await page.setViewportSize({width:390,height:844});
+    if(process.env.H1_SCREENSHOT)await gameStats.screenshot({path:process.env.H1_SCREENSHOT});
+    await page.goto(base+'/?mode=manage&game=cup-game&h1-stats&h1-multiple&h1-hbp');
+    await gameStats.waitFor();
+    assert.deepEqual((await gameStats.locator('dd').allTextContents()).slice(6),['5','1','0','1','2','.600'],'Historical HBP keeps the established OBP calculation');
+    await page.goto(base+'/?mode=manage&game=cup-game&h1-stats&h1-multiple&h1-lineup-order');await gameStats.waitFor();
+    assert.deepEqual(await gameStats.locator('h4').allTextContents(),['Synthetic Second Player With A Very Long Name And UnbrokenNicknameABCDEFGHIJKLMNOPQRSTUVWXYZ','Synthetic Player'],'Game lines follow lineup order even when totals insertion order differs');
+    await page.goto(base+'/?mode=manage&game=cup-game');
+    await gameStats.getByText('No recorded plate appearances in this game.',{exact:true}).waitFor();
+    assert.equal(await gameStats.locator('.game-stat-player').count(),0);
+    for(const mode of ['score','setup']){
+      await page.goto(base+'/?mode='+mode+'&game=cup-game&h1-stats');
+      await page.locator('.team-scorebook').waitFor();
+      assert.equal(await gameStats.count(),0,'H1 does not add a second placement to '+mode);
+    }
+    assert.deepEqual(errors,[]);
+    if(process.env.H1_ONLY === '1'){
+      console.log(`PASS ${process.env.BROWSER_ENGINE || 'chromium'} H1 selected-game stats: 6/4/3/3/3/.667, voids/OLHR, isolation, multiple players, BB/SF/ROE/legacy HBP, refresh, offline/access denial, keyboard and 320–1440px. Synthetic localhost only.`);
+      return;
+    }
     // A saved venue-local opener time is shown in scoring/details, never copied to Game 2.
     for(const mode of ['score','manage']){
       await page.goto(base+'/?mode='+mode+'&game=cup-game&start-time');
