@@ -1,6 +1,22 @@
 # Roast Club — build status (R1–R4)
 
-Status: AMBER. Code complete on local branches; nothing pushed, merged, or deployed. Updated 2026-11-03.
+Status: AMBER (EYD-PM-001). Code complete and pushed as draft PRs; nothing merged or deployed. Updated 2026-11-03 (evening).
+
+## Pull requests (stacked, merge in order; all draft, owner has not approved merge or deploy)
+| PR | Branch | Scope |
+| --- | --- | --- |
+| #53 | `claude/roast-club-r1-engine` | R1 engine, catalog, mapping |
+| #54 | `claude/roast-club-r2-consent` | R2 consent tables/RPCs (migration NOT applied), player control |
+| #55 | `claude/roast-club-r3-popup` | R3 popup after confirmed saves |
+| #56 | `claude/roast-club-r4-announcer` | R4 announcer, browser test, this doc |
+
+Conflicts to resolve by rebase after Codex lands #52/#47/#49 (not modified by this work): `connected-scorebook.tsx`, `globals.css`, `tests/scorebook-modes-browser.cjs` (#52); `player-dashboard.tsx` (#47, #49); `tests/games-flow-browser.cjs` (#49).
+
+## Continuity / handoff
+- Writer: Claude (owner direction 2026-11-03, replacing the default Codex-writes role for Roast Club). Reviewer: Codex or owner; independent review not yet done.
+- Continuity: AMBER. A fresh chat is not needed yet. Resume from this doc and PRs #53-#56, not from chat history.
+- Next actions: (1) independent review of #53-#56; (2) owner decision on hosted migration plan; (3) rebase over #52/#47/#49; (4) Will tests audio on a real iPhone and speaker.
+
 Owner direction: Will authorized full Roast Club development (supersedes the Nov 3 deferral in `31-roast-club-pilot-readiness.md`); Claude is the writer for this task (role swap recorded here).
 
 ## What exists (all on `claude/roast-club-r4-announcer`, stacked R1 → R2 → R3 → R4)
