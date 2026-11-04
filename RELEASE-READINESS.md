@@ -1,5 +1,9 @@
 # Release readiness and recovery
 
+## November 3 H3 phone correction — count – leader
+
+Owner requested that Stats cards use the circle as their category label and display **count – leader** beside it. `codex/stats-count-leader` follows deployed release #48 / main `07e68783081b3c3439be5903abb7904432cbef33`; its current brief and receipt are in [10-stats.md](docs/screen-handoffs/10-stats.md#november-3-2026--h3-phone-follow-up-count--leader), linked from `00-WORKING-STANDARD.md` and tracker revision 79. Existing H3 release authorization continues for this presentation correction only. H2 #49 and H4 #47 remain separate drafts and are excluded. Local typecheck, 22 tracker/leaderboard checks, Home/Stats Chromium/WebKit and Chromium shared-scorebook checks pass. Full head/main CI and active deployment verification remain pending at this source snapshot; the correction PR records their final receipt. Owner phone acceptance is open. Prior compatible release #48 was verified at Worker prefix `1fde797e`, 100% traffic. No scoring, migration, dependency, hosted write or access/auth/provider change is included.
+
 ## November 3 owner-approved UAT release through PR #46
 
 Owner authorized commit, push, publication, merge and deployment of the pending non-H4 work through PR #46. Release branch `codex/uat-release-through-pr46` combines original #38, #39, #43, #44, #45 and #46 commits without changing their agent branches. H4 / #47 remains a separate draft, excluded from main and activation. H1 and H3 are the product changes; the other PRs are documentation/governance. No migration, hosted UAT write, new dependency, auth/access change, invitation, provider change or test email is authorized by this release.
