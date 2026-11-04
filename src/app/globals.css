@@ -2207,3 +2207,11 @@ body:has(.workspace--home) { padding-bottom: 0; }
 .workspace--type-scale :is(.micro, .eyebrow, .home-stat dt, .dashboard-select-label, .game-entry-status, .leaderboard-player > .micro, .leaderboard-badge, .leaderboard-beverage small) { font-size: var(--ui-text-small); }
 .workspace--type-scale .dashboard-context-action > button { font-size: var(--ui-text-body); }
 /* Native inputs retain their existing 16px platform treatment and 44px targets. */
+
+/* Roast Club popup: a dismissible, nonblocking note. Only the close button takes pointer input. */
+.roast-popup { position: fixed; top: max(12px, env(safe-area-inset-top)); left: 12px; right: 12px; z-index: 40; max-width: 520px; margin: 0 auto; display: flex; align-items: flex-start; gap: 8px; padding: 12px 8px 12px 14px; background: var(--surface); color: var(--white); border: 2px solid var(--teal); border-radius: 12px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45); pointer-events: none; animation: roast-in 180ms ease-out; }
+.roast-popup p { margin: 0; flex: 1; font-size: 16px; line-height: 1.35; overflow-wrap: anywhere; }
+.roast-popup-close { pointer-events: auto; flex: none; min-width: 44px; min-height: 44px; margin: -6px 0; border: 0; border-radius: 8px; background: transparent; color: var(--white); font-size: 28px; line-height: 1; cursor: pointer; }
+.roast-popup-close:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+@keyframes roast-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .roast-popup { animation: none; } }

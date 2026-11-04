@@ -108,7 +108,7 @@ const assert = require("node:assert/strict");
         createRoot(document.getElementById('app')).render(<><div className="fixture-banner" role="note">Local preview · fictional data · saving disabled</div>{screen}<BottomNavigationView pathname={location.pathname} context={context}/></>);
       ` },
       bundle:true,write:false,platform:"browser",jsx:"automatic",
-      plugins:[{name:"isolated-games",setup(build){
+      plugins:[require("./support/roast-club-stub.cjs"),{name:"isolated-games",setup(build){
         build.onResolve({filter:/^(next\/(navigation|link|image)|@\/app\/(login\/actions|club\/(beverage-actions|scoring-actions))|\.\/personal-alibis)$/},args=>({path:args.path,namespace:"fixture"}));
         build.onLoad({filter:/.*/,namespace:"fixture"},args=>({loader:"tsx",resolveDir:process.cwd(),contents:
           args.path==='next/navigation'?"const router={refresh(){},push(url){location.href=url}};export const useRouter=()=>router;export const usePathname=()=>location.pathname;export const useSearchParams=()=>new URLSearchParams(location.search);":

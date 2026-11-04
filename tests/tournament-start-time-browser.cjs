@@ -34,6 +34,7 @@ const { chromium, webkit } = require("playwright"),
       platform: "browser",
       jsx: "automatic",
       plugins: [
+        require("./support/roast-club-stub.cjs"),
         {
           name: "synthetic-services",
           setup(build) {
