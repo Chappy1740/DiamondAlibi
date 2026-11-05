@@ -10,7 +10,9 @@ Status: AMBER (EYD-PM-001). Code complete and pushed as draft PRs; nothing merge
 | #55 | `claude/roast-club-r3-popup` | R3 popup after confirmed saves |
 | #56 | `claude/roast-club-r4-announcer` | R4 announcer, browser test, this doc |
 
-Conflicts to resolve by rebase after Codex lands #52/#47/#49 (not modified by this work): `connected-scorebook.tsx`, `globals.css`, `tests/scorebook-modes-browser.cjs` (#52); `player-dashboard.tsx` (#47, #49); `tests/games-flow-browser.cjs` (#49).
+Rebase done 2026-11-05: Codex merged #52, #47 and #49 into main; all four branches were rebased onto that main (three conflicts resolved, Codex changes kept; the popup now reads the saved play from the same reloaded data Codex's receipt uses). Branches were force-pushed with owner approval (own unmerged branches only).
+
+CI lesson: any browser test harness that bundles a component importing a new server action must stub it (`tests/support/roast-club-stub.cjs`). Missing stubs failed the `home-layout` and `personal-workflow` tests on the first push; fixed in R2.
 
 ## Continuity / handoff
 - Writer: Claude (owner direction 2026-11-03, replacing the default Codex-writes role for Roast Club). Reviewer: Codex or owner; independent review not yet done.
