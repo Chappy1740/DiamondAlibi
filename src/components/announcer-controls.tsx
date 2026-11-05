@@ -7,6 +7,7 @@ import { getSpeaker, readAnnouncerPrefs } from "./roast-club-popup";
 export function AnnouncerControls({ gameId }: { gameId: string }) {
   const [prefs, setPrefs] = useState<AnnouncerPrefs>(DEFAULT_ANNOUNCER_PREFS);
   const [note, setNote] = useState("");
+  const [diag, setDiag] = useState("");
   const [supported, setSupported] = useState(true);
   useEffect(() => { setPrefs(readAnnouncerPrefs()); setSupported(getSpeaker().supported); }, []);
   const mine = prefs.gameId === gameId;
@@ -47,10 +48,15 @@ export function AnnouncerControls({ gameId }: { gameId: string }) {
             update(next);
             const result = getSpeaker().unlock(next.volume);
             setNote(result === "spoken" ? "Announcer is on. Did you hear it?" : "Could not play sound on this browser.");
+            // Test readout so a silent phone can be diagnosed: what the browser reported about the test line.
+            window.setTimeout(() => {
+              try { setDiag(`Voices: ${window.speechSynthesis.getVoices().length}. Last speech event: ${getSpeaker().lastEvent}.`); } catch { setDiag("Speech status unavailable."); }
+            }, 2500);
           }}>Turn sound on and test</button>
           <button type="button" className="button secondary" onClick={() => { update({ ...prefs, muted: true }); getSpeaker().stop(); setNote("Muted."); }}>Mute</button>
           <label>Volume <input type="range" min={0} max={1} step={0.1} value={prefs.volume} onChange={(e) => update({ ...prefs, volume: Number(e.target.value) })} aria-label="Announcer volume" /></label>
           <p role="status">{prefs.muted ? "Muted." : "Sound on."} {note}</p>
+          {diag && <p className="micro" role="status" data-testid="announcer-diag">{diag}</p>}
         </>
       )}
     </section>
