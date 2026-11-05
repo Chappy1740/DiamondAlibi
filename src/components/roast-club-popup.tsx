@@ -1,0 +1,93 @@
+"use client";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { roastClubAction } from "@/app/club/roast-club-actions";
+import { createRoastPlanner } from "@/lib/roast-club";
+import { planConfirmedRoast, type SnapshotGame } from "@/lib/roast-club-flow";
+import type { RoastClubState } from "@/lib/roast-club-consent";
+
+export type RoastAnnounce = {
+  request: unknown;
+  receipt: { status?: string; duplicate?: boolean };
+  games: readonly SnapshotGame[];
+  displayName: (playerId: string) => string | undefined;
+};
+
+const SHOW_MS = 7000;
+
+/** Owns the popup. Never throws, never blocks scoring, and says nothing when in doubt. */
+export function useRoastClub(teamId: string) {
+  const planner = useRef<ReturnType<typeof createRoastPlanner> | null>(null);
+  const cache = useRef<RoastClubState | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const alive = useRef(true);
+  const [line, setLine] = useState<string | null>(null);
+
+  const readConsent = useCallback(async (): Promise<RoastClubState | null> => {
+    const result = await roastClubAction({ type: "read", teamId });
+    return result.status === "ok" ? result.data : null;
+  }, [teamId]);
+
+  const refresh = useCallback(async () => {
+    try {
+      const state = await readConsent();
+      if (alive.current) cache.current = state;
+    } catch {
+      if (alive.current) cache.current = null;
+    }
+  }, [readConsent]);
+
+  useEffect(() => {
+    alive.current = true;
+    void refresh();
+    const onVisible = () => { if (document.visibilityState === "visible") void refresh(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      alive.current = false;
+      document.removeEventListener("visibilitychange", onVisible);
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, [refresh]);
+
+  const dismiss = useCallback(() => {
+    if (timer.current) clearTimeout(timer.current);
+    setLine(null);
+  }, []);
+
+  const announce = useCallback((input: RoastAnnounce) => {
+    // Fire and forget: scoring has already succeeded and must never wait on or fail because of this.
+    void (async () => {
+      try {
+        const req = input.request as { commandId?: unknown; gameId?: unknown; change?: { type?: unknown; playId?: unknown } };
+        if (req?.change?.type !== "score") return;
+        if (typeof req.commandId !== "string" || typeof req.gameId !== "string" || typeof req.change.playId !== "string") return;
+        planner.current ??= createRoastPlanner();
+        const decision = await planConfirmedRoast({
+          planner: planner.current,
+          commandId: req.commandId,
+          playId: req.change.playId,
+          gameId: req.gameId,
+          receipt: input.receipt,
+          games: input.games,
+          displayName: input.displayName,
+          cachedConsent: cache.current,
+          readConsent,
+        });
+        if (decision.kind !== "show" || !alive.current) return;
+        setLine(decision.text);
+        if (timer.current) clearTimeout(timer.current);
+        timer.current = setTimeout(() => { if (alive.current) setLine(null); }, SHOW_MS);
+      } catch {
+        /* a roast is optional; never surface an error for it */
+      }
+    })();
+  }, [readConsent]);
+
+  const popup = line ? (
+    <div className="roast-popup" role="status" aria-live="polite" data-testid="roast-popup">
+      <p>{line}</p>
+      <button type="button" className="roast-popup-close" onClick={dismiss} aria-label="Dismiss roast">×</button>
+    </div>
+  ) : null;
+
+  return { announce, popup };
+}

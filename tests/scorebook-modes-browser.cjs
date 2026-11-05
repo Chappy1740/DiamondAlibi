@@ -61,7 +61,7 @@ const assert = require("node:assert/strict");
         if(window.__saveFault==='uncertain')return{status:'uncertain'};
         return{status:'ok',data:{status:'ok',duplicate}};
       }} reloadAction={async()=>{window.__reloads++;return window.__reloadStatus==='ok'?{status:'ok',data:structuredClone(data)}:{status:window.__reloadStatus}}}/></main>);
-    `},bundle:true,write:false,platform:"browser",jsx:"automatic",plugins:[{name:"synthetic-page-context",setup(build){
+    `},bundle:true,write:false,platform:"browser",jsx:"automatic",plugins:[require("./support/roast-club-stub.cjs"),{name:"synthetic-page-context",setup(build){
       build.onResolve({filter:/^(next\/(headers|navigation|link|image)|@\/lib\/supabase\/server|@\/app\/(club\/scoring-actions|login\/actions))$/},args=>({path:args.path,namespace:"synthetic"}));
       build.onLoad({filter:/.*/,namespace:"synthetic"},args=>({loader:"tsx",resolveDir:process.cwd(),contents:
         args.path === "next/headers" ? "export async function cookies(){return {get(){return undefined}}}" :

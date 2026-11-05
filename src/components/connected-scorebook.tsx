@@ -15,6 +15,7 @@ import { GameHrLimitPanel } from "@/components/game-hr-limit";
 import { BattingOutcomePicker } from "./batting-outcome-picker";
 import { DashboardSelect } from "./dashboard-select";
 import { VoicePlayEntry } from "./voice-play-entry";
+import { useRoastClub } from "./roast-club-popup";
 import { parseNamedPlay } from "@/lib/named-play";
 import { GameScoreboardPanel } from "@/components/game-scoreboard";
 import { connectedScoreboard } from "@/lib/game-scoreboard";
@@ -103,6 +104,7 @@ export function ConnectedScorebook({
     pending = useRef<unknown>(null),
     mounted = useRef(true);
   const setupForm = useRef<HTMLFormElement | null>(null);
+  const roast = useRoastClub(teamId);
   const [manualPlayer, setManualPlayer] = useState("");
   const [playerSearch, setPlayerSearch] = useState("");
   const [firstBand, setFirstBand] = useState<boolean | null>(null);
@@ -369,6 +371,9 @@ export function ConnectedScorebook({
               ? "Previous save confirmed. The change was recorded once."
               : "Saved to the team scorebook.",
         );
+      if (loaded && !conflict) {
+        roast.announce({ request, receipt, games: loaded.snapshot.games, displayName: id => loaded.roster.find(p => p.id === id)?.display_name });
+      }
       if (loaded && !conflict && mode === "score") {
         const submitted = request as { gameId?: string; change?: { type?: string; playId?: string } };
         if (submitted.change?.type === "score") {
@@ -699,6 +704,7 @@ export function ConnectedScorebook({
   }
   return (
     <div className={`team-scorebook${mode === "setup" ? " team-scorebook--setup" : mode === "score" ? " team-scorebook--score" : ""}`}>
+      {roast.popup}
       <section className={mode === "full" ? "card detail-card" : `scorebook-status${needsAttention ? " scorebook-status--attention" : ""}`} aria-label="Scorebook connection">
         <div className="scorebook-toolbar">
           {mode === "full" ? <h2>Team scorebook</h2> : <span className="connection-indicator" role="status">

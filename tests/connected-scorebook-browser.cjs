@@ -741,6 +741,7 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
       write: false,
       platform: "browser",
       jsx: "automatic",
+      plugins: [require("./support/roast-club-stub.cjs")],
     });
     const css = fs.readFileSync("src/app/globals.css", "utf8");
     server = http.createServer((req, res) => {
