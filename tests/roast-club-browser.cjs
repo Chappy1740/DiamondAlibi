@@ -94,6 +94,13 @@ createRoot(document.getElementById('app')).render(<App/>);` },
     // 8. mobile widths: no horizontal overflow with popup showing.
     await call("c10", A + "59", "00000000-0000-4000-8000-000000000101", "3B"); await popup.waitFor();
     for (const w of [320, 375, 768]) { await page.setViewportSize({ width: w, height: 800 }); await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))); assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true); }
+    // 9. an opt-out seen during a play's consent recheck leaves the scorer's member list at once, with no new popup.
+    await close.click().catch(() => {});
+    await page.setViewportSize({ width: 800, height: 800 });
+    await page.evaluate(() => { window.__optedIn = []; });
+    await call("c11", A + "60", "00000000-0000-4000-8000-000000000101", "1B");
+    await page.waitForFunction(() => document.querySelector("[data-testid=members]").textContent === "");
+    await page.waitForTimeout(300); assert.equal(await popup.count(), 0);
     assert.deepEqual(errors, []);
     console.log("roast club browser checks passed");
   } finally { await browser?.close(); server?.close(); }
