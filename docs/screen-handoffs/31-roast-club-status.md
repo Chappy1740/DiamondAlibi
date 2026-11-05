@@ -33,8 +33,8 @@ Owner direction: Will authorized full Roast Club development (supersedes the Nov
 - Real-device audio check, 2026-11-04 (Will; iPhone, iOS 18.7, headphones, inside the Claude app browser, standalone audio-check page, not yet the live app):
   - PASSED: voice after one tap; sound reached the headphones; a new line replaced the old one; same play spoken once; over-limit line said "out"; clear at volume.
   - FAILED: phone locked, nothing was heard (expected: iOS pauses web pages). Mitigation in R4: screen wake lock while the announcer is on, plus an on-screen "keep this screen on" note. The mitigation is built but NOT yet phone-tested.
-  - NOT CONFIRMED: Mute stopping the voice immediately (box left unchecked).
-  - NOT TESTED: Safari or a Home Screen app, other speakers, the live app. Audio is NOT production-ready.
+  - Second run, Safari (iOS 18.7): same results, and Mute stopped the voice right away (PASSED). Locked phone failed again in Safari, so the lock limitation is the phone, not the browser.
+  - NOT TESTED: a Home Screen app, other speakers, the live app with the wake-lock change. Audio is NOT production-ready.
 
 ## Gates before any release
 1. Owner approves merge and deploy (explicit).
