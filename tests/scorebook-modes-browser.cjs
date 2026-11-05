@@ -182,6 +182,10 @@ const assert = require("node:assert/strict");
       await open('&manual=1&full-roster=1');
       assert(await send.isDisabled(),'Send requires a player and a chosen result');
       assert.equal(await page.locator('.batting-outcomes [aria-pressed="true"]').count(),0,'No accidental default result');
+      assert.deepEqual(await page.locator('.batting-outcome-heading').allTextContents(),['The Hit Parade','Back to the Bench','Plot Twists']);
+      const double=page.getByRole('button',{name:'Double',exact:true});
+      assert.equal(await double.locator('strong').textContent(),'2B','Official code remains visible');
+      assert.equal(await double.locator('span').textContent(),'Make it a double','Clubhouse copy appears below the official code');
       await page.getByRole('button',{name:'Roster Player 11',exact:true}).click();
       for(const name of ['Single','Double','Triple','Fence home run','Inside-the-park HR','Strikeout swinging','Strikeout looking','Strikeout foul out','Hit into double play','Out','Walk','Sacrifice fly','Reached on error']){
         await page.getByRole('button',{name,exact:true}).click();

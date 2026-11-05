@@ -804,7 +804,7 @@ export function ConnectedScorebook({
                   >
                     <fieldset disabled={disabled}>
                       {mode === "score" && <p className="quick-play-hint">Choose the player and result, check Runs and RBI, then Send.</p>}
-                      {mode === "score" && <BattingOutcomePicker hitTypes={!!snapshot?.capabilities?.hitTypes} extended={Object.keys(extendedBoardFromColumns(current.rules)).length === 4} value={hasDraftOutcome ? outcome : null} disabled={disabled} onPick={pickOutcome} onChange={pickOutcome} />}
+                      {mode === "score" && <BattingOutcomePicker clubhouseLabels hitTypes={!!snapshot?.capabilities?.hitTypes} extended={Object.keys(extendedBoardFromColumns(current.rules)).length === 4} value={hasDraftOutcome ? outcome : null} disabled={disabled} onPick={pickOutcome} onChange={pickOutcome} />}
                       {mode === "score" && <div className="at-bat-rbi" role="group" aria-label="Runs on this play">
                         <span>Runs</span>
                         <div className="rbi-buttons">
