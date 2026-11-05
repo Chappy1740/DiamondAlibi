@@ -5,7 +5,7 @@ const http = require("node:http");
 const fs = require("node:fs");
 (async () => {
   const result = await esbuild.build({
-    stdin: { contents: `import React from 'react'; import {createRoot} from 'react-dom/client'; import {ReviewFeedback, OwnerFeedbackInbox} from './src/components/review-feedback'; createRoot(document.getElementById('root')).render(location.pathname === '/inbox' ? <OwnerFeedbackInbox /> : <ReviewFeedback ready owner />);`, resolveDir: process.cwd(), loader: "tsx" },
+    stdin: { contents: `import React from 'react'; import {createRoot} from 'react-dom/client'; import {ReviewFeedback, FeedbackInbox} from './src/components/review-feedback'; const mine = location.pathname === '/review/feedback/mine'; createRoot(document.getElementById('root')).render(location.pathname === '/inbox' || mine ? <FeedbackInbox mine={mine} /> : <ReviewFeedback ready owner />);`, resolveDir: process.cwd(), loader: "tsx" },
     bundle: true, write: false, format: "iife", jsx: "automatic", define: { "process.env.NODE_ENV": '"production"' },
     plugins: [{ name: "next-fixture-elements", setup(build) {
       build.onResolve({ filter: /^next\/(link|image)$/ }, args => ({ path: args.path, namespace: "fixture" }));
@@ -14,7 +14,7 @@ const fs = require("node:fs");
   });
   const js = result.outputFiles[0].text;
   const css = fs.readFileSync("src/app/globals.css", "utf8");
-  const records = []; const attempts = []; let failedOnce = false;
+  const records = []; const attempts = []; let failedOnce = false; let replyFailedOnce = false;
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, "http://127.0.0.1");
     const json = (value, status=200) => { res.writeHead(status, {"Content-Type":"application/json"}); res.end(JSON.stringify(value)); };
@@ -25,9 +25,19 @@ const fs = require("node:fs");
       const chunks=[]; for await (const chunk of req) chunks.push(chunk);
       const input=JSON.parse(Buffer.concat(chunks).toString());
       if (req.method === "PATCH") { const item=records.find(row=>row.id===input.id); item.reviewed=input.reviewed; return json({id:item.id,reviewed:item.reviewed}); }
+      if (req.method === "PUT") {
+        if (!replyFailedOnce) {
+          replyFailedOnce = true;
+          res.writeHead(503, {"Content-Type":"text/html"});
+          return res.end("<p>Synthetic gateway error</p>");
+        }
+        const item = records.find(row => row.id === input.id);
+        item.owner_reply = input.message.trim();
+        return json({owner_reply:item.owner_reply});
+      }
       attempts.push(input);
       if (!failedOnce) { failedOnce=true; return json({error:"Synthetic failure. Your message is still here."},503); }
-      if (!records.some(row=>row.id===input.id)) records.push({...input,created_at:new Date().toISOString(),reviewed:false,review_feedback_notifications:{accepted_at:null,attempts:0,first_attempt_at:null,last_failure:null}});
+      if (!records.some(row=>row.id===input.id)) records.push({...input,created_at:new Date().toISOString(),reviewed:false,owner_reply:null,review_feedback_notifications:{accepted_at:null,attempts:0,first_attempt_at:null,last_failure:null}});
       return json({sent:true});
     }
     if (url.pathname.startsWith("/brand/")) { const target="public"+url.pathname; res.writeHead(200,{"Content-Type":"image/webp"}); return fs.createReadStream(target).pipe(res); }

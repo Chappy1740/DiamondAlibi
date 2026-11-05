@@ -1,5 +1,13 @@
 # Release readiness and recovery
 
+## November 5, 2026 — Private owner replies release candidate
+
+**AMBER.** Owner approved applying and verifying the production migration and releasing [#65](https://github.com/Chappy1740/DiamondAlibi/pull/65). Source `20261105134519_review_feedback_owner_reply.sql` is recorded in production as `20261105230752` / `review_feedback_owner_reply`. Readback confirmed both nullable columns, the validated reply constraint, RLS, and a service-only security-invoker function with an empty search path. The service-role call for an absent ID returned `not_found`.
+
+The release candidate starts from `c44bc38dfffd8ba783b28a3f5dcc7e9ea7532e1d`, which shipped via [#74](https://github.com/Chappy1740/DiamondAlibi/pull/74). The production build reported Worker `cf0d2663-536c-4972-9ca3-4f4abd6b0e5f`. The candidate keeps #65's application and test changes, reconciles shared files, and records the verified migration fingerprint. [#65](https://github.com/Chappy1740/DiamondAlibi/pull/65) carries the final source, validation and deployment receipt.
+
+Owner phone acceptance remains open. The [feedback handoff](docs/screen-handoffs/29-owner-feedback.md) records the workflow and verification boundary.
+
 ## November 5, 2026 — Pilot phone checks and release checkpoint
 
 **AMBER.** [H5 #52](https://github.com/Chappy1740/DiamondAlibi/pull/52#issuecomment-6633560050) shipped from `ff64f0d4f918fce9c088e6ec7a25e99552914010`. Its exact-main validation passed and Worker `232bd809-4815-4cd2-ac46-1aebc0b675f3` was observed at 100% on November 4. The earlier H5 hold is historical.

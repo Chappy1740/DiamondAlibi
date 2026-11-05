@@ -3,7 +3,11 @@ import {
   verifyFeedbackIdentity,
 } from "@/lib/feedback-access";
 import { feedbackStore } from "@/lib/feedback-store";
-import { feedbackSubjectHash, parseFeedback } from "@/lib/feedback";
+import {
+  feedbackSubjectHash,
+  parseFeedback,
+  parseFeedbackReply,
+} from "@/lib/feedback";
 import { notificationConfig } from "@/lib/feedback-notifications";
 export const dynamic = "force-dynamic";
 function reply(body: unknown, status = 200) {
@@ -106,17 +110,24 @@ export async function POST(request: Request) {
 }
 export async function GET(request: Request) {
   const user = await identity(request);
-  if (!user?.owner) return reply({ error: "Inbox unavailable." }, 403);
+  const params = new URL(request.url).searchParams;
+  const mine = params.get("view") === "mine";
+  if (!user || (!mine && !user.owner))
+    return reply({ error: "Inbox unavailable." }, 403);
   try {
-    const pageText = new URL(request.url).searchParams.get("page") ?? "0";
-    const page = Number(pageText);
+    const page = Number(params.get("page") ?? "0");
     if (!Number.isInteger(page) || page < 0 || page > 10000)
       return reply({ error: "Invalid page." }, 400);
-    const { data, error } = await feedbackStore()
-      .from("review_feedback")
-      .select(
-        "id,kind,message,name,created_at,reviewed,review_feedback_notifications(accepted_at,attempts,first_attempt_at,last_failure)",
-      )
+    const table = feedbackStore().from("review_feedback");
+    const fields = "id,kind,message,name,created_at,reviewed,owner_reply";
+    const query = mine
+      ? table
+          .select(fields)
+          .eq("sender_hash", await feedbackSubjectHash(user.subject))
+      : table.select(
+          `${fields},review_feedback_notifications(accepted_at,attempts,first_attempt_at,last_failure)`,
+        );
+    const { data, error } = await query
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })
       .range(page * 50, page * 50 + 50);
@@ -124,10 +135,55 @@ export async function GET(request: Request) {
     return reply({
       items: data.slice(0, 50),
       more: data.length > 50,
-      alertsConfigured: notificationConfig(process.env) !== null,
+      ...(!mine && {
+        alertsConfigured: notificationConfig(process.env) !== null,
+      }),
     });
   } catch {
     return reply({ error: "Inbox unavailable. Try again later." }, 503);
+  }
+}
+
+export async function PUT(request: Request) {
+  if (!sameOrigin(request))
+    return reply({ error: "Request unavailable." }, 403);
+  const user = await identity(request);
+  if (!user?.owner) return reply({ error: "Inbox unavailable." }, 403);
+  if (!request.headers.get("content-type")?.startsWith("application/json"))
+    return reply({ error: "Invalid reply." }, 400);
+  try {
+    const text = await boundedText(request, 12000);
+    if (text === null)
+      return reply({ error: "Reply is too long or empty." }, 413);
+    let input;
+    try {
+      input = parseFeedbackReply(JSON.parse(text));
+    } catch {
+      return reply({ error: "Invalid reply." }, 400);
+    }
+    if (!input) return reply({ error: "Enter up to 2,000 characters." }, 400);
+    const { data, error } = await feedbackStore().rpc(
+      "reply_to_review_feedback",
+      {
+        p_id: input.id,
+        p_message: input.message,
+      },
+    );
+    if (!error && data === "saved")
+      return reply({ owner_reply: input.message });
+    if (!error && data === "not_found")
+      return reply({ error: "This submission is no longer available." }, 404);
+    if (!error && data === "already_replied")
+      return reply(
+        { error: "A reply already exists. Refresh the inbox to see it." },
+        409,
+      );
+    throw new Error("Unconfirmed");
+  } catch {
+    return reply(
+      { error: "Reply not confirmed. Your draft is still here." },
+      503,
+    );
   }
 }
 export async function PATCH(request: Request) {
