@@ -19,7 +19,7 @@ const assert = require("node:assert/strict");
         resolveDir: process.cwd(), loader: "tsx",
       },
       bundle: true, write: false, platform: "browser", jsx: "automatic",
-      plugins: [{ name: "synthetic-navigation-and-actions", setup(build) {
+      plugins: [require("./support/roast-club-stub.cjs"), { name: "synthetic-navigation-and-actions", setup(build) {
         build.onResolve({ filter: /^(next\/navigation|@\/app\/club\/scoring-actions)$/ }, args => ({path:args.path,namespace:"synthetic"}));
         build.onLoad({filter:/.*/,namespace:"synthetic"}, args => ({contents:args.path === "next/navigation"
           ? "export const useRouter=()=>({push:(path)=>window.__routes.push(path),refresh(){}});"
