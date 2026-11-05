@@ -23,7 +23,7 @@ Owner direction: Will authorized full Roast Club development (supersedes the Nov
 - R1 `src/lib/roast-club.ts`: clean catalog, outcome mapping, consent gate, command-id dedupe, no immediate repeats.
 - R2 migration `20261104180000_roast_club_consent.sql` (NOT applied anywhere), `roast-club-consent.ts`, player opt-in control. Everyone starts OUT; only the linked player can change their own choice.
 - R3 `roast-club-flow.ts`, `roast-club-popup.tsx`: popup after a confirmed save. Outcome, batter and over-limit verdict are read from the server snapshot row for the saved play id, never from client input.
-- R4 `roast-announcer.ts`, `announcer-controls.tsx`: per-device, per-game announcer, muted by default; neutral name-free lines; optional spoken roasts for opted-in players.
+- R4 `roast-announcer.ts`, `announcer-controls.tsx`: per-device, per-game announcer, muted by default; speaks only the Roast Club line (the random line for that result) for opted-in players. No plain result announcements, and nothing is spoken for players who have not opted in (owner decision 2026-11-04).
 
 ## Evidence (run in sandbox 2026-11-03)
 - Typecheck clean; 176 unit tests pass; production build compiles.

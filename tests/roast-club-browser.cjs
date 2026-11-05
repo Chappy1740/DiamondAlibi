@@ -59,23 +59,33 @@ createRoot(document.getElementById('app')).render(<App/>);` },
     await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
     await call("c5", A + "54", "00000000-0000-4000-8000-000000000101", "Fence HR", "OLHR");
     await popup.waitFor(); await close.click();
-    // 6. announcer: silent until designated + unlocked; then neutral line, no name, once.
-    await call("c6", A + "55", "00000000-0000-4000-8000-000000000101", "1B"); await page.waitForTimeout(200); await close.click().catch(() => {});
+    // 6. announcer: silent until designated + unlocked; then only the roast (no plain result line), once.
+    const P1 = "00000000-0000-4000-8000-000000000101", P2 = "00000000-0000-4000-8000-000000000102";
+    await call("c6", A + "55", P1, "1B"); await page.waitForTimeout(200); await close.click().catch(() => {});
     assert.equal(await page.evaluate(() => window.__spoken.length), 0);
     await page.getByLabel("This device is the announcer for this game").check();
     await page.getByRole("button", { name: "Turn sound on and test" }).click();
     assert.equal(await page.evaluate(() => window.__spoken.at(-1).split("|")[0]), "Announcer on.");
-    await call("c7", A + "56", "00000000-0000-4000-8000-000000000102", "HR".replace("HR", "Fence HR"));
-    await page.waitForFunction(() => window.__spoken.some((s) => s.startsWith("Home run.")));
-    await call("c7", A + "56", "00000000-0000-4000-8000-000000000102", "Fence HR");
+    await call("c7", A + "56", P1, "Fence HR");
+    await page.waitForFunction(() => window.__spoken.some((s) => s.includes("Synthetic Alex")));
+    await close.click().catch(() => {});
+    await call("c7", A + "56", P1, "Fence HR");
     await page.waitForTimeout(300);
-    assert.equal(await page.evaluate(() => window.__spoken.filter((s) => s.startsWith("Home run.")).length), 1);
-    await call("c8", A + "57", "00000000-0000-4000-8000-000000000102", "Fence HR", "OLHR");
-    await page.waitForFunction(() => window.__spoken.some((s) => /recorded as an out/i.test(s)));
+    assert.equal(await page.evaluate(() => window.__spoken.filter((s) => s.includes("Synthetic Alex")).length), 1, "same play spoken once");
+    assert.equal(await page.evaluate(() => window.__spoken.some((s) => /^(Single|Home run|Double|Triple)\./.test(s))), false, "no plain result lines");
+    // non-participant on the announcer phone: still silent.
+    const afterAlex = await page.evaluate(() => window.__spoken.length);
+    await call("c8", A + "57", P2, "Fence HR"); await page.waitForTimeout(300);
+    assert.equal(await page.evaluate(() => window.__spoken.length), afterAlex);
+    // over-limit roast for an opted-in player is spoken and says out.
+    await call("c8b", A + "5b", P1, "Fence HR", "OLHR");
+    await page.waitForFunction((n) => window.__spoken.length > n, afterAlex);
+    assert.match(await page.evaluate(() => window.__spoken.at(-1)), /out/i);
+    await close.click().catch(() => {});
     // 7. mute stops speech.
     await page.getByRole("button", { name: "Mute" }).click();
     const n = await page.evaluate(() => window.__spoken.length);
-    await call("c9", A + "58", "00000000-0000-4000-8000-000000000102", "K"); await page.waitForTimeout(300);
+    await call("c9", A + "58", P1, "K"); await page.waitForTimeout(300);
     assert.equal(await page.evaluate(() => window.__spoken.length), n);
     // 8. mobile widths: no horizontal overflow with popup showing.
     await call("c10", A + "59", "00000000-0000-4000-8000-000000000101", "3B"); await popup.waitFor();

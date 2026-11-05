@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { PREFERRED_VOICE, pickVoice, ANNOUNCER_STORAGE_KEY, DEFAULT_ANNOUNCER_PREFS, NEUTRAL_LINES, announcerActive, createSpeaker, neutralLine, parsePrefs } from "../src/lib/roast-announcer.ts";
+import { PREFERRED_VOICE, pickVoice, ANNOUNCER_STORAGE_KEY, DEFAULT_ANNOUNCER_PREFS, announcerActive, createSpeaker, parsePrefs } from "../src/lib/roast-announcer.ts";
 import { ROAST_CATALOG } from "../src/lib/roast-club.ts";
 
 function fake() {
@@ -12,14 +12,14 @@ function fake() {
 }
 
 test("defaults are silent and not an announcer", () => {
-  assert.deepEqual(DEFAULT_ANNOUNCER_PREFS, { gameId: null, muted: true, volume: 0.8, speakRoasts: false });
+  assert.deepEqual(DEFAULT_ANNOUNCER_PREFS, { gameId: null, muted: true, volume: 0.8 });
   assert.equal(ANNOUNCER_STORAGE_KEY.length > 0, true);
   assert.equal(announcerActive(DEFAULT_ANNOUNCER_PREFS, "g1"), false);
 });
 
 test("bad or missing stored prefs fall back to silent defaults", () => {
   for (const raw of [null, undefined, "", "{", "[]", 5, "null"]) assert.deepEqual(parsePrefs(raw), DEFAULT_ANNOUNCER_PREFS);
-  const p = parsePrefs({ gameId: 7, muted: "no", volume: "loud", speakRoasts: "yes" });
+  const p = parsePrefs({ gameId: 7, muted: "no", volume: "loud" });
   assert.deepEqual(p, DEFAULT_ANNOUNCER_PREFS);
   assert.equal(parsePrefs({ volume: 9 }).volume, 1);
   assert.equal(parsePrefs({ volume: -3 }).volume, 0);
@@ -27,30 +27,13 @@ test("bad or missing stored prefs fall back to silent defaults", () => {
 });
 
 test("only the designated device and game, unmuted with volume, is active", () => {
-  const on = { gameId: "g1", muted: false, volume: 0.5, speakRoasts: true };
+  const on = { gameId: "g1", muted: false, volume: 0.5 };
   assert.equal(announcerActive(on, "g1"), true);
   assert.equal(announcerActive(on, "g2"), false);
   assert.equal(announcerActive({ ...on, muted: true }, "g1"), false);
   assert.equal(announcerActive({ ...on, volume: 0 }, "g1"), false);
   assert.equal(announcerActive({ ...on, gameId: null }, "g1"), false);
   assert.equal(parsePrefs(JSON.stringify(on)).muted, false);
-});
-
-test("neutral lines never carry a name and differ from every roast", () => {
-  const roastLines = Object.values(ROAST_CATALOG).flat();
-  for (const line of Object.values(NEUTRAL_LINES)) {
-    assert.ok(!line.includes("{name}"));
-    assert.ok(!roastLines.includes(line));
-    assert.ok(line.length < 60);
-  }
-  assert.equal(neutralLine("Hit", false), "Single.");
-  assert.equal(neutralLine("HBP", false), null);
-  assert.equal(neutralLine("Fence HR", false), "Home run.");
-});
-
-test("an over-limit home run is announced as an out, never as a home run", () => {
-  const line = neutralLine("Fence HR", true);
-  assert.ok(line && /out/i.test(line) && !/home run/i.test(line));
 });
 
 test("the same key is spoken once; a new line replaces what is playing", () => {

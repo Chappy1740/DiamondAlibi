@@ -2,8 +2,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { roastClubAction } from "@/app/club/roast-club-actions";
 import { createRoastPlanner } from "@/lib/roast-club";
-import { confirmedScore, planConfirmedRoast, type SnapshotGame } from "@/lib/roast-club-flow";
-import { ANNOUNCER_STORAGE_KEY, announcerActive, createSpeaker, neutralLine, parsePrefs, pickVoice } from "@/lib/roast-announcer";
+import { planConfirmedRoast, type SnapshotGame } from "@/lib/roast-club-flow";
+import { ANNOUNCER_STORAGE_KEY, announcerActive, createSpeaker, parsePrefs, pickVoice } from "@/lib/roast-announcer";
 import type { RoastClubState } from "@/lib/roast-club-consent";
 
 export type RoastAnnounce = {
@@ -100,8 +100,8 @@ export function useRoastClub(teamId: string) {
         try {
           const prefs = readAnnouncerPrefs();
           if (announcerActive(prefs, req.gameId) && input.receipt.duplicate !== true && input.receipt.status !== "conflict") {
-            const score = confirmedScore(input.games, req.gameId, req.change.playId);
-            const spoken = decision.kind === "show" && prefs.speakRoasts ? decision.text : score ? neutralLine(score.outcome, score.overLimitFenceHr) : null;
+            // The announcer says only the roast: no plain result line, nothing for non-participants.
+            const spoken = decision.kind === "show" ? decision.text : null;
             if (spoken) getSpeaker().say(req.commandId, spoken, prefs.volume);
           }
         } catch { /* speech is optional */ }

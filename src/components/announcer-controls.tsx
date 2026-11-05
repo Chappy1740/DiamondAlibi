@@ -38,7 +38,7 @@ export function AnnouncerControls({ gameId }: { gameId: string }) {
   return (
     <section className="card detail-card" aria-label="Clubhouse announcer">
       <h3>Clubhouse announcer</h3>
-      <p>Use one device per game as the announcer. It reads short, neutral results aloud after each confirmed play. Sound comes out of whatever this phone is connected to, such as headphones or a Bluetooth speaker; test it before game time. Keep this screen on and open: a locked phone pauses the announcer.</p>
+      <p>Use one device per game as the announcer. It reads the Roast Club line aloud after each confirmed play, for players who opted in. Sound comes out of whatever this phone is connected to, such as headphones or a Bluetooth speaker; test it before game time. Keep this screen on and open: a locked phone pauses the announcer.</p>
       <label className="check-row"><input type="checkbox" checked={mine} onChange={(e) => update({ ...prefs, gameId: e.target.checked ? gameId : null, muted: e.target.checked ? prefs.muted : true })} /> This device is the announcer for this game</label>
       {mine && (
         <>
@@ -50,7 +50,6 @@ export function AnnouncerControls({ gameId }: { gameId: string }) {
           }}>Turn sound on and test</button>
           <button type="button" className="button secondary" onClick={() => { update({ ...prefs, muted: true }); getSpeaker().stop(); setNote("Muted."); }}>Mute</button>
           <label>Volume <input type="range" min={0} max={1} step={0.1} value={prefs.volume} onChange={(e) => update({ ...prefs, volume: Number(e.target.value) })} aria-label="Announcer volume" /></label>
-          <label className="check-row"><input type="checkbox" checked={prefs.speakRoasts} onChange={(e) => update({ ...prefs, speakRoasts: e.target.checked })} /> Also read Roast Club lines aloud (opted-in players only)</label>
           <p role="status">{prefs.muted ? "Muted." : "Sound on."} {note}</p>
         </>
       )}
