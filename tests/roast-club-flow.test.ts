@@ -80,7 +80,7 @@ test("an unreadable or failing consent check fails closed", async () => {
 });
 
 test("duplicate, conflicting and replayed saves never roast and never read consent", async () => {
-  for (const receipt of [{ duplicate: true }, { status: "conflict" }]) {
+  for (const receipt of [{ duplicate: true }, { status: "conflict" }, {}, { status: "rejected" }, { status: "accepted" }]) {
     const { value, calls } = input({ receipt });
     assert.deepEqual(await planConfirmedRoast(value), { kind: "skip", reason: "not-confirmed" });
     assert.equal(calls.reads, 0);

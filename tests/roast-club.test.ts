@@ -22,6 +22,7 @@ const base = (over: Partial<RoastInput> = {}): RoastInput => ({
   outcome: "1B",
   settings: on,
   consent: yes,
+  receipt: { status: "accepted", duplicate: false },
   ...over,
 });
 const fixed = (value: number) => () => value;
@@ -108,7 +109,7 @@ test("duplicate replays and conflicts never roast", () => {
   const planner = createRoastPlanner();
   assert.deepEqual(planner.plan(base({ commandId: "a", receipt: { duplicate: true } })), { kind: "skip", reason: "not-confirmed" });
   assert.deepEqual(planner.plan(base({ commandId: "b", receipt: { status: "conflict" } })), { kind: "skip", reason: "not-confirmed" });
-  assert.equal(planner.plan(base({ commandId: "c", receipt: { status: "ok", duplicate: false } })).kind, "show");
+  assert.equal(planner.plan(base({ commandId: "c", receipt: { status: "accepted", duplicate: false } })).kind, "show");
 });
 
 test("home-run celebrations are never used for an over-limit fence HR", () => {
@@ -182,10 +183,22 @@ test("dedupe memory is bounded and evicts the oldest ids", () => {
 
 test("planning does not mutate its inputs and never changes scoring data", () => {
   const consent = new Map([["p1", true]]);
-  const input = Object.freeze(base({ consent, receipt: Object.freeze({ status: "ok" }) }));
+  const input = Object.freeze(base({ consent, receipt: Object.freeze({ status: "accepted", duplicate: false }) }));
   const before = JSON.stringify([...consent]);
   createRoastPlanner().plan(input);
   assert.equal(JSON.stringify([...consent]), before);
   const outcomes: Outcome[] = [...OUTCOMES];
   assert.equal(outcomes.length, OUTCOMES.length);
+});
+
+test("only a plainly accepted first-time save can roast (allow-list)", () => {
+  for (const [i, receipt] of [[1, undefined], [2, {}], [3, { status: "rejected" }], [4, { status: "accepted" }], [5, { status: "ok", duplicate: false }], [6, { status: "accepted", duplicate: true }]] as const) {
+    const planner = createRoastPlanner({ random: fixed(0) });
+    assert.deepEqual(planner.plan(base({ commandId: "r" + i, receipt })), { kind: "skip", reason: "not-confirmed" }, JSON.stringify(receipt));
+  }
+});
+
+test("names that touch the owner's off-limits topics say nothing", () => {
+  for (const name of ["Fat Mike", "Crazy Dave", "Panic Pete"]) assert.equal(safeDisplayName(name), null, name);
+  assert.equal(safeDisplayName("Cassidy"), "Cassidy");
 });

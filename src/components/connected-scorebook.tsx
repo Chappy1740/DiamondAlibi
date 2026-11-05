@@ -16,6 +16,7 @@ import { BattingOutcomePicker } from "./batting-outcome-picker";
 import { DashboardSelect } from "./dashboard-select";
 import { VoicePlayEntry } from "./voice-play-entry";
 import { useRoastClub } from "./roast-club-popup";
+import { AnnouncerControls } from "./announcer-controls";
 import { parseNamedPlay } from "@/lib/named-play";
 import { GameScoreboardPanel } from "@/components/game-scoreboard";
 import { connectedScoreboard } from "@/lib/game-scoreboard";
@@ -104,7 +105,7 @@ export function ConnectedScorebook({
     pending = useRef<unknown>(null),
     mounted = useRef(true);
   const setupForm = useRef<HTMLFormElement | null>(null);
-  const roast = useRoastClub(teamId);
+  const roast = useRoastClub(teamId, mode === "score" || mode === "full");
   const [manualPlayer, setManualPlayer] = useState("");
   const [playerSearch, setPlayerSearch] = useState("");
   const [firstBand, setFirstBand] = useState<boolean | null>(null);
@@ -851,6 +852,7 @@ export function ConnectedScorebook({
                 ))}
                 {!gameStatLines.length && <p>No recorded plate appearances in this game.</p>}
               </section>}
+              {(mode === "score" || mode === "full") && !current.game.completed && <details className="announcer-panel"><summary>Clubhouse announcer (optional)</summary><AnnouncerControls gameId={current.game.id} /></details>}
               {mode !== "score" && <details className="game-management" open={mode === "full" || mode === "manage" || current.game.completed}>
                 <summary>Game details & settings</summary>
               <GameScoreboardPanel
