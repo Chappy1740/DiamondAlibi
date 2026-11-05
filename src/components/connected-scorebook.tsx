@@ -105,7 +105,7 @@ export function ConnectedScorebook({
     pending = useRef<unknown>(null),
     mounted = useRef(true);
   const setupForm = useRef<HTMLFormElement | null>(null);
-  const roast = useRoastClub(teamId);
+  const roast = useRoastClub(teamId, mode === "score" || mode === "full");
   const [manualPlayer, setManualPlayer] = useState("");
   const [playerSearch, setPlayerSearch] = useState("");
   const [firstBand, setFirstBand] = useState<boolean | null>(null);

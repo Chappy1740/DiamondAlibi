@@ -39,11 +39,12 @@ export function readAnnouncerPrefs() {
 }
 
 /** Owns the popup. Never throws, never blocks scoring, and says nothing when in doubt. */
-export function useRoastClub(teamId: string) {
+export function useRoastClub(teamId: string, enabled = true) {
   const planner = useRef<ReturnType<typeof createRoastPlanner> | null>(null);
   const cache = useRef<RoastClubState | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const alive = useRef(true);
+  const lastRefresh = useRef(0);
   const [line, setLine] = useState<string | null>(null);
 
   const readConsent = useCallback(async (): Promise<RoastClubState | null> => {
@@ -52,6 +53,7 @@ export function useRoastClub(teamId: string) {
   }, [teamId]);
 
   const refresh = useCallback(async () => {
+    lastRefresh.current = Date.now();
     try {
       const state = await readConsent();
       if (alive.current) cache.current = state;
@@ -62,15 +64,20 @@ export function useRoastClub(teamId: string) {
 
   useEffect(() => {
     alive.current = true;
+    // Only scoring screens need consent; other screens make no Roast Club calls at all.
+    if (!enabled) { cache.current = null; return; }
     void refresh();
-    const onVisible = () => { if (document.visibilityState === "visible") void refresh(); };
+    // Throttled: coming back to the tab refreshes at most about once a minute.
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && Date.now() - lastRefresh.current > 60_000) void refresh();
+    };
     document.addEventListener("visibilitychange", onVisible);
     return () => {
       alive.current = false;
       document.removeEventListener("visibilitychange", onVisible);
       if (timer.current) clearTimeout(timer.current);
     };
-  }, [refresh]);
+  }, [refresh, enabled]);
 
   const dismiss = useCallback(() => {
     if (timer.current) clearTimeout(timer.current);
@@ -99,7 +106,7 @@ export function useRoastClub(teamId: string) {
         // Speech: only on the one designated, unmuted device for this exact game. Failures are silent.
         try {
           const prefs = readAnnouncerPrefs();
-          if (announcerActive(prefs, req.gameId) && input.receipt.duplicate !== true && input.receipt.status !== "conflict") {
+          if (announcerActive(prefs, req.gameId) && input.receipt.status === "accepted" && input.receipt.duplicate === false) {
             // The announcer says only the roast: no plain result line, nothing for non-participants.
             const spoken = decision.kind === "show" ? decision.text : null;
             if (spoken) getSpeaker().say(req.commandId, spoken, prefs.volume);

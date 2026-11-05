@@ -41,7 +41,7 @@ const skip = (reason: Extract<RoastDecision, { kind: "skip" }>["reason"]): Roast
 
 export async function planConfirmedRoast(input: PlanInput): Promise<RoastDecision> {
   const { receipt } = input;
-  if (receipt.duplicate === true || receipt.status === "conflict") return skip("not-confirmed");
+  if (receipt.status !== "accepted" || receipt.duplicate !== false) return skip("not-confirmed");
   const score = confirmedScore(input.games, input.gameId, input.playId);
   if (!score) return skip("not-confirmed");
   if (!roastCategory(score.outcome, score.overLimitFenceHr)) return skip("no-roast-for-outcome");

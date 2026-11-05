@@ -56,9 +56,11 @@ createRoot(document.getElementById('app')).render(<App/>);` },
     await page.waitForTimeout(300); assert.equal(await popup.count(), 0);
     await page.evaluate(() => { window.__optedIn = ["00000000-0000-4000-8000-000000000101"]; });
     // 5. over-limit HR gets the over-limit line, not a home-run line.
-    await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+    await page.evaluate(() => { const n = Date.now() + 120000; Date.now = () => n; document.dispatchEvent(new Event("visibilitychange")); });
     await call("c5", A + "54", "00000000-0000-4000-8000-000000000101", "Fence HR", "OLHR");
-    await popup.waitFor(); await close.click();
+    await popup.waitFor();
+    assert.match(await popup.innerText(), /out/i);
+    await close.click();
     // 6. announcer: silent until designated + unlocked; then only the roast (no plain result line), once.
     const P1 = "00000000-0000-4000-8000-000000000101", P2 = "00000000-0000-4000-8000-000000000102";
     await call("c6", A + "55", P1, "1B"); await page.waitForTimeout(200); await close.click().catch(() => {});

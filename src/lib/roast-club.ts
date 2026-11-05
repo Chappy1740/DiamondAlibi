@@ -73,9 +73,9 @@ export const ROAST_CATALOG: Record<RoastCategory, readonly string[]> = {
     "{name} stretches it into a double. The defense watched, mostly because they were also tired.",
     "A double for {name}! The slide was optional, the dirt on the jersey is forever.",
     "{name} hustles into second. By hustle we mean controlled falling forward.",
-    "{name} doubles, then wheezes at second like it was a marathon. It was sixty feet.",
+    "{name} doubles, then rests at second like it was a marathon. It was sixty feet.",
     "Double for {name}! Whatever they drank before the game, it wasn't enough to slow the bat.",
-    "{name} makes it to second with a lead on the ball by about two inches. Cardio is a myth.",
+    "{name} makes it to second with a lead on the ball by about two inches. Speed is a rumor.",
     "{name} hits a double, then asks for a pinch runner on second. Bold move.",
     "A double for {name}! The outfielder forgot the ball and remembered their feelings.",
   ],
@@ -84,10 +84,10 @@ export const ROAST_CATALOG: Record<RoastCategory, readonly string[]> = {
     "A triple for {name}. By third base they'd forgotten how they got there. Classic.",
     "{name} chugs into third. The ball got there first, the umpire felt sorry for them.",
     "Triple for {name}! The outfield needed a search party and a better attitude.",
-    "{name} triples, and the third base coach just started a countdown for the collapse.",
+    "{name} triples, and the third base coach just started a countdown for the slide.",
     "{name} makes it to third on a hit that took the scenic route. So did the runner.",
     "A triple for {name}! Do not ask how. The ball bounced off a cooler and a dream.",
-    "{name} sprints, or what looks like a sprint, for a triple. Please hydrate.",
+    "{name} sprints, or what looks like a sprint, for a triple. Please stretch.",
   ],
   HR: [
     "{name} goes deep! The ball finally left the infield. Great news for the league.",
@@ -100,11 +100,11 @@ export const ROAST_CATALOG: Record<RoastCategory, readonly string[]> = {
     "Home run, {name}! The pitcher's league-night plans just got worse.",
   ],
   "ITP HR": [
-    "{name} hits an inside-the-park homer! Nobody has ever seen that much running, or that much panic.",
+    "{name} hits an inside-the-park homer! Nobody has ever seen that much running, or that much confidence.",
     "An inside-the-parker for {name}! The defense was busy discovering gravity.",
     "{name} runs out a home run. The ball rolled forever and so did the sprint, barely.",
     "Inside-the-park homer for {name}! The outfield got lost, the runner got lucky.",
-    "{name} circles the bases on one hit. Check the pulse. Check the bats. Check the beer count.",
+    "{name} circles the bases on one hit. Check the bases. Check the bats. Check the beer count.",
     "{name} legs out an inside-the-parker. A miracle brought to you by a very bad outfield.",
     "{name} goes all the way around. Slowly. Painfully. And somehow safely.",
     "An inside-the-park home run for {name}! The dugout is shouting, mostly from disbelief.",
@@ -135,9 +135,9 @@ export const ROAST_CATALOG: Record<RoastCategory, readonly string[]> = {
     "{name} didn't swing at strike three. Possibly the first smart thing they've done all night.",
     "{name} stared at the pitch for a full week and still didn't swing. Party of one.",
     "Strikeout looking for {name}. The ball arrived so slowly it had time to take a nap.",
-    "{name} took the called third strike. That's not patience, that's paralysis.",
+    "{name} took the called third strike. That's not patience, that's a statue.",
     "{name} looked at it, thought about it, and forgot what the bat was for.",
-    "{name} froze on strike three. The ump had to check for a pulse.",
+    "{name} froze on strike three. The ump nearly called a timeout for them.",
   ],
   SOFO: [
     "{name} struck out on a foul. Contact! Wrong direction, wrong game, wrong everything.",
@@ -222,7 +222,7 @@ export const ROAST_BANNED_PATTERN =
  * Checked by tests on every catalog line (not applied to player names).
  */
 export const ROAST_OFF_LIMITS_PATTERN =
-  /(\bfat\b|chubby|overweight|obese|\bweigh|\bweight|\bdiet\b|belly|\bgut\b|\bpudgy|\bheavy\b|mental|depress|anxi|crazy|insane|psycho|\bmad\b|\bnuts\b|suicid|\bocd\b|bipolar|\badhd\b|therap|\bhelp\b.*\bsad)/i;
+  /(\bfat\b|chubby|overweight|obese|\bweigh|\bweight|\bdiet\b|belly|\bgut\b|\bpudgy|\bheavy\b|mental|depress|anxi|crazy|insane|psycho|\bmad\b|\bnuts\b|suicid|\bocd\b|bipolar|\badhd\b|therap|\bhelp\b.*\bsad|panic|paralys|wheez|pulse|cardio|collaps|\bdumb|stupid|idiot|lost their mind)/i;
 
 const MAX_NAME_LENGTH = 24;
 
@@ -240,7 +240,7 @@ export function safeDisplayName(raw: unknown): string | null {
     .trim()
     .slice(0, MAX_NAME_LENGTH)
     .trim();
-  if (!cleaned || ROAST_BANNED_PATTERN.test(cleaned)) return null;
+  if (!cleaned || ROAST_BANNED_PATTERN.test(cleaned) || ROAST_OFF_LIMITS_PATTERN.test(cleaned)) return null;
   return cleaned;
 }
 
@@ -317,7 +317,8 @@ export function createRoastPlanner(options: RoastPlannerOptions = {}) {
   function plan(input: RoastInput): RoastDecision {
     if (input.settings.enabled !== true) return { kind: "skip", reason: "disabled" };
     const receipt = input.receipt;
-    if (receipt && (receipt.duplicate === true || receipt.status === "conflict"))
+    // Allow-list: only a plainly accepted, first-time save may roast. Anything else says nothing.
+    if (!receipt || receipt.status !== "accepted" || receipt.duplicate !== false)
       return { kind: "skip", reason: "not-confirmed" };
     if (!input.commandId || seen.has(input.commandId))
       return { kind: "skip", reason: "duplicate-command" };
