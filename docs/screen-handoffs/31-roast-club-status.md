@@ -1,6 +1,16 @@
 # Roast Club — build status (R1–R4)
 
-## Current checkpoint — 2026-11-05 (read this first)
+## November 5, 2026 — Current release and owner audio evidence
+
+**AMBER.** [#61](https://github.com/Chappy1740/DiamondAlibi/pull/61) merged as `0a1a48cfa5c4e187fb048a9b6c2b65d6768b85dd` after the owner lifted the hold at 09:23 CT. [Main validation](https://github.com/Chappy1740/DiamondAlibi/actions/runs/42054604449) passed and [production build 8096563e](https://github.com/Chappy1740/DiamondAlibi/runs/127343146384) reported Worker `2f4abbad-b231-4252-a1a2-5434d2366c11`. The later verified source `2b0acbf295d0d0fc217b865b56d54fb298647cb6` (#73) passed [main validation](https://github.com/Chappy1740/DiamondAlibi/actions/runs/42101559479) and [production build 212c3d22](https://github.com/Chappy1740/DiamondAlibi/runs/127508913554) reported Worker `544bf300-274e-44a5-8078-9ee62eb63602`. Active traffic percentage and the live feature flag have no independent readback.
+
+The owner clarified at 08:20 CT that the standalone iPhone audio check worked with Bluetooth headphones and Daniel (Enhanced). The owner accepted silence when locked for the pilot because the scorer keeps the phone in use. The live Safari app was silent before #68. #68 shipped a speech diagnostic and #73 added Announcer setup. Actual in-app speech, external Bluetooth speaker, microphone and Home Screen app acceptance remain open.
+
+The owner authorized committing, pushing, and deploying the listed PRs on November 5. The integration carries the scorer's existing team-scoped opt-in list from #63 and the reconciled records from #59, #66, and #67. #65 remains a draft pending separate approval and verification of its hosted migration. The release receipt in the integration PR records the final validation and Worker evidence. #63 reads the existing team-scoped consent for the scorer's list and clears the list when the current read is unavailable. It adds no consent or scoring writes.
+
+**Next owner audio check.** In the current build, open More → Clubhouse tools → Announcer setup on the unlocked phone, tap Test announcer sound, and check for an audible line and a completed speech event. Pilot scoring can use the existing muted default. The [Scorebook handoff](08-scorebook.md) records scoring acceptance.
+
+## Checkpoint before #61 — 2026-11-05 (historical)
 
 **Continuity: AMBER (EYD-PM-001).** Writer: Claude. Reviewer: Codex/owner. Resume from this record, not chat history.
 Rungs per item (Implemented, Tested, Merged, Deployed, Owner-accepted):
@@ -27,6 +37,8 @@ Rungs per item (Implemented, Tested, Merged, Deployed, Owner-accepted):
 - Last local run before merge (sandbox, head `7445ed1`): typecheck clean; 177 unit tests, Roast Club SQL test, Roast Club browser test (Chromium) and the connected-scorebook, scorebook-modes, games-flow, home-layout browser tests passed. PR CI `validate` was green on each of the four heads.
 
 **Owner phone result:** on 2026-11-05 the owner tested the announcer on his iPhone with headphones and reported it works with the Daniel (Enhanced) voice; locked screen does not speak (iOS limit; accepted for an in-use phone). This was the standalone audio-check page, not the deployed app. The in-app announcer, wake lock, Bluetooth speaker and Home Screen app remain UNTESTED. Audio is not production-ready.
+
+**Owner clarification, 2026-11-05 08:20 CT:** the owner reports the Bluetooth test was done the night before on his phone with his headphones (the standalone audio-check page) and the default voice (Daniel Enhanced) was chosen then. He considers the locked-screen limit a non-issue because the scorer keeps the phone in use while scoring. Recorded as the owner's acceptance of the lock-screen limit for the pilot; other Bluetooth speakers and the deployed in-app announcer are still untested, and owner acceptance of the feature is still pending.
 
 **Known limits / unknowns:** independent human or Codex review of the merged code not done; screen-reader pass not done; back-to-back lines cut the earlier line; a few catalog lines assume a runner/shortstop.
 

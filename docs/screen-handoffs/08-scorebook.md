@@ -1,6 +1,16 @@
 # 08 — Live scorebook: Screen handoff
 
+## November 5, 2026 — H5 and pilot phone receipt
+
+[H5 #52](https://github.com/Chappy1740/DiamondAlibi/pull/52#issuecomment-6633560050) shipped from `ff64f0d4f918fce9c088e6ec7a25e99552914010`. Its exact-main validation passed and Worker `232bd809-4815-4cd2-ac46-1aebc0b675f3` was observed at 100% on November 4. The earlier H5 hold is historical.
+
+Owner phone checks passed for A2 (per-game stats below Send), A4 (one-tap game navigation and official Out receipt above the bottom navigation), and #72 (Single with two runs defaults to two RBI; reached on error with three runs credits zero RBI and offers no override). Tournament continuation preserved the date, fence HR limit, and next batter on Game 3. The expanded Band panel showed the player's HR Band checked; it is prefilled from saved state, and a clean reopen verifies the saved assignment if the box was edited. Cross-device scoring and microphone input are open.
+
+The [release checkpoint](../../RELEASE-READINESS.md#november-5-2026--pilot-phone-checks-and-release-checkpoint) tracks the current Worker evidence and remaining gates.
+
 ## November 4, 2026 — H5 final reconciliation for pilot review
+
+> Historical checkpoint. The November 5 receipt above records the subsequent release and phone evidence.
 
 **Recovered; GREEN. H5 rung: Tested locally; exact-head CI pending.** Owner says
 “finish 52”; original scoped reconciliation authority covers conflict resolution,

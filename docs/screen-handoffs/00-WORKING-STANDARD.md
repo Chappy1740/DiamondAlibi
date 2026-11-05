@@ -1,10 +1,18 @@
 # Diamond Alibi — Screen-by-screen working standard
 
-## November 5, 2026 — Roast Club checkpoint (current for Roast Club)
+## November 5, 2026 — Pilot phone and release readback
+
+**AMBER.** [H5 #52](https://github.com/Chappy1740/DiamondAlibi/pull/52#issuecomment-6633560050) shipped from `ff64f0d4f918fce9c088e6ec7a25e99552914010`. Its exact-main validation passed and Worker `232bd809-4815-4cd2-ac46-1aebc0b675f3` was observed at 100% on November 4. The earlier H5 hold is historical. The [release checkpoint](../../RELEASE-READINESS.md#november-5-2026--pilot-phone-checks-and-release-checkpoint) records the later #61 and #73 build evidence and the [Scorebook handoff](08-scorebook.md) records the owner phone checks. The [Roast Club status](31-roast-club-status.md) tracks the separate audio acceptance and scorer list. Earlier holds below document their dated checkpoints.
+
+The owner authorized committing, pushing, and deploying the listed PRs on November 5. The integration carries the scorer's existing team-scoped opt-in list from #63 and the reconciled records from #59, #66, and #67. #65 remains a draft pending separate approval and verification of its hosted migration. The release receipt in the integration PR records the final validation and Worker evidence.
+
+## November 5, 2026 — Roast Club checkpoint before #61 (historical)
 
 **AMBER.** Roast Club R1–R4 ([#53](https://github.com/Chappy1740/DiamondAlibi/pull/53)–[#56](https://github.com/Chappy1740/DiamondAlibi/pull/56)) are **merged**, with the off switch and smoke test (#60), into main `0d282bf60622dcd01948b5ef1a9a539bc4f26e77`. The hosted migration `roast_club_consent` is **applied and verified** (read-back recorded). **Production is held: not deployed.** Last confirmed deployment: H5 `ff64f0d` (merge of #52; Worker `232bd809-4815-4cd2-ac46-1aebc0b675f3` at 100% when verified about 2026-11-04 14:41 UTC per the [#52 receipt](https://github.com/Chappy1740/DiamondAlibi/pull/52#issuecomment-6633560050)). **Current Cloudflare traffic is UNVERIFIED** (not rechecked); the failed main builds confirm those attempts produced no new release. Main `validate` run `42017788646` passed; the Cloudflare main build check `127212934158` reported failure with cause UNKNOWN (consistent with the migration deploy gate, log not read; earlier main build `cc77500d-ed69-4d41-b76c-f1c6188fb8e7` the same). Hosted rollback-only behavior check passed 16/16 on 2026-11-05 (synthetic data, nothing persisted); operations runbook: [33-roast-club-runbook.md](33-roast-club-runbook.md). Exact evidence, approvals and the single next action: [Roast Club status](31-roast-club-status.md). The owner said "hold on 61" (2026-11-05 05:28 CT): fingerprint PR #61 stays unmerged and production stays held. This section does not describe H5; older sections below are history.
 
 ## November 4, 2026 — H5 final reconciliation for pilot review
+
+> Historical checkpoint. The November 5 receipt above records the subsequent release and phone evidence.
 
 **Recovered; GREEN. H5 rung: Tested locally; exact-head CI pending.** Owner says
 “finish 52”; original scoped reconciliation authority covers conflict resolution,
