@@ -182,10 +182,10 @@ const assert = require("node:assert/strict");
       await open('&manual=1&full-roster=1');
       assert(await send.isDisabled(),'Send requires a player and a chosen result');
       assert.equal(await page.locator('.batting-outcomes [aria-pressed="true"]').count(),0,'No accidental default result');
-      assert.deepEqual(await page.locator('.batting-outcome-heading').allTextContents(),['The Hit Parade','Back to the Bench','Plot Twists']);
+      assert.deepEqual(await page.locator('.batting-outcome-heading').allTextContents(),['The Ego Boosters','The Hall of Shame','Participation Trophies']);
       const double=page.getByRole('button',{name:'Double',exact:true});
       assert.equal(await double.locator('strong').textContent(),'2B','Official code remains visible');
-      assert.equal(await double.locator('span').textContent(),'Make it a double','Clubhouse copy appears below the official code');
+      assert.equal(await double.locator('span').textContent(),'Two Bases? Alert the Media','Owner-selected copy appears below the official code');
       await page.getByRole('button',{name:'Roster Player 11',exact:true}).click();
       for(const name of ['Single','Double','Triple','Fence home run','Inside-the-park HR','Strikeout swinging','Strikeout looking','Strikeout foul out','Hit into double play','Out','Walk','Sacrifice fly','Reached on error']){
         await page.getByRole('button',{name,exact:true}).click();
@@ -785,7 +785,25 @@ const assert = require("node:assert/strict");
       await page.setViewportSize({width,height:900});
       await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Extended choices fit '+width);
-      assert(await page.locator('.batting-outcomes button').evaluateAll(buttons=>buttons.every(b=>{const r=b.getBoundingClientRect();return r.width>=44&&r.height>=44&&b.scrollWidth<=b.clientWidth&&b.scrollHeight<=b.clientHeight})), 'Readable, contained outcome targets at '+width);
+      const overflow = await page.locator('.batting-outcomes button').evaluateAll(buttons =>
+        buttons.flatMap(button => {
+          const bounds = button.getBoundingClientRect();
+          // WebKit may include the button borders in scrollHeight for wrapped text.
+          // Measure the rendered code and subtitle lines against the visible button.
+          const textFits = [...button.querySelectorAll('strong, span')].every(label => {
+            const range = document.createRange();
+            range.selectNodeContents(label);
+            return [...range.getClientRects()].every(line =>
+              line.left >= bounds.left && line.right <= bounds.right &&
+              line.top >= bounds.top && line.bottom <= bounds.bottom
+            );
+          });
+          return bounds.width >= 44 && bounds.height >= 44 &&
+            button.scrollWidth <= button.clientWidth && textFits
+            ? [] : [button.getAttribute('aria-label')];
+        })
+      );
+      assert.deepEqual(overflow, [], 'Readable, contained outcome targets at '+width);
     }
     await page.setViewportSize({width:390,height:844});
     if(process.env.OUTCOME_SCREENSHOT)await page.locator('.batting-outcomes').screenshot({path:process.env.OUTCOME_SCREENSHOT});

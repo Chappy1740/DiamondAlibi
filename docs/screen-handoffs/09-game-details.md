@@ -3,11 +3,12 @@
 ## November 5, 2026 — Scorebook button copy added to PR #62
 
 Will brought the thirteen H5 button subtitles and three group headings
-back into scope for the current draft. Codex selected **The Hit Parade**,
-**Back to the Bench**, and **Plot Twists**, with short subtitles below
-the existing outcome codes on the live scoring screen. The shared picker
-continues to provide the official outcome names to assistive technology.
-The subtitle and heading copy lives in `batting-outcome-picker.tsx`.
+back into scope for the current draft and corrected Codex's substitute
+wording. The November 3 UAT Run 1 H5 brief records the original list:
+**The Ego Boosters**, **The Hall of Shame**, and **Participation Trophies**.
+The thirteen verbatim subtitles appear below the outcome codes on the live
+scoring screen. The shared picker provides the official outcome names to
+assistive technology. The recovered copy is in `batting-outcome-picker.tsx`.
 
 Review and validation go through [PR #62](https://github.com/Chappy1740/DiamondAlibi/pull/62).
 The release still depends on the separate decision on PR #61.

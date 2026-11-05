@@ -10,7 +10,7 @@ const groups: {
 }[] = [
   {
     title: "Hits",
-    clubhouseTitle: "The Hit Parade",
+    clubhouseTitle: "The Ego Boosters",
     tone: "hit",
     choices: [
       { outcome: "1B", code: "1B", label: "Single" },
@@ -22,7 +22,7 @@ const groups: {
   },
   {
     title: "Outs",
-    clubhouseTitle: "Back to the Bench",
+    clubhouseTitle: "The Hall of Shame",
     tone: "out",
     choices: [
       { outcome: "K", code: "K", label: "Strikeout" },
@@ -31,7 +31,7 @@ const groups: {
   },
   {
     title: "Other",
-    clubhouseTitle: "Plot Twists",
+    clubhouseTitle: "Participation Trophies",
     tone: "other",
     choices: [
       { outcome: "BB", code: "BB", label: "Walk" },
@@ -42,19 +42,19 @@ const groups: {
 ];
 
 const clubhouseSubtitles: Partial<Record<Outcome, string>> = {
-  "1B": "First base, please",
-  "2B": "Make it a double",
-  "3B": "Three bags, no brakes",
-  "Fence HR": "Outta here!",
-  "ITP HR": "All legs, no fence",
-  "K Swinging": "Swing and a breeze",
-  "K Looking": "Just looking",
-  SOFO: "Foul ball, final call",
-  DP: "Two for one",
-  Out: "Have a seat",
-  BB: "Take a stroll",
-  SF: "Fly for the team",
-  ROE: "Oops, I’m safe",
+  "1B": "Even a Blind Squirrel",
+  "2B": "Two Bases? Alert the Media",
+  "3B": "Somebody Get the Oxygen",
+  "Fence HR": "The Fence Never Had a Chance",
+  "ITP HR": "Four Bases, Zero Breath",
+  "K Swinging": "All Swing, No Talent",
+  "K Looking": "Bat's Just for Decoration",
+  SOFO: "Fouled Up Everything",
+  DP: "Two Outs, One Bad Idea",
+  Out: "Sit Down, Superstar",
+  BB: "Free Pass, Zero Effort",
+  SF: "Congrats, You Failed Up",
+  ROE: "Defense Felt Sorry for You",
 };
 
 export function BattingOutcomePicker({
