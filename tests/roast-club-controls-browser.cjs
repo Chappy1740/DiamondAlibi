@@ -56,7 +56,8 @@ window.__show=(which)=>root.render(which==='both'?<Both/>:<Switch/>);
     await beta.getByText("Roast Club is off for you on Beta Bombers").waitFor();
 
     // 3. Switching the team on one control swaps in that team's own state (never the other team's).
-    await page.evaluate(() => window.__show("switch"));
+    await page.evaluate(() => { window.__switch = undefined; window.__show("switch"); });
+    await page.waitForFunction(() => typeof window.__switch === "function");
     const one = page.getByRole("group", { name: "Roast Club for Alpha Aces" });
     await one.getByText("You're in Roast Club on Alpha Aces").waitFor();
     await page.evaluate(() => window.__switch("00000000-0000-4000-8000-00000000000b"));
