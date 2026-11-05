@@ -8,7 +8,9 @@ Owner phone checks passed for A2 (per-game stats below Send), A4 (one-tap game n
 
 The [release checkpoint](../../RELEASE-READINESS.md#november-5-2026--pilot-phone-checks-and-release-checkpoint) tracks the current Worker evidence and remaining gates.
 
-## November 4, 2026 — H5 final reconciliation for pilot review (historical)
+## November 4, 2026 — H5 final reconciliation for pilot review
+
+> Historical checkpoint. The November 5 receipt above records the subsequent release and phone evidence.
 
 **Recovered; GREEN. H5 rung: Tested locally; exact-head CI pending.** Owner says
 “finish 52”; original scoped reconciliation authority covers conflict resolution,
