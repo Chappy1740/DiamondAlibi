@@ -1,5 +1,45 @@
 # 17 — Bio and profile: Screen handoff
 
+## November 5, 2026 — Team participation preferences
+
+Will asked to put Beverage participation and Roast Club under **Profile menu →
+Bio & profile → Team preferences**, with the Beverage tab reserved for team and
+season balances. Codex implements this screen-placement task on the isolated
+`codex/team-participation-preferences` branch from main
+`0a1a48cfa5c4e187fb048a9b6c2b65d6768b85dd`. Claude's open Roast Club announcer
+and scorer work is separate.
+
+The profile opens with the team from the current dashboard, or the existing
+saved selection for a direct visit. The section names the team and lets a
+player switch among active memberships. The two choices save independently
+through their existing controls and server actions. Switching teams drops the
+previous team's season. [Beverage Board](11-beverage-board.md) shows balances,
+and [the smoke test](32-roast-club-smoke-test.md) uses the profile entry.
+
+Reuse the existing active-membership filter, native team selector and
+participation controls. A separate settings store, new dependency or custom
+selector would duplicate working authorization and input behavior. This change
+requires no schema or provider changes.
+
+**Tested locally by Codex.** The production build, TypeScript, the scoped
+dashboard loader, and Beverage and Roast Club regressions passed. Chromium and
+WebKit passed the profile entry from the board, independent choices for two
+teams after switching and reloading, inactive-team denial, and phone layout
+and accessibility. The built sample board also passed season switching and
+scope independence. Hosted phone acceptance remains open.
+
+**Continuity:** GREEN for the combined placement. Will approved committing,
+pushing, and deploying this change on November 5 and then confirmed that both
+controls belong under the account area. Claude's
+[PR #69](https://github.com/Chappy1740/DiamondAlibi/pull/69) is a separate,
+overlapping Roast Club-only placement. Release the combined placement through
+its own PR and preserve Claude's branch. The tested work was brought onto main
+`5352920ef26ee25421cf80330e53f1d3f026ea3e`, which had added only the previously
+merged announcer fix. The migration fingerprint still matches main. Next action
+is validation and release of the combined PR through the existing gate.
+
+## Historical screen brief
+
 **Status:** Ready for owner brief. **Owner's requested change:** Not yet supplied.
 **Current screen only:** Bio and profile.
 **Route/view:** `/more/profile`

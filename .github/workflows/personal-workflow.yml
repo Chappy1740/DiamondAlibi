@@ -67,6 +67,10 @@ jobs:
       - run: BROWSER_ENGINE=webkit node tests/roster-membership-browser.cjs
       - run: node tests/roast-club-browser.cjs
       - run: BROWSER_ENGINE=webkit node tests/roast-club-browser.cjs
+      - run: node tests/roast-club-controls-browser.cjs
+      - run: BROWSER_ENGINE=webkit node tests/roast-club-controls-browser.cjs
+      - run: node tests/announcer-setup-browser.cjs
+      - run: BROWSER_ENGINE=webkit node tests/announcer-setup-browser.cjs
       - run: node tests/beverage-controls-browser.cjs
       - run: BROWSER_ENGINE=webkit node tests/beverage-controls-browser.cjs
       - run: node tests/scorebook-modes-browser.cjs

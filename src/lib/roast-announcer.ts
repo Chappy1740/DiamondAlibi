@@ -52,7 +52,11 @@ export type SpeechSynthLike = {
   speak(utterance: unknown): void;
   cancel(): void;
 };
-export type UtteranceLike = { onerror?: { bivarianceHack(event: { error?: string }): void }["bivarianceHack"] | null };
+export type UtteranceLike = {
+  onerror?: { bivarianceHack(event: { error?: string }): void }["bivarianceHack"] | null;
+  onstart?: { bivarianceHack(event: unknown): void }["bivarianceHack"] | null;
+  onend?: { bivarianceHack(event: unknown): void }["bivarianceHack"] | null;
+};
 export type SpeakerDeps = {
   synth: SpeechSynthLike | null;
   makeUtterance: (text: string, volume: number) => UtteranceLike | null;
@@ -63,7 +67,13 @@ export type SpeakResult = "spoken" | "duplicate" | "unsupported" | "blocked" | "
 export function createSpeaker(deps: SpeakerDeps, memory = 200) {
   const seen: string[] = [];
   let blocked = false;
+  // Keep a strong reference to the utterance that is playing. Some iPhone browsers drop an utterance that
+  // nothing references, which sounds like silence even though speak() was called.
+  let playing: UtteranceLike | null = null;
+  let lastEvent = "none yet";
   return {
+    /** Plain-text note of the latest speech event, for the on-screen test readout. */
+    get lastEvent() { return lastEvent; },
     get supported() { return deps.synth !== null; },
     get blocked() { return blocked; },
     /** Call from a tap. Browsers only allow speech after a user gesture. */
@@ -78,7 +88,11 @@ export function createSpeaker(deps: SpeakerDeps, memory = 200) {
       try {
         const utterance = deps.makeUtterance(clean, Math.min(1, Math.max(0, volume)));
         if (!utterance) return "unsupported";
-        utterance.onerror = (event) => { if (event?.error === "not-allowed") blocked = true; };
+        playing = utterance;
+        lastEvent = "queued";
+        utterance.onstart = () => { lastEvent = "started"; };
+        utterance.onend = () => { lastEvent = "finished"; if (playing === utterance) playing = null; };
+        utterance.onerror = (event) => { lastEvent = "error: " + (event?.error ?? "unknown"); if (event?.error === "not-allowed") blocked = true; if (playing === utterance) playing = null; };
         if (!force) { seen.push(key); if (seen.length > memory) seen.shift(); }
         deps.synth.cancel();
         deps.synth.speak(utterance);

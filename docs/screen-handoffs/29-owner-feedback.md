@@ -1,5 +1,13 @@
 # 29 — Owner feedback inbox: Screen handoff
 
+## November 5, 2026 — Production migration verified
+
+Owner approved applying and verifying the production migration and releasing [#65](https://github.com/Chappy1740/DiamondAlibi/pull/65). Source `20261105134519_review_feedback_owner_reply.sql` is recorded in production as `20261105230752` / `review_feedback_owner_reply`. Readback confirmed both nullable columns, the validated reply constraint, RLS, and a service-only security-invoker function with an empty search path. The service-role call for an absent ID returned `not_found`.
+
+The app release follows the existing GitHub validation and Worker gate. On the phone, the owner can open a submission in **Booth Reviews**. The original sender can see their reply under **Challenge the Call → My feedback and replies**. Use approved pilot data for acceptance. The initial local-test checkpoint follows as history.
+
+The release candidate starts from `c44bc38dfffd8ba783b28a3f5dcc7e9ea7532e1d`, which shipped via [#74](https://github.com/Chappy1740/DiamondAlibi/pull/74). The production build reported Worker `cf0d2663-536c-4972-9ca3-4f4abd6b0e5f`. The candidate keeps #65's application and test changes, reconciles shared files, and records the verified migration fingerprint. [#65](https://github.com/Chappy1740/DiamondAlibi/pull/65) carries the final source, validation and deployment receipt.
+
 ## November 5, 2026 — Open submissions and reply privately
 
 Will reports being unable to open suggestions in the Owner's Box and wants

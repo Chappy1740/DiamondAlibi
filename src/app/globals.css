@@ -1821,6 +1821,7 @@ blockquote {
 .team-scorebook .at-bat-form fieldset { min-width: 0; gap: 8px; }
 .at-bat-rbi { display: grid; gap: 6px; margin: 0; }
 .at-bat-rbi > span, .at-bat-runs { font-size: 12px; color: var(--muted); }
+.at-bat-rbi-adjustment > summary { min-height: 44px; padding-block: 10px; color: var(--teal); cursor: pointer; }
 .rbi-buttons { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
 .rbi-buttons button { min-height: 44px; min-width: 0; border: 1px solid var(--border); border-radius: 8px; color: var(--white); background: var(--surface); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
 .rbi-buttons button[aria-pressed="true"] { border: 2px solid var(--teal); background: #16485d; }
@@ -2230,6 +2231,19 @@ body:has(.workspace--home) { padding-bottom: 0; }
 .workspace--type-scale .leaderboard-counts strong { font-size: var(--ui-text-body); }
 .workspace--type-scale :is(.micro, .eyebrow, .home-stat dt, .dashboard-select-label, .game-entry-status, .leaderboard-player > .micro, .leaderboard-badge, .leaderboard-beverage small) { font-size: var(--ui-text-small); }
 .workspace--type-scale .dashboard-context-action > button { font-size: var(--ui-text-body); }
+.beverage-roster .leader-row > strong {
+  min-inline-size: 0;
+  font-size: var(--ui-text-large);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.workspace--type-scale .beverage-roster .leader-row > .balance {
+  min-inline-size: 0;
+  max-inline-size: 60%;
+  font-size: var(--ui-text-body);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
 /* Native inputs retain their existing 16px platform treatment and 44px targets. */
 
 /* Roast Club popup: a dismissible, nonblocking note. Only the close button takes pointer input. */

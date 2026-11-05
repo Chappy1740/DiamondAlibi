@@ -1,19 +1,30 @@
 # Release readiness and recovery
 
-## November 5, 2026 — Private owner replies tested locally
+## November 5, 2026 — Private owner replies release candidate
 
-Booth Reviews opening and private replies are prepared for review on
-`codex/owner-feedback-replies`. See the
-[owner feedback receipt](docs/screen-handoffs/29-owner-feedback.md#november-5-2026--open-submissions-and-reply-privately).
-Release requires separately approved and verified application of the reply
-migration and a reviewed release fingerprint. The existing #61 hold still
-applies. Hosted cause and acceptance remain unverified.
+**AMBER.** Owner approved applying and verifying the production migration and releasing [#65](https://github.com/Chappy1740/DiamondAlibi/pull/65). Source `20261105134519_review_feedback_owner_reply.sql` is recorded in production as `20261105230752` / `review_feedback_owner_reply`. Readback confirmed both nullable columns, the validated reply constraint, RLS, and a service-only security-invoker function with an empty search path. The service-role call for an absent ID returned `not_found`.
 
-## November 5, 2026 — Roast Club checkpoint (current for Roast Club)
+The release candidate starts from `c44bc38dfffd8ba783b28a3f5dcc7e9ea7532e1d`, which shipped via [#74](https://github.com/Chappy1740/DiamondAlibi/pull/74). The production build reported Worker `cf0d2663-536c-4972-9ca3-4f4abd6b0e5f`. The candidate keeps #65's application and test changes, reconciles shared files, and records the verified migration fingerprint. [#65](https://github.com/Chappy1740/DiamondAlibi/pull/65) carries the final source, validation and deployment receipt.
 
-**AMBER.** Roast Club R1–R4 ([#53](https://github.com/Chappy1740/DiamondAlibi/pull/53)–[#56](https://github.com/Chappy1740/DiamondAlibi/pull/56)) are **merged**, with the off switch and smoke test (#60), into main `0d282bf60622dcd01948b5ef1a9a539bc4f26e77`. The hosted migration `roast_club_consent` is **applied and verified** (read-back recorded). **Production is held: not deployed.** Last confirmed deployment: H5 `ff64f0d` (merge of #52; Worker `232bd809-4815-4cd2-ac46-1aebc0b675f3` at 100% when verified about 2026-11-04 14:41 UTC per the [#52 receipt](https://github.com/Chappy1740/DiamondAlibi/pull/52#issuecomment-6633560050)). **Current Cloudflare traffic is UNVERIFIED** (not rechecked); the failed main builds confirm those attempts produced no new release. Main `validate` run `42017788646` passed; the Cloudflare main build check `127212934158` reported failure with cause UNKNOWN (consistent with the migration deploy gate, log not read; earlier main build `cc77500d-ed69-4d41-b76c-f1c6188fb8e7` the same). Exact evidence, approvals and the single next action: [Roast Club status](docs/screen-handoffs/31-roast-club-status.md). The owner said "hold on 61" (2026-11-05 05:28 CT): fingerprint PR #61 stays unmerged and production stays held. This section does not describe H5; older sections below are history.
+Owner phone acceptance remains open. The [feedback handoff](docs/screen-handoffs/29-owner-feedback.md) records the workflow and verification boundary.
+
+## November 5, 2026 — Pilot phone checks and release checkpoint
+
+**AMBER.** [H5 #52](https://github.com/Chappy1740/DiamondAlibi/pull/52#issuecomment-6633560050) shipped from `ff64f0d4f918fce9c088e6ec7a25e99552914010`. Its exact-main validation passed and Worker `232bd809-4815-4cd2-ac46-1aebc0b675f3` was observed at 100% on November 4. The earlier H5 hold is historical.
+
+[#61](https://github.com/Chappy1740/DiamondAlibi/pull/61) merged as `0a1a48cfa5c4e187fb048a9b6c2b65d6768b85dd` after the owner lifted the hold at 09:23 CT. [Main validation](https://github.com/Chappy1740/DiamondAlibi/actions/runs/42054604449) passed and [production build 8096563e](https://github.com/Chappy1740/DiamondAlibi/runs/127343146384) reported Worker `2f4abbad-b231-4252-a1a2-5434d2366c11`. The later verified source `2b0acbf295d0d0fc217b865b56d54fb298647cb6` (#73) passed [main validation](https://github.com/Chappy1740/DiamondAlibi/actions/runs/42101559479) and [production build 212c3d22](https://github.com/Chappy1740/DiamondAlibi/runs/127508913554) reported Worker `544bf300-274e-44a5-8078-9ee62eb63602`. Active traffic percentage and the live feature flag have no independent readback.
+
+Owner phone checks passed for A2 (per-game stats below Send), A4 (one-tap game navigation and official Out receipt above the bottom navigation), and #72 (Single with two runs defaults to two RBI; reached on error with three runs credits zero RBI and offers no override). Tournament continuation preserved the date, fence HR limit, and next batter on Game 3. The expanded Band panel showed the player's HR Band checked; it is prefilled from saved state, and a clean reopen verifies the saved assignment if the box was edited. Cross-device scoring and microphone input are open. Conditional go for a scoring-only pilot with the announcer off. The owner accepted the lock-screen limitation for a phone in use. The [Roast Club status](docs/screen-handoffs/31-roast-club-status.md) records the audio evidence and limits.
+
+The owner authorized committing, pushing, and deploying the listed PRs on November 5. The integration carries the scorer's existing team-scoped opt-in list from #63 and the reconciled records from #59, #66, and #67. #65 remains a draft pending separate approval and verification of its hosted migration. The release receipt in the integration PR records the final validation and Worker evidence.
+
+## November 5, 2026 — Roast Club checkpoint before #61 (historical)
+
+**AMBER.** Roast Club R1–R4 ([#53](https://github.com/Chappy1740/DiamondAlibi/pull/53)–[#56](https://github.com/Chappy1740/DiamondAlibi/pull/56)) are **merged**, with the off switch and smoke test (#60), into main `0d282bf60622dcd01948b5ef1a9a539bc4f26e77`. The hosted migration `roast_club_consent` is **applied and verified** (read-back recorded). **Production is held: not deployed.** Last confirmed deployment: H5 `ff64f0d` (merge of #52; Worker `232bd809-4815-4cd2-ac46-1aebc0b675f3` at 100% when verified about 2026-11-04 14:41 UTC per the [#52 receipt](https://github.com/Chappy1740/DiamondAlibi/pull/52#issuecomment-6633560050)). **Current Cloudflare traffic is UNVERIFIED** (not rechecked); the failed main builds confirm those attempts produced no new release. Main `validate` run `42017788646` passed; the Cloudflare main build check `127212934158` reported failure with cause UNKNOWN (consistent with the migration deploy gate, log not read; earlier main build `cc77500d-ed69-4d41-b76c-f1c6188fb8e7` the same). Hosted rollback-only behavior check passed 16/16 on 2026-11-05 (synthetic data, nothing persisted); operations runbook: [33-roast-club-runbook.md](docs/screen-handoffs/33-roast-club-runbook.md). Exact evidence, approvals and the single next action: [Roast Club status](docs/screen-handoffs/31-roast-club-status.md). The owner said "hold on 61" (2026-11-05 05:28 CT): fingerprint PR #61 stays unmerged and production stays held. This section does not describe H5; older sections below are history.
 
 ## November 4, 2026 — H5 final reconciliation for pilot review
+
+> Historical checkpoint. The November 5 receipt above records the subsequent release and phone evidence.
 
 **Recovered; GREEN. H5 rung: Tested locally; exact-head CI pending.** Owner says
 “finish 52”; original scoped reconciliation authority covers conflict resolution,

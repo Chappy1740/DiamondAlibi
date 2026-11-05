@@ -46,20 +46,29 @@ export function useRoastClub(teamId: string, enabled = true) {
   const alive = useRef(true);
   const lastRefresh = useRef(0);
   const [line, setLine] = useState<string | null>(null);
+  /** Opted-in player ids from the last consent read (null = unknown or feature off), for the scorer's read-only list. */
+  const [participants, setParticipants] = useState<readonly string[] | null>(null);
 
   const readConsent = useCallback(async (): Promise<RoastClubState | null> => {
-    const result = await roastClubAction({ type: "read", teamId });
-    return result.status === "ok" ? result.data : null;
+    try {
+      const result = await roastClubAction({ type: "read", teamId });
+      const state = result.status === "ok" ? result.data : null;
+      if (alive.current) {
+        // Keep the last eligibility hint on transient failures so the next play can recheck.
+        // A roast still requires a successful fresh consent read.
+        if (result.status !== "unavailable") cache.current = state;
+        setParticipants(state?.optedInPlayerIds ?? null);
+      }
+      return state;
+    } catch {
+      if (alive.current) setParticipants(null);
+      return null;
+    }
   }, [teamId]);
 
   const refresh = useCallback(async () => {
     lastRefresh.current = Date.now();
-    try {
-      const state = await readConsent();
-      if (alive.current) cache.current = state;
-    } catch {
-      if (alive.current) cache.current = null;
-    }
+    await readConsent();
   }, [readConsent]);
 
   useEffect(() => {
@@ -129,5 +138,5 @@ export function useRoastClub(teamId: string, enabled = true) {
     </div>
   ) : null;
 
-  return { announce, popup };
+  return { announce, popup, participants };
 }
