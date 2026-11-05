@@ -46,19 +46,30 @@ export function useRoastClub(teamId: string, enabled = true) {
   const alive = useRef(true);
   const lastRefresh = useRef(0);
   const [line, setLine] = useState<string | null>(null);
+  /** Opted-in player ids from the last consent read (null = unknown or feature off), for the scorer's read-only list. */
+  const [participants, setParticipants] = useState<readonly string[] | null>(null);
 
   const readConsent = useCallback(async (): Promise<RoastClubState | null> => {
-    const result = await roastClubAction({ type: "read", teamId });
-    return result.status === "ok" ? result.data : null;
+    // Every consent read, including the authoritative recheck before a roast, refreshes the cache and
+    // the scorer's member list, so an opt-out (or a switched-off feature) disappears right away.
+    try {
+      const result = await roastClubAction({ type: "read", teamId });
+      const state = result.status === "ok" ? result.data : null;
+      if (alive.current) { cache.current = state; setParticipants(state ? state.optedInPlayerIds : null); }
+      return state;
+    } catch (error) {
+      if (alive.current) { cache.current = null; setParticipants(null); }
+      throw error;
+    }
   }, [teamId]);
 
   const refresh = useCallback(async () => {
     lastRefresh.current = Date.now();
     try {
       const state = await readConsent();
-      if (alive.current) cache.current = state;
+      if (alive.current) { cache.current = state; setParticipants(state ? state.optedInPlayerIds : null); }
     } catch {
-      if (alive.current) cache.current = null;
+      if (alive.current) { cache.current = null; setParticipants(null); }
     }
   }, [readConsent]);
 
@@ -129,5 +140,5 @@ export function useRoastClub(teamId: string, enabled = true) {
     </div>
   ) : null;
 
-  return { announce, popup };
+  return { announce, popup, participants };
 }
