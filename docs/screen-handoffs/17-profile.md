@@ -28,11 +28,15 @@ teams after switching and reloading, inactive-team denial, and phone layout
 and accessibility. The built sample board also passed season switching and
 scope independence. Hosted phone acceptance remains open.
 
-**Continuity:** AMBER for release coordination. Will approved committing,
-pushing, and deploying this combined placement change on November 5. Claude's
-[PR #69](https://github.com/Chappy1740/DiamondAlibi/pull/69) subsequently
-appeared with an overlapping Roast Club-only placement. Preserve both branches
-and resolve which change leads before publishing a competing PR or releasing.
+**Continuity:** GREEN for the combined placement. Will approved committing,
+pushing, and deploying this change on November 5 and then confirmed that both
+controls belong under the account area. Claude's
+[PR #69](https://github.com/Chappy1740/DiamondAlibi/pull/69) is a separate,
+overlapping Roast Club-only placement. Release the combined placement through
+its own PR and preserve Claude's branch. The tested work was brought onto main
+`5352920ef26ee25421cf80330e53f1d3f026ea3e`, which had added only the previously
+merged announcer fix. The migration fingerprint still matches main. Next action
+is validation and release of the combined PR through the existing gate.
 
 ## Historical screen brief
 
