@@ -1,6 +1,6 @@
 # Roast Club — build status (R1–R4)
 
-Status: AMBER (EYD-PM-001). Code complete and pushed as draft PRs; nothing merged or deployed. Updated 2026-11-03 (evening).
+Status: AMBER (EYD-PM-001). Code merged to main (PRs #53-#56, 2026-11-05). Hosted DB migration applied. NOT deployed.
 
 ## Pull requests (stacked, merge in order; all draft, owner has not approved merge or deploy)
 | PR | Branch | Scope |
@@ -51,3 +51,11 @@ Owner direction: Will authorized full Roast Club development (supersedes the Nov
 - Every scoreable result gets a roast. A plain "Hit" is a single and uses the single lines. Slowpitch has no hit-by-pitch, so HBP stays unmapped.
 - Open: category count. The catalog has 15 categories (the 14 result types plus a separate OVER-LIMIT HR set that keeps over-limit home runs from being celebrated).
 - Staged option still available: ship text-only first, announcer later.
+
+## Update 2026-11-05 (owner approvals and results)
+- Independent review fixes shipped in #56: accepted-and-new receipt allow-list, off-limits name check, widened off-limits words (drunk/hungover/slow jokes kept, owner-approved), consent checks only on score/full screens and throttled to ~1/min, browser test asserts over-limit line says "out".
+- Owner approved the hosted database change; `roast_club_consent` applied to the DiamondAlibi Supabase project. Verified: RLS on both private tables, immutable triggers, anon cannot execute, authenticated can, zero opt-ins.
+- Owner approved merging; #53-#56 merged to main in order, CI `validate` green on main.
+- Deploy NOT approved. Workers Build on main reports failure, consistent with the deploy gate (migration tree changed vs `approvedMigrationTree` in `scripts/worker-release-policy.json`); Cloudflare log not read.
+- Owner tested the announcer on his iPhone (Daniel Enhanced voice, check page): works. Locked screen does not speak (OS limit; fine for a phone in use). In-app announcer on a real deploy is still untested.
+- Next: owner approves deploy -> small PR updating the migration fingerprint -> deploy -> real-app iPhone/Bluetooth test -> owner acceptance.
