@@ -30,7 +30,7 @@ Rungs per item (Implemented, Tested, Merged, Deployed, Owner-accepted):
 
 **Known limits / unknowns:** independent human or Codex review of the merged code not done; screen-reader pass not done; back-to-back lines cut the earlier line; a few catalog lines assume a runner/shortstop.
 
-**Main since this checkpoint:** #62 (Codex, phone scoring/game stats/button copy) merged as `19147b0f2a3b1bd8c597edf698d2755aa9e1edb2`; its main `validate` run `42036762495` was still running and the Cloudflare main check `127277618053` showed failure when last read (same unverified deploy-gate explanation). The owner-hold on #61 and production is unchanged.
+**Main since this checkpoint:** #62 (Codex, phone scoring/game stats/button copy) merged as `19147b0f2a3b1bd8c597edf698d2755aa9e1edb2`; its main `validate` run `42036762495` **succeeded**; the Cloudflare main check `127277618053` showed failure (same unverified deploy-gate explanation, log not read). The owner-hold on #61 and production is unchanged.
 
 **One next action:** owner decides whether to approve the deploy (merge #61). Until then nothing ships. After a deploy: run `32-roast-club-smoke-test.md` on the live app and record the result here. Queued: team heads-up message; scorer view of who has opted in.
 
