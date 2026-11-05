@@ -95,6 +95,16 @@ export function PlayerLeaderboard({
             const ranked = rankTournamentPlayers(players, key);
             const leaders = ranked.filter((row) => row.rank === 1);
             const leader = leaders[0];
+            let leaderLabel = leader?.name ?? "No recorded value";
+            if (leaders.length > 1) {
+              leaderLabel = compactSummary ? "Tied" : `${leaders.length} tied`;
+            } else if (
+              leader &&
+              leaderboardValue(leader, key) === 0 &&
+              !ranked.some((row) => row.rank !== null && row.id !== leader.id)
+            ) {
+              leaderLabel = "No leader";
+            }
             const value = leader ? (
               <MetricValue row={leader} metric={key} showLabel={false} />
             ) : (
@@ -119,11 +129,7 @@ export function PlayerLeaderboard({
                 </span>
                 <span className={`leaderboard-player${compactSummary ? " leaderboard-player--count-first" : ""}`}>
                   {compactSummary && <><span className="leaderboard-counts">{value}</span><span className="leaderboard-separator" aria-hidden="true"> – </span></>}
-                  <strong>
-                    {leaders.length > 1
-                      ? (compactSummary ? "Tied" : `${leaders.length} tied`)
-                      : (leader?.name ?? "No recorded value")}
-                  </strong>
+                  <strong>{leaderLabel}</strong>
                   {!compactSummary && <span className="micro">{labels[key]}</span>}
                 </span>
                 {!compactSummary && <span className="leaderboard-counts">{value}</span>}
