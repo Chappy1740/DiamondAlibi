@@ -1,5 +1,38 @@
 # 09 — Game details and history: Screen handoff
 
+## November 5, 2026 — Pilot phone follow-up
+
+Will's phone photos show a player named on zero-count leader cards, a Send
+view where the existing receipt is above the viewport, and an OBP value of
+1.000 split across two lines. Will also asked to move Game stats directly
+below Send on the scoring screen. Codex prepared these fixes in
+`codex/pilot-phone-uat-fixes`, based on main
+`0d282bf60622dcd01948b5ef1a9a539bc4f26e77`.
+
+- The shared leader cards show the amount and “Tied” for equal eligible
+  leaders. A sole eligible zero shows “No leader.” The ranking detail keeps
+  player names, values and ranks.
+- The existing receipt for an officially confirmed play appears above the
+  bottom navigation for ten seconds on the scoring screen. It uses the exact
+  saved play readback and is separate from the optional Roast Club popup.
+- Game stats now appears directly below Send on the scoring screen, ahead
+  of the Game details link. The section uses the selected game's existing
+  saved totals. Columns size from their contents and give OBP extra room.
+  Three-digit counts and five-character rates fit without breaking a value.
+  The four-digit lifetime sizing requirement is for future lifetime views.
+
+**Tested locally.** Codex passed typecheck, diff whitespace and synthetic
+Chromium/WebKit scorebook and Home/Stats suites. Coverage includes a sole
+eligible zero, genuine ties, 999 counts and 1.000 OBP at 320/390px, and a
+receipt visible above navigation after Send with the heading offscreen.
+Scorebook places stats immediately after the Send form. Game details and
+setup have no duplicate section.
+Phone acceptance remains open. The separate migration-fingerprint update
+is tracked in [PR #61](https://github.com/Chappy1740/DiamondAlibi/pull/61).
+Will replied “Ok, one more for this PR” to the draft publication request
+and added the placement change. Next action is the draft PR with all four
+changes and its GitHub validation. Merge and deployment are separate.
+
 **November 3 release update:** owner now authorizes publishing, merging and deploying H1 #45 with H3 #46 and the pending documentation through #46. H4 #47 remains excluded. See [current release handoff and completion receipt](00-WORKING-STANDARD.md#november-3-2026--uat-release-through-pr-46) and the release PR for `codex/uat-release-through-pr46` for actual source/check/activation state. Physical-phone A2 acceptance remains open; the original draft-only boundary below is historical.
 
 ## November 3, 2026 — H1 / UAT A2 per-game stat line

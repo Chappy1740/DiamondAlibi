@@ -146,7 +146,7 @@ export function ConnectedScorebook({
   }, [mode, current?.game.id]);
   useEffect(() => {
     if (!recordedPlay) return;
-    const timer = window.setTimeout(() => setRecordedPlay(null), 5000);
+    const timer = window.setTimeout(() => setRecordedPlay(null), 10000);
     return () => window.clearTimeout(timer);
   }, [recordedPlay]);
   useEffect(() => {
@@ -834,7 +834,7 @@ export function ConnectedScorebook({
                   </form>
                 </>
               )}
-              {mode === "manage" && <section className="game-stat-lines" aria-label="Selected game player statistics">
+              {mode === "score" && <section className="game-stat-lines" aria-label="Selected game player statistics">
                 <h3>Game stats</h3>
                 <p className="micro">This game only</p>
                 {gameStatLines.map(([id, totals]) => (

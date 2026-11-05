@@ -1843,7 +1843,21 @@ blockquote {
 .at-bat-card .voice-play-note, .at-bat-card .quick-play-hint { font-size: 11px; line-height: 1.4; margin: 6px 0; color: var(--muted); }
 .at-bat-card .entry-error { color: #ffd4bd; font-size: 13px; margin: 8px 0; }
 .game-details-link { display: inline-block; margin-top: 12px; min-height: 44px; padding-block: 12px; }
-.recorded-play { margin-block: 12px; padding: 12px; border: 1px solid var(--teal); border-radius: 8px; background: var(--surface); overflow-wrap: anywhere; }
+.recorded-play {
+  position: fixed;
+  inset-inline: 12px;
+  bottom: calc(88px + env(safe-area-inset-bottom));
+  z-index: 40;
+  max-width: 520px;
+  margin-inline: auto;
+  padding: 12px;
+  border: 1px solid var(--teal);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}
 .recorded-play p { margin: 6px 0 0; }
 .play-draft { margin: 4px 0; overflow-wrap: anywhere; }
 .game-details-navigation {
@@ -2194,10 +2208,17 @@ body:has(.workspace--home) { padding-bottom: 0; }
 .game-stat-lines h3 { margin-bottom: 4px; }
 .game-stat-player { min-width: 0; padding-block: 12px; border-bottom: 1px solid var(--border); }
 .game-stat-player h4 { margin: 0 0 8px; overflow-wrap: anywhere; }
-.game-stat-player dl { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; margin: 0; text-align: center; }
+.game-stat-player dl {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(max-content, 1fr)) minmax(max-content, 1.35fr);
+  gap: 4px;
+  margin: 0;
+  text-align: center;
+  overflow-x: auto;
+}
 .game-stat-player dl > div { min-width: 0; }
 .game-stat-player dt { color: var(--muted); font-size: 12px; }
-.game-stat-player dd { margin: 4px 0 0; font-size: 14px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.game-stat-player dd { margin: 4px 0 0; font-size: 14px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 /* H4's three-size scale is limited to Home, Games, Stats and Beverage. */
 .workspace--type-scale { font-size: var(--ui-text-body); }
