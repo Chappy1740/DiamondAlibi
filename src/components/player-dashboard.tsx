@@ -23,6 +23,7 @@ import { GameScoreboardPanel } from "./game-scoreboard";
 import { connectedScoreboard } from "@/lib/game-scoreboard";
 import { gameSetupHref, safeGameSetupReturn } from "@/lib/game-navigation";
 import { BeverageControls } from "./beverage-controls";
+import { AnnouncerSetup } from "./announcer-setup";
 
 type Option = { id: string; name: string };
 export type DashboardProps = {
@@ -381,6 +382,7 @@ export function PlayerDashboard(p: DashboardProps) {
                     Local scoring practice
                   </Link>
                 </div>
+                <AnnouncerSetup />
               </section>
             )}
             {p.route === "more/beverage-rules" && (p.sample || !p.userId ? <section className="card detail-card"><h2>Beverage Rules</h2><p>Sign in and select your team to view its current rules.</p></section> : p.teamId ? <BeverageControls key={p.teamId} teamId={p.teamId} teamSettings returnHref={setupReturnHref} /> : <p>Select a team to view Beverage Rules.</p>)}
