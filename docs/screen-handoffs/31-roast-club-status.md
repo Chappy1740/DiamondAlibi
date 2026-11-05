@@ -28,6 +28,8 @@ Rungs per item (Implemented, Tested, Merged, Deployed, Owner-accepted):
 
 **Owner phone result:** on 2026-11-05 the owner tested the announcer on his iPhone with headphones and reported it works with the Daniel (Enhanced) voice; locked screen does not speak (iOS limit; accepted for an in-use phone). This was the standalone audio-check page, not the deployed app. The in-app announcer, wake lock, Bluetooth speaker and Home Screen app remain UNTESTED. Audio is not production-ready.
 
+**Owner clarification, 2026-11-05 08:20 CT:** the owner reports the Bluetooth test was done the night before on his phone with his headphones (the standalone audio-check page) and the default voice (Daniel Enhanced) was chosen then. He considers the locked-screen limit a non-issue because the scorer keeps the phone in use while scoring. Recorded as the owner's acceptance of the lock-screen limit for the pilot; other Bluetooth speakers and the deployed in-app announcer are still untested, and owner acceptance of the feature is still pending.
+
 **Known limits / unknowns:** independent human or Codex review of the merged code not done; screen-reader pass not done; back-to-back lines cut the earlier line; a few catalog lines assume a runner/shortstop.
 
 **Main since this checkpoint:** #62 (Codex, phone scoring/game stats/button copy) merged as `19147b0f2a3b1bd8c597edf698d2755aa9e1edb2`; its main `validate` run `42036762495` **succeeded**; the Cloudflare main check `127277618053` showed failure (same unverified deploy-gate explanation, log not read). The owner-hold on #61 and production is unchanged.
