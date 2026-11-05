@@ -1,5 +1,9 @@
 # Diamond Alibi — Screen-by-screen working standard
 
+## November 5, 2026 — Roast Club checkpoint (current for Roast Club)
+
+**AMBER.** Roast Club R1–R4 ([#53](https://github.com/Chappy1740/DiamondAlibi/pull/53)–[#56](https://github.com/Chappy1740/DiamondAlibi/pull/56)) are **merged**, with the off switch and smoke test (#60), into main `0d282bf60622dcd01948b5ef1a9a539bc4f26e77`. The hosted migration `roast_club_consent` is **applied and verified** (read-back recorded). **Production is held: not deployed.** Last confirmed deployment: H5 `ff64f0d` (merge of #52; Worker `232bd809-4815-4cd2-ac46-1aebc0b675f3` at 100% when verified about 2026-11-04 14:41 UTC per the [#52 receipt](https://github.com/Chappy1740/DiamondAlibi/pull/52#issuecomment-6633560050)). **Current Cloudflare traffic is UNVERIFIED** (not rechecked); the failed main builds confirm those attempts produced no new release. Main `validate` run `42017788646` passed; the Cloudflare main build check `127212934158` reported failure with cause UNKNOWN (consistent with the migration deploy gate, log not read; earlier main build `cc77500d-ed69-4d41-b76c-f1c6188fb8e7` the same). Exact evidence, approvals and the single next action: [Roast Club status](31-roast-club-status.md). The owner said "hold on 61" (2026-11-05 05:28 CT): fingerprint PR #61 stays unmerged and production stays held. This section does not describe H5; older sections below are history.
+
 ## November 4, 2026 — H5 final reconciliation for pilot review
 
 **Recovered; GREEN. H5 rung: Tested locally; exact-head CI pending.** Owner says
