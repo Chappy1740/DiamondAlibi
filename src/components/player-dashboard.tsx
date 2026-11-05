@@ -23,7 +23,6 @@ import { GameScoreboardPanel } from "./game-scoreboard";
 import { connectedScoreboard } from "@/lib/game-scoreboard";
 import { gameSetupHref, safeGameSetupReturn } from "@/lib/game-navigation";
 import { BeverageControls } from "./beverage-controls";
-import { RoastClubControls } from "./roast-club-controls";
 
 type Option = { id: string; name: string };
 export type DashboardProps = {
@@ -340,7 +339,6 @@ export function PlayerDashboard(p: DashboardProps) {
                         </strong>
                       </p>
                       {!p.sample && !p.review && <BeverageControls teamId={p.teamId} />}
-                      {!p.sample && !p.review && <RoastClubControls teamId={p.teamId} />}
                     </section>
                     <div className="card leaderboard">
                       {loaded.roster.map((r) => (

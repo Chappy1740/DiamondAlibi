@@ -8,7 +8,7 @@ import type { RoastClubRequest, RoastClubState } from "@/lib/roast-club-consent"
  * Renders nothing unless the database supports it and the viewer is an account-linked
  * player, so it adds no clutter and offers no fake toggle.
  */
-export function RoastClubControls({ teamId }: { teamId: string }) {
+export function RoastClubControls({ teamId, teamName }: { teamId: string; teamName?: string }) {
   const [value, setValue] = useState<RoastClubState | null>(null);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -73,9 +73,10 @@ export function RoastClubControls({ teamId }: { teamId: string }) {
   if (!value || !value.canToggle) return null;
   const disabled = busy || !online;
   return (
-    <div className="roast-club-controls" role="group" aria-label="Roast Club">
+    <div className="roast-club-controls" role="group" aria-label={teamName ? `Roast Club for ${teamName}` : "Roast Club"}>
+      {teamName && <h3 data-testid="roast-club-team">{teamName}</h3>}
       <p>
-        <strong>{value.optedIn ? "You're in Roast Club" : "Roast Club is off for you"}</strong>
+        <strong>{value.optedIn ? "You're in Roast Club" : "Roast Club is off for you"}</strong>{teamName ? ` on ${teamName}` : ""}
       </p>
       <p className="micro">
         Optional. When it is on, clean, funny lines about your at-bats may be shown to the team, and read aloud if the scorer turns on the announcer.
