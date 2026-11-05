@@ -10,24 +10,27 @@ Rungs per item (Implemented, Tested, Merged, Deployed, Owner-accepted):
 | R1 engine (#53) | **Merged** | PR head `224d2d2badfa29c6e653371d75b41edd702fcd82`; merge commit `e3293875472c939fbcb51d5fdb20001194635108` |
 | R2 consent + migration file (#54) | **Merged** | head `0b950cdd2957b914fa45345d813e7b463bf51ae8`; merge `6d522a027df0b19e7f74d3051e79cc0155078722` |
 | R3 popup (#55) | **Merged** | head `1ba2aeff9160a4229d761460639ea076e0fa3969`; merge `29eb1db0386bcdfbb581cef619d9818d81f715a1` |
-| R4 announcer (#56) | **Merged** | head `7445ed19ca9ea739a687c9483b07927adeba1c5f`; merge `1de1e7f1c44b7394c76d2e36ed79f81312c3bb3d` (= main at this checkpoint) |
+| R4 announcer (#56) | **Merged** | head `7445ed19ca9ea739a687c9483b07927adeba1c5f`; merge `1de1e7f1c44b7394c76d2e36ed79f81312c3bb3d` |
+| Owner off switch + smoke test (#60) | **Merged** | `ROAST_CLUB_ENABLED` (fails closed; only exact `true` is on) and `32-roast-club-smoke-test.md`; merge `0d282bf60622dcd01948b5ef1a9a539bc4f26e77` (= main at this refresh). Includes a test-only fix for a flaky 44px popup check (measured 43.999998px mid-animation). Not deployed; not owner-accepted. |
+| Deploy-gate fingerprint (#61) | **Open, HELD** | head `1a35f6abe8b6b17770461e6d0a90aa2e826e3a77`; one-line `approvedMigrationTree` -> `3c4e320d2c054e26cfd2b0c6b7166998ef090145`; CI green. Merging it lets the next main build deploy, so it stays unmerged. |
 | Hosted migration `20261104180000_roast_club_consent.sql` | **Applied and verified** on the DiamondAlibi Supabase project (hosted version `20261105100110`, name `roast_club_consent`) | Read-back: RLS on both private tables; two immutable triggers; `anon` cannot execute the new functions, `authenticated` can; zero opt-ins (every player OUT). Prerequisite helpers checked first. |
 | Production | **HELD: not deployed** | See Cloudflare evidence. Nothing from R1-R4 is live. |
 | Owner acceptance | **Not accepted** | See audio notes below. |
 
-**Approvals recorded (owner, 2026-11-05):** hosted database change approved (04:00 CT); merge of #53-#56 approved (04:12 CT). Codex's finding on this PR was addressed by this update. Separate, later approval (04:55 CT): deploy of the Roast Club release via #60 (off switch + smoke test) then #61 (migration fingerprint). **That deploy had NOT been executed when this checkpoint was written; production is held until it is, and a later record will replace this line with the result.** Claude may not merge #60 or #61 without that approval and may not widen it.
+**Approvals recorded (owner, 2026-11-05):** hosted database change approved (04:00 CT); merge of #53-#56 approved (04:12 CT). Codex's finding on this PR was addressed by this update. A deploy approval given at 04:55 CT was **superseded by the owner at 05:28 CT: "hold on 61"**. #60 was merged before that; #61 was not. **Production is held by explicit owner direction. Do not merge #61 until the owner gives a new, explicit deploy approval.**
 
-**Exact CI and Cloudflare evidence (main `1de1e7f1c44b7394c76d2e36ed79f81312c3bb3d`):**
+**Exact CI and Cloudflare evidence.** First, main `1de1e7f1c44b7394c76d2e36ed79f81312c3bb3d` (after #56):
 - GitHub Actions "Personal workflow validation" run `42009058568` (event push): **success**; job `validate` `127183110234`, completed 2026-11-05T10:19:06Z.
 - Cloudflare "Workers Builds: diamond-alibi-preview" check `127183703583` on that commit: **failure**, build `cc77500d-ed69-4d41-b76c-f1c6188fb8e7`, completed 2026-11-05T10:15:46Z. No Worker version was released from it. **Cause UNKNOWN** (the Cloudflare log was not read). It is consistent with the deploy gate: `supabase/migrations` tree changed from `approvedMigrationTree` `6dc55326d3dfc1ff283fcbd08ea03bf043b2c882` in `scripts/worker-release-policy.json`, which blocks automatic deploy until the fingerprint PR (#61) is approved. Treat as unverified until the log or a later passing build says otherwise.
-- PR #58 head `8daa560c31a1dfee4c21615fd5673c02fbb95334` Cloudflare preview build `01a06431-3087-42ee-a1c5-dc9afad8f6c7`: success (preview only, not a release).
+- Then main `0d282bf60622dcd01948b5ef1a9a539bc4f26e77` (after #60): GitHub Actions run `42017788646` (push) **success**, job `validate` `127212559570`; Cloudflare Workers Builds check `127212934158` (build `f1fc1ed7-769e-416b-9a73-ea9500c1c4ec`) **failure** (completed 2026-11-05T11:18:25Z), cause UNKNOWN (log not read), same gate explanation, no Worker version released. Production therefore still serves the previous release.
+- Earlier PR #58 head `8daa560c31a1dfee4c21615fd5673c02fbb95334` Cloudflare preview build `01a06431-3087-42ee-a1c5-dc9afad8f6c7`: success (preview only, not a release).
 - Last local run before merge (sandbox, head `7445ed1`): typecheck clean; 177 unit tests, Roast Club SQL test, Roast Club browser test (Chromium) and the connected-scorebook, scorebook-modes, games-flow, home-layout browser tests passed. PR CI `validate` was green on each of the four heads.
 
 **Owner phone result:** on 2026-11-05 the owner tested the announcer on his iPhone with headphones and reported it works with the Daniel (Enhanced) voice; locked screen does not speak (iOS limit; accepted for an in-use phone). This was the standalone audio-check page, not the deployed app. The in-app announcer, wake lock, Bluetooth speaker and Home Screen app remain UNTESTED. Audio is not production-ready.
 
 **Known limits / unknowns:** independent human or Codex review of the merged code not done; screen-reader pass not done; back-to-back lines cut the earlier line; a few catalog lines assume a runner/shortstop.
 
-**One next action:** owner-approved deploy sequence: merge #60, then #61, watch the main build and record the exact result here. Then run `32-roast-club-smoke-test.md` on the live app. Queued: team heads-up message; scorer view of who has opted in.
+**One next action:** owner decides whether to approve the deploy (merge #61). Until then nothing ships. After a deploy: run `32-roast-club-smoke-test.md` on the live app and record the result here. Queued: team heads-up message; scorer view of who has opted in.
 
 Linked from: [working standard](00-WORKING-STANDARD.md), [RELEASE-READINESS.md](../../RELEASE-READINESS.md), `src/data/project-tracker.ts` (release status). Draft #59 also edits the top of RELEASE-READINESS.md; whichever merges second needs a trivial conflict resolution at the top of the file.
 
