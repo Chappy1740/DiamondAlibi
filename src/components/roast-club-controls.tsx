@@ -74,7 +74,7 @@ export function RoastClubControls({ teamId, teamName }: { teamId: string; teamNa
   const disabled = busy || !online;
   return (
     <div className="roast-club-controls" role="group" aria-label={teamName ? `Roast Club for ${teamName}` : "Roast Club"}>
-      {teamName && <h3 data-testid="roast-club-team">{teamName}</h3>}
+      {teamName && <h3 data-testid="roast-club-team">Roast Club · {teamName}</h3>}
       <p>
         <strong>{value.optedIn ? "You're in Roast Club" : "Roast Club is off for you"}</strong>{teamName ? ` on ${teamName}` : ""}
       </p>

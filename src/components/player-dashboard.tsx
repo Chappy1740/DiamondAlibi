@@ -150,7 +150,7 @@ export function PlayerDashboard(p: DashboardProps) {
             {p.review && <input type="hidden" name="route" value={p.route} />}
             <DashboardSelect label="Team" name="team" value={p.teamId} options={p.teams} />
             <DashboardSelect label="Season" name="season" value={p.seasonId} options={p.seasons.map((s) => ({ id: s.id, name: `${s.name}${s.archived ? " · history" : ""}` }))} />
-            <DashboardSelect label="Personal stats" accessibleLabel="Statistics view" name="scope" value={p.scope} options={["Overall", "League", "Tournament"].map((name) => ({ id: name, name }))} />
+            {p.route === "beverages" ? <input type="hidden" name="scope" value={p.scope} /> : <DashboardSelect label="Personal stats" accessibleLabel="Statistics view" name="scope" value={p.scope} options={["Overall", "League", "Tournament"].map((name) => ({ id: name, name }))} />}
             {p.sample && <DashboardSelect label="Sample player" name="player" value={p.userId} options={loaded?.roster.map((r) => ({ id: r.user_id ?? "", name: r.display_name })) ?? []} />}
             {p.route === "" || p.route === "games" ? <div className="dashboard-context-action"><span aria-hidden="true">Update view</span><button className="button secondary">Apply context</button></div> : <button className="button secondary">Apply context</button>}
           </form>
@@ -186,7 +186,7 @@ export function PlayerDashboard(p: DashboardProps) {
               <div>
                 {p.route !== "" && <span className="eyebrow">
                   {team?.name ?? "Your team"} ·{" "}
-                  {season?.name ?? "Choose a season"}{p.route !== "games" && ` · ${p.scope}`}
+                  {season?.name ?? "Choose a season"}{p.route !== "games" && p.route !== "beverages" && ` · ${p.scope}`}
                 </span>}
                 <h1>
                   {p.route === ""
@@ -333,27 +333,23 @@ export function PlayerDashboard(p: DashboardProps) {
                         seasons remain in history.
                       </p>
                       <p>
-                        Mine:{" "}
+                        Your balance:{" "}
                         <strong>
                           {balance(view?.beverageBalance ?? null)}
                         </strong>
                       </p>
-                      {!p.sample && !p.review && <BeverageControls teamId={p.teamId} />}
                     </section>
-                    <div className="card leaderboard">
-                      {loaded.roster.map((r) => (
+                    <section className="card detail-card leaderboard" aria-labelledby="team-beverage-balances">
+                      <h2 id="team-beverage-balances">Team balances</h2>
+                      {loaded.roster.length ? loaded.roster.map((r) => (
                         <div key={r.id} className="leader-row">
                           <strong>{r.display_name}</strong>
                           <span className="balance">
                             {balance(loaded.snapshot.board[r.id] ?? null)}
                           </span>
                         </div>
-                      ))}
-                    </div>
-                    <p>
-                      Roster order · balances are owed or credit. Competitive
-                      ranking rules remain to be decided.
-                    </p>
+                      )) : <p>No players on this roster yet.</p>}
+                    </section>
                   </>
                 )}
               </>
