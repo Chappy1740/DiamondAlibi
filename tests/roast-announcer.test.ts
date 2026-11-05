@@ -101,3 +101,17 @@ test("the default announcer voice is Daniel, best quality first, else the phone 
   assert.equal(pickVoice(all, "")?.name, undefined);
   assert.equal(pickVoice([v("Daniel (Enhanced)")], "daniel")?.name, "Daniel (Enhanced)");
 });
+
+test("the speaker records what the browser reported and keeps the playing utterance", () => {
+  const made: Array<{ onstart?: (() => void) | null; onend?: (() => void) | null; onerror?: ((e: { error?: string }) => void) | null }> = [];
+  const speaker = createSpeaker({ synth: { speak() {}, cancel() {} }, makeUtterance: () => { const u = {}; made.push(u); return u; } });
+  assert.equal(speaker.lastEvent, "none yet");
+  assert.equal(speaker.say("a", "Hello", 1), "spoken");
+  assert.equal(speaker.lastEvent, "queued");
+  made[0].onstart?.(); assert.equal(speaker.lastEvent, "started");
+  made[0].onend?.(); assert.equal(speaker.lastEvent, "finished");
+  assert.equal(speaker.say("b", "Again", 1), "spoken");
+  made[1].onerror?.({ error: "not-allowed" });
+  assert.equal(speaker.lastEvent, "error: not-allowed");
+  assert.equal(speaker.blocked, true);
+});
