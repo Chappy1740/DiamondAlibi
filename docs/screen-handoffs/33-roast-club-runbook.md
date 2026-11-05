@@ -1,6 +1,6 @@
 # Roast Club runbook: rollback, monitoring, line removal, pilot scorecard
 
-Written 2026-11-05. Status of the feature itself: see `31-roast-club-status.md`. This file is operations only.
+Written 2026-11-05. The feature's status, approvals and evidence live in `31-roast-club-status.md` (the current checkpoint there is authoritative, including this file's hosted verification, which it links). This file is operations only.
 
 ## 1. Stop it fast (screen side)
 Cloudflare dashboard -> Workers -> diamond-alibi-preview -> Settings -> Variables: set `ROAST_CLUB_ENABLED` to `false`.
@@ -25,14 +25,18 @@ Edit `ROAST_CATALOG` in `src/lib/roast-club.ts` (one `{name}` per line, 110 char
 
 ## 5. Pilot scorecard (read-only SQL; run in Supabase SQL editor)
 ```sql
--- Who is in right now, per team (latest choice per player)
-select team_id, count(*) filter (where opted_in) as joined, count(*) filter (where not opted_in) as left_club
-from (select distinct on (team_id, player_id) team_id, player_id, opted_in
-      from private.roast_club_consent_events order by team_id, player_id, revision desc) latest
-group by team_id;
--- Every join/leave, newest first (no player names)
+-- Who can actually receive roasts right now, per team. Same rules as private.read_roast_club:
+-- latest choice per player, account-linked, not a guest, and the account's membership is still active.
+select l.team_id, count(*) filter (where l.opted_in) as joined_now, count(*) filter (where not l.opted_in) as opted_out
+from (select distinct on (e.team_id, e.player_id) e.team_id, e.player_id, e.opted_in
+      from private.roast_club_consent_events e order by e.team_id, e.player_id, e.revision desc) l
+join public.team_players tp on tp.team_id = l.team_id and tp.id = l.player_id and not tp.is_guest
+join public.team_memberships m on m.team_id = tp.team_id and m.user_id = tp.user_id and m.active
+group by l.team_id;
+-- History only (includes people since deactivated): every join/leave, newest first, no names
 select created_at, team_id, opted_in, revision from private.roast_club_consent_events order by created_at desc limit 50;
 ```
+The first query is current participation. The second is a historical log and can include people who can no longer receive roasts.
 Baseline on 2026-11-05: 0 events, 0 commands (everyone opted out).
 
 ## 6. Hosted verification record (2026-11-05, rollback-only, nothing persisted)
