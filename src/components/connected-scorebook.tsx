@@ -146,7 +146,7 @@ export function ConnectedScorebook({
   }, [mode, current?.game.id]);
   useEffect(() => {
     if (!recordedPlay) return;
-    const timer = window.setTimeout(() => setRecordedPlay(null), 5000);
+    const timer = window.setTimeout(() => setRecordedPlay(null), 10000);
     return () => window.clearTimeout(timer);
   }, [recordedPlay]);
   useEffect(() => {
@@ -804,7 +804,7 @@ export function ConnectedScorebook({
                   >
                     <fieldset disabled={disabled}>
                       {mode === "score" && <p className="quick-play-hint">Choose the player and result, check Runs and RBI, then Send.</p>}
-                      {mode === "score" && <BattingOutcomePicker hitTypes={!!snapshot?.capabilities?.hitTypes} extended={Object.keys(extendedBoardFromColumns(current.rules)).length === 4} value={hasDraftOutcome ? outcome : null} disabled={disabled} onPick={pickOutcome} onChange={pickOutcome} />}
+                      {mode === "score" && <BattingOutcomePicker clubhouseLabels hitTypes={!!snapshot?.capabilities?.hitTypes} extended={Object.keys(extendedBoardFromColumns(current.rules)).length === 4} value={hasDraftOutcome ? outcome : null} disabled={disabled} onPick={pickOutcome} onChange={pickOutcome} />}
                       {mode === "score" && <div className="at-bat-rbi" role="group" aria-label="Runs on this play">
                         <span>Runs</span>
                         <div className="rbi-buttons">
@@ -834,7 +834,7 @@ export function ConnectedScorebook({
                   </form>
                 </>
               )}
-              {mode === "manage" && <section className="game-stat-lines" aria-label="Selected game player statistics">
+              {mode === "score" && <section className="game-stat-lines" aria-label="Selected game player statistics">
                 <h3>Game stats</h3>
                 <p className="micro">This game only</p>
                 {gameStatLines.map(([id, totals]) => (

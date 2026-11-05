@@ -4,11 +4,13 @@ import type { Outcome } from "@/lib/scoring";
 
 const groups: {
   title: string;
+  clubhouseTitle: string;
   tone: string;
   choices: { outcome: Outcome; code: string; label: string }[];
 }[] = [
   {
     title: "Hits",
+    clubhouseTitle: "The Ego Boosters",
     tone: "hit",
     choices: [
       { outcome: "1B", code: "1B", label: "Single" },
@@ -20,6 +22,7 @@ const groups: {
   },
   {
     title: "Outs",
+    clubhouseTitle: "The Hall of Shame",
     tone: "out",
     choices: [
       { outcome: "K", code: "K", label: "Strikeout" },
@@ -28,6 +31,7 @@ const groups: {
   },
   {
     title: "Other",
+    clubhouseTitle: "Participation Trophies",
     tone: "other",
     choices: [
       { outcome: "BB", code: "BB", label: "Walk" },
@@ -37,6 +41,22 @@ const groups: {
   },
 ];
 
+const clubhouseSubtitles: Partial<Record<Outcome, string>> = {
+  "1B": "Even a Blind Squirrel",
+  "2B": "Two Bases? Alert the Media",
+  "3B": "Somebody Get the Oxygen",
+  "Fence HR": "The Fence Never Had a Chance",
+  "ITP HR": "Four Bases, Zero Breath",
+  "K Swinging": "All Swing, No Talent",
+  "K Looking": "Bat's Just for Decoration",
+  SOFO: "Fouled Up Everything",
+  DP: "Two Outs, One Bad Idea",
+  Out: "Sit Down, Superstar",
+  BB: "Free Pass, Zero Effort",
+  SF: "Congrats, You Failed Up",
+  ROE: "Defense Felt Sorry for You",
+};
+
 export function BattingOutcomePicker({
   value,
   onChange,
@@ -44,9 +64,11 @@ export function BattingOutcomePicker({
   onPick,
   extended = false,
   hitTypes = true,
+  clubhouseLabels = false,
 }: {
   extended?: boolean;
   hitTypes?: boolean;
+  clubhouseLabels?: boolean;
   value: Outcome | null;
   onChange: (outcome: Outcome) => void;
   disabled: boolean;
@@ -61,7 +83,7 @@ export function BattingOutcomePicker({
           role="group"
           aria-label={group.title}
         >
-          <p className="batting-outcome-heading">{group.title}</p>
+          <p className="batting-outcome-heading">{clubhouseLabels ? group.clubhouseTitle : group.title}</p>
           <div className="batting-outcome-grid">
             {(extended && group.title === "Outs" ? [
               {outcome:"K Swinging" as Outcome,code:"K",label:"Strikeout swinging"},
@@ -85,7 +107,7 @@ export function BattingOutcomePicker({
                 }}
               >
                 <strong aria-hidden="true">{choice.code}</strong>
-                <span aria-hidden="true">{choice.label}</span>
+                <span aria-hidden="true">{clubhouseLabels ? clubhouseSubtitles[choice.outcome] ?? choice.label : choice.label}</span>
               </button>
             ))}
           </div>
