@@ -46,6 +46,8 @@ export function useRoastClub(teamId: string, enabled = true) {
   const alive = useRef(true);
   const lastRefresh = useRef(0);
   const [line, setLine] = useState<string | null>(null);
+  /** Opted-in player ids from the last consent read (null = unknown or feature off), for the scorer's read-only list. */
+  const [participants, setParticipants] = useState<readonly string[] | null>(null);
 
   const readConsent = useCallback(async (): Promise<RoastClubState | null> => {
     const result = await roastClubAction({ type: "read", teamId });
@@ -56,9 +58,9 @@ export function useRoastClub(teamId: string, enabled = true) {
     lastRefresh.current = Date.now();
     try {
       const state = await readConsent();
-      if (alive.current) cache.current = state;
+      if (alive.current) { cache.current = state; setParticipants(state ? state.optedInPlayerIds : null); }
     } catch {
-      if (alive.current) cache.current = null;
+      if (alive.current) { cache.current = null; setParticipants(null); }
     }
   }, [readConsent]);
 
@@ -129,5 +131,5 @@ export function useRoastClub(teamId: string, enabled = true) {
     </div>
   ) : null;
 
-  return { announce, popup };
+  return { announce, popup, participants };
 }

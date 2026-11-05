@@ -852,7 +852,7 @@ export function ConnectedScorebook({
                 ))}
                 {!gameStatLines.length && <p>No recorded plate appearances in this game.</p>}
               </section>}
-              {(mode === "score" || mode === "full") && !current.game.completed && <details className="announcer-panel"><summary>Clubhouse announcer (optional)</summary><AnnouncerControls gameId={current.game.id} /></details>}
+              {(mode === "score" || mode === "full") && !current.game.completed && <details className="announcer-panel"><summary>Clubhouse announcer (optional)</summary><AnnouncerControls gameId={current.game.id} />{roast.participants && <p className="micro" data-testid="roast-club-members">{(() => { const names = (data?.roster ?? []).filter(p => roast.participants?.includes(p.id)).map(p => p.display_name); return names.length ? `Roast Club members (${names.length}): ${names.join(", ")}. Only these players get roasts.` : "Roast Club members: nobody has joined yet. Nobody gets roasted until they join themselves."; })()}</p>}</details>}
               {mode !== "score" && <details className="game-management" open={mode === "full" || mode === "manage" || current.game.completed}>
                 <summary>Game details & settings</summary>
               <GameScoreboardPanel

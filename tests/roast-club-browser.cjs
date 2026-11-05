@@ -15,7 +15,7 @@ window.__action=async()=>{window.__reads++;return{status:'ok',data:{teamId:T,can
 const names={[P1]:'Synthetic Alex',[P2]:'Synthetic Sam'};
 const games=(rows)=>[{game:{id:G},evaluation:{rows}}];
 function App(){const r=useRoastClub(T);window.__announce=(commandId,playId,playerId,outcome,official,receipt)=>r.announce({request:{commandId,gameId:G,change:{type:'score',playId}},receipt:receipt||{status:'accepted',duplicate:false},games:games([{id:playId,playerId,outcome,official:official||outcome,voided:false}]),displayName:id=>names[id]});
-return <div><button id="other">Other control</button>{r.popup}<AnnouncerControls gameId={G}/></div>}
+return <div><button id="other">Other control</button>{r.popup}<AnnouncerControls gameId={G}/><p data-testid="members">{names&&(r.participants||[]).map(id=>names[id]||'unknown').join(',')}</p></div>}
 createRoot(document.getElementById('app')).render(<App/>);` },
       bundle: true, write: false, jsx: "automatic", platform: "browser",
       plugins: [{ name: "synthetic", setup(b) {
@@ -33,6 +33,8 @@ createRoot(document.getElementById('app')).render(<App/>);` },
     await page.waitForFunction(() => typeof window.__announce === "function" && window.__reads >= 1);
     const A = "00000000-0000-4000-8000-0000000000";
     const call = (...a) => page.evaluate((x) => window.__announce(...x), a);
+    // 0. the scorer's read-only member list shows exactly the opted-in players.
+    await page.waitForFunction(() => document.querySelector('[data-testid=members]').textContent === 'Synthetic Alex');
     // 1. opted-in player: popup shows, is dismissible, never blocks other controls.
     await call("c1", A + "50", "00000000-0000-4000-8000-000000000101", "2B");
     const popup = page.getByTestId("roast-popup"); await popup.waitFor();
