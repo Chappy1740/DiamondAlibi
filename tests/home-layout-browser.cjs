@@ -27,7 +27,7 @@ const assert = require("node:assert/strict");
         const context=new URLSearchParams({team:p.teamId,season:p.seasonId,scope:p.scope,...(p.sample?{sample:'1',player:p.userId}:{})}).toString();
         createRoot(document.getElementById('app')).render(<><PlayerDashboard {...p}/><BottomNavigationView pathname={location.pathname} context={context}/></>);` },
       bundle: true, write: false, platform: "browser", jsx: "automatic",
-      plugins: [{ name: "synthetic-home", setup(build) {
+      plugins: [require("./support/roast-club-stub.cjs"), { name: "synthetic-home", setup(build) {
         build.onResolve({ filter: /^(next\/(navigation|link|image)|@\/app\/(login\/actions|club\/beverage-actions)|\.\/personal-alibis)$/ }, args => ({ path: args.path, namespace: "synthetic" }));
         build.onLoad({ filter: /.*/, namespace: "synthetic" }, args => ({ loader: "tsx", resolveDir: process.cwd(), contents:
           args.path === "next/navigation" ? "const router={refresh(){window.__refreshes=(window.__refreshes||0)+1}};export const useRouter=()=>router;export const usePathname=()=>location.pathname;export const useSearchParams=()=>new URLSearchParams(location.search);" :

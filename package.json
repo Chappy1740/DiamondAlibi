@@ -25,6 +25,7 @@
     "test:season-service": "node --experimental-strip-types --test tests/season-scoring-service.test.ts",
     "test:connected-scoring": "node --experimental-strip-types --test tests/connected-scoring.test.ts",
     "test:roast-club": "node --experimental-strip-types --test tests/roast-club.test.ts",
+    "test:roast-club-sql": "node tests/roast-club-sql.cjs",
     "test:connected-scorebook": "node --experimental-strip-types tests/connected-scorebook-browser.cjs",
     "test:scoring-metadata": "node --experimental-strip-types --test tests/scoring-metadata-pages.test.ts",
     "test:team-beverage": "node --experimental-strip-types --test --test-isolation=none tests/team-beverage.test.ts && node tests/team-beverage-sql.cjs",
