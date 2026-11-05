@@ -2,8 +2,8 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 86,
-  updatedAt: "2026-11-04",
+  revision: 87,
+  updatedAt: "2026-11-05",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
   release: {
@@ -104,7 +104,7 @@ export const projectTracker: ProjectTracker = {
           status: "in_progress",
           evidence:
             "Phone sample history and isolated twelve-player practice released; five approved reviewers have ongoing One-time PIN access. The saved policy was reopened and verified on October 10 with the existing preview association and 24-hour sessions. Owner confirmed review history and practice scoring passed on phone on October 10; Will confirmed October 12 that the separate reviewer test login on his phone displays sample players and switches seasons. Will then confirmed a synthetic practice plate appearance was recorded and visible in the scorebook. In response to the reload check, Will provided a screenshot showing the recorded synthetic hit still in the scorebook. Owner-controlled reviewer test login, sample history, scoring and reload persistence passed; the five teammates individual results remain pending.",
-          next: "November 3 reconciliation: PR #42 records c19132d / Worker 02bdcb3a at 100% traffic; the SAME approved synthetic feedback alert reached provider acceptance and the owner confirmed arrival in Junk. Do not resend it. Broader tester/login/team acceptance and inbox placement remain open. UAT coordination between Claude/Codex is repo-only: shared repository records and PR screenshots/notes, no agent hosted-UAT login/Access seat/token/credential, no new site or preview URL, synthetic or marked pilot data only. Owner authorized release of pending PRs through #46 with H4 excluded; combined release checks/merge/activation receipt is in the PR for codex/uat-release-through-pr46, linked by docs/screen-handoffs/00-WORKING-STANDARD.md and RELEASE-READINESS.md. After verified delivery, owner refreshes the existing protected phone site and resumes A2/H1 and H3 checks. Do not mark remaining UTA batches, all testers or the pilot accepted from this narrow release.",
+          next: "November 5: Will reported trouble opening suggestions and requested private owner replies. Codex tested automatic loading, individual disclosure, and one private in-app reply in the isolated codex/owner-feedback-replies branch. Reviewer history uses the verified original sender identity. See docs/screen-handoffs/29-owner-feedback.md. Will approved committing, pushing, and opening a draft PR. The live reply migration requires separate approval. Hosted cause and acceptance are unverified. Historical November 3 reconciliation: PR #42 records c19132d / Worker 02bdcb3a at 100% traffic; the SAME approved synthetic feedback alert reached provider acceptance and the owner confirmed arrival in Junk. Do not resend it. Broader tester/login/team acceptance and inbox placement remain open. UAT coordination between Claude/Codex is repo-only: shared repository records and PR screenshots/notes, no agent hosted-UAT login/Access seat/token/credential, no new site or preview URL, synthetic or marked pilot data only. Owner authorized release of pending PRs through #46 with H4 excluded; combined release checks/merge/activation receipt is in the PR for codex/uat-release-through-pr46, linked by docs/screen-handoffs/00-WORKING-STANDARD.md and RELEASE-READINESS.md. After verified delivery, owner refreshes the existing protected phone site and resumes A2/H1 and H3 checks. Do not mark remaining UTA batches, all testers or the pilot accepted from this narrow release.",
           kind: "work",
         },
         {

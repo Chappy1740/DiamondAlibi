@@ -1772,6 +1772,9 @@ blockquote {
 .feedback-page textarea { resize: vertical; }
 .feedback-page .panel { margin-block: 20px; padding: 20px; }
 .feedback-page .feedback-message { white-space: pre-wrap; overflow-wrap: anywhere; }
+.feedback-item summary { min-height: 44px; cursor: pointer; }
+.feedback-item summary span { display: block; margin-block-start: 4px; overflow-wrap: anywhere; }
+.feedback-reply { margin-block-start: 16px; }
 .feedback-page nav { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 
 /* Personal Home and competition workflow */

@@ -9,6 +9,7 @@ export type FeedbackInput = {
 export type FeedbackRecord = FeedbackInput & {
   created_at: string;
   reviewed: boolean;
+  owner_reply: string | null;
   review_feedback_notifications?: {
     accepted_at: string | null;
     attempts: number;
@@ -16,6 +17,9 @@ export type FeedbackRecord = FeedbackInput & {
     last_failure: string | null;
   } | null;
 };
+
+const feedbackId =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function feedbackAlertStatus(
   item: Pick<FeedbackRecord, "review_feedback_notifications">,
@@ -40,9 +44,7 @@ export function parseFeedback(value: unknown): FeedbackInput | null {
   const row = value as Record<string, unknown>;
   if (
     typeof row.id !== "string" ||
-    !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-      row.id,
-    ) ||
+    !feedbackId.test(row.id) ||
     !feedbackKinds.includes(row.kind as FeedbackKind) ||
     typeof row.message !== "string" ||
     typeof row.name !== "string"
@@ -52,6 +54,19 @@ export function parseFeedback(value: unknown): FeedbackInput | null {
   const name = row.name.trim();
   if (!message || message.length > 2000 || name.length > 60) return null;
   return { id: row.id, kind: row.kind as FeedbackKind, message, name };
+}
+
+export function parseFeedbackReply(value: unknown) {
+  if (!value || typeof value !== "object") return null;
+  const { id, message } = value as Record<string, unknown>;
+  if (
+    typeof id !== "string" ||
+    !feedbackId.test(id) ||
+    typeof message !== "string"
+  )
+    return null;
+  const trimmed = message.trim();
+  return trimmed && trimmed.length <= 2000 ? { id, message: trimmed } : null;
 }
 
 export async function feedbackSubjectHash(subject: string) {

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { BrandLink } from "@/components/brand-link";
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { FeedbackKind, FeedbackRecord } from "@/lib/feedback";
 import { feedbackAlertStatus } from "@/lib/feedback";
 
@@ -64,6 +64,11 @@ export function ReviewFeedback({
       {owner && (
         <Link className="button secondary" href="/owner/feedback">
           Owner inbox · Booth Reviews
+        </Link>
+      )}
+      {ready && (
+        <Link className="button secondary" href="/review/feedback/mine">
+          My feedback and replies
         </Link>
       )}
       <header>
@@ -136,35 +141,45 @@ export function ReviewFeedback({
   );
 }
 
-export function OwnerFeedbackInbox() {
+export function FeedbackInbox({ mine = false }: { mine?: boolean }) {
   const [items, setItems] = useState<FeedbackRecord[]>([]);
   const [page, setPage] = useState(0);
   const [more, setMore] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [alertsConfigured, setAlertsConfigured] = useState(true);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(true);
   const [notice, setNotice] = useState("");
-  async function load(nextPage = page) {
-    if (busy) return;
-    setBusy(true);
-    setNotice("");
-    try {
-      const response = await fetch(`/api/feedback?page=${nextPage}`, {
-        cache: "no-store",
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
-      setItems(result.items);
-      setMore(result.more);
-      setAlertsConfigured(result.alertsConfigured === true);
-      setPage(nextPage);
-      setLoaded(true);
-    } catch {
-      setNotice("Inbox unavailable. Try again later.");
-    } finally {
-      setBusy(false);
-    }
-  }
+  const load = useCallback(
+    async (nextPage: number, signal?: AbortSignal) => {
+      setBusy(true);
+      setNotice("");
+      try {
+        const query = `page=${nextPage}${mine ? "&view=mine" : ""}`;
+        const response = await fetch(`/api/feedback?${query}`, {
+          cache: "no-store",
+          signal,
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error);
+        if (signal?.aborted) return;
+        setItems(result.items);
+        setMore(result.more);
+        setAlertsConfigured(result.alertsConfigured === true);
+        setPage(nextPage);
+        setLoaded(true);
+      } catch {
+        if (!signal?.aborted) setNotice("Could not load feedback. Try again.");
+      } finally {
+        if (!signal?.aborted) setBusy(false);
+      }
+    },
+    [mine],
+  );
+  useEffect(() => {
+    const request = new AbortController();
+    void load(0, request.signal);
+    return () => request.abort();
+  }, [load]);
   async function mark(item: FeedbackRecord) {
     if (busy) return;
     setBusy(true);
@@ -190,49 +205,85 @@ export function OwnerFeedbackInbox() {
   }
   return (
     <main className="connected-wrap feedback-page">
-      <Link className="button secondary" href="/more">
-        Back to More
+      <Link
+        className="button secondary"
+        href={mine ? "/review/feedback" : "/more"}
+      >
+        {mine ? "Back to Challenge the Call" : "Back to More"}
       </Link>
       <header>
         <BrandLink href="/" variant="primary" className="header-logo" />
-        <p className="eyebrow">Diamond Alibi · Owner inbox</p>
-        <h1>Booth Reviews</h1>
-        <p>Questions, suggestions, and issues sent to you.</p>
+        <p className="eyebrow">
+          Diamond Alibi · {mine ? "Booth review" : "Owner inbox"}
+        </p>
+        <h1>{mine ? "My feedback" : "Booth Reviews"}</h1>
+        <p>
+          {mine
+            ? "Your submissions and any private replies from the owner."
+            : "Open a submission to read it and reply privately to the sender."}
+        </p>
       </header>
       <button
         className="button secondary"
         disabled={busy}
-        onClick={() => load()}
+        onClick={() => load(page)}
       >
-        {busy ? "Loading…" : loaded ? "Refresh inbox" : "Open inbox"}
+        {busy ? "Loading…" : loaded ? "Refresh inbox" : "Try again"}
       </button>
       <p role="status">{notice}</p>
-      {loaded && !alertsConfigured && (
+      {!mine && loaded && !alertsConfigured && (
         <p role="status">
           Email alerts are not configured. Feedback is still saved in this
           inbox.
         </p>
       )}
-      {loaded && !items.length && <p>No messages yet.</p>}
+      {loaded && !items.length && <p>No submissions yet.</p>}
       {items.map((item) => (
-        <article className="panel" key={item.id}>
-          <p className="eyebrow">
-            {item.kind} · {item.reviewed ? "Reviewed" : "New"}
-          </p>
-          <p>
-            {item.name || "No name supplied"} ·{" "}
-            {new Date(item.created_at).toLocaleString()}
-          </p>
+        <details className="panel feedback-item" key={item.id}>
+          <summary>
+            <strong>Open {item.kind}</strong>
+            <span>
+              {mine ? "" : `${item.name || "No name supplied"} · `}
+              {new Date(item.created_at).toLocaleString()} ·{" "}
+              {item.owner_reply
+                ? "Replied"
+                : item.reviewed
+                  ? "Reviewed"
+                  : "New"}
+            </span>
+          </summary>
           <p className="feedback-message">{item.message}</p>
-          <p className="micro">{feedbackAlertStatus(item)}</p>
-          <button
-            className="button secondary"
-            disabled={busy}
-            onClick={() => mark(item)}
-          >
-            {item.reviewed ? "Mark as new" : "Mark reviewed"}
-          </button>
-        </article>
+          {mine ? (
+            item.owner_reply ? (
+              <FeedbackReply message={item.owner_reply} />
+            ) : (
+              <p>No reply yet.</p>
+            )
+          ) : (
+            <>
+              <p className="micro">{feedbackAlertStatus(item)}</p>
+              <button
+                className="button secondary"
+                disabled={busy}
+                onClick={() => mark(item)}
+              >
+                {item.reviewed ? "Mark as new" : "Mark reviewed"}
+              </button>
+              <OwnerReply
+                item={item}
+                onSaved={(message) =>
+                  setItems((current) =>
+                    current.map((row) =>
+                      row.id === item.id
+                        ? { ...row, owner_reply: message }
+                        : row,
+                    ),
+                  )
+                }
+              />
+            </>
+          )}
+        </details>
       ))}
       {loaded && (
         <nav aria-label="Inbox pages">
@@ -254,5 +305,85 @@ export function OwnerFeedbackInbox() {
         </nav>
       )}
     </main>
+  );
+}
+
+function FeedbackReply({ message }: { message: string }) {
+  return (
+    <section className="feedback-reply">
+      <h2>Owner reply</h2>
+      <p className="feedback-message">{message}</p>
+    </section>
+  );
+}
+
+function OwnerReply({
+  item,
+  onSaved,
+}: {
+  item: FeedbackRecord;
+  onSaved: (message: string) => void;
+}) {
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState("");
+  async function send(event: React.FormEvent) {
+    event.preventDefault();
+    if (busy || !message.trim()) return;
+    setBusy(true);
+    setNotice("");
+    try {
+      const response = await fetch("/api/feedback", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: item.id, message }),
+      });
+      const result = await response.json().catch(() => null);
+      if (!response.ok || result?.owner_reply !== message.trim()) {
+        setNotice(
+          typeof result?.error === "string"
+            ? result.error
+            : "Reply not confirmed. Your draft is still here.",
+        );
+        return;
+      }
+      onSaved(result.owner_reply);
+      setMessage("");
+      setNotice("Reply saved. The submitter can read it in My feedback.");
+    } catch {
+      setNotice("Reply not confirmed. Your draft is still here.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="feedback-reply">
+      {item.owner_reply ? (
+        <FeedbackReply message={item.owner_reply} />
+      ) : (
+        <form onSubmit={send}>
+          <label>
+            Private reply
+            <textarea
+              value={message}
+              onChange={(event) => setMessage(event.target.value)}
+              disabled={busy}
+              maxLength={2000}
+              rows={4}
+              required
+            />
+          </label>
+          <p className="micro">The submitter can read this in My feedback.</p>
+          <button
+            className="button"
+            disabled={busy || !message.trim()}
+            type="submit"
+          >
+            {busy ? "Sending…" : "Send private reply"}
+          </button>
+        </form>
+      )}
+      <p role="status">{notice}</p>
+    </div>
   );
 }

@@ -1,5 +1,45 @@
 # 29 — Owner feedback inbox: Screen handoff
 
+## November 5, 2026 — Open submissions and reply privately
+
+Will reports being unable to open suggestions in the Owner's Box and wants
+to reply to the person who submitted one. The prior screen waited for an
+extra inbox-loading tap and showed submissions as plain cards. The precise
+hosted failure is unverified.
+
+- **Tested locally by Codex.** Isolated branch `codex/owner-feedback-replies`
+  starts from verified GitHub main `19147b0f2a3b1bd8c597edf698d2755aa9e1edb2`.
+  The desktop checkout and other agents' work were preserved. No open feedback
+  PR or active overlapping implementation was identified.
+- Booth Reviews loads on arrival and has an explicit open control for each
+  submission. The owner can save one private in-app reply. The submitter reads
+  it under **Challenge the Call → My feedback and replies** using the same
+  verified Access identity. Earlier submissions can receive replies. Review
+  status remains separate from reply status. Email alerts still go to the
+  owner through the existing flow.
+- Reuse decision (EYD-ARCH-001): retain the existing feedback store, hashed
+  Access subject, server authorization, and UI. Native disclosure controls
+  and a small additive migration cover the workflow. A messaging library or
+  separate inbox service would duplicate storage and authorization. Reply
+  email would require collecting or resolving recipient addresses and is
+  outside this in-app design.
+- TypeScript, the Next.js production build, the full feedback suite (including
+  mocked Access/API, disposable SQL and workerd), and the Chromium/WebKit
+  component flows passed.
+  Tests cover keyboard opening, narrow layout and accessibility, loading and
+  reply retries, old submissions, cross-sender denial, and safe plain text.
+  No hosted message, test email, or real phone test took place.
+- Local migration `20261105134519_review_feedback_owner_reply.sql` is pending
+  live approval and verification. Keep the release fingerprint unchanged.
+  Roll back the UI/API separately if needed and retain stored replies.
+
+**Continuity:** GREEN. On November 5 Will approved committing, pushing, and
+opening a draft PR for this tested scope. Continue in this chat. The draft PR
+records the published commit and review status. The existing #61 release hold,
+live migration, and hosted acceptance remain separate.
+
+## Historical screen handoff
+
 **Status:** Ready for owner brief. **Owner's requested change:** Not yet supplied.
 **Current screen only:** Owner feedback inbox.
 **Route/view:** `/owner/feedback`

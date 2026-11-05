@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { OwnerFeedbackInbox } from "@/components/review-feedback";
+import { FeedbackInbox } from "@/components/review-feedback";
 import {
   feedbackAccessConfig,
   verifyFeedbackIdentity,
@@ -12,5 +12,5 @@ export default async function OwnerInboxPage() {
     feedbackAccessConfig(),
   );
   if (!user?.owner) notFound();
-  return <OwnerFeedbackInbox />;
+  return <FeedbackInbox />;
 }

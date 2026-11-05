@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const { createHash } = require("node:crypto");
 const esbuild = require("esbuild");
 const fs = require("node:fs/promises");
 const os = require("node:os");
@@ -25,18 +26,46 @@ const { pathToFileURL } = require("node:url");
     });
     let dbCalls = 0;
     let mode = "sent";
+    let replyMode = "saved";
+    const senderHash = (subject) =>
+      createHash("sha256").update(subject).digest("hex");
+    const ownSubmission = {
+      kind: "suggestion",
+      owner_reply: "Thanks for the idea.",
+    };
     global.fetch = async (url, init) => {
       const target = String(url instanceof Request ? url.url : url);
       if (target === issuer + "/cdn-cgi/access/certs")
         return Response.json({ keys: [key] });
       assert.ok(target.startsWith("https://synthetic.supabase.co/rest/v1/"));
       dbCalls++;
+      if (target.endsWith("/rpc/reply_to_review_feedback")) {
+        assert.deepEqual(JSON.parse(init.body), {
+          p_id: id,
+          p_message: "Thanks for the idea.",
+        });
+        return Response.json(replyMode);
+      }
       if (target.includes("/rpc/"))
         return Response.json(
           mode === "sent" ? "sent" : mode === "rate" ? "rate_limited" : null,
         );
       if (init?.method === "PATCH")
         return Response.json({ id: id, reviewed: true });
+      const params = new URL(target).searchParams;
+      if (params.has("sender_hash")) {
+        assert.equal(params.get("select").includes("sender_hash"), false);
+        assert.equal(
+          params.get("select").includes("review_feedback_notifications"),
+          false,
+        );
+        assert.equal(params.get("id"), null);
+        return Response.json(
+          params.get("sender_hash") === `eq.${senderHash("synthetic-reviewer")}`
+            ? [ownSubmission]
+            : [],
+        );
+      }
       return Response.json([]);
     };
     const file = path.join(dir, "route.mjs");
@@ -72,6 +101,7 @@ const { pathToFileURL } = require("node:url");
         .setProtectedHeader({ alg: "RS256", kid: "synthetic" })
         .sign(pair.privateKey);
     const reviewer = await signed("synthetic-reviewer");
+    const otherReviewer = await signed("synthetic-other-reviewer");
     const owner = await signed("synthetic-owner");
     const id = crypto.randomUUID();
     const request = (
@@ -79,8 +109,9 @@ const { pathToFileURL } = require("node:url");
       token,
       body,
       origin = "https://app.example.invalid",
+      query = "",
     ) =>
-      new Request("https://app.example.invalid/api/feedback", {
+      new Request("https://app.example.invalid/api/feedback" + query, {
         method,
         headers: {
           "cf-access-jwt-assertion": token ?? "",
@@ -93,6 +124,37 @@ const { pathToFileURL } = require("node:url");
       });
     assert.equal((await api.GET(request("GET", reviewer))).status, 403);
     assert.equal((await api.GET(request("GET", "forged"))).status, 403);
+    assert.equal(
+      (await api.GET(request("GET", null, undefined, undefined, "?view=mine")))
+        .status,
+      403,
+    );
+    const ownerReply = { id, message: " Thanks for the idea. " };
+    assert.equal(
+      (await api.PUT(request("PUT", reviewer, ownerReply))).status,
+      403,
+    );
+    assert.equal(
+      (
+        await api.PUT(
+          request("PUT", owner, ownerReply, "https://other.example.invalid"),
+        )
+      ).status,
+      403,
+    );
+    assert.equal(
+      (await api.PUT(request("PUT", owner, { id, message: " " }))).status,
+      400,
+    );
+    assert.equal(
+      (await api.PUT(request("PUT", owner, { id, message: "a".repeat(2001) })))
+        .status,
+      400,
+    );
+    assert.equal(
+      (await api.PUT(request("PUT", owner, "a".repeat(12001)))).status,
+      413,
+    );
     assert.equal(
       (await api.PATCH(request("PATCH", reviewer, { id, reviewed: true })))
         .status,
@@ -145,8 +207,37 @@ const { pathToFileURL } = require("node:url");
       (await api.PATCH(request("PATCH", owner, { id, reviewed: true }))).status,
       200,
     );
+    const mine = await api.GET(
+      request("GET", reviewer, undefined, undefined, "?view=mine"),
+    );
+    assert.equal(mine.headers.get("cache-control"), "private, no-store");
+    assert.deepEqual(await mine.json(), {
+      items: [ownSubmission],
+      more: false,
+    });
+    const spoofed = `?view=mine&id=${id}&sender_hash=${senderHash("synthetic-reviewer")}`;
+    const other = await api.GET(
+      request("GET", otherReviewer, undefined, undefined, spoofed),
+    );
+    assert.deepEqual(await other.json(), { items: [], more: false });
+    const saved = await api.PUT(request("PUT", owner, ownerReply));
+    assert.equal(saved.status, 200);
+    assert.deepEqual(await saved.json(), {
+      owner_reply: "Thanks for the idea.",
+    });
+    for (const [result, status] of [
+      ["already_replied", 409],
+      ["not_found", 404],
+      ["unconfirmed", 503],
+    ]) {
+      replyMode = result;
+      assert.equal(
+        (await api.PUT(request("PUT", owner, ownerReply))).status,
+        status,
+      );
+    }
     console.log(
-      "Feedback API: reviewer/forged denial before database access, CSRF, bounded bodies, rate limits, truthful receipts and owner access pass. No live network calls.",
+      "Feedback API: owner-only replies, sender-only history, CSRF, bounded bodies, rate limits and truthful receipts pass. No live network calls.",
     );
   } finally {
     global.fetch = originalFetch;
