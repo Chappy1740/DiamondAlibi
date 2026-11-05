@@ -1,8 +1,41 @@
 # Roast Club — build status (R1–R4)
 
-Status: AMBER (EYD-PM-001). Code merged to main (PRs #53-#56, 2026-11-05). Hosted DB migration applied. NOT deployed.
+## Current checkpoint — 2026-11-05 (read this first)
 
-## Pull requests (stacked, merge in order; all draft, owner has not approved merge or deploy)
+**Continuity: AMBER (EYD-PM-001).** Writer: Claude. Reviewer: Codex/owner. Resume from this record, not chat history.
+Rungs per item (Implemented, Tested, Merged, Deployed, Owner-accepted):
+
+| Item | Rung | Evidence |
+| --- | --- | --- |
+| R1 engine (#53) | **Merged** | PR head `224d2d2badfa29c6e653371d75b41edd702fcd82`; merge commit `e3293875472c939fbcb51d5fdb20001194635108` |
+| R2 consent + migration file (#54) | **Merged** | head `0b950cdd2957b914fa45345d813e7b463bf51ae8`; merge `6d522a027df0b19e7f74d3051e79cc0155078722` |
+| R3 popup (#55) | **Merged** | head `1ba2aeff9160a4229d761460639ea076e0fa3969`; merge `29eb1db0386bcdfbb581cef619d9818d81f715a1` |
+| R4 announcer (#56) | **Merged** | head `7445ed19ca9ea739a687c9483b07927adeba1c5f`; merge `1de1e7f1c44b7394c76d2e36ed79f81312c3bb3d` (= main at this checkpoint) |
+| Hosted migration `20261104180000_roast_club_consent.sql` | **Applied and verified** on the DiamondAlibi Supabase project (hosted version `20261105100110`, name `roast_club_consent`) | Read-back: RLS on both private tables; two immutable triggers; `anon` cannot execute the new functions, `authenticated` can; zero opt-ins (every player OUT). Prerequisite helpers checked first. |
+| Production | **HELD: not deployed** | See Cloudflare evidence. Nothing from R1-R4 is live. |
+| Owner acceptance | **Not accepted** | See audio notes below. |
+
+**Approvals recorded (owner, 2026-11-05):** hosted database change approved (04:00 CT); merge of #53-#56 approved (04:12 CT). Codex's finding on this PR was addressed by this update. Separate, later approval (04:55 CT): deploy of the Roast Club release via #60 (off switch + smoke test) then #61 (migration fingerprint). **That deploy had NOT been executed when this checkpoint was written; production is held until it is, and a later record will replace this line with the result.** Claude may not merge #60 or #61 without that approval and may not widen it.
+
+**Exact CI and Cloudflare evidence (main `1de1e7f1c44b7394c76d2e36ed79f81312c3bb3d`):**
+- GitHub Actions "Personal workflow validation" run `42009058568` (event push): **success**; job `validate` `127183110234`, completed 2026-11-05T10:19:06Z.
+- Cloudflare "Workers Builds: diamond-alibi-preview" check `127183703583` on that commit: **failure**, build `cc77500d-ed69-4d41-b76c-f1c6188fb8e7`, completed 2026-11-05T10:15:46Z. No Worker version was released from it. **Cause UNKNOWN** (the Cloudflare log was not read). It is consistent with the deploy gate: `supabase/migrations` tree changed from `approvedMigrationTree` `6dc55326d3dfc1ff283fcbd08ea03bf043b2c882` in `scripts/worker-release-policy.json`, which blocks automatic deploy until the fingerprint PR (#61) is approved. Treat as unverified until the log or a later passing build says otherwise.
+- PR #58 head `8daa560c31a1dfee4c21615fd5673c02fbb95334` Cloudflare preview build `01a06431-3087-42ee-a1c5-dc9afad8f6c7`: success (preview only, not a release).
+- Last local run before merge (sandbox, head `7445ed1`): typecheck clean; 177 unit tests, Roast Club SQL test, Roast Club browser test (Chromium) and the connected-scorebook, scorebook-modes, games-flow, home-layout browser tests passed. PR CI `validate` was green on each of the four heads.
+
+**Owner phone result:** on 2026-11-05 the owner tested the announcer on his iPhone with headphones and reported it works with the Daniel (Enhanced) voice; locked screen does not speak (iOS limit; accepted for an in-use phone). This was the standalone audio-check page, not the deployed app. The in-app announcer, wake lock, Bluetooth speaker and Home Screen app remain UNTESTED. Audio is not production-ready.
+
+**Known limits / unknowns:** independent human or Codex review of the merged code not done; screen-reader pass not done; back-to-back lines cut the earlier line; a few catalog lines assume a runner/shortstop.
+
+**One next action:** owner-approved deploy sequence: merge #60, then #61, watch the main build and record the exact result here. Then run `32-roast-club-smoke-test.md` on the live app. Queued: team heads-up message; scorer view of who has opted in.
+
+Linked from: [working standard](00-WORKING-STANDARD.md), [RELEASE-READINESS.md](../../RELEASE-READINESS.md), `src/data/project-tracker.ts` (release status). Draft #59 also edits the top of RELEASE-READINESS.md; whichever merges second needs a trivial conflict resolution at the top of the file.
+
+## History — earlier instructions and evidence (kept; superseded where they conflict with the checkpoint)
+
+Earlier status line (superseded by the checkpoint above): AMBER; code merged, hosted migration applied, not deployed.
+
+## Pull requests as first opened (HISTORY: they were draft then; all four are now merged, see the checkpoint)
 | PR | Branch | Scope |
 | --- | --- | --- |
 | #53 | `claude/roast-club-r1-engine` | R1 engine, catalog, mapping |
@@ -39,7 +72,7 @@ Owner direction: Will authorized full Roast Club development (supersedes the Nov
   - Voice: owner chose "Daniel (Enhanced)" (iOS Read & Speak voice) as the default. The announcer uses it when installed (Premium, then Enhanced, then standard Daniel), else the phone default. Other built-in voices were judged too robotic; a natural voice service is deferred until after the pilot and needs owner approval (paid service, new secret).
   - NOT TESTED: a Home Screen app, other speakers, the live app with the wake-lock change. Audio is NOT production-ready.
 
-## Gates before any release
+## Gates before any release (HISTORY: 1 and 2 done; 3 partly; 4 open)
 1. Owner approves merge and deploy (explicit).
 2. Migration changes the deploy-gate fingerprint: hosted apply, verification and fingerprint update need separate approval. Until applied, the Roast Club control and popups stay hidden (fail closed).
 3. Independent review (Codex/owner) of the PRs; rebase over PR #52 (`connected-scorebook.tsx`, `globals.css`).
@@ -52,10 +85,10 @@ Owner direction: Will authorized full Roast Club development (supersedes the Nov
 - Open: category count. The catalog has 15 categories (the 14 result types plus a separate OVER-LIMIT HR set that keeps over-limit home runs from being celebrated).
 - Staged option still available: ship text-only first, announcer later.
 
-## Update 2026-11-05 (owner approvals and results)
+## Earlier update 2026-11-05 (HISTORY; superseded by the checkpoint above)
 - Independent review fixes shipped in #56: accepted-and-new receipt allow-list, off-limits name check, widened off-limits words (drunk/hungover/slow jokes kept, owner-approved), consent checks only on score/full screens and throttled to ~1/min, browser test asserts over-limit line says "out".
 - Owner approved the hosted database change; `roast_club_consent` applied to the DiamondAlibi Supabase project. Verified: RLS on both private tables, immutable triggers, anon cannot execute, authenticated can, zero opt-ins.
 - Owner approved merging; #53-#56 merged to main in order, CI `validate` green on main.
-- Deploy NOT approved. Workers Build on main reports failure, consistent with the deploy gate (migration tree changed vs `approvedMigrationTree` in `scripts/worker-release-policy.json`); Cloudflare log not read.
+- Deploy not approved at that time. Workers Build on main reports failure, consistent with the deploy gate (migration tree changed vs `approvedMigrationTree` in `scripts/worker-release-policy.json`); Cloudflare log not read.
 - Owner tested the announcer on his iPhone (Daniel Enhanced voice, check page): works. Locked screen does not speak (OS limit; fine for a phone in use). In-app announcer on a real deploy is still untested.
 - Next: owner approves deploy -> small PR updating the migration fingerprint -> deploy -> real-app iPhone/Bluetooth test -> owner acceptance.

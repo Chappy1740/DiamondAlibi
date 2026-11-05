@@ -1,5 +1,9 @@
 # Diamond Alibi — Screen-by-screen working standard
 
+## November 5, 2026 — Roast Club checkpoint (current for Roast Club)
+
+**AMBER.** Roast Club R1–R4 ([#53](https://github.com/Chappy1740/DiamondAlibi/pull/53)–[#56](https://github.com/Chappy1740/DiamondAlibi/pull/56)) are **merged** into main `1de1e7f1c44b7394c76d2e36ed79f81312c3bb3d`. The hosted migration `roast_club_consent` is **applied and verified** (read-back recorded). **Production is held: not deployed.** Main `validate` run `42009058568` passed; the Cloudflare main build `cc77500d-ed69-4d41-b76c-f1c6188fb8e7` reported failure with cause UNKNOWN (consistent with the migration deploy gate, log not read). Exact evidence, approvals and the single next action: [Roast Club status](31-roast-club-status.md). Roast Club #60/#61 deploy approval is recorded there and was not yet executed at this checkpoint. This section does not describe H5; older sections below are history.
+
 ## November 4, 2026 — H5 final reconciliation for pilot review
 
 **Recovered; GREEN. H5 rung: Tested locally; exact-head CI pending.** Owner says
