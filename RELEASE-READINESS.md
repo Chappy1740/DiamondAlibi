@@ -1,6 +1,14 @@
 # Release readiness and recovery
 
-## November 4, 2026 — H5 final reconciliation for pilot review
+## November 5, 2026 — GitHub readback for H5
+
+**H5 — Deployed (recorded release receipt).** [PR #52](https://github.com/Chappy1740/DiamondAlibi/pull/52) merged on November 4 at `ff64f0d4f918fce9c088e6ec7a25e99552914010` after the owner authorized the release. [Exact-main CI](https://github.com/Chappy1740/DiamondAlibi/actions/runs/41848817122) passed per the release record, which identifies Worker version `232bd809-4815-4cd2-ac46-1aebc0b675f3` at 100% when verified. This readback checked GitHub; it did not recheck active Worker traffic.
+
+The hold in the pre-merge record below is superseded for #52. Physical-phone, microphone, hosted and cross-device acceptance remain open. Record actual pilot evidence before advancing that rung.
+
+The later Roast Club merges #53–#56 are tracked in the [Roast Club status record](docs/screen-handoffs/31-roast-club-status.md). The H5 release receipt does not establish deployment or acceptance for those changes.
+
+## November 4, 2026 — H5 final reconciliation for pilot review (historical)
 
 **Recovered; GREEN. H5 rung: Tested locally; exact-head CI pending.** Owner says
 “finish 52”; original scoped reconciliation authority covers conflict resolution,
