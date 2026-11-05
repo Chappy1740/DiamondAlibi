@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { ANNOUNCER_STORAGE_KEY, DEFAULT_ANNOUNCER_PREFS, NEUTRAL_LINES, announcerActive, createSpeaker, neutralLine, parsePrefs } from "../src/lib/roast-announcer.ts";
+import { PREFERRED_VOICE, pickVoice, ANNOUNCER_STORAGE_KEY, DEFAULT_ANNOUNCER_PREFS, NEUTRAL_LINES, announcerActive, createSpeaker, neutralLine, parsePrefs } from "../src/lib/roast-announcer.ts";
 import { ROAST_CATALOG } from "../src/lib/roast-club.ts";
 
 function fake() {
@@ -104,4 +104,17 @@ test("memory is bounded so old keys eventually age out", () => {
   assert.equal(s.say("a", "Out.", 1), "spoken");
   assert.equal(s.say("d", "Out.", 1), "duplicate");
   void f;
+});
+
+test("the default announcer voice is Daniel, best quality first, else the phone default", () => {
+  assert.equal(PREFERRED_VOICE, "Daniel");
+  const v = (name: string) => ({ name, lang: "en-GB" });
+  const all = [v("Samantha"), v("Daniel"), v("Daniel (Enhanced)"), v("Daniel (Premium)"), v("Danielle")];
+  assert.equal(pickVoice(all)?.name, "Daniel (Premium)");
+  assert.equal(pickVoice(all.filter((x) => !/Premium/.test(x.name)))?.name, "Daniel (Enhanced)");
+  assert.equal(pickVoice([v("Samantha"), v("Daniel")])?.name, "Daniel");
+  assert.equal(pickVoice([v("Samantha"), v("Karen")]), null);
+  assert.equal(pickVoice([]), null);
+  assert.equal(pickVoice(all, "")?.name, undefined);
+  assert.equal(pickVoice([v("Daniel (Enhanced)")], "daniel")?.name, "Daniel (Enhanced)");
 });

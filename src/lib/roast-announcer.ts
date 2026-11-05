@@ -50,6 +50,20 @@ export function neutralLine(outcome: Outcome, overLimitFenceHr: boolean): string
   return category ? NEUTRAL_LINES[category] : null;
 }
 
+/** Owner's chosen default announcer voice. Used only if this device has it; otherwise the phone default. */
+export const PREFERRED_VOICE = "Daniel";
+export type VoiceLike = { name: string; lang: string };
+
+/** Picks the best installed voice whose name starts with the preferred name: Premium, then Enhanced, then standard. */
+export function pickVoice<T extends VoiceLike>(voices: readonly T[], preferred: string = PREFERRED_VOICE): T | null {
+  const want = preferred.trim().toLowerCase();
+  if (!want) return null;
+  const rank = (v: T) => (/\(premium\)/i.test(v.name) ? 0 : /\(enhanced\)/i.test(v.name) ? 1 : 2);
+  const matches = voices.filter((v) => typeof v?.name === "string" && v.name.toLowerCase().startsWith(want));
+  matches.sort((a, b) => rank(a) - rank(b));
+  return matches[0] ?? null;
+}
+
 export type SpeechSynthLike = {
   speak(utterance: unknown): void;
   cancel(): void;

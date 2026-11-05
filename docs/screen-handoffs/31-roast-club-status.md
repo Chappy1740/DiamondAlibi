@@ -34,6 +34,7 @@ Owner direction: Will authorized full Roast Club development (supersedes the Nov
   - PASSED: voice after one tap; sound reached the headphones; a new line replaced the old one; same play spoken once; over-limit line said "out"; clear at volume.
   - FAILED: phone locked, nothing was heard (expected: iOS pauses web pages). Mitigation in R4: screen wake lock while the announcer is on, plus an on-screen "keep this screen on" note. The mitigation is built but NOT yet phone-tested.
   - Second run, Safari (iOS 18.7): same results, and Mute stopped the voice right away (PASSED). Locked phone failed again in Safari, so the lock limitation is the phone, not the browser.
+  - Voice: owner chose "Daniel (Enhanced)" (iOS Read & Speak voice) as the default. The announcer uses it when installed (Premium, then Enhanced, then standard Daniel), else the phone default. Other built-in voices were judged too robotic; a natural voice service is deferred until after the pilot and needs owner approval (paid service, new secret).
   - NOT TESTED: a Home Screen app, other speakers, the live app with the wake-lock change. Audio is NOT production-ready.
 
 ## Gates before any release

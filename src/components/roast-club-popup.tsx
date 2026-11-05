@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { roastClubAction } from "@/app/club/roast-club-actions";
 import { createRoastPlanner } from "@/lib/roast-club";
 import { confirmedScore, planConfirmedRoast, type SnapshotGame } from "@/lib/roast-club-flow";
-import { ANNOUNCER_STORAGE_KEY, announcerActive, createSpeaker, neutralLine, parsePrefs } from "@/lib/roast-announcer";
+import { ANNOUNCER_STORAGE_KEY, announcerActive, createSpeaker, neutralLine, parsePrefs, pickVoice } from "@/lib/roast-announcer";
 import type { RoastClubState } from "@/lib/roast-club-consent";
 
 export type RoastAnnounce = {
@@ -22,7 +22,15 @@ export function getSpeaker() {
   const synth = typeof window !== "undefined" && "speechSynthesis" in window && typeof SpeechSynthesisUtterance !== "undefined" ? window.speechSynthesis : null;
   pageSpeaker = createSpeaker({
     synth,
-    makeUtterance: (text, volume) => { const u = new SpeechSynthesisUtterance(text); u.volume = volume; return u; },
+    makeUtterance: (text, volume) => {
+      const u = new SpeechSynthesisUtterance(text);
+      u.volume = volume;
+      try {
+        const voice = pickVoice(window.speechSynthesis.getVoices());
+        if (voice) { u.voice = voice; u.lang = voice.lang; }
+      } catch { /* phone default voice */ }
+      return u;
+    },
   });
   return pageSpeaker;
 }
