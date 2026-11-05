@@ -1818,6 +1818,7 @@ blockquote {
 .team-scorebook .at-bat-form fieldset { min-width: 0; gap: 8px; }
 .at-bat-rbi { display: grid; gap: 6px; margin: 0; }
 .at-bat-rbi > span, .at-bat-runs { font-size: 12px; color: var(--muted); }
+.at-bat-rbi-adjustment > summary { min-height: 44px; padding-block: 10px; color: var(--teal); cursor: pointer; }
 .rbi-buttons { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
 .rbi-buttons button { min-height: 44px; min-width: 0; border: 1px solid var(--border); border-radius: 8px; color: var(--white); background: var(--surface); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
 .rbi-buttons button[aria-pressed="true"] { border: 2px solid var(--teal); background: #16485d; }
