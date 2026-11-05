@@ -78,6 +78,8 @@ const fs = require("node:fs");
       .getByRole("heading", { name: "Season Beverage Board", exact: true })
       .waitFor();
     const leagueBoard = await page.locator(".leaderboard").innerText();
+    assert.equal(await page.getByLabel("Statistics view", { exact: true }).count(), 0);
+    await nav.getByRole("link", { name: "Stats", exact: true }).click();
     await page
       .getByLabel("Statistics view", { exact: true })
       .selectOption("Tournament");
@@ -86,6 +88,8 @@ const fs = require("node:fs");
       .getByText("Season 2026 · Tournament", { exact: false })
       .first()
       .waitFor();
+    await nav.getByRole("link", { name: "Beverage", exact: true }).click();
+    await page.getByRole("heading", { name: "Team balances", exact: true }).waitFor();
     assert.equal(await page.locator(".leaderboard").innerText(), leagueBoard);
     await page
       .getByLabel("Season", { exact: true })

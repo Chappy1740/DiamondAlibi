@@ -10,6 +10,7 @@ import {
 import type { DashboardProps } from "@/components/player-dashboard";
 import type { Scope } from "@/lib/scoring";
 import { scoringMetadataPages } from "@/lib/scoring-metadata-pages";
+import { loadActiveTeams, selectActiveTeam } from "@/lib/team-selection";
 import type { GameContextTeam } from "@/components/game-context-picker";
 
 export type DashboardQuery = {
@@ -110,24 +111,17 @@ export async function dashboardProps(
         };
       return sample();
     }
-    const jar = await cookies();
-    const [teams, memberships] = await Promise.all([
-      client.from("teams").select("id,name").order("created_at"),
-      client
-        .from("team_memberships")
-        .select("team_id")
-        .eq("user_id", user.id)
-        .eq("active", true),
+    const [jar, { options, unavailable }] = await Promise.all([
+      cookies(),
+      loadActiveTeams(client, user.id),
     ]);
-    if (teams.error || memberships.error)
+    if (unavailable)
       return {
         ...empty,
         userId: user.id,
         error:
           "Could not load team access. Your records have not been replaced by sample data.",
       };
-    const ids = new Set((memberships.data ?? []).map((m) => m.team_id));
-    const options = (teams.data ?? []).filter((t) => ids.has(t.id));
     // Only Games needs the lightweight chooser directory. RLS and the active
     // membership intersection both apply; no other teams' scorebooks are loaded.
     let picker: {
@@ -188,10 +182,7 @@ export async function dashboardProps(
               };
       }
     }
-    const requestedTeam = query.team ?? jar.get("da-team")?.value;
-    const team =
-      options.find((t) => t.id === requestedTeam) ??
-      (query.team ? undefined : options[0]);
+    const team = selectActiveTeam(options, query.team, jar.get("da-team")?.value);
     if (!team)
       return {
         ...empty,

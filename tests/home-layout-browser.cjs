@@ -11,10 +11,57 @@ const assert = require("node:assert/strict");
     const bundle = await esbuild.build({
       stdin: { resolveDir: process.cwd(), loader: "tsx", contents: `
         import React from 'react';import{createRoot}from'react-dom/client';import{PlayerDashboard}from'./src/components/player-dashboard';import{BottomNavigationView}from'./src/components/bottom-navigation';import{emptyTotals}from'./src/lib/scoring';
+        import ProfilePage from './src/app/more/profile/page';
         const long='M3-5 Synthetic Test with an exceptionally long team name';
         const data={archived:false,roster:[{id:'player',user_id:'synthetic-user',display_name:'Test Player',is_guest:false},{id:'teammate',user_id:'other-user',display_name:'Other Synthetic Player',is_guest:false}],snapshot:{teamId:'team',seasonId:'season',scope:'Overall',games:[{game:{id:'other-game',kind:'League',opponent:'Other synthetic opponent',completed:false,next_batter_position:0},lineup:['teammate'],playedOn:'2026-10-13'}],totals:{player:{...emptyTotals(),PA:4,AB:4,H:1,HR:1,RBI:3},teammate:{...emptyTotals(),PA:20,AB:20,H:9,HR:9,RBI:9}},board:{player:-2},tournaments:[],leagues:[]}};
         const p={route:location.pathname.slice(1),sample:location.search.includes('sample=1'),userId:'synthetic-user',teams:[{id:'team',name:'M3-5 Synthetic Test'},{id:'long',name:long}],seasons:[{id:'season',name:'M3-5 Synthetic Season',archived:false},{id:'history',name:'Synthetic Season with an exceptionally long history name',archived:true}],teamId:'team',seasonId:'season',scope:'Overall',loaded:data};
         const fixtureQuery=new URLSearchParams(location.search);
+        const accountId = 'synthetic-user';
+        const profileRecords = {
+          teams: [...p.teams, {id:'inactive',name:'Inactive team'}],
+          team_memberships: [
+            {team_id:'team',user_id:accountId,active:true},
+            {team_id:'long',user_id:accountId,active:true},
+            {team_id:'inactive',user_id:accountId,active:false},
+          ],
+          player_profiles: [{nickname:'Test Player',user_id:accountId}],
+        };
+        window.__profileClient = {
+          auth: {getUser: async () => ({data:{user:{id:accountId,user_metadata:{bio:'Synthetic bio'}}},error:null})},
+          from(table) {
+            const filters=[];
+            const rows=()=>({data:profileRecords[table].filter(row=>filters.every(([key,value])=>row[key]===value)),error:null});
+            const query={
+              select:()=>query, order:()=>query, eq(key,value){filters.push([key,value]);return query;},
+              maybeSingle:async()=>({data:rows().data[0]??null,error:null}),
+              then:(resolve,reject)=>Promise.resolve(rows()).then(resolve,reject),
+            };
+            return query;
+          },
+        };
+        window.__preferenceReads = [];
+        window.__preferenceAction = (kind, request) => {
+          const {teamId, type}=request;
+          if (!p.teams.some(team=>team.id===teamId)) throw Error('Unexpected preference team');
+          const key=kind+':'+teamId;
+          const saved=sessionStorage.getItem(key);
+          const opted=saved===null ? kind==='beverage' : saved==='true';
+          if (type==='read') {
+            window.__preferenceReads.push([kind,teamId]);
+            return kind==='beverage'
+              ? {status:'ok',data:{teamId,canToggle:true,participating:opted,revision:0}}
+              : {status:'ok',data:{teamId,canToggle:true,optedIn:opted,optedInPlayerIds:[]}};
+          }
+          const choice=kind==='beverage' ? request.change.participating : request.optedIn;
+          sessionStorage.setItem(key,String(choice));
+          return {status:'accepted',duplicate:false,optedIn:choice};
+        };
+        if (p.route==='beverages' && fixtureQuery.get('team')==='long') {
+          p.teamId=data.snapshot.teamId='long';
+          p.seasonId=data.snapshot.seasonId='history';
+          data.snapshot.board.player=7;
+          data.roster[1].display_name='Other team teammate';
+        }
         if(fixtureQuery.has('tied-stats')){Object.assign(data.snapshot.totals.player,{PA:20,AB:20,H:12});data.snapshot.totals.teammate.H=12;}
         if(fixtureQuery.has('wide-stats')){data.roster[1].display_name='Alexandria Montgomery-Santiago';Object.assign(data.snapshot.totals.teammate,{PA:25000,AB:21000,H:12345,HR:1234,RBI:12345,board:-12345});data.snapshot.totals.player.board=-23456;}
         if(fixtureQuery.has('owed'))data.snapshot.board.player=4;
@@ -24,17 +71,26 @@ const assert = require("node:assert/strict");
         if(fixtureQuery.has('unlinked'))data.roster[0].user_id='unlinked-user';
         if(fixtureQuery.has('no-team')){p.loaded=null;p.teams=[];p.seasons=[];p.teamId='';p.seasonId='';}
         if(fixtureQuery.has('load-error')){p.loaded=null;p.error='Synthetic records could not be loaded.';}
-        const context=new URLSearchParams({team:p.teamId,season:p.seasonId,scope:p.scope,...(p.sample?{sample:'1',player:p.userId}:{})}).toString();
-        createRoot(document.getElementById('app')).render(<><PlayerDashboard {...p}/><BottomNavigationView pathname={location.pathname} context={context}/></>);` },
+        const root=createRoot(document.getElementById('app'));
+        if (location.pathname==='/more/profile') {
+          ProfilePage({searchParams:Promise.resolve(Object.fromEntries(fixtureQuery))}).then(profile=>root.render(<>{profile}<BottomNavigationView pathname={location.pathname} context={fixtureQuery.toString()}/></>));
+        } else {
+          const context=new URLSearchParams({team:p.teamId,season:p.seasonId,scope:p.scope,...(p.sample?{sample:'1',player:p.userId}:{})}).toString();
+          root.render(<><PlayerDashboard {...p}/><BottomNavigationView pathname={location.pathname} context={context}/></>);
+        }` },
       bundle: true, write: false, platform: "browser", jsx: "automatic",
-      plugins: [require("./support/roast-club-stub.cjs"), { name: "synthetic-home", setup(build) {
-        build.onResolve({ filter: /^(next\/(navigation|link|image)|@\/app\/(login\/actions|club\/beverage-actions)|\.\/personal-alibis)$/ }, args => ({ path: args.path, namespace: "synthetic" }));
+      plugins: [{ name: "synthetic-home", setup(build) {
+        build.onResolve({ filter: /^(next\/(navigation|headers|link|image)|@\/lib\/supabase\/server|@\/app\/(login\/actions|club\/(actions|beverage-actions|roast-club-actions))|\.\/personal-alibis)$/ }, args => ({ path: args.path, namespace: "synthetic" }));
         build.onLoad({ filter: /.*/, namespace: "synthetic" }, args => ({ loader: "tsx", resolveDir: process.cwd(), contents:
-          args.path === "next/navigation" ? "const router={refresh(){window.__refreshes=(window.__refreshes||0)+1}};export const useRouter=()=>router;export const usePathname=()=>location.pathname;export const useSearchParams=()=>new URLSearchParams(location.search);" :
+          args.path === "next/navigation" ? "const router={refresh(){window.__refreshes=(window.__refreshes||0)+1}};export const useRouter=()=>router;export const usePathname=()=>location.pathname;export const useSearchParams=()=>new URLSearchParams(location.search);export const redirect=url=>location.assign(url);" :
+          args.path === "next/headers" ? "export async function cookies(){return {get(){return {value:'team'}}}}" :
           args.path === "next/link" ? "import React from 'react';export default function Link({children,...props}){return <a {...props}>{children}</a>}" :
           args.path === "next/image" ? "import React from 'react';export default function Image({unoptimized,...props}){return <img {...props}/>}" :
           args.path === "./personal-alibis" ? "export function PersonalAlibis(){return null}" :
-          args.path === "@/app/club/beverage-actions" ? "export async function beverageAction(){return {status:'unsupported'}}" :
+          args.path === "@/lib/supabase/server" ? "export const supabaseServer=async()=>window.__profileClient" :
+          args.path === "@/app/club/beverage-actions" ? "export const beverageAction=async request=>window.__preferenceAction('beverage',request)" :
+          args.path === "@/app/club/roast-club-actions" ? "export const roastClubAction=async request=>window.__preferenceAction('roast',request)" :
+          args.path === "@/app/club/actions" ? "export async function clubAction(){return {}}" :
           "export async function signout(){}"
         }));
       }}],
@@ -243,7 +299,62 @@ const assert = require("node:assert/strict");
       await assertHomeFits(390,844);
       await assertHomeFits(320,568);
     }
+    const base = 'http://127.0.0.1:'+server.address().port;
+    await page.goto(base+'/beverages?team=long&season=history');
+    const board = page.getByRole('region',{name:'Team balances',exact:true});
+    await board.getByText('Other team teammate',{exact:true}).waitFor();
+    await page.getByText('Your balance:',{exact:false}).getByText('7 owed',{exact:true}).waitFor();
+    assert.equal(await board.getByText('Other Synthetic Player',{exact:true}).count(),0);
+    assert.equal(await page.getByLabel('Statistics view',{exact:true}).count(),0);
+    assert.equal(await page.getByRole('button',{name:/^Opt out$|^Join Roast Club$/}).count(),0);
+    assert.deepEqual(await page.evaluate(()=>window.__preferenceReads),[]);
+    await page.locator('.profile-menu > summary').click();
+    await page.getByRole('link',{name:'Bio & profile',exact:true}).click();
+    const prefs=page.getByRole('region',{name:'Team preferences',exact:true});
+    const optOut=prefs.getByRole('button',{name:'Opt out',exact:true});
+    const participate=prefs.getByRole('button',{name:'Participate',exact:true});
+    const join=prefs.getByRole('button',{name:'Join Roast Club',exact:true});
+    const leave=prefs.getByRole('button',{name:'Leave Roast Club',exact:true});
+    const teamSelect=prefs.getByRole('combobox',{name:'Team',exact:true});
+    await optOut.waitFor();
+    assert.equal(await teamSelect.inputValue(),'long','profile opens with the viewed team, ahead of the saved team');
+    assert.equal(new URL(page.url()).searchParams.get('season'),'history');
+    await optOut.click();
+    await participate.waitFor();
+    await join.click();
+    await leave.waitFor();
+    async function switchTeam(teamId) {
+      await teamSelect.selectOption(teamId);
+      await prefs.getByRole('button',{name:'Switch team',exact:true}).click();
+      await page.waitForURL(url=>url.pathname==='/more/profile'&&url.searchParams.get('team')===teamId);
+    }
+    await switchTeam('team');
+    await optOut.waitFor();
+    await join.waitFor();
+    assert.equal(new URL(page.url()).searchParams.has('season'),false,'switching teams drops the previous season');
+    await switchTeam('long');
+    await participate.waitFor();
+    await leave.waitFor();
+    await page.reload();
+    await participate.waitFor();
+    await leave.waitFor();
+    for(const width of [320,390,1440]) {
+      await page.setViewportSize({width,height:900});
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+      assert(await prefs.getByRole('button').evaluateAll(buttons=>buttons.every(button=>button.getBoundingClientRect().height>=44)));
+    }
+    await page.addScriptTag({path:require.resolve('axe-core')});
+    assert.deepEqual(await page.evaluate(async()=> (await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations.map(v=>v.id)),[]);
+    await page.goto(base+'/more/profile?team=inactive');
+    await prefs.getByRole('alert').getByText('That team is unavailable.',{exact:false}).waitFor();
+    assert.deepEqual(await teamSelect.locator('option').evaluateAll(options=>options.map(option=>option.value)),['','team','long']);
+    assert.equal(await join.count()+await optOut.count(),0);
+    assert.deepEqual(await page.evaluate(()=>window.__preferenceReads),[]);
+    await page.goto(base+'/more/profile');
+    await optOut.waitFor();
+    assert.equal(await teamSelect.inputValue(),'team','direct profile uses the saved active team');
     assert.deepEqual(errors, []);
+    console.log(`PASS ${engine.name()} Team preferences: scoped profile entry, two independent choices, team switching and reload, inactive denial, read-only balances, phone layout and accessibility.`);
     console.log(`PASS ${process.env.BROWSER_ENGINE || "chromium"} Home: viewport fit from 320x568 to 1440x900 without clipping or navigation overlap, including populated/empty/unlinked/no-team/error states; 44px touch targets; complete long selected names at 320–1440px; native keyboard/form selection; personal-only signed stats/BEVs; unchanged sample/Stats/More navigation; automated accessibility; refresh/offline/reconnect behavior. Synthetic data only.`);
   } finally { if (browser) await browser.close(); if (server) await new Promise(resolve => server.close(resolve)); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
