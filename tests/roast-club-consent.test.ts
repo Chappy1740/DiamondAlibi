@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { consentMap, roastClubConsent, type RoastClubState } from "../src/lib/roast-club-consent.ts";
+import { consentMap, roastClubConsent, roastClubEnabled, type RoastClubState } from "../src/lib/roast-club-consent.ts";
 import type { ScoringClient } from "../src/lib/connected-scoring.ts";
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
@@ -103,4 +103,9 @@ test("consent map lists only effective opt-ins; unknown players and missing stat
   assert.equal(map.get(id(103)), undefined);
   assert.equal(consentMap(null).size, 0);
   assert.equal(consentMap(undefined).get(id(101)), undefined);
+});
+
+test("the owner off switch fails closed", () => {
+  assert.equal(roastClubEnabled("true"), true);
+  for (const v of [undefined, "", "false", "TRUE", "1", " true", "off"]) assert.equal(roastClubEnabled(v), false, String(v));
 });
