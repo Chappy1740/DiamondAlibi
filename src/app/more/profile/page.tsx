@@ -73,7 +73,7 @@ export default async function Page({
           {team && (
             <div key={team.id}>
               <BeverageControls teamId={team.id} />
-              <RoastClubControls teamId={team.id} />
+              <RoastClubControls teamId={team.id} teamName={team.name} />
             </div>
           )}
         </>
