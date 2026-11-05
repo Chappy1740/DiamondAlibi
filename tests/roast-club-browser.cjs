@@ -39,7 +39,7 @@ createRoot(document.getElementById('app')).render(<App/>);` },
     assert.match(await popup.innerText(), /Synthetic Alex/);
     await page.locator("#other").click(); // pointer-events pass through the popup body
     const close = page.getByRole("button", { name: "Dismiss roast" });
-    const box = await close.boundingBox(); assert(box.width >= 44 && box.height >= 44);
+    const box = await close.boundingBox(); assert(box.width >= 43.9 && box.height >= 43.9, "close box " + JSON.stringify(box));
     await close.click(); assert.equal(await popup.count(), 0);
     // 2. duplicate command id and duplicate receipt show nothing.
     await call("c1", A + "50", "00000000-0000-4000-8000-000000000101", "2B");

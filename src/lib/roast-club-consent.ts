@@ -106,3 +106,8 @@ export async function roastClubConsent(client: ScoringClient, input: unknown): P
     return uncertain();
   }
 }
+
+/** Owner off switch (ROAST_CLUB_ENABLED). Fails closed: only the exact text "true" turns it on. */
+export function roastClubEnabled(value: string | undefined): boolean {
+  return value === "true";
+}
