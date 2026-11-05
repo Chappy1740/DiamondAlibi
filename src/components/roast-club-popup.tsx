@@ -50,27 +50,25 @@ export function useRoastClub(teamId: string, enabled = true) {
   const [participants, setParticipants] = useState<readonly string[] | null>(null);
 
   const readConsent = useCallback(async (): Promise<RoastClubState | null> => {
-    // Every consent read, including the authoritative recheck before a roast, refreshes the cache and
-    // the scorer's member list, so an opt-out (or a switched-off feature) disappears right away.
     try {
       const result = await roastClubAction({ type: "read", teamId });
       const state = result.status === "ok" ? result.data : null;
-      if (alive.current) { cache.current = state; setParticipants(state ? state.optedInPlayerIds : null); }
+      if (alive.current) {
+        // Keep the last eligibility hint on transient failures so the next play can recheck.
+        // A roast still requires a successful fresh consent read.
+        if (result.status !== "unavailable") cache.current = state;
+        setParticipants(state?.optedInPlayerIds ?? null);
+      }
       return state;
-    } catch (error) {
-      if (alive.current) { cache.current = null; setParticipants(null); }
-      throw error;
+    } catch {
+      if (alive.current) setParticipants(null);
+      return null;
     }
   }, [teamId]);
 
   const refresh = useCallback(async () => {
     lastRefresh.current = Date.now();
-    try {
-      const state = await readConsent();
-      if (alive.current) { cache.current = state; setParticipants(state ? state.optedInPlayerIds : null); }
-    } catch {
-      if (alive.current) { cache.current = null; setParticipants(null); }
-    }
+    await readConsent();
   }, [readConsent]);
 
   useEffect(() => {

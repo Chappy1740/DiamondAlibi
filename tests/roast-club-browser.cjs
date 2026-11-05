@@ -11,7 +11,7 @@ import React from 'react';import{createRoot}from'react-dom/client';
 import{useRoastClub}from'./src/components/roast-club-popup';import{AnnouncerControls}from'./src/components/announcer-controls';
 const T='00000000-0000-4000-8000-000000000010',G='00000000-0000-4000-8000-000000000020',P1='00000000-0000-4000-8000-000000000101',P2='00000000-0000-4000-8000-000000000102';
 window.__reads=0;window.__optedIn=[P1];window.__spoken=[];
-window.__action=async()=>{window.__reads++;return{status:'ok',data:{teamId:T,canToggle:true,optedIn:false,optedInPlayerIds:[...window.__optedIn]}}};
+window.__action=async()=>{window.__reads++;if(window.__consentUnavailable)return{status:'unavailable'};return{status:'ok',data:{teamId:T,canToggle:true,optedIn:false,optedInPlayerIds:[...window.__optedIn]}}};
 const names={[P1]:'Synthetic Alex',[P2]:'Synthetic Sam'};
 const games=(rows)=>[{game:{id:G},evaluation:{rows}}];
 function App(){const r=useRoastClub(T);window.__announce=(commandId,playId,playerId,outcome,official,receipt)=>r.announce({request:{commandId,gameId:G,change:{type:'score',playId}},receipt:receipt||{status:'accepted',duplicate:false},games:games([{id:playId,playerId,outcome,official:official||outcome,voided:false}]),displayName:id=>names[id]});
@@ -105,11 +105,22 @@ createRoot(document.getElementById('app')).render(<App/>);` },
     // 8. mobile widths: no horizontal overflow with popup showing.
     await call("c10", A + "59", "00000000-0000-4000-8000-000000000101", "3B"); await popup.waitFor();
     for (const w of [320, 375, 768]) { await page.setViewportSize({ width: w, height: 800 }); await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))); assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true); }
-    // 9. an opt-out seen during a play's consent recheck leaves the scorer's member list at once, with no new popup.
-    await close.click().catch(() => {});
+    // 9. Temporary consent failure hides the list and the roast. The next play rechecks consent.
+    await close.click();
     await page.setViewportSize({ width: 800, height: 800 });
+    await page.evaluate(() => { window.__consentUnavailable = true; });
+    await call("c11", A + "60", P1, "1B");
+    await page.waitForFunction(() => document.querySelector("[data-testid=members]").textContent === "");
+    assert.equal(await popup.count(), 0);
+    await page.evaluate(() => { window.__consentUnavailable = false; });
+    await call("c12", A + "61", P1, "2B");
+    await popup.waitFor();
+    await page.waitForFunction(() => document.querySelector("[data-testid=members]").textContent === "Synthetic Alex");
+    await close.click();
+
+    // 10. A confirmed opt-out clears the list and suppresses the roast.
     await page.evaluate(() => { window.__optedIn = []; });
-    await call("c11", A + "60", "00000000-0000-4000-8000-000000000101", "1B");
+    await call("c13", A + "62", P1, "1B");
     await page.waitForFunction(() => document.querySelector("[data-testid=members]").textContent === "");
     await page.waitForTimeout(300); assert.equal(await popup.count(), 0);
     assert.deepEqual(errors, []);
