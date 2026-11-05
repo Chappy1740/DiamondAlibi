@@ -13,7 +13,7 @@ Note: a later deploy may reset the value to the one in `wrangler.jsonc` (`true`)
 2. Tap Join. Expect: it says you are in. Reload; still in. [ ]
 3. Open a test game, score a plain Hit for YOU. Expect: a funny single line with your name; stats unchanged. [ ]
 4. Score an out for someone who has NOT joined. Expect: no popup. [ ]
-5. Open Clubhouse announcer, mark this phone as the announcer, tap "Turn sound on and test". Score a hit for you. Expect: the roast is spoken (Daniel), nothing else. [ ]
+5. Optional first: More → Clubhouse tools → Announcer setup → "Test announcer sound". Then open the test game in Score mode, open "Clubhouse announcer (optional)", mark this phone as the announcer, tap "Turn sound on and test". Score a hit for you. Expect: the roast is spoken (Daniel), nothing else. [ ]
 6. Back in Bio & profile, tap Leave. Score another hit for you. Expect: nothing. [ ]
 7. Optional: mute and volume work; dismiss button closes the popup. [ ]
 8. Flip the off switch (above) and reload Bio & profile. Expect: the Join control is gone. Flip back. [ ]
