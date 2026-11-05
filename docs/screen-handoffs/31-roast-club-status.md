@@ -13,7 +13,7 @@ Rungs per item (Implemented, Tested, Merged, Deployed, Owner-accepted):
 | R4 announcer (#56) | **Merged** | head `7445ed19ca9ea739a687c9483b07927adeba1c5f`; merge `1de1e7f1c44b7394c76d2e36ed79f81312c3bb3d` |
 | Owner off switch + smoke test (#60) | **Merged** | `ROAST_CLUB_ENABLED` (fails closed; only exact `true` is on) and `32-roast-club-smoke-test.md`; merge `0d282bf60622dcd01948b5ef1a9a539bc4f26e77` (= main at this refresh). Includes a test-only fix for a flaky 44px popup check (measured 43.999998px mid-animation). Not deployed; not owner-accepted. |
 | Deploy-gate fingerprint (#61) | **Open, HELD** | head `1a35f6abe8b6b17770461e6d0a90aa2e826e3a77`; one-line `approvedMigrationTree` -> `3c4e320d2c054e26cfd2b0c6b7166998ef090145`; CI green. Merging it lets the next main build deploy, so it stays unmerged. |
-| Hosted migration `20261104180000_roast_club_consent.sql` | **Applied and verified** on the DiamondAlibi Supabase project (hosted version `20261105100110`, name `roast_club_consent`) | Read-back: RLS on both private tables; two immutable triggers; `anon` cannot execute the new functions, `authenticated` can; zero opt-ins (every player OUT). Prerequisite helpers checked first. |
+| Hosted migration `20261104180000_roast_club_consent.sql` | **Applied and verified** on the DiamondAlibi Supabase project (hosted version `20261105100110`, name `roast_club_consent`) | Read-back: RLS on both private tables; two immutable triggers; `anon` cannot execute the new functions, `authenticated` can; zero opt-ins (every player OUT). Prerequisite helpers checked first. **Hosted behavior check, 2026-11-05:** a rollback-only transaction with synthetic accounts passed all 16 checks (self-only opt-in, team isolation, signed-out and direct-table denial, deactivated members excluded, immutable history); afterwards 0 synthetic rows remained. Details, scorecard queries, rollback and monitoring: [33-roast-club-runbook.md](33-roast-club-runbook.md). This is the real database with synthetic data, not the deployed app. |
 | Production | **HELD: not deployed** | See Cloudflare evidence. Nothing from R1-R4 is live. Last confirmed deployment: H5 `ff64f0d` (merge of #52; Worker `232bd809-4815-4cd2-ac46-1aebc0b675f3` at 100% when verified about 2026-11-04 14:41 UTC per the [#52 receipt](https://github.com/Chappy1740/DiamondAlibi/pull/52#issuecomment-6633560050)). **Current Cloudflare traffic is UNVERIFIED** (not rechecked); the failed main builds confirm those attempts produced no new release. |
 | Owner acceptance | **Not accepted** | See audio notes below. |
 
@@ -29,6 +29,8 @@ Rungs per item (Implemented, Tested, Merged, Deployed, Owner-accepted):
 **Owner phone result:** on 2026-11-05 the owner tested the announcer on his iPhone with headphones and reported it works with the Daniel (Enhanced) voice; locked screen does not speak (iOS limit; accepted for an in-use phone). This was the standalone audio-check page, not the deployed app. The in-app announcer, wake lock, Bluetooth speaker and Home Screen app remain UNTESTED. Audio is not production-ready.
 
 **Known limits / unknowns:** independent human or Codex review of the merged code not done; screen-reader pass not done; back-to-back lines cut the earlier line; a few catalog lines assume a runner/shortstop.
+
+**Main since this checkpoint:** #62 (Codex, phone scoring/game stats/button copy) merged as `19147b0f2a3b1bd8c597edf698d2755aa9e1edb2`; its main `validate` run `42036762495` **succeeded**; the Cloudflare main check `127277618053` showed failure (same unverified deploy-gate explanation, log not read). The owner-hold on #61 and production is unchanged.
 
 **One next action:** owner decides whether to approve the deploy (merge #61). Until then nothing ships. After a deploy: run `32-roast-club-smoke-test.md` on the live app and record the result here. Queued: team heads-up message; scorer view of who has opted in.
 
@@ -59,7 +61,7 @@ Owner direction: Will authorized full Roast Club development (supersedes the Nov
 
 ## What exists (all on `claude/roast-club-r4-announcer`, stacked R1 → R2 → R3 → R4)
 - R1 `src/lib/roast-club.ts`: clean catalog, outcome mapping, consent gate, command-id dedupe, no immediate repeats.
-- R2 migration `20261104180000_roast_club_consent.sql` (NOT applied anywhere), `roast-club-consent.ts`, player opt-in control. Everyone starts OUT; only the linked player can change their own choice.
+- R2 migration `20261104180000_roast_club_consent.sql` (HISTORY: not applied when written; since applied and verified, see the checkpoint), `roast-club-consent.ts`, player opt-in control. Everyone starts OUT; only the linked player can change their own choice.
 - R3 `roast-club-flow.ts`, `roast-club-popup.tsx`: popup after a confirmed save. Outcome, batter and over-limit verdict are read from the server snapshot row for the saved play id, never from client input.
 - R4 `roast-announcer.ts`, `announcer-controls.tsx`: per-device, per-game announcer, muted by default; speaks only the Roast Club line (the random line for that result) for opted-in players. No plain result announcements, and nothing is spoken for players who have not opted in (owner decision 2026-11-04).
 
@@ -67,7 +69,7 @@ Owner direction: Will authorized full Roast Club development (supersedes the Nov
 - Typecheck clean; 176 unit tests pass; production build compiles.
 - Disposable-DB SQL: Roast Club consent (incl. mutation check) and existing optional-lineups, team-beverage pass.
 - Chromium (local Chrome): new roast-club-browser test passes; connected-scorebook, scorebook-modes, games-flow, tournament-start-time, beverage-controls pass.
-- NOT run: WebKit/Safari, archive-controls (harness ignores local browser path; same on main), real iPhone, real Bluetooth speaker, hosted database.
+- HISTORY of what was not run on 2026-11-03 (hosted database since checked, see the checkpoint): WebKit/Safari, archive-controls (harness ignores local browser path; same on main), real iPhone, real Bluetooth speaker, hosted database.
 - Real-device audio check, 2026-11-04 (Will; iPhone, iOS 18.7, headphones, inside the Claude app browser, standalone audio-check page, not yet the live app):
   - PASSED: voice after one tap; sound reached the headphones; a new line replaced the old one; same play spoken once; over-limit line said "out"; clear at volume.
   - FAILED: phone locked, nothing was heard (expected: iOS pauses web pages). Mitigation in R4: screen wake lock while the announcer is on, plus an on-screen "keep this screen on" note. The mitigation is built but NOT yet phone-tested.

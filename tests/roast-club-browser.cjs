@@ -41,6 +41,17 @@ createRoot(document.getElementById('app')).render(<App/>);` },
     const close = page.getByRole("button", { name: "Dismiss roast" });
     const box = await close.boundingBox(); assert(box.width >= 43.9 && box.height >= 43.9, "close box " + JSON.stringify(box));
     await close.click(); assert.equal(await popup.count(), 0);
+    // 1b. accessibility: polite live region, labeled dismiss button, keyboard-reachable and keyboard-dismissable, never steals focus.
+    await call("c1b", A + "50b", "00000000-0000-4000-8000-000000000101", "2B");
+    await popup.waitFor();
+    assert.equal(await popup.getAttribute("role"), "status");
+    assert.equal(await popup.getAttribute("aria-live"), "polite");
+    assert.notEqual(await page.evaluate(() => document.activeElement && document.activeElement.getAttribute("aria-label")), "Dismiss roast");
+    let reached = false;
+    for (let i = 0; i < 8 && !reached; i++) { await page.keyboard.press("Tab"); reached = await page.evaluate(() => document.activeElement && document.activeElement.getAttribute("aria-label") === "Dismiss roast"); }
+    assert(reached, "dismiss button reachable by Tab");
+    await page.keyboard.press("Enter");
+    await page.waitForFunction(() => !document.querySelector("[data-testid=roast-popup]"));
     // 2. duplicate command id and duplicate receipt show nothing.
     await call("c1", A + "50", "00000000-0000-4000-8000-000000000101", "2B");
     await call("c2", A + "51", "00000000-0000-4000-8000-000000000101", "2B", "2B", { status: "accepted", duplicate: true });
