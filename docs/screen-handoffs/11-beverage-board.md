@@ -1,5 +1,15 @@
 # 11 — Beverage Board: Screen handoff
 
+## November 5, 2026 — Roster typography
+
+Will's phone screenshot showed small player names and oversized balance text.
+On the local `codex/beverage-roster-type` branch, the roster uses the existing
+22 px size for names and 14 px body size for balances. Codex checked Chromium
+and WebKit at 320–1440 px with long names, owed and credit balances, zero, and
+missing balances. TypeScript passed. Will approved publishing and deploying
+this typography change. Next is PR validation and release through the
+existing main build.
+
 ## November 5, 2026 — Balance view and profile preferences
 
 Will approved using the bottom **Beverage** tab to view balances for the

@@ -339,7 +339,7 @@ export function PlayerDashboard(p: DashboardProps) {
                         </strong>
                       </p>
                     </section>
-                    <section className="card detail-card leaderboard" aria-labelledby="team-beverage-balances">
+                    <section className="card detail-card leaderboard beverage-roster" aria-labelledby="team-beverage-balances">
                       <h2 id="team-beverage-balances">Team balances</h2>
                       {loaded.roster.length ? loaded.roster.map((r) => (
                         <div key={r.id} className="leader-row">

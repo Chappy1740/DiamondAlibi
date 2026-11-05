@@ -2227,6 +2227,19 @@ body:has(.workspace--home) { padding-bottom: 0; }
 .workspace--type-scale .leaderboard-counts strong { font-size: var(--ui-text-body); }
 .workspace--type-scale :is(.micro, .eyebrow, .home-stat dt, .dashboard-select-label, .game-entry-status, .leaderboard-player > .micro, .leaderboard-badge, .leaderboard-beverage small) { font-size: var(--ui-text-small); }
 .workspace--type-scale .dashboard-context-action > button { font-size: var(--ui-text-body); }
+.beverage-roster .leader-row > strong {
+  min-inline-size: 0;
+  font-size: var(--ui-text-large);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.workspace--type-scale .beverage-roster .leader-row > .balance {
+  min-inline-size: 0;
+  max-inline-size: 60%;
+  font-size: var(--ui-text-body);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
 /* Native inputs retain their existing 16px platform treatment and 44px targets. */
 
 /* Roast Club popup: a dismissible, nonblocking note. Only the close button takes pointer input. */
