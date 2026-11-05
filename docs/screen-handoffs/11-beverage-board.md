@@ -1,5 +1,15 @@
 # 11 — Beverage Board: Screen handoff
 
+## November 5, 2026 — Balance view and profile preferences
+
+Will approved using the bottom **Beverage** tab to view balances for the
+selected team and season. It shows the signed-in player's balance first and
+then the roster. Team and season are selectable. Totals combine league and
+tournament play. Beverage participation and Roast Club opt-in are under
+[Bio & profile → Team preferences](17-profile.md#november-5-2026--team-participation-preferences).
+
+## Historical screen brief
+
 **Status:** Ready for owner brief. **Owner's requested change:** Not yet supplied.
 **Current screen only:** Beverage Board.
 **Route/view:** `/beverages`
