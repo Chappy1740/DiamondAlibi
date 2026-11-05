@@ -30,7 +30,11 @@ Owner direction: Will authorized full Roast Club development (supersedes the Nov
 - Disposable-DB SQL: Roast Club consent (incl. mutation check) and existing optional-lineups, team-beverage pass.
 - Chromium (local Chrome): new roast-club-browser test passes; connected-scorebook, scorebook-modes, games-flow, tournament-start-time, beverage-controls pass.
 - NOT run: WebKit/Safari, archive-controls (harness ignores local browser path; same on main), real iPhone, real Bluetooth speaker, hosted database.
-- Audio is NOT production-ready until tested on a real iPhone with the real speaker.
+- Real-device audio check, 2026-11-04 (Will; iPhone, iOS 18.7, headphones, inside the Claude app browser, standalone audio-check page, not yet the live app):
+  - PASSED: voice after one tap; sound reached the headphones; a new line replaced the old one; same play spoken once; over-limit line said "out"; clear at volume.
+  - FAILED: phone locked, nothing was heard (expected: iOS pauses web pages). Mitigation in R4: screen wake lock while the announcer is on, plus an on-screen "keep this screen on" note. The mitigation is built but NOT yet phone-tested.
+  - NOT CONFIRMED: Mute stopping the voice immediately (box left unchecked).
+  - NOT TESTED: Safari or a Home Screen app, other speakers, the live app. Audio is NOT production-ready.
 
 ## Gates before any release
 1. Owner approves merge and deploy (explicit).
