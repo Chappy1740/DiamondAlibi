@@ -12,6 +12,7 @@
     "FEEDBACK_NOTIFICATION_FROM": "notifications@mail.eydrenworks.com",
     "FEEDBACK_NOTIFICATION_INBOX_URL": "https://diamondalibi.eydrenworks.com/owner/feedback",
     "FEEDBACK_NOTIFICATIONS_ENABLED": "true",
+    "ROAST_CLUB_ENABLED": "true",
   },
   "triggers": { "crons": ["*/5 * * * *"] },
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
