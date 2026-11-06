@@ -7,6 +7,7 @@ const assert = require("node:assert/strict");
 (async () => {
   let server, browser;
   const errors = [];
+  let storedPhoto = null;
   try {
     const bundle = await esbuild.build({
       stdin: { resolveDir: process.cwd(), loader: "tsx", contents: `
@@ -25,7 +26,10 @@ const assert = require("node:assert/strict");
             {team_id:'long',user_id:accountId,active:true},
             {team_id:'inactive',user_id:accountId,active:false},
           ],
-          player_profiles: [{nickname:'Test Player',user_id:accountId}],
+          player_profiles: [{
+            nickname:'Test Player', play_level:'Class E', fielding_position:'Left Center',
+            ...JSON.parse(sessionStorage.getItem('profile-details') ?? '{}'), user_id:accountId,
+          }],
         };
         window.__profileClient = {
           auth: {getUser: async () => ({data:{user:{id:accountId,user_metadata:{bio:'Synthetic bio'}}},error:null})},
@@ -97,7 +101,7 @@ const assert = require("node:assert/strict");
         }` },
       bundle: true, write: false, platform: "browser", jsx: "automatic",
       plugins: [{ name: "synthetic-home", setup(build) {
-        build.onResolve({ filter: /^(next\/(navigation|headers|link|image)|@\/lib\/supabase\/server|@\/app\/(login\/actions|club\/(actions|beverage-actions|roast-club-actions))|\.\/personal-alibis)$/ }, args => ({ path: args.path, namespace: "synthetic" }));
+        build.onResolve({ filter: /^(next\/(navigation|headers|link|image)|@\/lib\/supabase\/server|@\/app\/(login\/actions|more\/profile\/actions|club\/(actions|beverage-actions|roast-club-actions))|\.\/personal-alibis)$/ }, args => ({ path: args.path, namespace: "synthetic" }));
         build.onLoad({ filter: /.*/, namespace: "synthetic" }, args => ({ loader: "tsx", resolveDir: process.cwd(), contents:
           args.path === "next/navigation" ? "const router={refresh(){window.__refreshes=(window.__refreshes||0)+1}};export const useRouter=()=>router;export const usePathname=()=>location.pathname;export const useSearchParams=()=>new URLSearchParams(location.search);export const redirect=url=>location.assign(url);" :
           args.path === "next/headers" ? "export async function cookies(){return {get(){return {value:'team'}}}}" :
@@ -107,14 +111,30 @@ const assert = require("node:assert/strict");
           args.path === "@/lib/supabase/server" ? "export const supabaseServer=async()=>window.__profileClient" :
           args.path === "@/app/club/beverage-actions" ? "export const beverageAction=async request=>window.__preferenceAction('beverage',request)" :
           args.path === "@/app/club/roast-club-actions" ? "export const roastClubAction=async request=>window.__preferenceAction('roast',request)" :
-          args.path === "@/app/club/actions" ? "export async function clubAction(){return {}}" :
+          args.path === "@/app/club/actions" ? "export async function clubAction(_, form){if(form.get('operation')==='profile'){const values=Object.fromEntries(form);sessionStorage.setItem('profile-details',JSON.stringify(values));return {message:'Saved to your clubhouse.'}}return {}}" :
+          args.path === "@/app/more/profile/actions" ? "export async function changeProfilePhoto(form){if(window.__failProfilePhoto)return {error:'Could not save your photo. Try again.'};const remove=form.get('photo_action')==='remove';const response=await fetch('/more/profile/photo',{method:remove?'DELETE':'POST',body:remove?undefined:form.get('photo')});if(!response.ok)return {error:'Fixture upload failed.'};return {message:remove?'Photo removed.':'Photo saved.'}}" :
           "export async function signout(){}"
         }));
       }}],
     });
     const fonts=[400,700].map(weight=>'@font-face{font-family:Inter;font-style:normal;font-weight:'+weight+';font-display:swap;src:url(data:font/woff2;base64,'+fs.readFileSync('node_modules/@fontsource/inter/files/inter-latin-'+weight+'-normal.woff2').toString('base64')+') format("woff2")}').join('');
     const css = fonts+fs.readFileSync("src/app/globals.css", "utf8");
-    server = http.createServer((req, res) => {
+    server = http.createServer(async (req, res) => {
+      if (req.url.split("?")[0] === "/more/profile/photo") {
+        if (req.method === "POST") {
+          const chunks = [];
+          for await (const chunk of req) chunks.push(chunk);
+          storedPhoto = Buffer.concat(chunks);
+          res.writeHead(204).end();
+        } else if (req.method === "DELETE") {
+          storedPhoto = null;
+          res.writeHead(204).end();
+        } else {
+          res.writeHead(storedPhoto ? 200 : 404, { "content-type": "image/jpeg", "cache-control": "no-store" });
+          res.end(storedPhoto);
+        }
+        return;
+      }
       if (req.url.startsWith("/brand/")) { res.setHeader("content-type", "image/webp"); res.end(fs.readFileSync("public/brand/diamond-alibi-primary.webp")); return; }
       res.setHeader("content-type", req.url === "/bundle.js" ? "text/javascript" : "text/html");
       res.end(req.url === "/bundle.js" ? bundle.outputFiles[0].text : `<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Synthetic Home</title><style>${css}</style></head><body><div id="app"></div><script src="/bundle.js"></script></body></html>`);
@@ -424,6 +444,67 @@ const assert = require("node:assert/strict");
     assert.equal(await page.locator('main').getByRole('link',{name:'Home',exact:true}).getAttribute('href'),'/');
     await page.locator('.profile-menu > summary').click();
     assert.equal(await extrasLink.getAttribute('href'),'/more/clubhouse-extras');
+    await page.setViewportSize({width:390,height:844});
+    await page.goto(base + "/more");
+    await page.getByRole("link", { name: "Profile", exact: true }).click();
+    await page.getByRole("heading", { name: "Bio & profile" }).waitFor();
+    await page.getByText("Class E", { exact: true }).first().waitFor();
+    assert.equal(await page.getByLabel("What’s your favorite fielding position? (optional)").inputValue(), "Left Center");
+    assert.equal(await page.getByLabel("Bio", { exact: true }).inputValue(), "Synthetic bio");
+    const initials = page.getByLabel("Profile initials");
+    assert.equal(await initials.innerText(), "TP");
+    await page.getByLabel("What name do you go by?").fill("River Test");
+    await page.getByLabel("What level of slow-pitch do you play? (optional)").selectOption("Not sure");
+    await page.getByLabel("What’s your favorite fielding position? (optional)").selectOption("No Preference");
+    await page.getByRole("button", { name: "Save profile", exact: true }).click();
+    await page.getByText("Saved to your clubhouse.").waitFor();
+    await page.reload();
+    assert.equal(await page.getByLabel("What name do you go by?").inputValue(), "River Test");
+    assert.equal(await page.getByLabel("What level of slow-pitch do you play? (optional)").inputValue(), "Not sure");
+    await page.getByText("River Test", { exact: true }).waitFor();
+    async function choose(color) {
+      const image = await page.evaluate((value) => {
+        const canvas = document.createElement("canvas");
+        canvas.width = canvas.height = 24;
+        const context = canvas.getContext("2d");
+        context.fillStyle = value;
+        context.fillRect(0, 0, 24, 24);
+        return canvas.toDataURL("image/png").split(",")[1];
+      }, color);
+      await page.getByLabel("Choose a photo (optional)").setInputFiles({
+        name: "synthetic.png", mimeType: "image/png", buffer: Buffer.from(image, "base64"),
+      });
+      await page.getByRole("img", { name: "Profile photo preview" }).waitFor();
+    }
+    await choose("red");
+    assert.equal(storedPhoto, null, "preview stays in the browser until Save");
+    await page.getByRole("button", { name: "Save photo", exact: true }).click();
+    await page.getByRole("img", { name: "Your profile photo" }).waitFor();
+    assert.equal(storedPhoto[0], 0xff);
+    assert.equal(storedPhoto[1], 0xd8);
+    const firstPhoto = storedPhoto;
+    await page.reload();
+    await page.getByRole("img", { name: "Your profile photo" }).waitFor();
+    await page.evaluate(() => { window.__failProfilePhoto = true; });
+    await choose("blue");
+    await page.getByRole("button", { name: "Save photo", exact: true }).click();
+    await page.getByRole("alert").getByText("Could not save your photo. Try again.").waitFor();
+    assert.equal(storedPhoto, firstPhoto);
+    await page.evaluate(() => { window.__failProfilePhoto = false; });
+    await page.getByRole("button", { name: "Save photo", exact: true }).click();
+    await page.getByRole("img", { name: "Your profile photo" }).waitFor();
+    assert(!storedPhoto.equals(firstPhoto));
+    await page.getByRole("button", { name: "Remove photo" }).click();
+    await page.getByText("Photo removed.").waitFor();
+    await page.reload();
+    assert.equal(await initials.innerText(), "RT");
+    assert.equal(storedPhoto, null);
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+    await page.addScriptTag({ path: require.resolve("axe-core") });
+    assert.deepEqual(await page.evaluate(async () => (await axe.run(document, {
+      runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21aa"] },
+    })).violations.map((violation) => violation.id)), []);
+    console.log(`PASS ${engine.name()} Bio & profile: More entry, saved details and initials, local preview, save, reload, failed replacement, retry, and removal.`);
     assert.deepEqual(errors, []);
     console.log(`PASS ${engine.name()} Clubhouse Extras: one profile-menu link, two independent choices, team switching and reload, inactive denial, read-only balances, phone layout and accessibility.`);
     console.log(`PASS ${process.env.BROWSER_ENGINE || "chromium"} Home: viewport fit from 320x568 to 1440x900 without clipping or navigation overlap, including populated/empty/unlinked/no-team/error states; 44px touch targets; complete long selected names at 320–1440px; native keyboard/form selection; personal-only signed stats/BEVs; unchanged sample/Stats/More navigation; automated accessibility; refresh/offline/reconnect behavior. Synthetic data only.`);

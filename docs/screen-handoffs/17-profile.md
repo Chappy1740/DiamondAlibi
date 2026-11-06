@@ -1,5 +1,49 @@
 # 17 — Bio and profile: Screen handoff
 
+## November 6, 2026 — Signup and private player profile
+
+**Tested locally by Codex.** Will approved the signup display name, optional
+level and position, private profile photo, and photo selection after email
+verification. Codex implemented in `codex/player-profile-signup` from
+`028bd942cc54f1f468b37958448a72d12a6a9db9` and reconciled the branch with
+GitHub main `496ef3ae767b77c88657385477e2358330891082` before the first push.
+The reconciliation retains the merged Beverage Board changes and the Roast Club
+and Worker receipts. The owner’s main checkout retains its uncommitted edits.
+
+Reuse the [registration form](20-sign-in.md), account nickname record and Bio
+editor. Signup carries the validated answers through email confirmation and
+seeds the profile once at verified sign-in. The existing Bio text stays in
+Auth metadata. Team creation and invitation redemption can seed legacy
+profiles and preserve established account names. Team roster aliases and
+captain lineup decisions stay separate from profile preferences.
+
+More → Profile opens the existing page. A native photo picker previews a
+normalized square JPEG before saving. One owner-only Storage object per account
+supports replacement and removal, with initials when there is no photo.
+The existing Supabase SDK handles storage and the browser handles preview,
+so the change uses the pinned dependencies. The migration adds nullable
+preferences and a private photo bucket. The release fingerprint stays at the
+last approved migration tree pending hosted review and approval.
+
+Codex verified the Next.js production build, TypeScript, all 183 unit tests,
+33 release-gate tests, password recovery, roster actions, disposable PostgreSQL
+profile/roster and Storage policy tests, and synthetic Chromium and WebKit
+Home/Profile tests with accessibility checks. Storage policies ran against
+disposable tables and the browser used a synthetic upload transport.
+After reconciling main, the production build, 183 unit tests, disposable
+profile and roster checks, and Chromium and WebKit Home/Profile checks passed
+again with the merged Beverage Board coverage.
+
+**AMBER.** Will approved local implementation, verification, commit, and push
+of the feature branch. Draft PR publication, hosted migration, deployment, and
+phone acceptance remain open. Next action is owner approval to open a draft PR.
+Once authorized and published, Claude Code reviews the draft. The hosted
+phone check uses a fresh synthetic account to confirm email, preview an iPhone
+photo, verify Bio and preferences after reload, replace and remove the photo,
+and confirm the initials fallback. Repeat with a legacy account and a second
+account to verify photo isolation. The [release checkpoint](../../RELEASE-READINESS.md#november-6-2026--player-profile-local-candidate)
+and tracker M3-9 record the release boundary.
+
 ## November 5, 2026 — Clubhouse Extras pilot candidate
 
 Will requested the **Clubhouse Extras** preview for the pilot. Its profile-menu

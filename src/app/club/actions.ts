@@ -2,6 +2,7 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { supabaseServer } from "@/lib/supabase/server";
+import { playerDetails, profileArguments } from "@/lib/player-profile";
 export type ClubResult = { error?: string; message?: string; code?: string };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function field(form: FormData, name: string) {
@@ -181,11 +182,20 @@ export async function clubAction(
       response = await supabase.auth.updateUser({ data: { bio } });
       break;
     }
-    case "profile":
-      response = await supabase.rpc("da_save_profile", {
-        p_nickname: nickname,
-      });
+    case "profile": {
+      if (!form.has("play_level") && !form.has("fielding_position")) {
+        response = await supabase.rpc("da_save_profile", { p_nickname: nickname });
+      } else {
+        const details = playerDetails(nickname, form.get("play_level"), form.get("fielding_position"));
+        if (!details) return { error: "Choose only the listed levels and fielding positions." };
+        response = await supabase.rpc("da_save_player_details", {
+          ...profileArguments(details),
+          p_initialize: false,
+        });
+      }
+      if (response.error) return { error: "Could not save your profile. Try again." };
       break;
+    }
     default:
       return { error: "Action unavailable." };
   }

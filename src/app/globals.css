@@ -518,6 +518,14 @@ p {
   font-size: 18px;
   flex-shrink: 0;
 }
+.profile-photo {
+  overflow: hidden;
+}
+.profile-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 .identity-row {
   display: flex;
   gap: 8px;
