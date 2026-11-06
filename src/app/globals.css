@@ -2300,8 +2300,10 @@ body:has(.workspace--home) { padding-bottom: 0; }
   white-space: nowrap;
 }
 @media (max-width: 360px) {
+  /* iPhone Display Zoom reports 320px. Wrap a balance only when a long
+     name needs the room; short names keep one-line balances. */
   .workspace--type-scale .beverage-roster .leader-row > .balance {
-    max-inline-size: 7.5em;
+    flex-shrink: 1;
     white-space: normal;
   }
 }

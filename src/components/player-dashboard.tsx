@@ -51,14 +51,14 @@ const tabs = [
   { path: "beverages", label: "Beverage", icon: CupSoda },
   { path: "more", label: "More", icon: Ellipsis },
 ];
+// Owner direction (2026-11-06): nothing owed or credited, including no
+// recorded Beverage activity yet, shows a plain 0.
 const balance = (value: number | null) =>
-  value === null
-    ? "No recorded balance"
-    : value < 0
-      ? `${Math.abs(value)} in credit`
-      : value > 0
-        ? `${value} owed`
-        : "Settled · 0";
+  value !== null && value < 0
+    ? `${Math.abs(value)} in credit`
+    : value !== null && value > 0
+      ? `${value} owed`
+      : "0";
 export function PlayerDashboard(p: DashboardProps) {
   const { loaded } = p;
   const fitHome = p.route === "" && !p.sample && !p.review;
