@@ -26,6 +26,7 @@ test("sample and review navigation remain synthetic while account entry clears s
   assert.equal(new URLSearchParams(navigationContext(sample,"","/tournaments/cup")).get("player"),"sample-player");
   assert.equal(navigationContext(sample,"","/club"),"");
   assert.equal(navigationContext(sample,"","/more/profile"),"");
+  assert.equal(navigationContext(sample,"","/more/clubhouse-extras"),"");
   const protectedContext=navigationContext(sample,"team=authorized&season=real-season","/club/score");
   assert.equal(protectedContext,"team=authorized&season=real-season");
   const tabs=appNavigation("/review/history","route=beverages",sample);

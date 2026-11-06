@@ -1,5 +1,17 @@
 # Release readiness and recovery
 
+## November 6, 2026 — Roast Club owner acceptance
+
+**AMBER.** Owner accepted Roast Club for the pilot on 2026-11-06 at 12:44 CT, after the owner-run smoke test and announcer test (owner-reported; Claude did not independently verify the live Worker version or the ROAST_CLUB_ENABLED value). Spoken line stays roast-only. Welcome message drafted, not sent. Open: Cloudflare active-version check, Supabase backup/PITR check, real screen-reader pass, other Bluetooth speakers. See [Roast Club status](docs/screen-handoffs/31-roast-club-status.md).
+
+## November 5, 2026 — Clubhouse Extras pilot release
+
+**AMBER.** Will approved committing, pushing, merging after validation, and
+deploying the Clubhouse Extras profile menu link and opt-in page to the pilot.
+[PR #78](https://github.com/Chappy1740/DiamondAlibi/pull/78) carries the checks and
+release receipt. The [profile handoff](docs/screen-handoffs/17-profile.md)
+records the local checks and the hosted phone acceptance that remains open.
+
 ## November 5, 2026 — Private owner replies release candidate
 
 **AMBER.** Owner approved applying and verifying the production migration and releasing [#65](https://github.com/Chappy1740/DiamondAlibi/pull/65). Source `20261105134519_review_feedback_owner_reply.sql` is recorded in production as `20261105230752` / `review_feedback_owner_reply`. Readback confirmed both nullable columns, the validated reply constraint, RLS, and a service-only security-invoker function with an empty search path. The service-role call for an absent ID returned `not_found`.

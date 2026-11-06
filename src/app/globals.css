@@ -1784,7 +1784,51 @@ blockquote {
 .profile-menu nav { position: absolute; right: 0; top: 52px; z-index: 40; width: min(250px, calc(100vw - 32px)); display: grid; padding: 8px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); box-shadow: 0 12px 32px #0008; }
 .profile-menu nav a, .profile-menu nav button { display: flex; align-items: center; width: 100%; min-height: 44px; padding: 10px 12px; border: 0; background: transparent; text-align: left; color: var(--white); font-size: 14px; border-radius: 6px; }
 .profile-menu nav a:hover, .profile-menu nav button:hover { background: var(--surface-raised); }
+.profile-menu nav .profile-menu-extras { display: grid; gap: 2px; }
+.profile-menu-extras small { color: var(--muted); font-size: var(--ui-text-small); }
 .profile-menu nav form { margin: 0; }
+.clubhouse-extras { max-width: 640px; }
+.clubhouse-extras .connected-header { margin-bottom: 12px; }
+.connected-wrap.clubhouse-extras .page-heading { margin: 0 0 12px; }
+.clubhouse-extras .page-heading h1 { margin: 0; }
+.clubhouse-extras .page-heading p { margin: 4px 0 0; }
+.clubhouse-extras .detail-card > h2 { margin: 0 0 6px; }
+.clubhouse-extras .detail-card > p { margin: 6px 0; font-size: var(--ui-text-body); }
+.clubhouse-extras .clubhouse-extras-team {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px;
+  margin: 8px 0;
+}
+.clubhouse-extras-team label { min-width: 0; margin: 0; }
+.clubhouse-extras-choices > * {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 10px;
+  padding-block: 10px;
+  border-top: 1px solid var(--border);
+}
+.clubhouse-extras-choices > :last-child { padding-bottom: 0; }
+.clubhouse-extras-choices > * > p {
+  grid-column: 1 / -1;
+  margin: 0;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.clubhouse-extras-choices > * > p:first-child {
+  grid-column: 1;
+  font-size: var(--ui-text-body);
+}
+.clubhouse-extras .detail-card .button {
+  margin: 0;
+  min-height: 44px;
+  padding: 8px 12px;
+  font-size: var(--ui-text-body);
+}
+.clubhouse-extras-choices > * > button { grid-column: 1 / -1; justify-self: start; }
+.clubhouse-extras-choices > * > button:first-of-type { grid-area: 1 / 2; justify-self: end; }
 .competition-entry { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
 .competition-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 12px; margin: 16px 0; }
 .competition-link { display: grid; gap: 8px; padding: 18px; color: var(--white); }
@@ -2231,18 +2275,37 @@ body:has(.workspace--home) { padding-bottom: 0; }
 .workspace--type-scale .leaderboard-counts strong { font-size: var(--ui-text-body); }
 .workspace--type-scale :is(.micro, .eyebrow, .home-stat dt, .dashboard-select-label, .game-entry-status, .leaderboard-player > .micro, .leaderboard-badge, .leaderboard-beverage small) { font-size: var(--ui-text-small); }
 .workspace--type-scale .dashboard-context-action > button { font-size: var(--ui-text-body); }
+/* Team balances (#77): compact rows so 10-12 players fit on an iPhone.
+   Names stay bold and larger than balances, wrap only between words, and
+   hyphenate a single word only when it cannot fit. Balances never wrap. */
+.beverage-roster .leader-row {
+  min-block-size: 44px;
+  padding: 12px 0;
+  gap: 12px;
+}
 .beverage-roster .leader-row > strong {
+  flex: 1 1 auto;
   min-inline-size: 0;
-  font-size: var(--ui-text-large);
-  line-height: 1.25;
-  overflow-wrap: anywhere;
+  font-size: 1.0625rem;
+  line-height: 1.3;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 .workspace--type-scale .beverage-roster .leader-row > .balance {
-  min-inline-size: 0;
-  max-inline-size: 60%;
+  flex: 0 0 auto;
+  margin-inline-start: auto;
   font-size: var(--ui-text-body);
-  line-height: 1.4;
-  overflow-wrap: anywhere;
+  line-height: 1.3;
+  text-align: end;
+  white-space: nowrap;
+}
+@media (max-width: 360px) {
+  /* iPhone Display Zoom reports 320px. Wrap a balance only when a long
+     name needs the room; short names keep one-line balances. */
+  .workspace--type-scale .beverage-roster .leader-row > .balance {
+    flex-shrink: 1;
+    white-space: normal;
+  }
 }
 /* Native inputs retain their existing 16px platform treatment and 44px targets. */
 

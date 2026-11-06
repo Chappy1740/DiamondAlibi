@@ -12,6 +12,7 @@ const assert = require("node:assert/strict");
       stdin: { resolveDir: process.cwd(), loader: "tsx", contents: `
         import React from 'react';import{createRoot}from'react-dom/client';import{PlayerDashboard}from'./src/components/player-dashboard';import{BottomNavigationView}from'./src/components/bottom-navigation';import{emptyTotals}from'./src/lib/scoring';
         import ProfilePage from './src/app/more/profile/page';
+        import ClubhouseExtrasPage from './src/app/more/clubhouse-extras/page';
         const long='M3-5 Synthetic Test with an exceptionally long team name';
         const data={archived:false,roster:[{id:'player',user_id:'synthetic-user',display_name:'Test Player',is_guest:false},{id:'teammate',user_id:'other-user',display_name:'Other Synthetic Player',is_guest:false}],snapshot:{teamId:'team',seasonId:'season',scope:'Overall',games:[{game:{id:'other-game',kind:'League',opponent:'Other synthetic opponent',completed:false,next_batter_position:0},lineup:['teammate'],playedOn:'2026-10-13'}],totals:{player:{...emptyTotals(),PA:4,AB:4,H:1,HR:1,RBI:3},teammate:{...emptyTotals(),PA:20,AB:20,H:9,HR:9,RBI:9}},board:{player:-2},tournaments:[],leagues:[]}};
         const p={route:location.pathname.slice(1),sample:location.search.includes('sample=1'),userId:'synthetic-user',teams:[{id:'team',name:'M3-5 Synthetic Test'},{id:'long',name:long}],seasons:[{id:'season',name:'M3-5 Synthetic Season',archived:false},{id:'history',name:'Synthetic Season with an exceptionally long history name',archived:true}],teamId:'team',seasonId:'season',scope:'Overall',loaded:data};
@@ -62,6 +63,21 @@ const assert = require("node:assert/strict");
           data.snapshot.board.player=7;
           data.roster[1].display_name='Other team teammate';
         }
+        if(fixtureQuery.has('dense-roster')){
+          const names=['Alexandria Montgomery-Santiago','Bo','Christopher Wellington','Dee Dee','Maximiliana Featherstonehaugh','Jo','Sam Lee','Tre Williams','Kristopherson','Abby Daniels','Pat','Jordan Riley-Evans','Wes','Lou Gonzalez'];
+          names.forEach((name,i)=>{
+            const id='dense-'+i;
+            data.roster.push({id,user_id:'dense-user-'+i,display_name:name,is_guest:false});
+            if(i%4!==3)data.snapshot.board[id]=[3,-2,0][i%3]*(i+1);
+          });
+        }
+        if(fixtureQuery.has('short-roster')){
+          ['Ace','Bree','Cam','Dani','Eli','Fern','Gus','Hal','Ivy','Jax','Kit','Lux','Moe','Nia'].forEach((name,i)=>{
+            const id='short-'+i;
+            data.roster.push({id,user_id:'short-user-'+i,display_name:name,is_guest:false});
+            if(i<3)data.snapshot.board[id]=[0,1,0][i];
+          });
+        }
         if(fixtureQuery.has('tied-stats')){Object.assign(data.snapshot.totals.player,{PA:20,AB:20,H:12});data.snapshot.totals.teammate.H=12;}
         if(fixtureQuery.has('wide-stats')){data.roster[1].display_name='Alexandria Montgomery-Santiago';Object.assign(data.snapshot.totals.teammate,{PA:25000,AB:21000,H:12345,HR:1234,RBI:12345,board:-12345});data.snapshot.totals.player.board=-23456;}
         if(fixtureQuery.has('owed'))data.snapshot.board.player=4;
@@ -72,8 +88,9 @@ const assert = require("node:assert/strict");
         if(fixtureQuery.has('no-team')){p.loaded=null;p.teams=[];p.seasons=[];p.teamId='';p.seasonId='';}
         if(fixtureQuery.has('load-error')){p.loaded=null;p.error='Synthetic records could not be loaded.';}
         const root=createRoot(document.getElementById('app'));
-        if (location.pathname==='/more/profile') {
-          ProfilePage({searchParams:Promise.resolve(Object.fromEntries(fixtureQuery))}).then(profile=>root.render(<>{profile}<BottomNavigationView pathname={location.pathname} context={fixtureQuery.toString()}/></>));
+        if (['/more/profile','/more/clubhouse-extras'].includes(location.pathname)) {
+          const AccountPage=location.pathname==='/more/profile'?ProfilePage:ClubhouseExtrasPage;
+          AccountPage({searchParams:Promise.resolve(Object.fromEntries(fixtureQuery))}).then(account=>root.render(<>{account}<BottomNavigationView pathname={location.pathname} context={fixtureQuery.toString()}/></>));
         } else {
           const context=new URLSearchParams({team:p.teamId,season:p.seasonId,scope:p.scope,...(p.sample?{sample:'1',player:p.userId}:{})}).toString();
           root.render(<><PlayerDashboard {...p}/><BottomNavigationView pathname={location.pathname} context={context}/></>);
@@ -308,8 +325,46 @@ const assert = require("node:assert/strict");
     assert.equal(await page.getByLabel('Statistics view',{exact:true}).count(),0);
     assert.equal(await page.getByRole('button',{name:/^Opt out$|^Join Roast Club$/}).count(),0);
     assert.deepEqual(await page.evaluate(()=>window.__preferenceReads),[]);
+    // #77: compact Team balances. 10-12+ players fit below the heading on a 390x844 iPhone;
+    // balances stay on one line; names wrap only between words or at their own hyphen.
+    for(const [width,height,minimum,fixture='dense-roster',rows=16] of [[390,844,10],[375,667,8],[320,568,null],[320,693,10,'short-roster',16]]){
+      await page.setViewportSize({width,height});
+      await page.goto(base+'/beverages?'+fixture+'=1');
+      const dense=page.getByRole('region',{name:'Team balances',exact:true});
+      await page.locator('.beverage-roster .leader-row').nth(rows-1).waitFor({state:'attached'});
+      await page.evaluate(()=>document.fonts.ready);
+      await dense.locator('h2').evaluate(el=>el.scrollIntoView({block:'start'}));
+      const roster=await page.evaluate(()=>{
+        const navTop=document.querySelector('.app-bottom-nav')?.getBoundingClientRect().top ?? innerHeight;
+        const lines=el=>Math.round(el.getBoundingClientRect().height/parseFloat(getComputedStyle(el).lineHeight));
+        const splitWord=el=>{const text=el.firstChild;if(!text)return null;const range=document.createRange();let at=0;for(const part of text.textContent.split(/[\s-]/)){range.setStart(text,at);range.setEnd(text,at+part.length);if(range.getClientRects().length>1)return part;at+=part.length+1;}return null;};
+        const rows=[...document.querySelectorAll('.beverage-roster .leader-row')].map(row=>{const box=row.getBoundingClientRect();const name=row.querySelector('strong');const balance=row.querySelector('.balance');return {name:name.textContent,balance:balance.textContent,shortName:name.textContent.length<=8,fits:box.top>=0&&box.bottom<=navTop,nameSize:parseFloat(getComputedStyle(name).fontSize),balanceSize:parseFloat(getComputedStyle(balance).fontSize),balanceLines:lines(balance),split:splitWord(name)||splitWord(balance)};});
+        return {rows,overflow:document.documentElement.scrollWidth>innerWidth};
+      });
+      assert.equal(roster.rows.length,rows);
+      assert.equal(roster.overflow,false,`${width}px Team balances must not scroll sideways`);
+      assert.deepEqual(roster.rows.map(row=>row.split).filter(Boolean),[],`${width}px names and balances break only between words`);
+      assert.ok(roster.rows.every(row=>row.nameSize>row.balanceSize&&row.balanceSize>=14),`${width}px names stay emphasized over legible balances`);
+      if(minimum!==null){
+        assert.ok(roster.rows.filter(row=>row.fits).length>=minimum,`${width}x${height} shows at least ${minimum} players`);
+        if(fixture==='dense-roster')assert.ok(roster.rows.every(row=>row.balanceLines===1),`${width}px balances stay on one line`);
+      }
+      // Owner direction 2026-11-06: nothing owed or credited, including no recorded activity, shows a plain 0.
+      assert.ok(roster.rows.every(row=>/^(0|\d+ owed|\d+ in credit)$/.test(row.balance)),`${width}px balances are 0, owed or in credit`);
+      if(fixture==='dense-roster')assert.equal(roster.rows.find(row=>row.name==='Dee Dee').balance,'0','No recorded activity shows 0');
+      // Display Zoom (320px): a short name never pushes its balance onto two lines.
+      assert.deepEqual(roster.rows.filter(row=>row.shortName&&row.balanceLines>1).map(row=>row.name),[],`${width}px short names keep one-line balances`);
+    }
+    await page.setViewportSize({width:390,height:844});
+    await page.goto(base+'/beverages?team=long&season=history');
+    await board.getByText('Other team teammate',{exact:true}).waitFor();
     await page.locator('.profile-menu > summary').click();
-    await page.getByRole('link',{name:'Bio & profile',exact:true}).click();
+    const extrasLink=page.getByRole('link',{name:'Clubhouse Extras Cold ones. Hot takes.',exact:true});
+    assert.equal(await extrasLink.count(),1);
+    await page.addScriptTag({path:require.resolve('axe-core')});
+    assert.deepEqual(await page.evaluate(async()=> (await axe.run('.profile-menu',{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations.map(v=>v.id)),[]);
+    await extrasLink.click();
+    await page.getByRole('heading',{name:'Clubhouse Extras',exact:true}).waitFor();
     const prefs=page.getByRole('region',{name:'Team preferences',exact:true});
     const optOut=prefs.getByRole('button',{name:'Opt out',exact:true});
     const participate=prefs.getByRole('button',{name:'Participate',exact:true});
@@ -317,7 +372,13 @@ const assert = require("node:assert/strict");
     const leave=prefs.getByRole('button',{name:'Leave Roast Club',exact:true});
     const teamSelect=prefs.getByRole('combobox',{name:'Team',exact:true});
     await optOut.waitFor();
-    assert.equal(await teamSelect.inputValue(),'long','profile opens with the viewed team, ahead of the saved team');
+    await join.waitFor();
+    await page.evaluate(()=>document.fonts.ready);
+    const mobileNav=await page.locator('.app-bottom-nav').boundingBox();
+    const lastChoice=await join.boundingBox();
+    assert(mobileNav&&lastChoice&&lastChoice.y+lastChoice.height<=mobileNav.y,
+      'Both choices fit above the menu on a 390px phone without scrolling');
+    assert.equal(await teamSelect.inputValue(),'long','Clubhouse Extras opens with the viewed team, ahead of the saved team');
     assert.equal(new URL(page.url()).searchParams.get('season'),'history');
     await optOut.click();
     await participate.waitFor();
@@ -326,7 +387,7 @@ const assert = require("node:assert/strict");
     async function switchTeam(teamId) {
       await teamSelect.selectOption(teamId);
       await prefs.getByRole('button',{name:'Switch team',exact:true}).click();
-      await page.waitForURL(url=>url.pathname==='/more/profile'&&url.searchParams.get('team')===teamId);
+      await page.waitForURL(url=>url.pathname==='/more/clubhouse-extras'&&url.searchParams.get('team')===teamId);
     }
     await switchTeam('team');
     await optOut.waitFor();
@@ -345,16 +406,26 @@ const assert = require("node:assert/strict");
     }
     await page.addScriptTag({path:require.resolve('axe-core')});
     assert.deepEqual(await page.evaluate(async()=> (await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations.map(v=>v.id)),[]);
-    await page.goto(base+'/more/profile?team=inactive');
+    await page.goto(base+'/more/clubhouse-extras?team=inactive');
     await prefs.getByRole('alert').getByText('That team is unavailable.',{exact:false}).waitFor();
     assert.deepEqual(await teamSelect.locator('option').evaluateAll(options=>options.map(option=>option.value)),['','team','long']);
     assert.equal(await join.count()+await optOut.count(),0);
     assert.deepEqual(await page.evaluate(()=>window.__preferenceReads),[]);
-    await page.goto(base+'/more/profile');
+    await page.goto(base+'/more/clubhouse-extras');
     await optOut.waitFor();
-    assert.equal(await teamSelect.inputValue(),'team','direct profile uses the saved active team');
+    assert.equal(await teamSelect.inputValue(),'team','direct Clubhouse Extras uses the saved active team');
+    await page.locator('.profile-menu > summary').click();
+    await page.getByRole('link',{name:'Bio & profile',exact:true}).click();
+    await page.getByRole('heading',{name:'Bio & profile',exact:true}).waitFor();
+    assert.equal(await prefs.count(),0);
+    assert.deepEqual(await page.evaluate(()=>window.__preferenceReads),[]);
+    await page.goto(base+'/more/profile?team=inactive&season=history');
+    await page.getByRole('heading',{name:'Bio & profile',exact:true}).waitFor();
+    assert.equal(await page.locator('main').getByRole('link',{name:'Home',exact:true}).getAttribute('href'),'/');
+    await page.locator('.profile-menu > summary').click();
+    assert.equal(await extrasLink.getAttribute('href'),'/more/clubhouse-extras');
     assert.deepEqual(errors, []);
-    console.log(`PASS ${engine.name()} Team preferences: scoped profile entry, two independent choices, team switching and reload, inactive denial, read-only balances, phone layout and accessibility.`);
+    console.log(`PASS ${engine.name()} Clubhouse Extras: one profile-menu link, two independent choices, team switching and reload, inactive denial, read-only balances, phone layout and accessibility.`);
     console.log(`PASS ${process.env.BROWSER_ENGINE || "chromium"} Home: viewport fit from 320x568 to 1440x900 without clipping or navigation overlap, including populated/empty/unlinked/no-team/error states; 44px touch targets; complete long selected names at 320–1440px; native keyboard/form selection; personal-only signed stats/BEVs; unchanged sample/Stats/More navigation; automated accessibility; refresh/offline/reconnect behavior. Synthetic data only.`);
   } finally { if (browser) await browser.close(); if (server) await new Promise(resolve => server.close(resolve)); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

@@ -1,5 +1,78 @@
 # 11 — Beverage Board: Screen handoff
 
+## November 6, 2026 — Display Zoom follow-up (#77)
+
+**Release receipt for PR #81 (Claude, verified):** PR checks `validate` and
+Workers Builds passed on `f673b40`; merged as
+`3bd9b9d5bf726108932705590eca88aa39d00eca` (12:24 CT); main validation run
+42269573338 passed; Cloudflare deployment 523cf9cc put Worker
+`567593f6-6195-421d-b9cf-c4411016b207` at 100% ("Validated main 3bd9b9d").
+Rollback target: `1f396086`.
+
+**Owner phone check (12:35 CT):** live on Will's iPhone, but every
+"No recorded balance" wrapped to two lines and about 8 players fit. Row
+heights (47 and 61 px) match the 320 px layout, so the phone uses iPhone
+Display Zoom. PR #81's 360 px rule capped balances at 7.5em even beside
+short names.
+
+**Owner direction (12:39 CT):** "make it 0 so there doesn't have any words.
+Zero is the default no owed or credited."
+
+**Change on `claude/beverage-board-zoom`:** the shared Beverage balance label
+shows a plain `0` when nothing is owed or credited, including no recorded
+activity (was "No recorded balance" or "Settled · 0"). It appears in Team
+balances, Your balance and the Home "Beverage Board" line. The Home BEVs tile
+keeps its own `—` for a missing balance. At 360 px and narrower, a balance
+shrinks and wraps only when a long name needs the room.
+
+**Evidence (Claude, local, Chromium):** synthetic short-name roster at
+320×693: 12 players visible below the heading, no wrapped names or
+balances. TypeScript passed. Long-name roster unchanged at 390×844 (14) and 375×667 (10).
+`tests/home-layout-browser.cjs` adds a `short-roster` fixture, a 320×693
+check and the `0` wording check; it passes on this change, and the 320×693
+check fails on the PR #81 CSS.
+
+**Approval:** Will approved push, PR and merge of this follow-up PR only
+(2026-11-06 12:42 CT, "Approve and merge"). Merge runs the existing
+validation and deploy gate. No database, auth, access or provider change.
+
+**Rung:** Implemented and tested locally. Merge only after PR checks pass.
+Owner acceptance on Will's iPhone is open.
+
+## November 6, 2026 — Team balances density (#77)
+
+**Owner direction:** Will told Claude "Fix 77" (06:19 CT). Role swap for this
+task: Claude implements on `claude/beverage-board-density`; Codex or Will
+reviews. Targets from [#77](https://github.com/Chappy1740/DiamondAlibi/issues/77):
+10–12 players visible on iPhone (8–10 minimum), readable long names.
+
+**Change (CSS only, Team balances list only):** names 22 px → 17 px bold;
+balances stay 14 px and never wrap; rows 12 px tall padding with a 44 px
+minimum; names align with the card heading; names wrap only between words
+(hyphenate if one word cannot fit). At 360 px and narrower, a long balance
+may wrap between words. Other leaderboards are unchanged.
+
+**Evidence (Claude, local sandbox, synthetic 16-player roster, Chromium only):**
+players fully visible below the Team balances heading went 9 → 14 at
+390×844, 6 → 10 at 375×667, 5 → 7 at 320×568. Mid-word splits ("3 owe d",
+"No recorded balance" on two lines) are gone. `tests/home-layout-browser.cjs`
+gained a `dense-roster` fixture and checks; it passes on the change and fails
+on the old CSS. WebKit was not available locally; CI runs this test in
+Chromium and WebKit. Not tested on a real iPhone.
+
+**Approval:** Will approved push, PR and merge of this change only
+(2026-11-06 12:11 CT, "Approve and merge"). Merge to main runs the existing
+exact-source validation and deploy gate. No database, auth, access or
+provider change is in scope.
+
+**Rung:** Implemented and tested locally. Merge only after PR checks pass.
+Owner acceptance on the pilot iPhone is open.
+
+## November 5, 2026 — Clubhouse Extras pilot candidate
+
+The [profile menu](17-profile.md#november-5-2026--clubhouse-extras-pilot-candidate)
+opens the separate participation page. The Beverage tab shows balances.
+
 ## November 5, 2026 — Roster typography
 
 Will's phone screenshot showed small player names and oversized balance text.
