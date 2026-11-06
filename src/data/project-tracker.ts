@@ -2,14 +2,15 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 88,
-  updatedAt: "2026-11-05",
+  revision: 89,
+  updatedAt: "2026-11-06",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
   release: {
-    commit: "c44bc38",
-    label: "Scorer opt-in list deployed; private replies migration verified",
+    commit: "622b2ce",
+    label: "Roast Club owner-accepted; Beverage Board fit deployed; live version verified",
     status:
+      "November 6 live readback (AMBER). Claude read Cloudflare on 2026-11-06: main 622b2ce (#75) passed validate and Workers build; active version e67ae075-4e41-4e75-8156-139385b68411 at 100% (deployment 1f263781, 13:37 CT, release gate). ROAST_CLUB_ENABLED reads true on that version. Cloudflare active-version check closed. Owner reported he believes the #78 and #65 phone checks are complete; explicit confirmation pending. Open: Supabase backup/PITR check, real screen-reader pass, other Bluetooth speakers. " +
       "November 6 checkpoint (AMBER). Owner accepted Roast Club for the pilot on 2026-11-06 at 12:44 CT, after the owner-run smoke test and announcer test (owner-reported; Claude did not independently verify the live Worker version or the ROAST_CLUB_ENABLED value). Spoken line stays roast-only. Welcome message drafted, not sent. Open: Cloudflare active-version check, Supabase backup/PITR check, real screen-reader pass, other Bluetooth speakers. " +
       "November 5 checkpoint (AMBER). PR #74 deployed from c44bc38 after exact-main CI passed. Cloudflare reported Worker cf0d2663-536c-4972-9ca3-4f4abd6b0e5f. Current traffic percentage remains unverified. Owner authorized #65's private-replies release and live migration. Source 20261105134519 is recorded as hosted migration 20261105230752; columns, validated constraint, RLS, service-only function and absent-record behavior verified. Exact candidate, main CI and Worker evidence are recorded in #65. Owner phone acceptance remains open. " +
       "Previous release checkpoints follow. " +
