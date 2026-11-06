@@ -1,5 +1,24 @@
 # Roast Club — build status (R1–R4)
 
+## November 5, 2026, 6:46 PM CT — Owner smoke test and acceptance
+
+**Owner-accepted** by Will on 2026-11-05 at 6:46 PM CT, for the scope tested below. Source: main `95a8c49` (last verified deployment record above; no Worker version ID was read for this test).
+
+Test: Will's iPhone, live app at the diamond-alibi-preview Worker, test game "The Roast test" (marked League).
+
+| Check | Result |
+| --- | --- |
+| Join Roast Club, reload | Pass: still in |
+| Opted-in player scores a 2B | Pass: roast popup shown and spoken in-app; stats unchanged (PA 1, H 1, RBI 2, R 2) |
+| Opted-out player scores a 1B | Pass: no roast; only "This is the play that was recorded" |
+| Leave Roast Club, then score a DP | Pass: no roast |
+
+The feature flag is on by behavior only. `ROAST_CLUB_ENABLED` has no Cloudflare readback; the Join control appearing and roasts firing show it is on in production.
+
+Not covered by this acceptance: in-app audio on an external Bluetooth speaker (earlier audio checks were headphones on the standalone audio-check page), a screen-reader pass, and independent code review. Before the first pitch, connect the speaker and tap "Turn sound on and test" once.
+
+Open: remove or keep the "Roast test" game (marked League, in the live database).
+
 ## November 5, 2026 — Current release and owner audio evidence
 
 **AMBER.** [#61](https://github.com/Chappy1740/DiamondAlibi/pull/61) merged as `0a1a48cfa5c4e187fb048a9b6c2b65d6768b85dd` after the owner lifted the hold at 09:23 CT. [Main validation](https://github.com/Chappy1740/DiamondAlibi/actions/runs/42054604449) passed and [production build 8096563e](https://github.com/Chappy1740/DiamondAlibi/runs/127343146384) reported Worker `2f4abbad-b231-4252-a1a2-5434d2366c11`. The later verified source `2b0acbf295d0d0fc217b865b56d54fb298647cb6` (#73) passed [main validation](https://github.com/Chappy1740/DiamondAlibi/actions/runs/42101559479) and [production build 212c3d22](https://github.com/Chappy1740/DiamondAlibi/runs/127508913554) reported Worker `544bf300-274e-44a5-8078-9ee62eb63602`. Active traffic percentage and the live feature flag have no independent readback.
