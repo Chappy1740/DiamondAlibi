@@ -6,9 +6,11 @@
 
 Rungs: Implemented, Tested (CI plus owner smoke test), Merged, Deployed (owner-observed live; the active Worker version was not checked by Claude), **Owner-accepted: YES, owner said "I accept" at 12:44 CT on 2026-11-06** for the pilot.
 
+External Bluetooth speaker test: owner reported at 12:46 CT on 2026-11-06 that it worked (owner-reported; speaker model not recorded).
+
 Owner decisions: spoken line stays **roast-only** (no result or runs), decided 2026-11-05 12:00 CT. `ROAST_CLUB_ENABLED` = `true` reported by the owner 2026-11-05 12:51 CT (not verified by Claude). The welcome message is drafted and **not sent**; the owner decides when.
 
-Still open: Cloudflare active-version check; Supabase backup/PITR check; real screen-reader pass; other Bluetooth speakers.
+Still open: Cloudflare active-version check; Supabase backup/PITR check; real screen-reader pass.
 
 ## November 5, 2026 — Current release and owner audio evidence
 
