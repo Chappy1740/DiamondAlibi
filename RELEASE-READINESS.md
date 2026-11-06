@@ -1,5 +1,9 @@
 # Release readiness and recovery
 
+## November 6, 2026 — Roast Club owner acceptance
+
+**AMBER.** Owner accepted Roast Club for the pilot on 2026-11-06 at 12:44 CT, after the owner-run smoke test and announcer test (owner-reported; Claude did not independently verify the live Worker version or the ROAST_CLUB_ENABLED value). Spoken line stays roast-only. Welcome message drafted, not sent. Open: Cloudflare active-version check, Supabase backup/PITR check, real screen-reader pass, other Bluetooth speakers. See [Roast Club status](docs/screen-handoffs/31-roast-club-status.md).
+
 ## November 5, 2026 — Clubhouse Extras pilot release
 
 **AMBER.** Will approved committing, pushing, merging after validation, and
