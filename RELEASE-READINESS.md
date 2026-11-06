@@ -1,5 +1,17 @@
 # Release readiness and recovery
 
+## November 6, 2026 — Live version readback (Claude, read-only)
+
+**AMBER.** Owner approved this records update. Claude Code read Cloudflare and GitHub on 2026-11-06; nothing was deployed or changed.
+
+- GitHub main `622b2cefcfe2d9c2ae91e791e676f480aa055f89` (Merge PR #75). `validate` and `Workers Builds: diamond-alibi-preview` passed on that commit.
+- Cloudflare Worker `diamond-alibi-preview` active deployment `1f263781-79f2-48f8-924c-b7435193bd5a`, created 2026-11-06 19:37 UTC (13:37 CT) by the release gate with message "Validated main 622b2ce…". Version `e67ae075-4e41-4e75-8156-139385b68411` at **100%** traffic.
+- That version's `ROAST_CLUB_ENABLED` plain-text binding reads `true`.
+- This closes the "Cloudflare active-version check" and the unverified `ROAST_CLUB_ENABLED` value listed in the Roast Club acceptance entry below. #78's version `1f396086-9c41-4a0f-aff5-0eb5b56d681d` is superseded; its code is in 622b2ce.
+- Phone checks for #78 Clubhouse Extras and #65 private replies: owner reported on 2026-11-06 that he believes they are complete. Not recorded as Owner-accepted until the owner confirms each.
+
+Still open: Supabase backup/PITR check, real screen-reader pass, other Bluetooth speakers.
+
 ## November 6, 2026 — Roast Club owner acceptance
 
 **AMBER.** Owner accepted Roast Club for the pilot on 2026-11-06 at 12:44 CT, after the owner-run smoke test and announcer test (owner-reported; Claude did not independently verify the live Worker version or the ROAST_CLUB_ENABLED value). Spoken line stays roast-only. Welcome message drafted, not sent. Open: Cloudflare active-version check, Supabase backup/PITR check, real screen-reader pass, other Bluetooth speakers. See [Roast Club status](docs/screen-handoffs/31-roast-club-status.md).
