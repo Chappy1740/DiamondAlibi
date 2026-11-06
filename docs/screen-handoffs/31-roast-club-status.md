@@ -1,5 +1,15 @@
 # Roast Club — build status (R1–R4)
 
+## November 6, 2026 — Owner smoke test and announcer evidence (owner-reported)
+
+**Owner-reported, not independently verified by Claude.** At 12:29 CT the owner ran More → Clubhouse tools → Announcer setup → Test announcer sound on the live app (#73, `2b0acbf`): test line heard; readout "Voices: 70. Last speech event: finished." At 12:32 CT the owner reported the full smoke test (`32-roast-club-smoke-test.md`) ran and "it works". Details of each step were not recorded; the owner should note any step that differed.
+
+Rungs: Implemented, Tested (CI plus owner smoke test), Merged, Deployed (owner-observed live; the active Worker version was not checked by Claude), **Owner-accepted: pending the owner's explicit acceptance** (not claimed here).
+
+Owner decisions: spoken line stays **roast-only** (no result or runs), decided 2026-11-05 12:00 CT. `ROAST_CLUB_ENABLED` = `true` reported by the owner 2026-11-05 12:51 CT (not verified by Claude). The welcome message is drafted and **not sent**; the owner decides when.
+
+Still open: Cloudflare active-version check; Supabase backup/PITR check; real screen-reader pass; other Bluetooth speakers.
+
 ## November 5, 2026 — Current release and owner audio evidence
 
 **AMBER.** [#61](https://github.com/Chappy1740/DiamondAlibi/pull/61) merged as `0a1a48cfa5c4e187fb048a9b6c2b65d6768b85dd` after the owner lifted the hold at 09:23 CT. [Main validation](https://github.com/Chappy1740/DiamondAlibi/actions/runs/42054604449) passed and [production build 8096563e](https://github.com/Chappy1740/DiamondAlibi/runs/127343146384) reported Worker `2f4abbad-b231-4252-a1a2-5434d2366c11`. The later verified source `2b0acbf295d0d0fc217b865b56d54fb298647cb6` (#73) passed [main validation](https://github.com/Chappy1740/DiamondAlibi/actions/runs/42101559479) and [production build 212c3d22](https://github.com/Chappy1740/DiamondAlibi/runs/127508913554) reported Worker `544bf300-274e-44a5-8078-9ee62eb63602`. Active traffic percentage and the live feature flag have no independent readback.
