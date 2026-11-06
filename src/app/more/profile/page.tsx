@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
 import { BrandLink } from "@/components/brand-link";
 import { ProfileMenu } from "@/components/profile-menu";
 import { ClubForm } from "@/components/club-form";
 import { navigationContext } from "@/lib/app-navigation";
+import { loadActiveTeams, selectActiveTeam } from "@/lib/team-selection";
 
 export const dynamic = "force-dynamic";
 export default async function Page({
@@ -15,14 +17,18 @@ export default async function Page({
   const client = await supabaseServer();
   const { data: { user }, error } = await client.auth.getUser();
   if (error || !user) redirect("/login");
-  const [profile, query] = await Promise.all([
+  const [profile, { options }, query, jar] = await Promise.all([
     client.from("player_profiles").select("nickname").eq("user_id", user.id).maybeSingle(),
+    loadActiveTeams(client, user.id),
     searchParams,
+    cookies(),
   ]);
+  const requestedTeam = typeof query.team === "string" ? query.team : undefined;
+  const team = selectActiveTeam(options, requestedTeam, jar.get("da-team")?.value);
   const context = new URLSearchParams();
-  for (const key of ["team", "season", "scope"] as const) {
-    if (typeof query[key] === "string") context.set(key, query[key]);
-  }
+  if (team) context.set("team", team.id);
+  if (team && typeof query.season === "string") context.set("season", query.season);
+  if (typeof query.scope === "string") context.set("scope", query.scope);
   const returnContext = navigationContext("", context.toString(), "/more/profile");
   const homeHref = returnContext ? `/?${returnContext}` : "/";
   const bio = typeof user.user_metadata?.bio === "string" ? user.user_metadata.bio : "";

@@ -25,10 +25,14 @@ reports the same 320 px overflow in Windows WebKit with both main and candidate
 styles. The new page passed its 320 px check.
 
 **AMBER.** Will approved committing, pushing, merging after validation, and
-deploying Clubhouse Extras to the pilot. Release through the existing main
-validation gate. Hosted phone acceptance is pending.
+deploying Clubhouse Extras to the pilot. [PR #78](https://github.com/Chappy1740/DiamondAlibi/pull/78)
+records the Claude Code review and current checks. Bio & profile continues to
+use the existing active-team filter for return links. Release through the
+existing main validation gate. Hosted phone acceptance is pending.
 
 ## November 5, 2026 — Team participation preferences
+
+This records the earlier placement before the Clubhouse Extras pilot change.
 
 Will asked to put Beverage participation and Roast Club under **Profile menu →
 Bio & profile → Team preferences**, with the Beverage tab reserved for team and
