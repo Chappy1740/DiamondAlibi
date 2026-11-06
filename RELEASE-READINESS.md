@@ -1,5 +1,11 @@
 # Release readiness and recovery
 
+## November 6, 2026 — #78 and #65 owner acceptance
+
+**AMBER.** Owner wrote "#78 accepted, #65 accepted" on 2026-11-06 at 14:33 CT after his phone checks. [#78](https://github.com/Chappy1740/DiamondAlibi/pull/78) Clubhouse Extras and [#65](https://github.com/Chappy1740/DiamondAlibi/pull/65) private replies are **Owner-accepted**. Both are in live main `496ef3ae767b77c88657385477e2358330891082` (version `1a52d2a0-e2b9-4317-bf43-916bd2b04daa` at 100%, read by Claude at 14:32 CT). This resolves the pending-confirmation note in the entry below.
+
+Still open: Supabase backup/PITR check, real screen-reader pass, other Bluetooth speakers.
+
 ## November 6, 2026 — Live version readback (Claude, read-only)
 
 **AMBER.** Owner approved this records update. Claude Code read Cloudflare and GitHub on 2026-11-06; nothing was deployed or changed.
