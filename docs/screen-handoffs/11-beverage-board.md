@@ -1,5 +1,34 @@
 # 11 — Beverage Board: Screen handoff
 
+## November 6, 2026 — Team balances density (#77)
+
+**Owner direction:** Will told Claude "Fix 77" (06:19 CT). Role swap for this
+task: Claude implements on `claude/beverage-board-density`; Codex or Will
+reviews. Targets from [#77](https://github.com/Chappy1740/DiamondAlibi/issues/77):
+10–12 players visible on iPhone (8–10 minimum), readable long names.
+
+**Change (CSS only, Team balances list only):** names 22 px → 17 px bold;
+balances stay 14 px and never wrap; rows 12 px tall padding with a 44 px
+minimum; names align with the card heading; names wrap only between words
+(hyphenate if one word cannot fit). At 360 px and narrower, a long balance
+may wrap between words. Other leaderboards are unchanged.
+
+**Evidence (Claude, local sandbox, synthetic 16-player roster, Chromium only):**
+players fully visible below the Team balances heading went 9 → 14 at
+390×844, 6 → 10 at 375×667, 5 → 7 at 320×568. Mid-word splits ("3 owe d",
+"No recorded balance" on two lines) are gone. `tests/home-layout-browser.cjs`
+gained a `dense-roster` fixture and checks; it passes on the change and fails
+on the old CSS. WebKit was not available locally; CI runs this test in
+Chromium and WebKit. Not tested on a real iPhone.
+
+**Approval:** Will approved push, PR and merge of this change only
+(2026-11-06 12:11 CT, "Approve and merge"). Merge to main runs the existing
+exact-source validation and deploy gate. No database, auth, access or
+provider change is in scope.
+
+**Rung:** Implemented and tested locally. Merge only after PR checks pass.
+Owner acceptance on the pilot iPhone is open.
+
 ## November 5, 2026 — Clubhouse Extras pilot candidate
 
 The [profile menu](17-profile.md#november-5-2026--clubhouse-extras-pilot-candidate)
