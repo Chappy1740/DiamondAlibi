@@ -360,6 +360,9 @@ export function PlayerDashboard(p: DashboardProps) {
                 <h2>Clubhouse tools</h2>
                 <div className="dashboard-cards">
                   <Link className="button secondary" href={href("more/beverage-rules")}>Beverage Rules</Link>
+                  {p.userId && !p.sample && !p.review && (
+                    <Link className="button secondary" href={href("more/profile")}>Profile</Link>
+                  )}
                   {!p.sample && !p.review && <Link className="button secondary" href="/?sample=1">Explore sample history</Link>}
                   <Link className="button secondary" href="/review/feedback">
                     Challenge the Call · Send feedback

@@ -2,6 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
+import { completePlayerSignup } from "@/lib/complete-player-signup";
+import { playerDetails } from "@/lib/player-profile";
 export type AuthResult = { error?: string; message?: string };
 export async function login(
   _previous: AuthResult,
@@ -12,13 +14,13 @@ export async function login(
   if (!email || !password || email.length > 254 || password.length > 256)
     return { error: "Enter your email and password." };
   const supabase = await supabaseServer();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error)
     return {
       error:
         "Sign-in failed. Check your details and whether your email is confirmed.",
     };
-  redirect("/");
+  redirect(await completePlayerSignup(supabase, data.user));
 }
 export async function signup(
   _previous: AuthResult,
@@ -33,13 +35,19 @@ export async function signup(
     password.length > 256
   )
     return { error: "Use a valid email and a password of 12–256 characters." };
+  const details = playerDetails(form.get("nickname"), form.get("play_level"), form.get("fielding_position"));
+  if (!details) return { error: "Enter a name of 1–40 characters and choose only the listed options." };
   const supabase = await supabaseServer();
-  const { error, data } = await supabase.auth.signUp({ email, password });
+  const { error, data } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { da_signup_profile: details } },
+  });
   if (error)
     return {
       error: "Account creation could not be completed. Please try again later.",
     };
-  if (data.session) redirect("/");
+  if (data.session) redirect(await completePlayerSignup(supabase, data.user));
   return {
     message:
       "If account creation is available for this address, check your confirmation email. After confirming, return here to sign in.",
