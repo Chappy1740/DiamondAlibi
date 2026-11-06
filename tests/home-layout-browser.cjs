@@ -63,6 +63,14 @@ const assert = require("node:assert/strict");
           data.snapshot.board.player=7;
           data.roster[1].display_name='Other team teammate';
         }
+        if(fixtureQuery.has('dense-roster')){
+          const names=['Alexandria Montgomery-Santiago','Bo','Christopher Wellington','Dee Dee','Maximiliana Featherstonehaugh','Jo','Sam Lee','Tre Williams','Kristopherson','Abby Daniels','Pat','Jordan Riley-Evans','Wes','Lou Gonzalez'];
+          names.forEach((name,i)=>{
+            const id='dense-'+i;
+            data.roster.push({id,user_id:'dense-user-'+i,display_name:name,is_guest:false});
+            if(i%4!==3)data.snapshot.board[id]=[3,-2,0][i%3]*(i+1);
+          });
+        }
         if(fixtureQuery.has('tied-stats')){Object.assign(data.snapshot.totals.player,{PA:20,AB:20,H:12});data.snapshot.totals.teammate.H=12;}
         if(fixtureQuery.has('wide-stats')){data.roster[1].display_name='Alexandria Montgomery-Santiago';Object.assign(data.snapshot.totals.teammate,{PA:25000,AB:21000,H:12345,HR:1234,RBI:12345,board:-12345});data.snapshot.totals.player.board=-23456;}
         if(fixtureQuery.has('owed'))data.snapshot.board.player=4;
@@ -310,7 +318,34 @@ const assert = require("node:assert/strict");
     assert.equal(await page.getByLabel('Statistics view',{exact:true}).count(),0);
     assert.equal(await page.getByRole('button',{name:/^Opt out$|^Join Roast Club$/}).count(),0);
     assert.deepEqual(await page.evaluate(()=>window.__preferenceReads),[]);
+    // #77: compact Team balances. 10-12+ players fit below the heading on a 390x844 iPhone;
+    // balances stay on one line; names wrap only between words or at their own hyphen.
+    for(const [width,height,minimum] of [[390,844,10],[375,667,8],[320,568,null]]){
+      await page.setViewportSize({width,height});
+      await page.goto(base+'/beverages?dense-roster=1');
+      const dense=page.getByRole('region',{name:'Team balances',exact:true});
+      await dense.getByText('Lou Gonzalez',{exact:true}).waitFor();
+      await page.evaluate(()=>document.fonts.ready);
+      await dense.locator('h2').evaluate(el=>el.scrollIntoView({block:'start'}));
+      const roster=await page.evaluate(()=>{
+        const navTop=document.querySelector('.app-bottom-nav')?.getBoundingClientRect().top ?? innerHeight;
+        const lines=el=>Math.round(el.getBoundingClientRect().height/parseFloat(getComputedStyle(el).lineHeight));
+        const splitWord=el=>{const text=el.firstChild;if(!text)return null;const range=document.createRange();let at=0;for(const part of text.textContent.split(/[\s-]/)){range.setStart(text,at);range.setEnd(text,at+part.length);if(range.getClientRects().length>1)return part;at+=part.length+1;}return null;};
+        const rows=[...document.querySelectorAll('.beverage-roster .leader-row')].map(row=>{const box=row.getBoundingClientRect();const name=row.querySelector('strong');const balance=row.querySelector('.balance');return {fits:box.top>=0&&box.bottom<=navTop,nameSize:parseFloat(getComputedStyle(name).fontSize),balanceSize:parseFloat(getComputedStyle(balance).fontSize),balanceLines:lines(balance),split:splitWord(name)||splitWord(balance)};});
+        return {rows,overflow:document.documentElement.scrollWidth>innerWidth};
+      });
+      assert.equal(roster.rows.length,16);
+      assert.equal(roster.overflow,false,`${width}px Team balances must not scroll sideways`);
+      assert.deepEqual(roster.rows.map(row=>row.split).filter(Boolean),[],`${width}px names and balances break only between words`);
+      assert.ok(roster.rows.every(row=>row.nameSize>row.balanceSize&&row.balanceSize>=14),`${width}px names stay emphasized over legible balances`);
+      if(minimum!==null){
+        assert.ok(roster.rows.filter(row=>row.fits).length>=minimum,`${width}x${height} shows at least ${minimum} players`);
+        assert.ok(roster.rows.every(row=>row.balanceLines===1),`${width}px balances stay on one line`);
+      }
+    }
     await page.setViewportSize({width:390,height:844});
+    await page.goto(base+'/beverages?team=long&season=history');
+    await board.getByText('Other team teammate',{exact:true}).waitFor();
     await page.locator('.profile-menu > summary').click();
     const extrasLink=page.getByRole('link',{name:'Clubhouse Extras Cold ones. Hot takes.',exact:true});
     assert.equal(await extrasLink.count(),1);
