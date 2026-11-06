@@ -45,7 +45,7 @@ export function navigationContext(
   // Authenticated account pages must not carry a former sample team's context.
   if (
     path.startsWith("/club") ||
-    ["/more/profile", "/more/settings"].includes(path)
+    ["/more/profile", "/more/settings", "/more/clubhouse-extras"].includes(path)
   ) {
     if (result.has("sample") || result.has("shell")) {
       for (const key of ["team", "season", "scope"])

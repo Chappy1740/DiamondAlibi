@@ -14,6 +14,10 @@ export function ProfileMenu({ signedIn = true, context = "" }: { signedIn?: bool
         {signedIn ? <>
           <Link href={`/more/profile${profileContext ? `?${profileContext}` : ""}`}>Bio & profile</Link>
           <Link href="/more/settings">Account settings</Link>
+          <Link className="profile-menu-extras" href={`/more/clubhouse-extras${profileContext ? `?${profileContext}` : ""}`}>
+            <span>Clubhouse Extras</span>
+            <small>Cold ones. Hot takes.</small>
+          </Link>
           <Link href={`/club${context ? `?${context}` : ""}`}>Team management</Link>
           <Link href="/more/alibi">My alibis</Link>
           <form action={signout}>

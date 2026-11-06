@@ -1,5 +1,10 @@
 # 11 — Beverage Board: Screen handoff
 
+## November 5, 2026 — Clubhouse Extras pilot candidate
+
+The [profile menu](17-profile.md#november-5-2026--clubhouse-extras-pilot-candidate)
+opens the separate participation page. The Beverage tab shows balances.
+
 ## November 5, 2026 — Roster typography
 
 Will's phone screenshot showed small player names and oversized balance text.
