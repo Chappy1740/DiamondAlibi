@@ -1,5 +1,33 @@
 # 17 — Bio and profile: Screen handoff
 
+## November 5, 2026 — Clubhouse Extras pilot candidate
+
+Will requested the **Clubhouse Extras** preview for the pilot. Its profile-menu
+link uses the tagline “Cold ones. Hot takes.” and opens `/more/clubhouse-extras`
+with separate Beverage and Roast Club choices for the selected team. Moving
+the existing preferences section reuses the team selector, active membership
+checks and save actions. A second settings implementation or library would
+duplicate those behaviors. The release diff is scoped to the menu and opt-in
+page, with the existing Beverage roster typography retained.
+
+Codex recovered the uncommitted `codex/clubhouse-extras` preview based on
+`c136e17ecdbce745abcb400904abbad2c15edd44` and applied the scoped changes to an
+isolated `codex/clubhouse-extras-pilot` checkout based on verified GitHub main
+`95a8c4953b4121b544b07b4a88b5ffaef059bef2`. The original preview is preserved.
+
+**Tested locally.** The production Next.js build (Webpack), TypeScript,
+navigation and Roast Club unit tests, dashboard loader, and signed-out route
+redirect passed. Chromium and WebKit verified menu entry from the Beverage
+Board, independent saves across two teams and reloads, inactive-team denial,
+44 px controls, and automated accessibility. Both opt-in actions fit above
+the bottom navigation at 390 × 844. The standalone Roast Club control test
+reports the same 320 px overflow in Windows WebKit with both main and candidate
+styles. The new page passed its 320 px check.
+
+**AMBER.** Will approved committing, pushing, merging after validation, and
+deploying Clubhouse Extras to the pilot. Release through the existing main
+validation gate. Hosted phone acceptance is pending.
+
 ## November 5, 2026 — Team participation preferences
 
 Will asked to put Beverage participation and Roast Club under **Profile menu →
