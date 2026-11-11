@@ -1,5 +1,5 @@
 "use client";
-import { BOARD_LABELS, extendedBoardFromColumns, scoringOutcomes, OUTCOME_LABELS } from "@/lib/scoring";
+import { BOARD_LABELS, extendedBoardFromColumns, roeRbiCorrectionMessage, scoringOutcomes, OUTCOME_LABELS } from "@/lib/scoring";
 import { formatBaseballRate as rate } from "@/lib/baseball-rate";
 import { competitionGames, competitionPath, contextQuery } from "@/lib/competitions";
 import { gameSetupHref } from "@/lib/game-navigation";
@@ -75,6 +75,10 @@ export function ConnectedScorebook({
   const [busy, setBusy] = useState(false),
     [online, setOnline] = useState(true),
     [paused, setPaused] = useState(initial.status !== "ok");
+  const [correctionError, setCorrectionError] = useState<{
+    playId: string;
+    text: string;
+  } | null>(null);
   const [review, setReview] = useState(false),
     [uncertain, setUncertain] = useState(false),
     [message, setMessage] = useState(
@@ -652,15 +656,26 @@ export function ConnectedScorebook({
     g: ConnectedGame,
     row: ScoreRow,
   ) {
+    const rbiField = event.currentTarget.elements.namedItem("rbi");
     const form = formData(event);
+    const outcome = String(form.get("outcome"));
+    const rbi = Number(form.get("rbi"));
+    // The server rejects this too. Explain it here and leave RBI for the scorer to change.
+    const blocked = roeRbiCorrectionMessage(outcome, rbi);
+    if (blocked) {
+      setCorrectionError({ playId: row.id, text: blocked });
+      if (rbiField instanceof HTMLInputElement) rbiField.focus();
+      return;
+    }
+    setCorrectionError(null);
     void save(
       gameRequest(g, {
         type: "correct",
         playId: row.id,
         playerId: String(form.get("batter")),
-        outcome: String(form.get("outcome")),
+        outcome,
         runs: Number(form.get("runs")),
-        rbi: Number(form.get("rbi")),
+        rbi,
         voided: form.has("voided"),
         reason: String(form.get("reason")).trim(),
       }),
@@ -982,6 +997,10 @@ export function ConnectedScorebook({
                     key={JSON.stringify(row)}
                     className="club-form"
                     onSubmit={(e) => correct(e, current, row)}
+                    onInput={() => {
+                      if (correctionError?.playId === row.id)
+                        setCorrectionError(null);
+                    }}
                   >
                     <fieldset disabled={disabled}>
                       <label>
@@ -1035,8 +1054,15 @@ export function ConnectedScorebook({
                           max={4}
                           defaultValue={row.rbi}
                           required
+                          aria-invalid={correctionError?.playId === row.id || undefined}
+                          aria-describedby={correctionError?.playId === row.id ? `correction-error-${row.id}` : undefined}
                         />
                       </label>
+                      {correctionError?.playId === row.id && (
+                        <p id={`correction-error-${row.id}`} className="entry-error" role="alert">
+                          {correctionError.text}
+                        </p>
+                      )}
                       <label>
                         <input
                           type="checkbox"

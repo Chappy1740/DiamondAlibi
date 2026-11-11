@@ -1889,7 +1889,7 @@ blockquote {
 .team-scorebook .voice-play-controls input { flex: 1; width: 0; min-width: 0; margin: 0; }
 .voice-play-controls .button { flex: none; margin: 0; padding: 6px 8px; font-size: 11px; }
 .at-bat-card .voice-play-note, .at-bat-card .quick-play-hint { font-size: 11px; line-height: 1.4; margin: 6px 0; color: var(--muted); }
-.at-bat-card .entry-error { color: #ffd4bd; font-size: 13px; margin: 8px 0; }
+.at-bat-card .entry-error, .scorebook-play .entry-error { color: #ffd4bd; font-size: 13px; margin: 8px 0; }
 .game-details-link { display: inline-block; margin-top: 12px; min-height: 44px; padding-block: 12px; }
 .recorded-play {
   position: fixed;

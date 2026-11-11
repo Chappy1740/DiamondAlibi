@@ -5,6 +5,7 @@ import {
   applyCommand,
   evaluateGame,
   aggregate,
+  roeRbiCorrectionMessage,
   rates,
   DEFAULT_BOARD,
   type Scorebook,
@@ -255,4 +256,13 @@ test("score and audited correction reject RBI on reached on error", () => {
   assert.throws(() => send(b, correction), /Reached on error cannot earn RBI/);
   assert.equal(JSON.stringify(b), before);
   assert.equal(aggregate(send(b, { ...correction, rbi: 0 }), "Overall").a.RBI, 0);
+});
+
+test("correction form message asks the scorer to zero RBI on reached on error", () => {
+  assert.match(
+    roeRbiCorrectionMessage("ROE", 1) ?? "",
+    /Reached on error cannot earn RBI\. Set Correct RBI to 0/,
+  );
+  assert.equal(roeRbiCorrectionMessage("ROE", 0), null);
+  assert.equal(roeRbiCorrectionMessage("Hit", 2), null);
 });
