@@ -204,16 +204,39 @@ function members(book: Scorebook, ids: string[]) {
 type CommandMode = "write" | "replay";
 
 /**
- * Message for a correction form that would submit reached on error with RBI.
- * The scorer zeroes RBI explicitly; the form never changes it for them.
+ * Owner count rules. Strikeouts score no runs and earn no RBI; reached on error
+ * and a double play can score runs but never earn RBI. Shared by the write
+ * validator, the scorebook controls and the correction form.
  */
-export function roeRbiCorrectionMessage(
+export function outcomeCountRule(outcome: string): { runs: boolean; rbi: boolean } {
+  if (isStrikeout(outcome as Outcome)) return { runs: false, rbi: false };
+  if (outcome === "ROE" || outcome === "DP") return { runs: true, rbi: false };
+  return { runs: true, rbi: true };
+}
+/** Write-validator message for counts that break an outcome count rule, or null. */
+export function outcomeCountError(outcome: string, runs: number, rbi: number): string | null {
+  const rule = outcomeCountRule(outcome);
+  if (!rule.runs && (runs > 0 || rbi > 0)) return "A strikeout cannot score runs or earn RBI.";
+  if (!rule.rbi && rbi > 0) return outcome === "DP" ? "A double play cannot earn RBI." : "Reached on error cannot earn RBI.";
+  return null;
+}
+/**
+ * Message for a correction form that would break an outcome count rule, and the
+ * field the scorer changes first. The scorer zeroes counts explicitly; the form
+ * never changes them.
+ */
+export function correctionCountMessage(
   outcome: string,
+  runs: number,
   rbi: number,
-): string | null {
-  return outcome === "ROE" && rbi > 0
-    ? "Reached on error cannot earn RBI. Set Correct RBI to 0, then save the correction."
-    : null;
+): { text: string; field: "runs" | "rbi" } | null {
+  const error = outcomeCountError(outcome, runs, rbi);
+  if (!error) return null;
+  const rule = outcomeCountRule(outcome);
+  return {
+    text: `${error} Set ${rule.runs ? "Correct RBI" : "Correct runs and Correct RBI"} to 0, then save the correction.`,
+    field: !rule.runs && runs > 0 ? "runs" : "rbi",
+  };
 }
 
 function validatePlay(
@@ -226,8 +249,11 @@ function validatePlay(
   count(runs, 4, "Runs");
   count(rbi, 4, "RBI");
   insist(rbi <= runs, "RBI cannot exceed runs on this play.");
-  if (mode === "write")
-    insist(outcome !== "ROE" || rbi === 0, "Reached on error cannot earn RBI.");
+  // Saved journals replay values accepted before these rules; new writes follow them.
+  if (mode === "write") {
+    const countError = outcomeCountError(outcome, runs, rbi);
+    insist(countError === null, countError ?? "");
+  }
   if (outcome === "Fence HR" || outcome === "ITP HR")
     insist(runs >= 1, "A home run must score at least one run.");
 }

@@ -19,6 +19,7 @@
     "test:sample-seasons": "node --experimental-strip-types --test tests/sample-seasons.test.ts tests/personal-dashboard.test.ts",
     "test:scoreboard": "node --experimental-strip-types --test tests/game-scoreboard.test.ts",
     "test:rules": "node --experimental-strip-types --test tests/scoring.test.ts",
+    "test:outcome-count-rules-sql": "node tests/outcome-count-rules-sql.cjs",
     "test:scoring-service": "node --experimental-strip-types --test tests/scoring-service.test.ts",
     "test:season-scoring": "node --experimental-strip-types --test tests/season-scoring.test.ts",
     "test:season-scorebook": "node --experimental-strip-types --test tests/season-scorebook.test.ts",
