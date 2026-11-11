@@ -329,6 +329,7 @@ function assignNewPlayers(
 export function applySeasonCommand(
   current: SeasonScorebook,
   request: SeasonRequest,
+  mode: "write" | "replay" = "write",
 ): SeasonScorebook {
   text(request.commandId, "Command ID");
   text(request.actor, "Actor");
@@ -525,11 +526,11 @@ export function applySeasonCommand(
         rules: entry.game.rules,
       });
       temp.games = [structuredClone(entry.game)];
-      entry.game = applyCommand(temp, {
-        ...request,
-        expectedRevision: 0,
-        command: cmd.change,
-      }).games[0];
+      entry.game = applyCommand(
+        temp,
+        { ...request, expectedRevision: 0, command: cmd.change },
+        mode,
+      ).games[0];
     }
   }
   next.revision++;
@@ -571,7 +572,7 @@ export function replaySeasonJournal(journal: SeasonJournal): SeasonScorebook {
     journal.initial.players,
   );
   for (const request of journal.requests)
-    book = applySeasonCommand(book, request);
+    book = applySeasonCommand(book, request, "replay");
   return book;
 }
 /** Compatibility view for controls, never an authoritative day-wide Band state. */

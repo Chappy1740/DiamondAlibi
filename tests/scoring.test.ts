@@ -237,3 +237,22 @@ test("manual void excludes totals, keeps row and audit; inputs fail before mutat
   assert.equal(aggregate(b, "Overall").a.PA, 0);
   assert.equal(evaluateGame(b.games[0], b.bands).rows[0].official, "Voided");
 });
+
+test("score and audited correction reject RBI on reached on error", () => {
+  const b = score(start(), "ROE", 1, 0);
+  const before = JSON.stringify(b);
+  const correction = {
+    type: "correct",
+    gameId: "g",
+    playId: b.games[0].plays[0].id,
+    outcome: "ROE",
+    runs: 1,
+    rbi: 1,
+    voided: false,
+    reason: "Synthetic correction",
+  } as const;
+  assert.throws(() => score(b, "ROE", 1, 1), /Reached on error cannot earn RBI/);
+  assert.throws(() => send(b, correction), /Reached on error cannot earn RBI/);
+  assert.equal(JSON.stringify(b), before);
+  assert.equal(aggregate(send(b, { ...correction, rbi: 0 }), "Overall").a.RBI, 0);
+});
