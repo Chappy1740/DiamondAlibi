@@ -922,10 +922,31 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
       roeBefore,
       "Blocked correction saves nothing",
     );
+    // Voiding does not lift the rule, and other edits keep the message in view.
+    await page.getByLabel("Void this appearance", { exact: true }).check();
+    await page
+      .getByRole("button", { name: "Save correction", exact: true })
+      .click();
+    await roeAlert.waitFor();
+    assert.equal(JSON.stringify((await load()).data.snapshot.games[0]), roeBefore, "Blocked void saves nothing");
+    await page.getByLabel("Void this appearance", { exact: true }).uncheck();
+    assert.equal(await roeAlert.count(), 1, "Message stays while RBI is still above zero");
+    // The scorer zeroes RBI; reached on error then saves through the audited path.
+    await rbiField.fill("0");
+    assert.equal(await roeAlert.count(), 0, "Message clears once RBI is 0");
+    await page
+      .getByRole("button", { name: "Save correction", exact: true })
+      .click();
+    await saved();
+    const roeSaved = (await load()).data.snapshot.games[0].evaluation.rows.at(-1);
+    assert.equal(roeSaved.outcome, "ROE");
+    assert.equal(roeSaved.rbi, 0);
     await page
       .getByLabel("Correct outcome", { exact: true })
       .selectOption("Hit");
-    assert.equal(await roeAlert.count(), 0, "Message clears when the scorer edits the form");
+    await page
+      .getByLabel("Correction reason", { exact: true })
+      .fill("Synthetic league correction");
     await page.getByLabel("Correct runs", { exact: true }).fill("0");
     await page.getByLabel("Correct RBI", { exact: true }).fill("0");
     await page

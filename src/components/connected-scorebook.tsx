@@ -75,8 +75,9 @@ export function ConnectedScorebook({
   const [busy, setBusy] = useState(false),
     [online, setOnline] = useState(true),
     [paused, setPaused] = useState(initial.status !== "ok");
+  // Keyed by the row's saved values, so a row that changes underneath drops the message.
   const [correctionError, setCorrectionError] = useState<{
-    playId: string;
+    rowKey: string;
     text: string;
   } | null>(null);
   const [review, setReview] = useState(false),
@@ -663,7 +664,7 @@ export function ConnectedScorebook({
     // The server rejects this too. Explain it here and leave RBI for the scorer to change.
     const blocked = roeRbiCorrectionMessage(outcome, rbi);
     if (blocked) {
-      setCorrectionError({ playId: row.id, text: blocked });
+      setCorrectionError({ rowKey: JSON.stringify(row), text: blocked });
       if (rbiField instanceof HTMLInputElement) rbiField.focus();
       return;
     }
@@ -997,8 +998,11 @@ export function ConnectedScorebook({
                     key={JSON.stringify(row)}
                     className="club-form"
                     onSubmit={(e) => correct(e, current, row)}
-                    onInput={() => {
-                      if (correctionError?.playId === row.id)
+                    onInput={(e) => {
+                      if (correctionError?.rowKey !== JSON.stringify(row)) return;
+                      const form = new FormData(e.currentTarget);
+                      // Keep the message until the outcome or RBI no longer breaks the rule.
+                      if (!roeRbiCorrectionMessage(String(form.get("outcome")), Number(form.get("rbi"))))
                         setCorrectionError(null);
                     }}
                   >
@@ -1054,11 +1058,11 @@ export function ConnectedScorebook({
                           max={4}
                           defaultValue={row.rbi}
                           required
-                          aria-invalid={correctionError?.playId === row.id || undefined}
-                          aria-describedby={correctionError?.playId === row.id ? `correction-error-${row.id}` : undefined}
+                          aria-invalid={correctionError?.rowKey === JSON.stringify(row) || undefined}
+                          aria-describedby={correctionError?.rowKey === JSON.stringify(row) ? `correction-error-${row.id}` : undefined}
                         />
                       </label>
-                      {correctionError?.playId === row.id && (
+                      {correctionError?.rowKey === JSON.stringify(row) && (
                         <p id={`correction-error-${row.id}`} className="entry-error" role="alert">
                           {correctionError.text}
                         </p>

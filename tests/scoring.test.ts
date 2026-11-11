@@ -5,6 +5,7 @@ import {
   applyCommand,
   evaluateGame,
   aggregate,
+  availableOutcomes,
   roeRbiCorrectionMessage,
   rates,
   DEFAULT_BOARD,
@@ -265,4 +266,33 @@ test("correction form message asks the scorer to zero RBI on reached on error", 
   );
   assert.equal(roeRbiCorrectionMessage("ROE", 0), null);
   assert.equal(roeRbiCorrectionMessage("Hit", 2), null);
+});
+
+test("correction form message agrees with the write validator for every outcome", () => {
+  const b = score(start(), "Hit", 1, 1);
+  const playId = b.games[0].plays[0].id;
+  for (const outcome of availableOutcomes(b.games[0].rules.board))
+    for (const rbi of [0, 1]) {
+      const correction = {
+        type: "correct",
+        gameId: "g",
+        playId,
+        outcome,
+        runs: 1,
+        rbi,
+        voided: false,
+        reason: "Synthetic correction",
+      } as const;
+      let rejected = false;
+      try {
+        send(b, correction);
+      } catch (error) {
+        rejected = /Reached on error cannot earn RBI/.test(String(error));
+      }
+      assert.equal(
+        roeRbiCorrectionMessage(outcome, rbi) !== null,
+        rejected,
+        `${outcome} with ${rbi} RBI`,
+      );
+    }
 });
