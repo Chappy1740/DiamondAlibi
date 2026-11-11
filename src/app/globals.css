@@ -2254,6 +2254,9 @@ body:has(.workspace--home) { padding-bottom: 0; }
 /* A regular roster player may be present before they link a sign-in account. */
 .roster-list.regular-roster li { display: block; min-width: 0; }
 .roster-player-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; justify-content: space-between; overflow-wrap: anywhere; }
+.roster-player-name { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.avatar.roster-photo { position: relative; flex: 0 0 32px; width: 32px; height: 32px; overflow: hidden; font-size: 12px; }
+.roster-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .regular-roster .club-form { margin-top: 12px; }
 .regular-roster .button { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
 

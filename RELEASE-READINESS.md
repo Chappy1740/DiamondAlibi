@@ -1,5 +1,30 @@
 # Release readiness and recovery
 
+## November 10, 2026 — Team-visible profile photos
+
+**AMBER.** Will approved the photo design at 19:05 CT, recorded by Claude Code
+after read-only review. Will subsequently approved Codex to commit, push, merge
+and deploy [PR #87](https://github.com/Chappy1740/DiamondAlibi/pull/87).
+The [profile handoff](docs/screen-handoffs/17-profile.md#november-10-2026--team-visible-profile-photos)
+records the design, account cleanup and validation gates. The existing release
+fingerprint still identifies the prior approved migration tree. Hosted schema
+application requires separate authorization and readback. Verify revocation
+through the app and the Storage API before enabling the release.
+
+## November 10, 2026 — Claude Code Bash safety hook (Claude)
+
+**AMBER.** Owner approved adding this from a setup review ("Ok a c", then "Ok commit and push", then "Ok both" for a draft PR and this record). The owner assigned this tooling task to Claude Code directly. It changes no product code, provider settings, database or deployment.
+
+- **What:** `.claude/hooks/guard-bash.mjs`, a PreToolUse hook registered in `.claude/settings.json`. It blocks force-push (including `--force-with-lease` and `+branch`), `git reset --hard`, `git clean -f`, recursive force deletes outside build folders, and shell commands naming a real `.env` or `.dev.vars` file (`.example` files are allowed). A blocked command tells the agent to ask Will for that exact command. Also adds `.claude/settings.json` deny rules so Claude's Read tool cannot open `.env` or `.dev.vars` files; this repo previously had none.
+- **Limits:** Applies to Claude Code only; Codex does not read `.claude/`. It catches honest mistakes and is not a security boundary. Creating a local env file from its example is now the owner's step.
+- **Status ladder:** Implemented — Claude, `claude/adoring-bohr-b1knbs` @ `778542f449870eef7d32e5a840978ed7304862fe`. Tested — Claude, this session: 15 should-block and 11 should-allow commands behaved as expected, plus one end-to-end run through the configured hook command. No repo test suite was run (configuration-only change). Merged — Yes, owner-approved ("Merge all three and push") on 2026-11-10: [PR #90](https://github.com/Chappy1740/DiamondAlibi/pull/90) → main `0f2fb17fbf7dff35389d22d07aca7507bb94cb04`. Applies to new Claude Code sessions started from main. Deployed — not applicable to the app; any build triggered by the merge was not read back.
+
+## November 6, 2026 — #78 and #65 owner acceptance
+
+**AMBER.** Owner wrote "#78 accepted, #65 accepted" on 2026-11-06 at 14:33 CT after his phone checks. [#78](https://github.com/Chappy1740/DiamondAlibi/pull/78) Clubhouse Extras and [#65](https://github.com/Chappy1740/DiamondAlibi/pull/65) private replies are **Owner-accepted**. Both are in live main `496ef3ae767b77c88657385477e2358330891082` (version `1a52d2a0-e2b9-4317-bf43-916bd2b04daa` at 100%, read by Claude at 14:32 CT). This resolves the pending-confirmation note in the entry below.
+
+Still open: Supabase backup/PITR check, real screen-reader pass, other Bluetooth speakers.
+
 ## November 6, 2026 — Live version readback (Claude, read-only)
 
 **AMBER.** Owner approved this records update. Claude Code read Cloudflare and GitHub on 2026-11-06; nothing was deployed or changed.

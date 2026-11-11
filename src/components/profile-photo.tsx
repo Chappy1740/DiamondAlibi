@@ -89,6 +89,7 @@ export function ProfilePhoto({ name }: { name: string }) {
         Choose a photo (optional)
         <input type="file" accept="image/*" onChange={choosePhoto} disabled={processing || pending} />
       </label>
+      <p className="muted">Members of your active teams can see your photo.</p>
       {processing && <p role="status">Preparing preview…</p>}
       {preview && <p>Preview before saving.</p>}
       {(photoError || result.error) && <p role="alert" className="form-error">{photoError || result.error}</p>}

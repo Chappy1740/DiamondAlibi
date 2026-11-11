@@ -39,6 +39,11 @@ const { chromium, webkit } = require("playwright"),
     });
     const css = fs.readFileSync("src/app/globals.css", "utf8");
     server = http.createServer((req, res) => {
+      if (req.url === "/more/profile/photo?player=member") {
+        const pixel = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+WXYkAAAAASUVORK5CYII=", "base64");
+        res.writeHead(200, { "content-type": "image/png" }).end(pixel);
+        return;
+      }
       res.setHeader("content-type", "text/html");
       res.end(
         '<html lang="en"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Synthetic roster review</title><style>' +
@@ -58,6 +63,11 @@ const { chromium, webkit } = require("playwright"),
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto(base);
     await page.getByRole("heading", { name: "Roster", exact: true }).waitFor();
+    const photos = page.locator(".roster-photo img");
+    await photos.waitFor({ state: "visible" });
+    assert.equal(await photos.count(), 1, "only linked accounts request a photo");
+    assert.equal(await photos.getAttribute("src"), "/more/profile/photo?player=member");
+    assert.equal(await page.locator(".roster-photo").first().textContent(), "SA");
     assert.equal(
       await page.getByText("Guest", { exact: false }).count(),
       0,

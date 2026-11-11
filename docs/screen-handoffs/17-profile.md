@@ -1,5 +1,61 @@
 # 17 — Bio and profile: Screen handoff
 
+## November 10, 2026 — Team-visible profile photos
+
+Will approved the design at 19:05 CT after Claude Code's read-only review.
+Codex owns implementation in [PR #87](https://github.com/Chappy1740/DiamondAlibi/pull/87).
+Only the owner can add, replace or remove their photo. A viewer can read a
+photo when both accounts have an active membership on any shared team.
+The roster uses its explicit account link. Guest rows use initials, and
+account preferences and team aliases keep their existing visibility.
+
+The private bucket serves the fixed account avatar through authenticated reads.
+The app checks current membership on each request and sends private, no-store
+responses. Storage policies disallow signed read URLs. In a hosted synthetic
+check, load a teammate's photo through both the app and Storage, then deactivate
+the last shared membership and repeat the same requests with the same session.
+Both paths must deny the next request, including after an earlier cached read.
+Verify both teams of a multi-team account, remaining access when a different
+shared active team still exists, and denied signed URL creation. Disposable SQL
+does not exercise the hosted Storage CDN.
+
+The existing canvas keeps normal uploads at 512px or less and strips source
+metadata. Keep the current JPEG and byte limits for the pilot. An owner can
+upload directly to Storage, so the app's checks cannot guarantee that every
+object lacks metadata. The profile page tells owners who can see their photo.
+
+For an assisted account-deletion request, confirm the request and have the
+owner use **Remove photo** while their session is active. Verify that the
+Storage API removed the object and stop if it did not. Separately authorized
+Auth deletion follows only after reviewing references from teams, roster and
+audit data and deciding which records to retain. Keep historical orphan
+cleanup as a separate decision. Photo removal uses the owner's session.
+
+Keep signup skill levels pending owner review and test the TypeScript choices
+against the SQL constraints. Release requires independent review of the revised
+head, required CI, authorization and readback for the hosted migration, and
+the revocation check. Apply the migration before deploying code that depends on
+it. Keep the existing migration fingerprint until hosted verification.
+
+Codex recovered a clean source worktree at
+`a833b95e8cf4cd8588e7928f150dc265d64bfd0a` and cloned an isolated task
+checkout. Current main `9a50962ac787749b54b9c90575384edd53367870` was
+integrated with a history-preserving merge, retaining the source commit and
+the newer owner acceptance records. Tracker revision is 91. Will authorized
+commit, push, merge and deploy in this session. Hosted schema application
+still requires explicit authorization under CONTRIBUTING.md.
+
+Codex's local checks passed for TypeScript, the production Next.js build,
+the unit suite, 33 release-gate tests, disposable roster/profile/Storage SQL,
+the new route and list-parity tests, and synthetic roster and Home/Profile
+checks in Chromium and WebKit. The route tests verify a repeated request
+after membership removal reaches 404 before a Storage download. The browser
+checks exercise linked-account images, guest initials, preview, replacement,
+removal, phone layout and accessibility. The initial sandbox Worker tests
+failed on denied loopback connections and passed when rerun with local
+server access. Docker's engine is unavailable, so the actual Storage API
+and CDN check remains open. Independent review must cover the revised head.
+
 ## November 6, 2026 — Signup and private player profile
 
 **Tested locally by Codex.** Will approved the signup display name, optional
