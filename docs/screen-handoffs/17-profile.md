@@ -41,9 +41,11 @@ Codex recovered a clean source worktree at
 `a833b95e8cf4cd8588e7928f150dc265d64bfd0a` and cloned an isolated task
 checkout. Current main `9a50962ac787749b54b9c90575384edd53367870` was
 integrated with a history-preserving merge, retaining the source commit and
-the newer owner acceptance records. Tracker revision is 91. Will authorized
-commit, push, merge and deploy in this session. Hosted schema application
-still requires explicit authorization under CONTRIBUTING.md.
+the newer owner acceptance records. Will authorized commit, push, merge and
+deploy. He also explicitly approved applying and verifying
+`20261106164718_player_signup_profile.sql` and
+`20261111011626_team_profile_photo_access.sql` on Diamond Alibi's hosted
+Supabase project, then updating the deployment fingerprint after review.
 
 Codex's local checks passed for TypeScript, the production Next.js build,
 the unit suite, 33 release-gate tests, disposable roster/profile/Storage SQL,
@@ -55,6 +57,22 @@ removal, phone layout and accessibility. The initial sandbox Worker tests
 failed on denied loopback connections and passed when rerun with local
 server access. Docker's engine is unavailable, so the actual Storage API
 and CDN check remains open. Independent review must cover the revised head.
+
+Claude Code reviewed `921b441917c40d85325c2aea5ed61bc14cd7fda1` read-only.
+GitHub validation and the Workers build passed on that head. Codex read back
+the hosted operation helpers and verified that they normalize the
+`storage.` prefix and deny missing operation context. The pinned SDK forwards
+the route's cache option to fetch. Follow-up changes make the route test
+assert the roster and active membership filters and clarify the profile copy.
+
+Apply the signup/profile migration first and verify the bucket is private
+and owner-only. The second migration grants Storage API access as soon as it
+is applied. Schedule the synthetic check alongside that migration, while
+the bucket contains only test images. If a revoked viewer can still download
+the photo, stop the rollout and remove the teammate select policy. Keep the
+private bucket and profile columns in place so owner data is preserved.
+Restore the previous application version if dependent code has shipped.
+Keep credentials with the owner and record only the synthetic outcome.
 
 ## November 6, 2026 — Signup and private player profile
 

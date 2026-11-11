@@ -34,6 +34,7 @@ async function preparePhoto(source: File) {
 }
 
 export function ProfilePhoto({ name }: { name: string }) {
+  const initials = profileInitials(name);
   const [preview, setPreview] = useState<{ photo: Blob; url: string } | null>(null);
   const [processing, setProcessing] = useState(false);
   const [photoError, setPhotoError] = useState("");
@@ -79,7 +80,7 @@ export function ProfilePhoto({ name }: { name: string }) {
   return (
     <form className="club-form" action={submit}>
       <div className="avatar profile-photo">
-        {!hasPhoto && !preview && <span role="img" aria-label="Profile initials">{profileInitials(name)}</span>}
+        {!hasPhoto && !preview && <span role="img" aria-label={`Profile initials ${initials}`}>{initials}</span>}
         <img key={version} src={`/more/profile/photo?v=${version}`} alt="Your profile photo"
           hidden={!hasPhoto || !!preview} onLoad={() => setLoadedVersion(version)}
           onError={() => setLoadedVersion(-1)} />

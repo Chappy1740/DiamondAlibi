@@ -7,9 +7,11 @@ after read-only review. Will subsequently approved Codex to commit, push, merge
 and deploy [PR #87](https://github.com/Chappy1740/DiamondAlibi/pull/87).
 The [profile handoff](docs/screen-handoffs/17-profile.md#november-10-2026--team-visible-profile-photos)
 records the design, account cleanup and validation gates. The existing release
-fingerprint still identifies the prior approved migration tree. Hosted schema
-application requires separate authorization and readback. Verify revocation
-through the app and the Storage API before enabling the release.
+fingerprint still identifies the prior approved migration tree. Will also
+approved applying and verifying the two profile migrations on hosted
+Supabase. Apply the signup/profile migration first. Verify the app and
+Storage API deny the next read after revocation before merging the release
+commit. The second migration enables teammate reads at the Storage API.
 
 ## November 10, 2026 — Claude Code Bash safety hook (Claude)
 

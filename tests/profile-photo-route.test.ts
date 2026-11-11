@@ -11,14 +11,20 @@ test("photo route checks current membership before each download", async (t) => 
   let shared = true;
   let available = true;
   const downloads: string[] = [];
+  const queries: { table: string; filters: [string, unknown][] }[] = [];
   const client = {
     auth: { getUser: async () => ({ data: { user: signedIn ? { id: "viewer" } : null } }) },
     from(table: string) {
+      const filters: [string, unknown][] = [];
       return {
         select() { return this; },
-        eq() { return this; },
+        eq(column: string, value: unknown) {
+          filters.push([column, value]);
+          return this;
+        },
         limit() { return this; },
         async maybeSingle() {
+          queries.push({ table, filters });
           return { data: table === "team_players" ? { user_id: linked } : shared ? { team_id: "team" } : null };
         },
       };
@@ -61,6 +67,10 @@ test("photo route checks current membership before each download", async (t) => 
     assert.equal(response.headers.get("Cache-Control"), "private, no-store");
     assert.equal(response.headers.get("X-Content-Type-Options"), "nosniff");
     assert.equal(downloads.at(-1), `${owner}/avatar.jpg`);
+    assert.deepEqual(queries, [
+      { table: "team_players", filters: [["id", roster]] },
+      { table: "team_memberships", filters: [["user_id", owner], ["active", true]] },
+    ]);
   });
   await t.test("removed or inactive membership stops the next download", async () => {
     shared = false;

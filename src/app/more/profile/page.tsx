@@ -48,7 +48,7 @@ export default async function Page({
     {profile.error && <p role="alert">Could not load your profile details. Refresh to retry.</p>}
     <section className="card detail-card">
       <h2>Your bio</h2>
-      <p className="micro">Your private profile. Team roster aliases stay with their teams.</p>
+      <p className="micro">Your bio and preferences are private. Team roster aliases stay with their teams.</p>
       <ProfilePhoto key={user.id} name={name} />
       {details && <dl>
         <dt>Display name</dt><dd>{name}</dd>
