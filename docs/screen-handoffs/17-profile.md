@@ -74,6 +74,13 @@ private bucket and profile columns in place so owner data is preserved.
 Restore the previous application version if dependent code has shipped.
 Keep credentials with the owner and record only the synthetic outcome.
 
+Hosted readback. The signup/profile migration was applied as
+`20261111014757` on Diamond Alibi's Supabase project. Codex confirmed both
+profile columns, authenticated-only execution of the new details RPC, and
+the private JPEG-only bucket with a 512 KiB limit. The bucket contained zero
+objects and still had its owner-only policy at readback. Stage the
+owner-run synthetic revocation check before applying the access migration.
+
 ## November 6, 2026 — Signup and private player profile
 
 **Tested locally by Codex.** Will approved the signup display name, optional

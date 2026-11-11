@@ -9,9 +9,12 @@ The [profile handoff](docs/screen-handoffs/17-profile.md#november-10-2026--team-
 records the design, account cleanup and validation gates. The existing release
 fingerprint still identifies the prior approved migration tree. Will also
 approved applying and verifying the two profile migrations on hosted
-Supabase. Apply the signup/profile migration first. Verify the app and
-Storage API deny the next read after revocation before merging the release
-commit. The second migration enables teammate reads at the Storage API.
+Supabase. The signup/profile migration is applied as hosted
+`20261111014757`. Readback confirmed the two columns, the RPC grants, and
+the empty private bucket with its owner-only policy. Stage the owner-run
+synthetic test before applying the second migration, which enables
+teammate reads at the Storage API. Verify immediate revocation before
+merging the release commit.
 
 ## November 10, 2026 — Claude Code Bash safety hook (Claude)
 
