@@ -1,5 +1,14 @@
 # Release readiness and recovery
 
+## November 12, 2026 — Approve outcome-count migrations for Worker release (Claude)
+
+**AMBER.** Owner approval in chat, November 12, 07:02 CT: "Push it merge and deploy". Scope: this one PR (release policy update and this record), its merge, and the gated main deploy. Nothing else.
+
+- **Why:** the deploy gate (`scripts/deploy-worker.cjs`) refused to release main after #96/#97/#99 because `supabase/migrations` changed. Live Worker stayed `6a7fe175` (main `9a50962`).
+- **Change:** `scripts/worker-release-policy.json` `approvedMigrationTree` `0e35f4a…` → `823a223df3095e0988a8a3789372bd21366d08f5` (`git rev-parse HEAD:supabase/migrations` at main `6f8f996`).
+- **Evidence the hosted database matches:** both migrations applied (entry below). Claude rebuilt all 20 repo migrations on a disposable PGlite database: `private.apply_scoring_game_change` fingerprint `eae2819419524d2993b0c73f514b5fff`, equal to the hosted readback. `tests/worker-release.cjs` passed locally.
+- **Status ladder:** Implemented, Tested (local). Merged and Deployed: pending this PR's checks and the main deploy readback. Owner-accepted: no; phone check below.
+
 ## November 12, 2026 — Outcome count rules merged, hosted migrations applied, audit corrected (Claude)
 
 **AMBER.** Follow-up to the November 11 entry below. Owner approvals in chat on November 12: "Merge them in order" (the stack), then "1. Do it 2. Do it 3. Do it — I approve all 3" (audited correction, hosted migrations, this record). Claude Code performed each action in this session.
