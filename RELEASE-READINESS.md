@@ -1,5 +1,17 @@
 # Release readiness and recovery
 
+## November 12, 2026 — Deployment read-back: gate held the outcome count rules release (Claude)
+
+**AMBER.** Owner approval in chat on November 12: "I approve" for a read-only hosted migration check, then a branch, commit, push and draft PR updating the deploy gate. Merging is a separate owner approval, and the merge triggers the automatic deployment.
+
+- **Read-back (Cloudflare, read-only):** the live Worker `diamond-alibi-preview` is still version `6a7fe175-0837-4c6f-977b-b0935c603a43` (number 111), deployed November 10 from main `9a50962ac787749b54b9c90575384edd53367870`. Workers Builds ran for main `207edd3` (#96), `3cfdf5c` (#97), `fcc590f` (#99) and `6f8f996` (#100). Each build succeeded and each deploy step stopped at `scripts/deploy-worker.cjs` with "Migration source changed." So the outcome count rules are merged and migrated but **not deployed**.
+- **Cause:** #96 and #99 added `20261111020047_reject_roe_rbi.sql` and `20261111200000_outcome_count_rules.sql`, changing the `supabase/migrations` tree from `0e35f4a2755959449f92d6dc209333c2f5078791` to `823a223df3095e0988a8a3789372bd21366d08f5`. The gate works as designed: it waits for the database step to be recorded before shipping code with new migrations.
+- **Hosted migrations re-verified (Supabase, read-only):** project DiamondAlibi lists `reject_roe_rbi` (`20261112110243`) and `outcome_count_rules` (`20261112110305`), matching the entry below. Every migration in the repository tree appears in the hosted list.
+- **Discrepancy, outside this task:** the hosted list also contains `player_signup_profile` (`20261111014757`), which is not in main. It comes from Codex's unmerged `codex/player-profile-signup` branch, which records its own approval. When that work merges, the tree changes again and the gate will need another update. `m43_synthetic_fixture_cleanup` (October 9) is also hosted-only and predates the gate.
+- **Change for review:** `scripts/worker-release-policy.json` `approvedMigrationTree` set to `823a223df3095e0988a8a3789372bd21366d08f5`.
+- **Status ladder:** Implemented, Tested and Merged (#96, #97, #99). Database migrated. Deployed: no, pending the merge of this gate update. Owner-accepted: no.
+- **Next action:** owner approves the merge. Then read back the new Worker version and confirm its message names the merge SHA. Then the owner phone check listed below.
+
 ## November 12, 2026 — Outcome count rules merged, hosted migrations applied, audit corrected (Claude)
 
 **AMBER.** Follow-up to the November 11 entry below. Owner approvals in chat on November 12: "Merge them in order" (the stack), then "1. Do it 2. Do it 3. Do it — I approve all 3" (audited correction, hosted migrations, this record). Claude Code performed each action in this session.

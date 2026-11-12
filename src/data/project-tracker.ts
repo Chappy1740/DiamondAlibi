@@ -861,8 +861,8 @@ export const projectTracker: ProjectTracker = {
           title: "Enforce outcome count rules: strikeouts 0/0, ROE and DP no RBI",
           status: "implemented",
           evidence:
-            "Owner issue (Nov 7 hosted K Swinging saved 4 runs/4 RBI). Stack merged in order on Nov 12: #96 (207edd3), #97 (3cfdf5c), #99 (fcc590f), each on a validate-green head. Hosted migrations reject_roe_rbi (20261112110243) and outcome_count_rules (20261112110305) applied under owner approval; the audit found one play, corrected to 0/0 through the audited path at day revision 34 with history preserved; audit now empty. Records: RELEASE-READINESS.md November 12 and 11 entries, docs/screen-handoffs/08-scorebook.md.",
-          next: "Read back the main deployment, then owner phone acceptance: strikeout hides Runs/RBI and saves 0/0, ROE and DP save 0 RBI, rule-breaking corrections are explained and not saved.",
+            "Owner issue (Nov 7 hosted K Swinging saved 4 runs/4 RBI). Stack merged in order on Nov 12: #96 (207edd3), #97 (3cfdf5c), #99 (fcc590f), each on a validate-green head. Hosted migrations reject_roe_rbi (20261112110243) and outcome_count_rules (20261112110305) applied under owner approval; the audit found one play, corrected to 0/0 through the audited path at day revision 34 with history preserved; audit now empty. Records: RELEASE-READINESS.md November 12 and 11 entries, docs/screen-handoffs/08-scorebook.md. Deployment read-back on Nov 12 found the deploy gate blocked all four main builds (#96, #97, #99, #100) because the approved migration tree was not yet updated; live remained version 6a7fe175 from 9a50962. Hosted migrations re-verified read-only; approvedMigrationTree updated to 823a223 for review.",
+          next: "Owner approves merging the deploy gate update; confirm the new Worker version reports the merge SHA, then owner phone acceptance: strikeout hides Runs/RBI and saves 0/0, ROE and DP save 0 RBI, rule-breaking corrections are explained and not saved.",
           kind: "work",
         },
       ],
