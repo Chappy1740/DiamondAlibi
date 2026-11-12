@@ -201,11 +201,20 @@ function members(book: Scorebook, ids: string[]) {
     "Choose a unique lineup from this team's roster.",
   );
 }
-function validatePlay(outcome: Outcome, runs: number, rbi: number) {
+type CommandMode = "write" | "replay";
+
+function validatePlay(
+  outcome: Outcome,
+  runs: number,
+  rbi: number,
+  mode: CommandMode,
+) {
   insist(OUTCOMES.includes(outcome), "Choose a recognized batting outcome.");
   count(runs, 4, "Runs");
   count(rbi, 4, "RBI");
   insist(rbi <= runs, "RBI cannot exceed runs on this play.");
+  if (mode === "write")
+    insist(outcome !== "ROE" || rbi === 0, "Reached on error cannot earn RBI.");
   if (outcome === "Fence HR" || outcome === "ITP HR")
     insist(runs >= 1, "A home run must score at least one run.");
 }
@@ -244,7 +253,12 @@ export function createScorebook(input: {
   );
   return book;
 }
-export function applyCommand(current: Scorebook, request: Request): Scorebook {
+/** Use replay mode when reconstructing a previously saved journal. */
+export function applyCommand(
+  current: Scorebook,
+  request: Request,
+  mode: CommandMode = "write",
+): Scorebook {
   text(request.commandId, "Command ID");
   text(request.actor, "Actor");
   text(request.at, "Timestamp");
@@ -340,7 +354,7 @@ export function applyCommand(current: Scorebook, request: Request): Scorebook {
       reason = cmd.reason.trim();
       const play = game.plays.find((p) => p.id === cmd.playId);
       insist(play, "Play was not found.");
-      validatePlay(cmd.outcome, cmd.runs, cmd.rbi);
+      validatePlay(cmd.outcome, cmd.runs, cmd.rbi, mode);
       insist(availableOutcomes(game.rules.board).includes(cmd.outcome), "This game does not have saved rules for that outcome.");
       insist(
         typeof cmd.voided === "boolean",
@@ -387,7 +401,7 @@ export function applyCommand(current: Scorebook, request: Request): Scorebook {
           game.lineup[game.next] === cmd.playerId,
           "The next batter changed. Confirm the batter before scoring.",
         );
-        validatePlay(cmd.outcome, cmd.runs, cmd.rbi);
+        validatePlay(cmd.outcome, cmd.runs, cmd.rbi, mode);
       insist(availableOutcomes(game.rules.board).includes(cmd.outcome), "This game does not have saved rules for that outcome.");
         game.plays.push({
           id: cmd.playId,

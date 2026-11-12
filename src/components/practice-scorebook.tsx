@@ -63,7 +63,7 @@ function replayLegacy(journal: LegacyJournal) {
   )
     throw new Error("Only the synthetic practice roster can be restored here.");
   let b = createScorebook(journal.initial);
-  for (const r of journal.requests) b = applyCommand(b, r);
+  for (const r of journal.requests) b = applyCommand(b, r, "replay");
   return b;
 }
 export function PracticeScorebook({
