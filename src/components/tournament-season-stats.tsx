@@ -4,7 +4,7 @@ import type { CompetitionKind } from "@/lib/competitions";
 import type { LoadedScorebook } from "@/lib/scorebook-view";
 import { PlayerLeaderboard } from "./tournament-leaderboard";
 
-type SeasonStatsProps = { data: LoadedScorebook; team: string; season: string; seasonName: string };
+type SeasonStatsProps = { data: LoadedScorebook; team: string; season: string; seasonName: string; showPlayerPhotos?: boolean };
 
 export function TournamentSeasonStats({ tournamentId, tournamentName, ...props }: SeasonStatsProps & { tournamentId?: string; tournamentName?: string }) {
   return <CompetitionSeasonStats {...props} kind="Tournament" competitionId={tournamentId} competitionName={tournamentName} />;
@@ -14,7 +14,7 @@ export function LeagueSeasonStats({ leagueId, leagueName, ...props }: SeasonStat
   return <CompetitionSeasonStats {...props} kind="League" competitionId={leagueId} competitionName={leagueName} />;
 }
 
-function CompetitionSeasonStats({ data, team, season, seasonName, kind, competitionId, competitionName }: SeasonStatsProps & {
+function CompetitionSeasonStats({ data, team, season, seasonName, showPlayerPhotos, kind, competitionId, competitionName }: SeasonStatsProps & {
   kind: CompetitionKind; competitionId?: string; competitionName?: string;
 }) {
   const individual = competitionId !== undefined;
@@ -52,6 +52,7 @@ function CompetitionSeasonStats({ data, team, season, seasonName, kind, competit
       </div> : <p>{individual ? `No recorded plate appearances in this ${noun}.` : `No recorded ${noun} plate appearances this season.`}</p>}
     </section>
     {stats.players.length > 0 && <PlayerLeaderboard key={`${kind}:${team}:${season}:${competitionId ?? "overall"}`} players={stats.players}
+      photoPlayerIds={showPlayerPhotos ? data.roster.filter(r => r.user_id && !r.is_guest).map(r => r.id) : undefined}
       compactSummary title="Player leaders" scopeLabel={scope} regionLabel={individual ? `${kind} player leaderboard` : `Overall ${noun} player leaderboard`} />}
   </section>;
 }

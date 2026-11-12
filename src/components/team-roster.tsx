@@ -1,4 +1,5 @@
 import { ClubForm } from "./club-form";
+import { RosterPhoto } from "./roster-photo";
 export type RosterPlayer = {
   id: string;
   display_name: string;
@@ -24,7 +25,10 @@ export function TeamRoster({
         {players.map((player) => (
           <li key={player.id}>
             <div className="roster-player-heading">
-              <strong>{player.display_name}</strong>
+              <div className="roster-player-name">
+                <RosterPhoto playerId={player.is_guest ? null : player.id} name={player.display_name} />
+                <strong>{player.display_name}</strong>
+              </div>
               <span className="badge">
                 {player.is_guest ? "No account" : "Account linked"}
               </span>

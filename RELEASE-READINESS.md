@@ -1,5 +1,60 @@
 # Release readiness and recovery
 
+## November 12, 2026 — Hosted photo revocation passed
+
+**GREEN for hosted acceptance.** The fresh synthetic viewer could read through
+the revised app and JWT-protected function while on a shared team. Both denied
+the same valid session immediately after the last shared membership ended.
+Direct Storage and signed URL requests were denied. Both synthetic memberships
+were restored. The four hosted photo migration statements match the source.
+Integrate current main `d2427bcc3ce2966ff9b22e5fae07a40c8ddc3965`, update the
+migration fingerprint, and require exact-head CI and independent review before
+the approved merge and gated Worker deployment.
+[Profile handoff](docs/screen-handoffs/17-profile.md#november-12-2026--hosted-photo-revocation-passed).
+
+## November 12, 2026 — Hosted photo revocation failed
+
+**AMBER.** Both app routes denied the synthetic viewer after revocation, but
+both direct Storage routes still returned HTTP 200 to the same session.
+The two synthetic memberships were restored. With explicit owner approval,
+the direct teammate policy was removed as hosted migration `20261112193037`.
+The JWT-protected Edge Function and revised app path passed local checks. The
+owner approved deploying the function alone. Version 1 is active, JWT
+verification is enabled, and no-token, key-only and invalid-token probes
+returned 401. The fresh-session app and function check remains pending. Keep
+the deploy gate closed. [Profile handoff](docs/screen-handoffs/17-profile.md#november-12-2026--hosted-revocation-failed).
+
+## November 12, 2026 — Hosted photo policy applied
+
+**AMBER.** PR #87 migration `20261111011626_team_profile_photo_access.sql`
+applied as `20261112190015` with explicit owner approval. Hosted readback
+confirmed the private bucket, one synthetic photo and the new scoped policies.
+Both synthetic accounts share two test teams. Complete the same-session app
+and Storage revocation check before updating the deployment fingerprint.
+The initial roster read exposed a gateway metadata preflight. The scoped
+follow-up applied as `20261112191312`. Retest the roster downloads before
+running revocation.
+[Profile handoff](docs/screen-handoffs/17-profile.md#november-12-2026--hosted-photo-policy-applied).
+
+## November 12, 2026 — Profile photo release reconciliation
+
+**AMBER.** Will renewed approval to commit, push and deploy the photo release
+and is available for the owner-run synthetic check. The earlier scoped merge
+and migration approvals are recorded below. Codex reconciled [PR #87](https://github.com/Chappy1740/DiamondAlibi/pull/87)
+from `ca9f9def483bcfd8ddca50e1663c78d04a9e9cc0` with main
+`b796ed728ea1da046d2173fcd50d0b92f44ba7df`, retaining the outcome-count release.
+Hosted readback confirmed the private JPEG bucket is empty with its owner-only
+policy and the teammate-access migration is pending. Coordinate the hosted
+revocation check in the [profile handoff](docs/screen-handoffs/17-profile.md#november-12-2026--profile-photo-release-reconciliation)
+before applying the teammate policy. Keep the approved migration fingerprint
+at main's value until hosted verification is complete.
+
+Later November 12 readback confirmed one synthetic photo and the owner's
+active membership on both test teams. Stage the second synthetic account on
+both before enabling teammate reads. The owner requested a return to Sign in
+after email confirmation. The [profile handoff](docs/screen-handoffs/17-profile.md#november-12-2026--profile-photo-release-reconciliation)
+records the locally tested follow-up and remaining hosted verification.
+
 ## November 12, 2026 — Approve outcome-count migrations for Worker release (Claude)
 
 **AMBER.** Owner approval in chat, November 12, 07:02 CT: "Push it merge and deploy". Scope: this one PR (release policy update and this record), its merge, and the gated main deploy. Nothing else.
@@ -29,6 +84,22 @@
 - **Hosted:** not touched. Before applying the migration to hosted data, run `supabase/audits/outcome-count-rules.sql` read-only under separate authorization and correct any listed plays through audited corrections; then confirm the hosted scoring function fingerprint still matches after #96's migration is applied.
 - **Decisions to confirm:** (1) typed or spoken counts that break a rule are credited as 0 rather than refused, matching the existing typed-ROE behavior; refusing with a message is a small follow-up if preferred. (2) Voiding a legacy play that breaks a rule still requires zeroing its counts in the same correction (same as #96 F2).
 - **Not authorized here:** merge, hosted migration, deployment, historical data changes, a pull request.
+
+## November 10, 2026 — Team-visible profile photos
+
+**AMBER.** Will approved the photo design at 19:05 CT, recorded by Claude Code
+after read-only review. Will subsequently approved Codex to commit, push, merge
+and deploy [PR #87](https://github.com/Chappy1740/DiamondAlibi/pull/87).
+The [profile handoff](docs/screen-handoffs/17-profile.md#november-10-2026--team-visible-profile-photos)
+records the design, account cleanup and validation gates. The existing release
+fingerprint still identifies the prior approved migration tree. Will also
+approved applying and verifying the two profile migrations on hosted
+Supabase. The signup/profile migration is applied as hosted
+`20261111014757`. Readback confirmed the two columns, the RPC grants, and
+the empty private bucket with its owner-only policy. Stage the owner-run
+synthetic test before applying the second migration, which enables
+teammate reads at the Storage API. Verify immediate revocation before
+merging the release commit.
 
 ## November 10, 2026 — Claude Code Bash safety hook (Claude)
 

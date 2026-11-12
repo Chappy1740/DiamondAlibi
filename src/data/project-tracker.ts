@@ -2,8 +2,8 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 90,
-  updatedAt: "2026-11-06",
+  revision: 91,
+  updatedAt: "2026-11-10",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
   release: {
@@ -288,6 +288,9 @@ export const projectTracker: ProjectTracker = {
             "Make Home personal, add profile control and competition pages, compact phone setup",
           status: "implemented",
           evidence:
+            "November 12 profile release: PR #87 passed the fresh-session hosted revocation check. The app and JWT-protected teammate-photo function allowed one remaining shared team, then denied the same valid session after the last shared membership ended. Direct Storage and signed URL requests were denied. Both synthetic memberships were restored. The four hosted photo migration statements match source. Exact-head CI, independent review and Worker deployment remain pending. See docs/screen-handoffs/17-profile.md and RELEASE-READINESS.md. " +
+            "November 10 profile photos: Will approved active shared-team visibility, owner-only edits, and private Storage, then authorized commit, push, merge, deploy, and both hosted migrations. Signup/profile applied as hosted 20261111014757, with both columns, RPC grants, and the private bucket verified. PR #87 and the profile handoff record the cleanup and rollback plan. " +
+            "November 6 player profile: Codex verified the original owner-only candidate with a local production build, unit and disposable SQL tests, and synthetic Chromium/WebKit checks. " +
             "November 5 Clubhouse Extras (AMBER): Will approved release to the pilot through existing validation. PR #78 and docs/screen-handoffs/17-profile.md record the team-scoped navigation change, checks, and hosted phone acceptance. Owner accepted #78 Clubhouse Extras on phone (2026-11-06, 14:33 CT). Earlier evidence follows. Implementation reuses authorized snapshots and existing scoring commands. Login returns Home; leagues/tournaments have games/settings pages; profile menu includes bio, settings, team management and sign-out. Bio uses existing user metadata only as profile text. 55 focused synthetic checks passed locally. Source 39d7170 passed all GitHub checks: 66 unit checks, typecheck, disposable ownership/RLS SQL, actual React workflows, score/setup modes, complete connected scoring regression, Worker build and built Next.js route/mobile checks. Dependency installation and local build/browser checks are now available. Owner's latest Home screenshot requested primary content first and readable selected names. Home controls were moved below the greeting, competition actions and personal summary; native selected text now wraps. Local Chromium layout/keyboard/form checks at 320–1440px, typecheck and Worker build pass.",
           next: "Personal-only Home deployed as c4875c1 and owner responded that it looks better. Isolated tournament acceptance resumed; Game 1 creation is visible in the owner screenshot. Keep Game 2 acceptance open. Owner requested removing the brown notice and keeping team statistics under bottom Stats; this refinement removes the notice, team-wide live cards, aggregate activity and all-player shortcut from signed-in Home, while retaining personal account-linked stats and Beverage balance. Full validation passed on source 29deb01, including Chromium/mobile WebKit Home checks at 320–1440px; long names, native keyboard/form values, credits and offline refresh were verified with synthetic data. Owner accepted improved spacing generally, but requested another setup-format pass. Compact first/next-game forms, small connection status, grouped settings and native date containment are implemented; targeted Chromium/scoring/build checks pass. Mobile WebKit validation also passed in GitHub CI on source 6c03520; hosted phone review remains open. Scorebook logout still needs a separate owner check.",
           kind: "work",

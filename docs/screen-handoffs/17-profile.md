@@ -1,5 +1,247 @@
 # 17 — Bio and profile: Screen handoff
 
+## November 12, 2026 — Hosted photo revocation passed
+
+**GREEN for the hosted acceptance check.** On the revised laptop preview,
+the owner signed in with a fresh synthetic viewer session. Both app URLs and
+the authenticated `teammate-photo` function returned the sample photo when
+both teams were active. The two direct Storage URLs and signed URL issuance
+were denied. The remaining shared team kept access after the first membership
+was deactivated. After the last membership was deactivated, both app URLs,
+both function requests, and both direct Storage URLs denied the same still-valid
+session. Function logs corroborated both revocation steps. Both memberships
+were restored and verified. The bucket is private with one sample photo and
+the direct teammate policy remains absent.
+
+The four hosted photo migration statements match the source files. Update the
+release fingerprint for the tested migration tree and run required CI and
+independent review on the revised PR head. Main advanced to
+`d2427bcc3ce2966ff9b22e5fae07a40c8ddc3965` through the instructions-only #103.
+The existing authorization covers the photo release through the Worker gate.
+The Codex runtime is identified by the session. The exact model variant and
+effort are unavailable. The remaining release steps use deterministic checks
+and independent review. No purchased credits are authorized.
+
+## November 12, 2026 — Hosted revocation failed
+
+**AMBER.** With the same valid synthetic viewer session, both app photo URLs
+returned 404 after the last shared membership ended, while both warmed direct
+Storage URLs returned 200. The session still returned 200. With one active
+shared team, its app photo and both Storage URLs returned 200. The signed URL
+request was denied. Both temporary synthetic membership changes were restored
+and read back. The private bucket still holds only one synthetic photo.
+
+Automatic review initially blocked dropping `da_profile_photo_teammate_select`.
+After explicit owner approval, `20261112192946_disable_direct_teammate_photo_reads.sql`
+applied as hosted `20261112193037`. Readback confirms the teammate policy is
+gone, the private bucket still has its one sample photo, and owner policies
+are in place. Keep the deployment fingerprint on the previous approved tree.
+
+The local replacement sends roster photo reads through the `teammate-photo`
+Supabase Edge Function. A user JWT and the viewer's existing RLS-scoped roster
+and membership lookups gate every POST. The function uses the runtime's
+privileged key only to read the fixed avatar after those checks, returns private
+no-store bytes, and does not pass the key to the app. Owner photo edits retain
+the existing Storage path. Local typecheck, production build, 198 unit checks,
+and disposable SQL passed. With explicit owner approval the function deployed
+as version 1 (`f5a11600-f515-43eb-8ddc-9b071d54e1cd`), active with platform JWT
+verification enabled. No-token, publishable-key-only, and invalid-JWT probes
+returned 401. The key-only response also confirmed private no-store headers
+from the handler. The Worker release and previous fingerprint are held.
+Next, rerun the owner-led check with a fresh session on the revised app preview.
+
+## November 12, 2026 — Hosted photo policy applied
+
+**AMBER.** The owner explicitly approved production teammate photo reads
+while accounts have an active shared team. The exact reviewed migration
+`20261111011626_team_profile_photo_access.sql` from PR #87 head
+`277801d7192cdb12acbdb40bc7ec25f8c11a6cef` applied as hosted version
+`20261112190015`. Readback confirmed a private bucket, one synthetic photo,
+the owner write policies, and the authenticated shared-team read policy.
+The synthetic owner and viewer share two active test teams. The owner-run
+application and Storage revocation check is pending. The deployment fingerprint
+still points to the previously approved tree.
+
+The first laptop roster check showed initials for both teams. Hosted Storage
+logs showed that the download gateway calls `object.get_authenticated_info`
+before serving the file. The original operation filter denied that call even
+for active teammates. Follow-up `20261112191200_profile_photo_download_metadata.sql`
+applied as `20261112191312`. It allows that operation under the same owner or
+active shared-team conditions. Disposable SQL verifies that signing, listing,
+unrelated access and revoked access still fail. Hosted policy readback confirms
+the private bucket and the metadata operation under both read policies.
+
+After that change, the owner showed Pilot Test viewing the sample logo beside
+Test Player on M3-5 Synthetic TesT. Hosted download logs returned HTTP 200
+with cache hits. Both synthetic memberships remain active. This confirms
+visibility on that roster. The same-session access and revocation check is
+still required before the release fingerprint can change.
+
+The owner requested teammate photos across the app. The local follow-up
+reuses the roster avatar and existing authenticated photo route in the
+connected game's batter and stats views, detailed team and competition
+rankings, and the Beverage Board. Unlinked players use initials. Fictional
+sample views do not request account photos.
+
+## November 12, 2026 — Profile photo release reconciliation
+
+**AMBER.** Will renewed approval to commit, push and deploy the existing
+photo release and is available for the hosted synthetic check. Codex prepared
+[PR #87](https://github.com/Chappy1740/DiamondAlibi/pull/87) by merging current
+main `b796ed728ea1da046d2173fcd50d0b92f44ba7df` into the existing Codex-owned
+photo branch at `ca9f9def483bcfd8ddca50e1663c78d04a9e9cc0`. The conflict was
+limited to the release notes, which retain both dated histories. The prior
+approval for this PR's merge and both named migrations is recorded below.
+Hosted readback confirms signup/profile and both outcome-count migrations
+are applied. The private JPEG photo bucket has zero objects, and its owner-only
+policy is still in place.
+
+Next, stage the synthetic photo and teammate accounts, then apply the
+teammate policy and verify access and immediate revocation using the same
+authenticated viewer. The rollout gates below remain in force. The
+[release checkpoint](../../RELEASE-READINESS.md#november-12-2026--profile-photo-release-reconciliation)
+and tracker M3-9 carry the release state.
+
+Later November 12 owner testing used the laptop preview at PR #87 head
+`277801d7192cdb12acbdb40bc7ec25f8c11a6cef`. Hosted readback confirmed one
+sample photo saved by the synthetic owner, who is active on both test teams.
+The second synthetic account still needs to join both teams. The teammate
+policy and hosted revocation check remain pending.
+
+The owner requested that signup confirmation return to Sign in after a
+confirmation link opened Home in a browser with another account. The local
+follow-up reuses the recovery origin checks and callback, returns to `/login`
+without exchanging the signup code for a session, and initializes the profile
+on the subsequent password sign-in. Local signup, callback, recovery and
+type checks passed. Hosted Supabase accepted the canonical site and numeric
+loopback return URLs in an invalid-token redirect probe. A fresh hosted
+confirmation email has not been tested against this local follow-up.
+
+## November 10, 2026 — Team-visible profile photos
+
+Will approved the design at 19:05 CT after Claude Code's read-only review.
+Codex owns implementation in [PR #87](https://github.com/Chappy1740/DiamondAlibi/pull/87).
+Only the owner can add, replace or remove their photo. A viewer can read a
+photo when both accounts have an active membership on any shared team.
+The roster uses its explicit account link. Guest rows use initials, and
+account preferences and team aliases keep their existing visibility.
+
+The private bucket serves the fixed account avatar through authenticated reads.
+The app checks current membership on each request and sends private, no-store
+responses. Storage policies disallow signed read URLs. In a hosted synthetic
+check, load a teammate's photo through both the app and Storage, then deactivate
+the last shared membership and repeat the same requests with the same session.
+Both paths must deny the next request, including after an earlier cached read.
+Verify both teams of a multi-team account, remaining access when a different
+shared active team still exists, and denied signed URL creation. Disposable SQL
+does not exercise the hosted Storage CDN.
+
+The existing canvas keeps normal uploads at 512px or less and strips source
+metadata. Keep the current JPEG and byte limits for the pilot. An owner can
+upload directly to Storage, so the app's checks cannot guarantee that every
+object lacks metadata. The profile page tells owners who can see their photo.
+
+For an assisted account-deletion request, confirm the request and have the
+owner use **Remove photo** while their session is active. Verify that the
+Storage API removed the object and stop if it did not. Separately authorized
+Auth deletion follows only after reviewing references from teams, roster and
+audit data and deciding which records to retain. Keep historical orphan
+cleanup as a separate decision. Photo removal uses the owner's session.
+
+Keep signup skill levels pending owner review and test the TypeScript choices
+against the SQL constraints. Release requires independent review of the revised
+head, required CI, authorization and readback for the hosted migration, and
+the revocation check. Apply the migration before deploying code that depends on
+it. Keep the existing migration fingerprint until hosted verification.
+
+Codex recovered a clean source worktree at
+`a833b95e8cf4cd8588e7928f150dc265d64bfd0a` and cloned an isolated task
+checkout. Current main `9a50962ac787749b54b9c90575384edd53367870` was
+integrated with a history-preserving merge, retaining the source commit and
+the newer owner acceptance records. Will authorized commit, push, merge and
+deploy. He also explicitly approved applying and verifying
+`20261106164718_player_signup_profile.sql` and
+`20261111011626_team_profile_photo_access.sql` on Diamond Alibi's hosted
+Supabase project, then updating the deployment fingerprint after review.
+
+Codex's local checks passed for TypeScript, the production Next.js build,
+the unit suite, 33 release-gate tests, disposable roster/profile/Storage SQL,
+the new route and list-parity tests, and synthetic roster and Home/Profile
+checks in Chromium and WebKit. The route tests verify a repeated request
+after membership removal reaches 404 before a Storage download. The browser
+checks exercise linked-account images, guest initials, preview, replacement,
+removal, phone layout and accessibility. The initial sandbox Worker tests
+failed on denied loopback connections and passed when rerun with local
+server access. Docker's engine is unavailable, so the actual Storage API
+and CDN check remains open. Independent review must cover the revised head.
+
+Claude Code reviewed `921b441917c40d85325c2aea5ed61bc14cd7fda1` read-only.
+GitHub validation and the Workers build passed on that head. Codex read back
+the hosted operation helpers and verified that they normalize the
+`storage.` prefix and deny missing operation context. The pinned SDK forwards
+the route's cache option to fetch. Follow-up changes make the route test
+assert the roster and active membership filters and clarify the profile copy.
+
+Apply the signup/profile migration first and verify the bucket is private
+and owner-only. The second migration grants Storage API access as soon as it
+is applied. Schedule the synthetic check alongside that migration, while
+the bucket contains only test images. If a revoked viewer can still download
+the photo, stop the rollout and remove the teammate select policy. Keep the
+private bucket and profile columns in place so owner data is preserved.
+Restore the previous application version if dependent code has shipped.
+Keep credentials with the owner and record only the synthetic outcome.
+
+Hosted readback. The signup/profile migration was applied as
+`20261111014757` on Diamond Alibi's Supabase project. Codex confirmed both
+profile columns, authenticated-only execution of the new details RPC, and
+the private JPEG-only bucket with a 512 KiB limit. The bucket contained zero
+objects and still had its owner-only policy at readback. Stage the
+owner-run synthetic revocation check before applying the access migration.
+
+## November 6, 2026 — Signup and private player profile
+
+**Tested locally by Codex.** Will approved the signup display name, optional
+level and position, private profile photo, and photo selection after email
+verification. Codex implemented in `codex/player-profile-signup` from
+`028bd942cc54f1f468b37958448a72d12a6a9db9` and reconciled the branch with
+GitHub main `496ef3ae767b77c88657385477e2358330891082` before the first push.
+The reconciliation retains the merged Beverage Board changes and the Roast Club
+and Worker receipts. The owner’s main checkout retains its uncommitted edits.
+
+Reuse the [registration form](20-sign-in.md), account nickname record and Bio
+editor. Signup carries the validated answers through email confirmation and
+seeds the profile once at verified sign-in. The existing Bio text stays in
+Auth metadata. Team creation and invitation redemption can seed legacy
+profiles and preserve established account names. Team roster aliases and
+captain lineup decisions stay separate from profile preferences.
+
+More → Profile opens the existing page. A native photo picker previews a
+normalized square JPEG before saving. One owner-only Storage object per account
+supports replacement and removal, with initials when there is no photo.
+The existing Supabase SDK handles storage and the browser handles preview,
+so the change uses the pinned dependencies. The migration adds nullable
+preferences and a private photo bucket. The release fingerprint stays at the
+last approved migration tree pending hosted review and approval.
+
+Codex verified the Next.js production build, TypeScript, all 183 unit tests,
+33 release-gate tests, password recovery, roster actions, disposable PostgreSQL
+profile/roster and Storage policy tests, and synthetic Chromium and WebKit
+Home/Profile tests with accessibility checks. Storage policies ran against
+disposable tables and the browser used a synthetic upload transport.
+After reconciling main, the production build, 183 unit tests, disposable
+profile and roster checks, and Chromium and WebKit Home/Profile checks passed
+again with the merged Beverage Board coverage.
+
+**AMBER.** Will approved local implementation, verification, commit, and push
+of the feature branch. Draft PR publication, hosted migration, deployment, and
+phone acceptance remain open. Next action is owner approval to open a draft PR.
+Once authorized and published, Claude Code reviews the draft. The hosted
+phone check uses a fresh synthetic account to confirm email, preview an iPhone
+photo, verify Bio and preferences after reload, replace and remove the photo,
+and confirm the initials fallback. Repeat with a legacy account and a second
+account to verify photo isolation. The [release checkpoint](../../RELEASE-READINESS.md#november-6-2026--player-profile-local-candidate)
+and tracker M3-9 record the release boundary.
+
 ## November 5, 2026 — Clubhouse Extras pilot candidate
 
 Will requested the **Clubhouse Extras** preview for the pilot. Its profile-menu

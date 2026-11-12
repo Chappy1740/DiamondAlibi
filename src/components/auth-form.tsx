@@ -2,6 +2,7 @@
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import { login, signup, type AuthResult } from "@/app/login/actions";
+import { PlayerProfileFields } from "./player-profile-fields";
 export function AuthForm() {
   const [creating, setCreating] = useState(false);
   const [result, submit, pending] = useActionState<AuthResult, FormData>(
@@ -33,12 +34,13 @@ export function AuthForm() {
           maxLength={256}
           required
         />
-        {creating && (
+        {creating && <>
+          <PlayerProfileFields />
           <p className="muted">
-            Creating an account may send a confirmation email to the address you
-            enter. No teammate invitations are sent automatically.
+            After you confirm your email and sign in, you can add a profile photo.
+            No teammate invitations are sent automatically.
           </p>
-        )}
+        </>}
         {result.error && (
           <p role="alert" className="form-error">
             {result.error}

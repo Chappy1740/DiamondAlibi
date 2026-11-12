@@ -60,6 +60,27 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
     );
     await db.exec(original);
     await db.exec(migration);
+    await db.exec(`
+      create schema storage;
+      create table storage.buckets(
+        id text primary key, name text, public boolean, file_size_limit int, allowed_mime_types text[]
+      );
+      create table storage.objects(
+        bucket_id text references storage.buckets(id), name text, version text, primary key(bucket_id,name)
+      );
+      -- Emulate the Storage API operation context in disposable PostgreSQL.
+      create function storage.allow_any_operation(text[]) returns boolean
+        language sql stable as $$select current_setting('storage.operation', true) = any($1)$$;
+      create function storage.allow_only_operation(text) returns boolean
+        language sql stable as $$select storage.allow_any_operation(array[$1])$$;
+      alter table storage.objects enable row level security;
+      grant usage on schema storage to authenticated, anon;
+      grant select, insert, update, delete on storage.objects to authenticated, anon;
+      insert into public.player_profiles(user_id, nickname) values ('${id(10)}', 'Legacy name');
+    `);
+    await db.exec(fs.readFileSync("supabase/migrations/20261106164718_player_signup_profile.sql", "utf8"));
+    await db.exec(fs.readFileSync("supabase/migrations/20261111011626_team_profile_photo_access.sql", "utf8"));
+    await db.exec(fs.readFileSync("supabase/migrations/20261112191200_profile_photo_download_metadata.sql", "utf8"));
     const actor = async (n) => {
       await db.exec("reset role");
       await db.query("select set_config('request.jwt.claim.sub',$1,false)", [
@@ -347,6 +368,116 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
       rpc("da_read_scoring_season", [team, season, "Overall"]),
       /Team access denied/,
     );
+    await actor(9);
+    assert.equal(await rpc("da_save_player_details", ["Account Name", "Class E", "Left Center", true]), true);
+    assert.equal(await rpc("da_save_player_details", ["Replay", null, null, true]), false);
+    const anotherTeam = await rpc("da_create_team", ["Profile test team", "Local Alias"]);
+    assert.equal((await redeem(general.code, "Tournament Alias")).ok, true);
+    assert.deepEqual((await db.query("select nickname,play_level,fielding_position from public.player_profiles")).rows,
+      [{ nickname: "Account Name", play_level: "Class E", fielding_position: "Left Center" }]);
+    assert.equal((await db.query("select display_name from public.team_players where team_id=$1", [anotherTeam])).rows[0].display_name,
+      "Local Alias");
+    await rpc("da_save_profile", ["Edited Name"]);
+    assert.equal((await db.query("select play_level from public.player_profiles")).rows[0].play_level, "Class E");
+    await assert.rejects(rpc("da_save_player_details", ["Edited Name", null, "Manager", false]), /check constraint/);
+    assert.equal(await rpc("da_save_player_details", ["Edited Name", null, "No Preference", false]), true);
+    const photo = `${id(9)}/avatar.jpg`;
+    const operation = (name) => db.query("select set_config('storage.operation',$1,false)", [name]);
+    const visible = () => db.query("select version from storage.objects where name=$1", [photo]);
+    const remove = () => db.query("delete from storage.objects where name=$1 returning name", [photo]);
+    const putPhoto = (name, version) => db.query(
+      "insert into storage.objects values ('da-player-profile-photos',$1,$2) on conflict (bucket_id,name) do update set version=excluded.version",
+      [name, version],
+    );
+    await operation("object.upload");
+    await putPhoto(photo, "first");
+    await putPhoto(photo, "second");
+    await assert.rejects(putPhoto(`${id(10)}/avatar.jpg`, "foreign"), /row-level security/);
+    await assert.rejects(putPhoto(`${id(9)}/nested/avatar.jpg`, "nested"), /row-level security/);
+
+    await db.exec("reset role");
+    const otherTeam = (await db.query(
+      "insert into public.teams(name,created_by) values ('Unrelated synthetic team',$1) returning id", [id(10)],
+    )).rows[0].id;
+    await db.query("insert into public.team_memberships(team_id,user_id) values ($1,$2),($3,$4)",
+      [otherTeam, id(10), anotherTeam, id(11)]);
+
+    await actor(10);
+    assert.deepEqual((await db.query("select nickname,play_level,fielding_position from public.player_profiles")).rows,
+      [{ nickname: "Legacy name", play_level: null, fielding_position: null }]);
+    await operation("object.get_authenticated");
+    assert.deepEqual((await visible()).rows, [], "unrelated team has no access");
+    await operation("object.get_authenticated_info");
+    assert.deepEqual((await visible()).rows, [], "unrelated team cannot read object info");
+
+    for (const member of [1, 11]) {
+      await actor(member);
+      await operation("object.get_authenticated");
+      assert.deepEqual((await visible()).rows, [{ version: "second" }], "both teams can read");
+      await operation("object.get_authenticated_info");
+      assert.deepEqual((await visible()).rows, [{ version: "second" }], "both teams pass the gateway's object info check");
+      for (const denied of ["object.sign", "object.sign_many", "object.list", "object.head_authenticated_info", ""]) {
+        await operation(denied);
+        assert.deepEqual((await visible()).rows, [], `teammate cannot read through ${denied || "an unset operation"}`);
+      }
+    }
+    await operation("object.delete_many");
+    assert.equal((await remove()).rows.length, 0);
+    await operation("object.upload");
+    await assert.rejects(putPhoto(photo, "foreign"), /row-level security/);
+    await operation("object.upload_update");
+    assert.equal((await db.query("update storage.objects set version='foreign' where name=$1 returning name", [photo])).rows.length, 0);
+
+    await db.exec("reset role");
+    await db.query("update public.team_memberships set active=false where team_id=$1 and user_id=$2",
+      [anotherTeam, id(11)]);
+    await actor(11);
+    await operation("object.get_authenticated");
+    assert.deepEqual((await visible()).rows, [], "inactive member loses the next read");
+    await actor(1);
+    assert.deepEqual((await visible()).rows, [{ version: "second" }], "other active team still has access");
+    await db.exec("reset role");
+    await db.query("insert into public.team_memberships(team_id,user_id) values ($1,$2)", [anotherTeam, id(1)]);
+    await db.query("update public.team_memberships set active=false where team_id=$1 and user_id=$2", [team, id(1)]);
+    await actor(1);
+    assert.deepEqual((await visible()).rows, [{ version: "second" }], "a second active shared team keeps access");
+    await db.exec("reset role");
+    await db.query("delete from public.team_memberships where team_id=$1 and user_id=$2", [anotherTeam, id(1)]);
+    await actor(1);
+    assert.deepEqual((await visible()).rows, [], "removing the last active shared team revokes access");
+    await operation("object.get_authenticated_info");
+    assert.deepEqual((await visible()).rows, [], "revocation also blocks object info");
+    await db.exec("reset role");
+    await db.query("update public.team_memberships set active=true where team_id=$1 and user_id=$2", [team, id(1)]);
+    await db.query("update public.team_memberships set active=false where team_id=$1 and user_id=$2",
+      [team, id(9)]);
+    await actor(1);
+    assert.deepEqual((await visible()).rows, [], "inactive target membership does not grant access");
+
+    await db.exec("reset role; set role anon");
+    assert.deepEqual((await visible()).rows, []);
+    await operation("object.upload");
+    await assert.rejects(putPhoto(photo, "anonymous"), /row-level security/);
+    await operation("object.delete_many");
+    assert.equal((await remove()).rows.length, 0);
+    await assert.rejects(rpc("da_save_player_details", ["Anonymous", null, null, false]), /permission denied/);
+    await db.exec("reset role");
+    await db.query("update public.team_memberships set active=true where team_id=$1 and user_id=$2", [team, id(9)]);
+    await db.exec(fs.readFileSync("supabase/migrations/20261112192946_disable_direct_teammate_photo_reads.sql", "utf8"));
+    await actor(1);
+    await operation("object.get_authenticated");
+    assert.deepEqual((await visible()).rows, [], "an active teammate cannot read directly after rollback");
+    await operation("object.get_authenticated_info");
+    assert.deepEqual((await visible()).rows, [], "an active teammate cannot read object info after rollback");
+    await actor(9);
+    assert.deepEqual((await visible()).rows, [{ version: "second" }]);
+    await operation("object.get_authenticated_info");
+    assert.deepEqual((await visible()).rows, [{ version: "second" }], "owner passes the gateway's object info check");
+    await operation("object.sign_many");
+    assert.deepEqual((await visible()).rows, [], "owner cannot sign a read URL");
+    await operation("object.delete_many");
+    assert.equal((await remove()).rows.length, 1);
+    console.log("PASS private profile SQL: signup, independent aliases, owner photo writes, active teammate reads on both teams, revocation, anonymous and cross-account denial. Storage operation context is simulated.");
     console.log(
       "PASS roster membership SQL: explicit single-player invite, same player ID/name/stats/BEVs, no duplicate or name matching, stable retry, used/expired/revoked/issuer/inactive/anonymous/cross-team denial, throttling, direct-write denial, audit and legacy invite compatibility. Disposable PostgreSQL; pgcrypto functions are test doubles only.",
     );

@@ -1,5 +1,9 @@
 # 20 — Sign in and registration: Screen handoff
 
+The [November 6 signup and profile candidate](17-profile.md#november-6-2026--signup-and-private-player-profile)
+records the approved signup fields, local verification and remaining approvals.
+The screen contract below preserves the original sign-in and recovery behavior.
+
 **Status:** Ready for owner brief. **Owner's requested change:** Not yet supplied.
 **Current screen only:** Sign in and registration.
 **Route/view:** `/login — existing AuthForm modes`

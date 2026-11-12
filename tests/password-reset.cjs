@@ -4,6 +4,7 @@ const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
+const { NextResponse } = require("next/server");
 
 (async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), "diamond-reset-"));
@@ -12,9 +13,14 @@ const { pathToFileURL } = require("node:url");
   let authorized = true;
   let failed = false;
   global.__resetMocks = {
+    NextResponse,
     headers: async () => new Headers({ origin }),
     supabaseServer: async () => ({
       auth: {
+        exchangeCodeForSession: async (code) => {
+          calls.push(["exchange", code]);
+          return { data: { user: null }, error: failed ? {} : null };
+        },
         resetPasswordForEmail: async (...args) => {
           calls.push(args);
           return { error: failed ? {} : null };
@@ -36,14 +42,16 @@ const { pathToFileURL } = require("node:url");
         name: "synthetic-auth",
         setup(build) {
           build.onResolve(
-            { filter: /^(next\/headers|@\/lib\/supabase\/server)$/ },
+            { filter: /^(next\/(headers|server)|@\/lib\/supabase\/server)$/ },
             (args) => ({ path: args.path, namespace: "mock" }),
           );
           build.onLoad({ filter: /.*/, namespace: "mock" }, (args) => ({
             contents:
               args.path === "next/headers"
                 ? "export const headers = global.__resetMocks.headers;"
-                : "export const supabaseServer = global.__resetMocks.supabaseServer;",
+                : args.path === "next/server"
+                  ? "export const NextResponse = global.__resetMocks.NextResponse;"
+                  : "export const supabaseServer = global.__resetMocks.supabaseServer;",
           }));
         },
       },
@@ -68,6 +76,21 @@ const { pathToFileURL } = require("node:url");
       "src/app/reset-password/actions.ts",
       "update",
     );
+    const { GET: authCallback } = await load("src/app/auth/callback/route.ts", "callback");
+    const callback = async (query) => {
+      const nextUrl = new URL(`/auth/callback?${query}`, origin);
+      return authCallback({ nextUrl, url: nextUrl.href });
+    };
+    const signupConfirmation = await callback("next=/login&code=synthetic-signup-code");
+    assert.equal(signupConfirmation.headers.get("location"), `${origin}/login#`);
+    assert.equal(signupConfirmation.headers.get("cache-control"), "private, no-store");
+    assert.equal(calls.length, 0, "signup confirmation must leave the browser session alone");
+    const recovery = await callback("next=/reset-password&code=synthetic-recovery-code");
+    assert.equal(recovery.headers.get("location"), `${origin}/reset-password`);
+    assert.deepEqual(calls, [["exchange", "synthetic-recovery-code"]]);
+    const expiredRecovery = await callback("next=/reset-password");
+    assert.equal(expiredRecovery.headers.get("location"), `${origin}/forgot-password?error=expired`);
+    calls.length = 0;
     const form = (values) => {
       const f = new FormData();
       Object.entries(values).forEach(([k, v]) => f.set(k, v));
