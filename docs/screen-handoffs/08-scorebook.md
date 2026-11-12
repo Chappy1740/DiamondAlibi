@@ -1,5 +1,15 @@
 # 08 — Live scorebook: Screen handoff
 
+## November 12, 2026 — Outcome count rules checkpoint (AMBER)
+
+Owner issue: a hosted "K Swinging" plate appearance saved on November 7 with 4 runs and 4 RBI. Owner rules: strikeouts (K, K Looking, K Swinging, SOFO) score 0 runs and 0 RBI; ROE and DP may score runs but never earn RBI. Owner direction on November 11: Claude Code is the Diamond Alibi implementer until reassigned ("Claude until I say other ways"); owner merge approval on November 12: "Merge them in order".
+
+- **Stack and state:** [#96](https://github.com/Chappy1740/DiamondAlibi/pull/96) merged to main `207edd3ef61786586ebc8a21d2102f8ba79b826f`; [#97](https://github.com/Chappy1740/DiamondAlibi/pull/97) merged to main `3cfdf5ca528ae244d508a063d9ff036df51e8480`; [#99](https://github.com/Chappy1740/DiamondAlibi/pull/99) (branch `claude/serene-hypatia-5t0rgr`, code commit `def77e61ab407f2f0244272656e20987cffdf662`) retargeted to main, merge pending its `validate` run.
+- **Scorebook behavior at this checkpoint:** Runs and RBI derive from the shared outcome count rule. Strikeouts hide the Runs control and RBI override in quick and full modes with a short hint; ROE and DP hide RBI; typed or spoken counts that break a rule are credited as 0 (the existing typed-ROE behavior); the correction form explains the rule, flags the count to zero and saves nothing until the scorer fixes it. Server rejects the same writes on score and correct.
+- **Rung:** Implemented and Tested locally (Claude Code, synthetic data, Chromium only; WebKit not run). Not Deployed, not Owner-accepted. Local checks are not hosted acceptance.
+- **Before hosted use:** run `supabase/audits/outcome-count-rules.sql` read-only under separate approval, correct any listed plays through audited corrections, apply migrations `20261111020047` and `20261111200000` in order, then owner phone check of a strikeout, an ROE with runs and a DP with runs.
+- **Evidence and decisions:** [RELEASE-READINESS.md November 11 entry](../../RELEASE-READINESS.md#november-11-2026--outcome-count-rules-strikeouts-roe-and-dp-claude), tracker M6-8, and the #99 handoff body. Open owner decisions: credit-as-zero versus refuse for typed or spoken rule-breaking counts; voiding a legacy rule-breaking play still requires zeroing its counts.
+
 ## November 5, 2026 — H5 and pilot phone receipt
 
 [H5 #52](https://github.com/Chappy1740/DiamondAlibi/pull/52#issuecomment-6633560050) shipped from `ff64f0d4f918fce9c088e6ec7a25e99552914010`. Its exact-main validation passed and Worker `232bd809-4815-4cd2-ac46-1aebc0b675f3` was observed at 100% on November 4. The earlier H5 hold is historical.

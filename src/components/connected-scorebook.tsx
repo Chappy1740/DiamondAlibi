@@ -1,5 +1,5 @@
 "use client";
-import { BOARD_LABELS, extendedBoardFromColumns, roeRbiCorrectionMessage, scoringOutcomes, OUTCOME_LABELS } from "@/lib/scoring";
+import { BOARD_LABELS, correctionCountMessage, extendedBoardFromColumns, outcomeCountRule, scoringOutcomes, OUTCOME_LABELS } from "@/lib/scoring";
 import { formatBaseballRate as rate } from "@/lib/baseball-rate";
 import { competitionGames, competitionPath, contextQuery } from "@/lib/competitions";
 import { gameSetupHref } from "@/lib/game-navigation";
@@ -79,6 +79,7 @@ export function ConnectedScorebook({
   const [correctionError, setCorrectionError] = useState<{
     rowKey: string;
     text: string;
+    field: "runs" | "rbi";
   } | null>(null);
   const [review, setReview] = useState(false),
     [uncertain, setUncertain] = useState(false),
@@ -100,9 +101,12 @@ export function ConnectedScorebook({
   const [overrideLimit, setOverrideLimit] = useState(false);
   const defaultHit: Outcome = data?.snapshot.capabilities?.hitTypes ? "1B" : "Hit";
   const [outcome, setOutcome] = useState<Outcome>(defaultHit),
-    [runs, setRuns] = useState(0),
+    [runsDraft, setRuns] = useState(0),
     [rbiOverride, setRbiOverride] = useState<number | null>(null);
-  const rbi = outcome === "ROE" ? 0 : mode === "score" ? Math.min(rbiOverride ?? runs, runs) : rbiOverride ?? 0;
+  // Owner count rules: strikeouts score nothing; reached on error and double plays never earn RBI.
+  const countRule = outcomeCountRule(outcome);
+  const runs = countRule.runs ? runsDraft : 0;
+  const rbi = !countRule.rbi ? 0 : mode === "score" ? Math.min(rbiOverride ?? runs, runs) : rbiOverride ?? 0;
   const [audit, setAudit] = useState<{
     events: unknown[];
     nextCursor: { at: string; key: string } | null;
@@ -438,16 +442,18 @@ export function ConnectedScorebook({
     if (!scoringOutcomes({ ...DEFAULT_BOARD, ...extendedBoardFromColumns(current.rules) }, !!data.snapshot.capabilities?.hitTypes).includes(nextOutcome)) { setEntryError("That result is unavailable for this game. Refresh the scorebook."); return false; }
     if (!data.roster.some(player => player.id === playerId)) { setEntryError("Choose the player first."); return false; }
     if (!manual && playerId !== current.lineup[current.game.next_batter_position]) { setEntryError(`The lineup’s next batter is ${playerName(current.lineup[current.game.next_batter_position])}.`); return false; }
-    // Get Better Rule applies to new plays, including typed or spoken errors.
-    const creditedRbi = nextOutcome === "ROE" ? 0 : nextRbi;
-    if (![nextRuns, creditedRbi].every(value => Number.isInteger(value) && value >= 0 && value <= 4) || creditedRbi > nextRuns || ((nextOutcome === "Fence HR" || nextOutcome === "ITP HR") && nextRuns < 1)) { setEntryError("RBI cannot exceed runs. A home run must score at least one run."); return false; }
+    // Outcome count rules apply to new plays, including typed or spoken entries.
+    const creditedRule = outcomeCountRule(nextOutcome);
+    const creditedRuns = creditedRule.runs ? nextRuns : 0;
+    const creditedRbi = creditedRule.rbi ? nextRbi : 0;
+    if (![creditedRuns, creditedRbi].every(value => Number.isInteger(value) && value >= 0 && value <= 4) || creditedRbi > creditedRuns || ((nextOutcome === "Fence HR" || nextOutcome === "ITP HR") && creditedRuns < 1)) { setEntryError("RBI cannot exceed runs. A home run must score at least one run."); return false; }
     const needsBand = manual && current.game.kind === "Tournament" && !data.bands.some(band => band.tournament_id === current.game.tournament_id && band.player_id === playerId);
     if (needsBand && bandChoice === null) {
       setManualPlayer(playerId); setEntryError("Choose Band or no Band for this player’s first tournament appearance.");
-      pendingPlay.current = { playerId, outcome: nextOutcome, runs: nextRuns, rbi: creditedRbi }; return false;
+      pendingPlay.current = { playerId, outcome: nextOutcome, runs: creditedRuns, rbi: creditedRbi }; return false;
     }
     setEntryError("");
-    const accepted = await save(gameRequest(current, { type: "score", playId: crypto.randomUUID(), playerId, outcome: nextOutcome, runs: nextRuns, rbi: creditedRbi, ...(needsBand ? { firstGameBand: bandChoice } : {}) }));
+    const accepted = await save(gameRequest(current, { type: "score", playId: crypto.randomUUID(), playerId, outcome: nextOutcome, runs: creditedRuns, rbi: creditedRbi, ...(needsBand ? { firstGameBand: bandChoice } : {}) }));
     if (accepted && mode === "score") { setOutcome(defaultHit); setRuns(0); setRbiOverride(null); countsEdited.current = false; setFirstBand(null); pendingPlay.current = null; if (manual) { setManualPlayer(""); setPlayerSearch(""); } }
     return accepted;
   }
@@ -657,15 +663,17 @@ export function ConnectedScorebook({
     g: ConnectedGame,
     row: ScoreRow,
   ) {
-    const rbiField = event.currentTarget.elements.namedItem("rbi");
+    const fields = event.currentTarget.elements;
     const form = formData(event);
     const outcome = String(form.get("outcome"));
+    const runs = Number(form.get("runs"));
     const rbi = Number(form.get("rbi"));
-    // The server rejects this too. Explain it here and leave RBI for the scorer to change.
-    const blocked = roeRbiCorrectionMessage(outcome, rbi);
+    // The server rejects this too. Explain it here and leave the counts for the scorer to change.
+    const blocked = correctionCountMessage(outcome, runs, rbi);
     if (blocked) {
-      setCorrectionError({ rowKey: JSON.stringify(row), text: blocked });
-      if (rbiField instanceof HTMLInputElement) rbiField.focus();
+      setCorrectionError({ rowKey: JSON.stringify(row), ...blocked });
+      const field = fields.namedItem(blocked.field);
+      if (field instanceof HTMLInputElement) field.focus();
       return;
     }
     setCorrectionError(null);
@@ -675,7 +683,7 @@ export function ConnectedScorebook({
         playId: row.id,
         playerId: String(form.get("batter")),
         outcome,
-        runs: Number(form.get("runs")),
+        runs,
         rbi,
         voided: form.has("voided"),
         reason: String(form.get("reason")).trim(),
@@ -825,25 +833,26 @@ export function ConnectedScorebook({
                     <fieldset disabled={disabled}>
                       {mode === "score" && <p className="quick-play-hint">Choose the player, result and Runs. Review the play, then Send.</p>}
                       {mode === "score" && <BattingOutcomePicker clubhouseLabels hitTypes={!!snapshot?.capabilities?.hitTypes} extended={Object.keys(extendedBoardFromColumns(current.rules)).length === 4} value={hasDraftOutcome ? outcome : null} disabled={disabled} onPick={pickOutcome} onChange={pickOutcome} />}
-                      {mode === "score" && <div className="at-bat-rbi" role="group" aria-label="Runs on this play">
+                      {mode === "score" && countRule.runs && <div className="at-bat-rbi" role="group" aria-label="Runs on this play">
                         <span>Runs</span>
                         <div className="rbi-buttons">
                           {[0, 1, 2, 3, 4].map(value => <button key={value} type="button" aria-label={`${value} ${value === 1 ? "run" : "runs"}`} aria-pressed={runs === value} disabled={disabled} onClick={() => { countsEdited.current = true; setRuns(value); setEntryError(""); }}>{value}</button>)}
                         </div>
                       </div>}
-                      {mode === "score" && hasDraftOutcome && outcome !== "ROE" && <details key={`${current.game.id}:${battingPlayer}:${outcome}`} className="at-bat-rbi-adjustment">
+                      {mode === "score" && hasDraftOutcome && !countRule.runs && <p className="quick-play-hint">A strikeout scores no runs and earns no RBI.</p>}
+                      {mode === "score" && hasDraftOutcome && countRule.rbi && <details key={`${current.game.id}:${battingPlayer}:${outcome}`} className="at-bat-rbi-adjustment">
                         <summary>Adjust RBI</summary>
                         <div className="rbi-buttons" role="group" aria-label="RBI on this play">
                           {[0, 1, 2, 3, 4].map(value => <button key={value} type="button" aria-label={`${value} RBI`} aria-pressed={rbi === value} disabled={disabled || value > runs} onClick={() => setRbiOverride(value)}>{value} RBI</button>)}
                         </div>
                       </details>}
-                      {mode !== "score" && outcome !== "ROE" && <div className="at-bat-rbi" role="group" aria-label="RBI on this play">
+                      {mode !== "score" && countRule.rbi && <div className="at-bat-rbi" role="group" aria-label="RBI on this play">
                         <span>RBI</span>
                         <div className="rbi-buttons">
                           {[0, 1, 2, 3, 4].map((value) => <button key={value} type="button" aria-label={`${value} RBI`} aria-pressed={rbi === value} disabled={disabled} onClick={() => { countsEdited.current = true; setRbiOverride(value); setRuns(Math.max(runs, value)); }}>{value} RBI</button>)}
                         </div>
                       </div>}
-                      {mode !== "score" && <label className="at-bat-runs">
+                      {mode !== "score" && countRule.runs && <label className="at-bat-runs">
                         Runs on this play
                         <input type="number" min={0} max={4} value={runs} onChange={(e) => { countsEdited.current = true; setRuns(Number(e.target.value)); }} required />
                       </label>}
@@ -1001,9 +1010,11 @@ export function ConnectedScorebook({
                     onInput={(e) => {
                       if (correctionError?.rowKey !== JSON.stringify(row)) return;
                       const form = new FormData(e.currentTarget);
-                      // Keep the message until the outcome or RBI no longer breaks the rule.
-                      if (!roeRbiCorrectionMessage(String(form.get("outcome")), Number(form.get("rbi"))))
-                        setCorrectionError(null);
+                      // Keep the message until the outcome or counts no longer break a rule, flagging the count still to fix.
+                      const next = correctionCountMessage(String(form.get("outcome")), Number(form.get("runs")), Number(form.get("rbi")));
+                      if (!next) setCorrectionError(null);
+                      else if (next.text !== correctionError.text || next.field !== correctionError.field)
+                        setCorrectionError({ rowKey: correctionError.rowKey, ...next });
                     }}
                   >
                     <fieldset disabled={disabled}>
@@ -1047,6 +1058,8 @@ export function ConnectedScorebook({
                           max={4}
                           defaultValue={row.runs}
                           required
+                          aria-invalid={(correctionError?.rowKey === JSON.stringify(row) && correctionError.field === "runs") || undefined}
+                          aria-describedby={correctionError?.rowKey === JSON.stringify(row) && correctionError.field === "runs" ? `correction-error-${row.id}` : undefined}
                         />
                       </label>
                       <label>
@@ -1058,8 +1071,8 @@ export function ConnectedScorebook({
                           max={4}
                           defaultValue={row.rbi}
                           required
-                          aria-invalid={correctionError?.rowKey === JSON.stringify(row) || undefined}
-                          aria-describedby={correctionError?.rowKey === JSON.stringify(row) ? `correction-error-${row.id}` : undefined}
+                          aria-invalid={(correctionError?.rowKey === JSON.stringify(row) && correctionError.field === "rbi") || undefined}
+                          aria-describedby={correctionError?.rowKey === JSON.stringify(row) && correctionError.field === "rbi" ? `correction-error-${row.id}` : undefined}
                         />
                       </label>
                       {correctionError?.rowKey === JSON.stringify(row) && (
