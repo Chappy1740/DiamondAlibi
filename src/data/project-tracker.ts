@@ -861,8 +861,8 @@ export const projectTracker: ProjectTracker = {
           title: "Enforce outcome count rules: strikeouts 0/0, ROE and DP no RBI",
           status: "implemented",
           evidence:
-            "Owner issue (Nov 7 hosted K Swinging saved 4 runs/4 RBI). Stack merged in order: #96 (ROE RBI) and #97 (correction message) to main on Nov 12; #99 (strikeouts, ROE, DP in validator, migration 20261111200000, scorebook controls, correction form, read-only audit query) tested locally by Claude Code with unit, disposable SQL and Chromium browser checks. AMBER checkpoint: RELEASE-READINESS.md November 11 entry and docs/screen-handoffs/08-scorebook.md.",
-          next: "Merge #99 when validate is green; run supabase/audits/outcome-count-rules.sql read-only on hosted data under separate approval, correct listed plays through audited corrections, apply the two migrations, then owner phone acceptance.",
+            "Owner issue (Nov 7 hosted K Swinging saved 4 runs/4 RBI). Stack merged in order on Nov 12: #96 (207edd3), #97 (3cfdf5c), #99 (fcc590f), each on a validate-green head. Hosted migrations reject_roe_rbi (20261112110243) and outcome_count_rules (20261112110305) applied under owner approval; the audit found one play, corrected to 0/0 through the audited path at day revision 34 with history preserved; audit now empty. Records: RELEASE-READINESS.md November 12 and 11 entries, docs/screen-handoffs/08-scorebook.md.",
+          next: "Read back the main deployment, then owner phone acceptance: strikeout hides Runs/RBI and saves 0/0, ROE and DP save 0 RBI, rule-breaking corrections are explained and not saved.",
           kind: "work",
         },
       ],
