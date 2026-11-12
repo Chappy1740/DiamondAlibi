@@ -855,6 +855,16 @@ export const projectTracker: ProjectTracker = {
           next: "Check critical workflows and record owner sign-off before marking M6 complete.",
           kind: "acceptance",
         },
+        {
+          id: "M6-8",
+          group: "Rules",
+          title: "Enforce outcome count rules: strikeouts 0/0, ROE and DP no RBI",
+          status: "implemented",
+          evidence:
+            "Owner issue (Nov 7 hosted K Swinging saved 4 runs/4 RBI). Stack merged in order: #96 (ROE RBI) and #97 (correction message) to main on Nov 12; #99 (strikeouts, ROE, DP in validator, migration 20261111200000, scorebook controls, correction form, read-only audit query) tested locally by Claude Code with unit, disposable SQL and Chromium browser checks. AMBER checkpoint: RELEASE-READINESS.md November 11 entry and docs/screen-handoffs/08-scorebook.md.",
+          next: "Merge #99 when validate is green; run supabase/audits/outcome-count-rules.sql read-only on hosted data under separate approval, correct listed plays through audited corrections, apply the two migrations, then owner phone acceptance.",
+          kind: "work",
+        },
       ],
     },
   ],
