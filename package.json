@@ -7,7 +7,7 @@
     "build": "next build",
     "build:worker": "node scripts/build-worker.cjs",
     "deploy:worker": "node scripts/deploy-worker.cjs",
-    "preview:worker": "opennextjs-cloudflare preview --ip 127.0.0.1 --port 3002",
+    "preview:worker": "opennextjs-cloudflare preview --ip 127.0.0.1 --port 3002 --var DA_LOCAL_WORKER_PREVIEW:1",
     "start": "next start --hostname 127.0.0.1",
     "typecheck": "tsc --noEmit",
     "test:feedback": "node --experimental-strip-types --test --test-isolation=none tests/feedback.test.ts tests/feedback-notifications.test.ts tests/feedback-notifications-sql.test.ts tests/feedback-worker.test.ts && node tests/feedback-api.cjs && node tests/feedback-sql.cjs",

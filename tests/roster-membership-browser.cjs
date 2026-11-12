@@ -12,10 +12,13 @@ const { chromium, webkit } = require("playwright"),
       stdin: {
         resolveDir: process.cwd(),
         loader: "tsx",
-        contents: `import React from 'react';import{createRoot}from'react-dom/client';import{TeamRoster,TeamInvitations}from'./src/components/team-roster';
+        contents: `import React from 'react';import{createRoot,hydrateRoot}from'react-dom/client';import{TeamRoster,TeamInvitations}from'./src/components/team-roster';import{RosterPhoto}from'./src/components/roster-photo';
+ if(location.pathname==='/preloaded-photo'){
+  window.__hydratePhoto=()=>hydrateRoot(document.getElementById('app'),<RosterPhoto playerId="member" name="Synthetic Member"/>);
+ }else{
  const q=new URLSearchParams(location.search);window.__writes=[];window.__failure=false;window.__players=[{id:'player-1',display_name:'Synthetic Alex',is_guest:true},{id:'member',display_name:'Synthetic Member',is_guest:false},{id:'long',display_name:'Synthetic player with a long roster name',is_guest:true}];
  window.__action=async(form)=>{const input=Object.fromEntries(form);window.__writes.push(input);if(window.__failure)return{error:'Could not create this player invitation. Refresh and check team access; the player may already have an account.'};if(input.operation==='create-player-invite')return{code:'a'.repeat(36),message:'Private player invitation created. One account can use it within seven days. Share it only with this player; nothing was sent.'};if(input.operation==='guest'){window.__players.push({id:'added',display_name:input.name,is_guest:true});window.__render();}return{message:'Saved to your clubhouse.'}};
- const root=createRoot(document.getElementById('app'));window.__render=()=>root.render(<main className="connected-wrap"><section className="card detail-card"><h1>Synthetic roster review</h1><TeamRoster team="synthetic-team" players={window.__players} playerInvitesAvailable={!q.has('unsupported')}/></section><TeamInvitations team="synthetic-team" players={window.__players} playerInvitesAvailable={!q.has('unsupported')} playerInvites={[{invite_id:'targeted',player_id:'player-1'}]} invites={[{id:'targeted',uses:0,max_uses:1,revoked_at:null,expires_at:'2099-01-01'},{id:'used',uses:1,max_uses:1,revoked_at:null,expires_at:'2099-01-01'},{id:'revoked',uses:0,max_uses:1,revoked_at:'2026-01-01',expires_at:'2099-01-01'},{id:'expired',uses:0,max_uses:1,revoked_at:null,expires_at:'2000-01-01'}]}/></main>);window.__render();`,
+ const root=createRoot(document.getElementById('app'));window.__render=()=>root.render(<main className="connected-wrap"><section className="card detail-card"><h1>Synthetic roster review</h1><TeamRoster team="synthetic-team" players={window.__players} playerInvitesAvailable={!q.has('unsupported')}/></section><TeamInvitations team="synthetic-team" players={window.__players} playerInvitesAvailable={!q.has('unsupported')} playerInvites={[{invite_id:'targeted',player_id:'player-1'}]} invites={[{id:'targeted',uses:0,max_uses:1,revoked_at:null,expires_at:'2099-01-01'},{id:'used',uses:1,max_uses:1,revoked_at:null,expires_at:'2099-01-01'},{id:'revoked',uses:0,max_uses:1,revoked_at:'2026-01-01',expires_at:'2099-01-01'},{id:'expired',uses:0,max_uses:1,revoked_at:null,expires_at:'2000-01-01'}]}/></main>);window.__render();}`,
       },
       bundle: true,
       write: false,
@@ -44,11 +47,14 @@ const { chromium, webkit } = require("playwright"),
         res.writeHead(200, { "content-type": "image/png" }).end(pixel);
         return;
       }
+      const markup = req.url === "/preloaded-photo"
+        ? '<span class="avatar roster-photo" data-initials="SM" aria-hidden="true"><img src="/more/profile/photo?player=member" loading="lazy" alt="" style="visibility:hidden"></span>'
+        : "";
       res.setHeader("content-type", "text/html");
       res.end(
         '<html lang="en"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Synthetic roster review</title><style>' +
           css +
-          '</style><body><div id="app"></div><script>' +
+          '</style><body><div id="app">' + markup + '</div><script>' +
           built.outputFiles[0].text +
           "</script></body></html>",
       );
@@ -61,6 +67,13 @@ const { chromium, webkit } = require("playwright"),
       viewport: { width: 390, height: 844 },
     });
     page.on("pageerror", (e) => errors.push(e.message));
+    await page.goto(base + "/preloaded-photo");
+    await page.waitForFunction(() => {
+      const image = document.querySelector(".roster-photo img");
+      return image?.complete && image.naturalWidth > 0;
+    });
+    await page.evaluate(() => window.__hydratePhoto());
+    await page.locator(".roster-photo img").waitFor({ state: "visible", timeout: 2500 });
     await page.goto(base);
     await page.getByRole("heading", { name: "Roster", exact: true }).waitFor();
     const photos = page.locator(".roster-photo img");
