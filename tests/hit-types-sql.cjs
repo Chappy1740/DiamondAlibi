@@ -61,6 +61,56 @@ const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
   await db.exec('reset role');
   const acl=(await db.query(`select has_function_privilege('anon','public.da_apply_scoring_game_change(uuid,uuid,uuid,uuid,uuid,bigint,bigint,jsonb)','execute') anon,has_table_privilege('authenticated','public.scoring_play_revisions','insert,update,delete') direct,has_function_privilege('authenticated','private.scoring_game_evaluation(uuid,uuid,uuid)','execute') helper`)).rows[0];
   assert.deepEqual(acl,{anon:false,direct:false,helper:false});
+
+  // Create a synthetic legacy play, then verify the preflight and the new write validation.
+  await db.exec(`select set_config('request.jwt.claim.sub','${id(1)}',false);set role authenticated`);
+  const legacyRoe = await score('ROE', { runs: 1, rbi: 1 });
+  const revisions = async () => (await db.query(
+    'select * from public.scoring_play_revisions where game_id=$1 order by revision', [gameId],
+  )).rows;
+  const oldRows = await revisions();
+  const oldGame = (await read()).games[0];
+  await db.exec('reset role');
+  const affected = await db.query("select count(*)::int from public.scoring_play_revisions where outcome = 'ROE' and rbi > 0");
+  assert.equal(affected.rows[0].count, 1);
+  // The migration must refuse a scoring change function that differs from the reviewed one.
+  const roeMigration = fs.readFileSync('supabase/migrations/20261111020047_reject_roe_rbi.sql', 'utf8');
+  const scoringChange = 'private.apply_scoring_game_change(uuid,uuid,uuid,uuid,uuid,bigint,bigint,jsonb)';
+  const functionDefinition = async () => (await db.query(
+    `select pg_get_functiondef('${scoringChange}'::regprocedure) definition`,
+  )).rows[0].definition;
+  const reviewedDefinition = await functionDefinition();
+  await db.exec(`alter function ${scoringChange} cost 101`);
+  const alteredDefinition = await functionDefinition();
+  await assert.rejects(() => db.exec(roeMigration), /Scoring change definition changed/);
+  await db.exec('rollback');
+  assert.equal(await functionDefinition(), alteredDefinition, 'Refused migration leaves the function untouched');
+  await db.exec(reviewedDefinition);
+  assert.equal(await functionDefinition(), reviewedDefinition);
+  await db.exec(roeMigration);
+  await db.exec('set role authenticated');
+  assert.deepEqual(await revisions(), oldRows);
+  assert.deepEqual((await read()).games[0].evaluation, oldGame.evaluation);
+
+  const badCorrection = { type: 'correct', playId: legacyRoe, outcome: 'ROE', runs: 1, rbi: 1, reason: 'Synthetic correction' };
+  const rejected = { code: '22023', message: /Reached on error cannot earn RBI/ };
+  await assert.rejects(() => score('ROE', { runs: 1, rbi: 1 }), rejected);
+  await assert.rejects(() => change({ ...badCorrection, voided: true }), rejected);
+  await assert.rejects(() => change({ ...badCorrection, voided: false }), rejected);
+  assert.deepEqual((await read()).games[0], oldGame);
+  assert.deepEqual(await revisions(), oldRows);
+
+  const corrected = await change({ ...badCorrection, rbi: 0, voided: false });
+  assert.equal(corrected.status, 'accepted');
+  const newRows = await revisions();
+  assert.equal(newRows.length, oldRows.length + 1);
+  assert.deepEqual(newRows.slice(0, -1), oldRows);
+  const updatedEvaluation = (await read()).games[0].evaluation;
+  assert.equal(updatedEvaluation.rows.find(({ id }) => id === legacyRoe).rbi, 0);
+  assert.equal(updatedEvaluation.totals[id(101)].RBI, oldGame.evaluation.totals[id(101)].RBI - 1);
+  await score('ROE', { runs: 1, rbi: 0 });
+  assert.equal((await read()).games[0].evaluation.rows.at(-1).rbi, 0);
   console.log('PASS hit types SQL: explicit 1B/2B/3B saves/readback, hit totals, unchanged legacy/rules/BEVs/HR allowance, corrections/voids, retries/conflicts and access isolation. Disposable PostgreSQL only.');
+  console.log('PASS ROE RBI SQL: preflight detects legacy revisions, migration refuses a changed function, preserves history, invalid writes are atomic, and audited correction to zero succeeds.');
  }finally{await db.close();}
 })().catch(error=>{console.error(error.stack);process.exitCode=1});

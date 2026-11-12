@@ -894,14 +894,94 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
     assert.equal((await load()).data.snapshot.games[0].game.team_runs, 9);
     await page.getByText('Synthetic Alex · Out',{exact:true}).click();
     await page.getByText('Over-limit fence home run — scored as an out. No runs or RBI credited. Correction fields retain the original entry.',{exact:true}).waitFor();
+    // Reached on error with RBI is explained before saving; the scorer zeroes RBI.
+    const roeBefore = JSON.stringify((await load()).data.snapshot.games[0]);
     await page
       .getByLabel("Correct outcome", { exact: true })
-      .selectOption("Hit");
-    await page.getByLabel("Correct runs", { exact: true }).fill("0");
-    await page.getByLabel("Correct RBI", { exact: true }).fill("0");
+      .selectOption("ROE");
+    await page.getByLabel("Correct runs", { exact: true }).fill("1");
+    await page.getByLabel("Correct RBI", { exact: true }).fill("1");
     await page
       .getByLabel("Correction reason", { exact: true })
       .fill("Synthetic league correction");
+    await page
+      .getByRole("button", { name: "Save correction", exact: true })
+      .click();
+    const roeAlert = page.getByText(
+      "Reached on error cannot earn RBI. Set Correct RBI to 0, then save the correction.",
+      { exact: true },
+    );
+    await roeAlert.waitFor();
+    assert.equal(await roeAlert.getAttribute("role"), "alert");
+    const rbiField = page.getByLabel("Correct RBI", { exact: true });
+    assert.equal(await rbiField.inputValue(), "1", "RBI is not changed for the scorer");
+    assert.equal(await rbiField.getAttribute("aria-invalid"), "true");
+    assert.equal(await rbiField.evaluate((el) => el === document.activeElement), true);
+    assert.equal(
+      JSON.stringify((await load()).data.snapshot.games[0]),
+      roeBefore,
+      "Blocked correction saves nothing",
+    );
+    // Voiding does not lift the rule, and other edits keep the message in view.
+    await page.getByLabel("Void this appearance", { exact: true }).check();
+    await page
+      .getByRole("button", { name: "Save correction", exact: true })
+      .click();
+    await roeAlert.waitFor();
+    assert.equal(JSON.stringify((await load()).data.snapshot.games[0]), roeBefore, "Blocked void saves nothing");
+    await page.getByLabel("Void this appearance", { exact: true }).uncheck();
+    assert.equal(await roeAlert.count(), 1, "Message stays while RBI is still above zero");
+    // The scorer zeroes RBI; reached on error then saves through the audited path.
+    await rbiField.fill("0");
+    assert.equal(await roeAlert.count(), 0, "Message clears once RBI is 0");
+    await page
+      .getByRole("button", { name: "Save correction", exact: true })
+      .click();
+    await saved();
+    const roeSaved = (await load()).data.snapshot.games[0].evaluation.rows.at(-1);
+    assert.equal(roeSaved.outcome, "ROE");
+    assert.equal(roeSaved.rbi, 0);
+    // A strikeout correction with runs is explained before saving; the scorer zeroes both counts.
+    const kBefore = JSON.stringify((await load()).data.snapshot.games[0]);
+    await page.getByLabel("Correct outcome", { exact: true }).selectOption("K");
+    await page.getByLabel("Correct runs", { exact: true }).fill("2");
+    await page.getByLabel("Correct RBI", { exact: true }).fill("1");
+    await page
+      .getByLabel("Correction reason", { exact: true })
+      .fill("Synthetic league correction");
+    await page
+      .getByRole("button", { name: "Save correction", exact: true })
+      .click();
+    const kAlert = page.getByText(
+      "A strikeout cannot score runs or earn RBI. Set Correct runs and Correct RBI to 0, then save the correction.",
+      { exact: true },
+    );
+    await kAlert.waitFor();
+    assert.equal(await kAlert.getAttribute("role"), "alert");
+    const runsField = page.getByLabel("Correct runs", { exact: true });
+    assert.equal(await runsField.inputValue(), "2", "Runs are not changed for the scorer");
+    assert.equal(await runsField.getAttribute("aria-invalid"), "true");
+    assert.equal(await runsField.evaluate((el) => el === document.activeElement), true);
+    assert.equal(JSON.stringify((await load()).data.snapshot.games[0]), kBefore, "Blocked strikeout correction saves nothing");
+    await runsField.fill("0");
+    assert.equal(await kAlert.count(), 1, "Message stays while RBI is still above zero");
+    assert.equal(await rbiField.getAttribute("aria-invalid"), "true", "The remaining broken count is flagged");
+    await rbiField.fill("0");
+    assert.equal(await kAlert.count(), 0, "Message clears once both counts are 0");
+    await page
+      .getByRole("button", { name: "Save correction", exact: true })
+      .click();
+    await saved();
+    const kSaved = (await load()).data.snapshot.games[0].evaluation.rows.at(-1);
+    assert.deepEqual([kSaved.outcome, kSaved.runs, kSaved.rbi], ["K", 0, 0]);
+    await page
+      .getByLabel("Correct outcome", { exact: true })
+      .selectOption("Hit");
+    await page
+      .getByLabel("Correction reason", { exact: true })
+      .fill("Synthetic league correction");
+    await page.getByLabel("Correct runs", { exact: true }).fill("0");
+    await page.getByLabel("Correct RBI", { exact: true }).fill("0");
     await page
       .getByRole("button", { name: "Save correction", exact: true })
       .click();

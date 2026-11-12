@@ -5,8 +5,12 @@ import {
   applyCommand,
   evaluateGame,
   aggregate,
+  availableOutcomes,
+  correctionCountMessage,
+  isStrikeout,
   rates,
   DEFAULT_BOARD,
+  EXTENDED_BOARD,
   type Scorebook,
   type Command,
 } from "../src/lib/scoring.ts";
@@ -236,4 +240,161 @@ test("manual void excludes totals, keeps row and audit; inputs fail before mutat
   });
   assert.equal(aggregate(b, "Overall").a.PA, 0);
   assert.equal(evaluateGame(b.games[0], b.bands).rows[0].official, "Voided");
+});
+
+test("score and audited correction reject RBI on reached on error", () => {
+  const b = score(start(), "ROE", 1, 0);
+  const before = JSON.stringify(b);
+  const correction = {
+    type: "correct",
+    gameId: "g",
+    playId: b.games[0].plays[0].id,
+    outcome: "ROE",
+    runs: 1,
+    rbi: 1,
+    voided: false,
+    reason: "Synthetic correction",
+  } as const;
+  assert.throws(() => score(b, "ROE", 1, 1), /Reached on error cannot earn RBI/);
+  assert.throws(() => send(b, correction), /Reached on error cannot earn RBI/);
+  assert.equal(JSON.stringify(b), before);
+  assert.equal(aggregate(send(b, { ...correction, rbi: 0 }), "Overall").a.RBI, 0);
+});
+
+test("score and audited correction reject runs or RBI on every strikeout type", () => {
+  const extended = start(
+    createScorebook({
+      teamId: "team",
+      seasonId: "season",
+      dayId: "day",
+      players: [{ id: "a", name: "A" }],
+      bands: [],
+      rules: { version: "v2", fenceLimit: 1, board: { ...EXTENDED_BOARD } },
+    }),
+  );
+  for (const outcome of ["K", "K Looking", "K Swinging", "SOFO"] as const) {
+    const b = score(extended, outcome, 0, 0);
+    const before = JSON.stringify(b);
+    const correction = {
+      type: "correct",
+      gameId: "g",
+      playId: b.games[0].plays[0].id,
+      outcome,
+      runs: 1,
+      rbi: 0,
+      voided: false,
+      reason: "Synthetic correction",
+    } as const;
+    const rule = /A strikeout cannot score runs or earn RBI/;
+    assert.throws(() => score(b, outcome, 1, 0), rule, `${outcome} with runs`);
+    assert.throws(() => score(b, outcome, 4, 4), rule, `${outcome} with runs and RBI`);
+    assert.throws(() => send(b, correction), rule, `${outcome} correction with runs`);
+    assert.throws(() => send(b, { ...correction, voided: true }), rule, `${outcome} void keeps the rule`);
+    assert.equal(JSON.stringify(b), before, `${outcome} rejections mutate nothing`);
+    const totals = aggregate(send(b, { ...correction, runs: 0 }), "Overall").a;
+    assert.equal(totals.runs, 0);
+    assert.equal(totals.RBI, 0);
+    assert.equal(totals.K, 1);
+  }
+});
+
+test("score and audited correction reject RBI on a double play but allow its runs", () => {
+  const b = score(
+    start(
+      createScorebook({
+        teamId: "team",
+        seasonId: "season",
+        dayId: "day",
+        players: [{ id: "a", name: "A" }],
+        bands: [],
+        rules: { version: "v2", fenceLimit: 1, board: { ...EXTENDED_BOARD } },
+      }),
+    ),
+    "DP",
+    2,
+    0,
+  );
+  const before = JSON.stringify(b);
+  const correction = {
+    type: "correct",
+    gameId: "g",
+    playId: b.games[0].plays[0].id,
+    outcome: "DP",
+    runs: 2,
+    rbi: 1,
+    voided: false,
+    reason: "Synthetic correction",
+  } as const;
+  assert.throws(() => score(b, "DP", 1, 1), /A double play cannot earn RBI/);
+  assert.throws(() => send(b, correction), /A double play cannot earn RBI/);
+  assert.equal(JSON.stringify(b), before);
+  const totals = aggregate(send(b, { ...correction, rbi: 0, runs: 1 }), "Overall").a;
+  assert.equal(totals.runs, 1);
+  assert.equal(totals.RBI, 0);
+});
+
+test("correction form message names the counts the scorer must zero", () => {
+  assert.deepEqual(correctionCountMessage("ROE", 1, 1), {
+    text: "Reached on error cannot earn RBI. Set Correct RBI to 0, then save the correction.",
+    field: "rbi",
+  });
+  assert.deepEqual(correctionCountMessage("DP", 1, 1), {
+    text: "A double play cannot earn RBI. Set Correct RBI to 0, then save the correction.",
+    field: "rbi",
+  });
+  assert.deepEqual(correctionCountMessage("K Swinging", 4, 4), {
+    text: "A strikeout cannot score runs or earn RBI. Set Correct runs and Correct RBI to 0, then save the correction.",
+    field: "runs",
+  });
+  assert.equal(correctionCountMessage("SOFO", 0, 1)?.field, "rbi");
+  assert.equal(correctionCountMessage("ROE", 1, 0), null);
+  assert.equal(correctionCountMessage("DP", 2, 0), null);
+  assert.equal(correctionCountMessage("K", 0, 0), null);
+  assert.equal(correctionCountMessage("Hit", 2, 2), null);
+});
+
+test("correction form message agrees with the write validator for every outcome", () => {
+  const b = score(
+    start(
+      createScorebook({
+        teamId: "team",
+        seasonId: "season",
+        dayId: "day",
+        players: [{ id: "a", name: "A" }],
+        bands: [],
+        rules: { version: "v2", fenceLimit: 1, board: { ...EXTENDED_BOARD } },
+      }),
+    ),
+    "Hit",
+    1,
+    1,
+  );
+  const playId = b.games[0].plays[0].id;
+  const outcomes = availableOutcomes(b.games[0].rules.board);
+  assert.ok(outcomes.some(isStrikeout) && outcomes.includes("DP") && outcomes.includes("ROE"));
+  for (const outcome of outcomes)
+    for (const runs of [1, 2])
+      for (const rbi of [0, 1]) {
+        const correction = {
+          type: "correct",
+          gameId: "g",
+          playId,
+          outcome,
+          runs,
+          rbi,
+          voided: false,
+          reason: "Synthetic correction",
+        } as const;
+        let rejected = false;
+        try {
+          send(b, correction);
+        } catch (error) {
+          rejected = /cannot (score runs or )?earn RBI/.test(String(error));
+        }
+        assert.equal(
+          correctionCountMessage(outcome, runs, rbi) !== null,
+          rejected,
+          `${outcome} with ${runs} runs and ${rbi} RBI`,
+        );
+      }
 });

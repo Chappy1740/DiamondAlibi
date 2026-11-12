@@ -1,5 +1,24 @@
 # 17 — Bio and profile: Screen handoff
 
+## November 12, 2026 — Profile photo release reconciliation
+
+**AMBER.** Will renewed approval to commit, push and deploy the existing
+photo release and is available for the hosted synthetic check. Codex prepared
+[PR #87](https://github.com/Chappy1740/DiamondAlibi/pull/87) by merging current
+main `b796ed728ea1da046d2173fcd50d0b92f44ba7df` into the existing Codex-owned
+photo branch at `ca9f9def483bcfd8ddca50e1663c78d04a9e9cc0`. The conflict was
+limited to the release notes, which retain both dated histories. The prior
+approval for this PR's merge and both named migrations is recorded below.
+Hosted readback confirms signup/profile and both outcome-count migrations
+are applied. The private JPEG photo bucket has zero objects, and its owner-only
+policy is still in place.
+
+Next, stage the synthetic photo and teammate accounts, then apply the
+teammate policy and verify access and immediate revocation using the same
+authenticated viewer. The rollout gates below remain in force. The
+[release checkpoint](../../RELEASE-READINESS.md#november-12-2026--profile-photo-release-reconciliation)
+and tracker M3-9 carry the release state.
+
 ## November 10, 2026 — Team-visible profile photos
 
 Will approved the design at 19:05 CT after Claude Code's read-only review.

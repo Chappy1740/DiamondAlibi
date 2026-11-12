@@ -344,3 +344,103 @@ test("journal replay validates context, nested payloads and bounds without trust
     /Unrecognized/,
   );
 });
+
+test("saved season journals replay ROE RBI accepted before the write rule", () => {
+  const commands: SeasonCommand[] = [
+    { type: "season", seasonId: "fall", name: "Synthetic", rules: rules() },
+    {
+      type: "start",
+      seasonId: "fall",
+      dayId: "2026-10-09",
+      gameId: "g",
+      kind: "League",
+      opponent: "Synthetic",
+      lineup: ["a"],
+      rules: rules(),
+      bands: { a: false },
+    },
+    {
+      type: "game",
+      seasonId: "fall",
+      change: {
+        type: "score",
+        gameId: "g",
+        playId: "p",
+        playerId: "a",
+        outcome: "ROE",
+        runs: 1,
+        rbi: 1,
+      },
+    },
+  ];
+  const requests = commands.map((command, expectedRevision) => ({
+    command,
+    expectedRevision,
+    commandId: `cmd-${expectedRevision}`,
+    actor: "synthetic",
+    at: "2026-10-09T12:00:00Z",
+  }));
+  const journal = {
+    format: 2 as const,
+    initial: { teamId: "team", players: roster },
+    requests,
+  };
+  const restored = replaySeasonJournal(journal);
+  assert.equal(seasonTotals(restored.seasons[0].scoring).a.RBI, 1);
+  const before = replaySeasonJournal({ ...journal, requests: requests.slice(0, -1) });
+  assert.throws(
+    () => applySeasonCommand(before, requests[2]),
+    /Reached on error cannot earn RBI/,
+  );
+});
+
+test("saved season journals replay strikeout runs accepted before the write rule", () => {
+  const commands: SeasonCommand[] = [
+    { type: "season", seasonId: "fall", name: "Synthetic", rules: rules() },
+    {
+      type: "start",
+      seasonId: "fall",
+      dayId: "2026-11-07",
+      gameId: "g",
+      kind: "League",
+      opponent: "Synthetic",
+      lineup: ["a"],
+      rules: rules(),
+      bands: { a: false },
+    },
+    {
+      type: "game",
+      seasonId: "fall",
+      change: {
+        type: "score",
+        gameId: "g",
+        playId: "p",
+        playerId: "a",
+        outcome: "K",
+        runs: 4,
+        rbi: 4,
+      },
+    },
+  ];
+  const requests = commands.map((command, expectedRevision) => ({
+    command,
+    expectedRevision,
+    commandId: `cmd-${expectedRevision}`,
+    actor: "synthetic",
+    at: "2026-11-07T12:00:00Z",
+  }));
+  const journal = {
+    format: 2 as const,
+    initial: { teamId: "team", players: roster },
+    requests,
+  };
+  const restored = replaySeasonJournal(journal);
+  assert.equal(seasonTotals(restored.seasons[0].scoring).a.RBI, 4);
+  const before = replaySeasonJournal({ ...journal, requests: requests.slice(0, -1) });
+  const beforeJson = JSON.stringify(before);
+  assert.throws(
+    () => applySeasonCommand(before, requests[2]),
+    /A strikeout cannot score runs or earn RBI/,
+  );
+  assert.equal(JSON.stringify(before), beforeJson);
+});

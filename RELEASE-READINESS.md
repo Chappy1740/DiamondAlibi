@@ -1,5 +1,48 @@
 # Release readiness and recovery
 
+## November 12, 2026 — Profile photo release reconciliation
+
+**AMBER.** Will renewed approval to commit, push and deploy the photo release
+and is available for the owner-run synthetic check. The earlier scoped merge
+and migration approvals are recorded below. Codex reconciled [PR #87](https://github.com/Chappy1740/DiamondAlibi/pull/87)
+from `ca9f9def483bcfd8ddca50e1663c78d04a9e9cc0` with main
+`b796ed728ea1da046d2173fcd50d0b92f44ba7df`, retaining the outcome-count release.
+Hosted readback confirmed the private JPEG bucket is empty with its owner-only
+policy and the teammate-access migration is pending. Coordinate the hosted
+revocation check in the [profile handoff](docs/screen-handoffs/17-profile.md#november-12-2026--profile-photo-release-reconciliation)
+before applying the teammate policy. Keep the approved migration fingerprint
+at main's value until hosted verification is complete.
+
+## November 12, 2026 — Approve outcome-count migrations for Worker release (Claude)
+
+**AMBER.** Owner approval in chat, November 12, 07:02 CT: "Push it merge and deploy". Scope: this one PR (release policy update and this record), its merge, and the gated main deploy. Nothing else.
+
+- **Why:** the deploy gate (`scripts/deploy-worker.cjs`) refused to release main after #96/#97/#99 because `supabase/migrations` changed. Live Worker stayed `6a7fe175` (main `9a50962`).
+- **Change:** `scripts/worker-release-policy.json` `approvedMigrationTree` `0e35f4a…` → `823a223df3095e0988a8a3789372bd21366d08f5` (`git rev-parse HEAD:supabase/migrations` at main `6f8f996`).
+- **Evidence the hosted database matches:** both migrations applied (entry below). Claude rebuilt all 20 repo migrations on a disposable PGlite database: `private.apply_scoring_game_change` fingerprint `eae2819419524d2993b0c73f514b5fff`, equal to the hosted readback. `tests/worker-release.cjs` passed locally.
+- **Status ladder:** Implemented, Tested (local). Merged and Deployed: pending this PR's checks and the main deploy readback. Owner-accepted: no; phone check below.
+
+## November 12, 2026 — Outcome count rules merged, hosted migrations applied, audit corrected (Claude)
+
+**AMBER.** Follow-up to the November 11 entry below. Owner approvals in chat on November 12: "Merge them in order" (the stack), then "1. Do it 2. Do it 3. Do it — I approve all 3" (audited correction, hosted migrations, this record). Claude Code performed each action in this session.
+
+- **Merged to main, in order:** [#96](https://github.com/Chappy1740/DiamondAlibi/pull/96) at `207edd3ef61786586ebc8a21d2102f8ba79b826f`, [#97](https://github.com/Chappy1740/DiamondAlibi/pull/97) at `3cfdf5ca528ae244d508a063d9ff036df51e8480`, [#99](https://github.com/Chappy1740/DiamondAlibi/pull/99) at `fcc590fe1e787cafddfc7af07ee1fb9e8bfd1aa1`. Each merge was pinned to the exact head whose `validate` run passed. Codex's one P1 review finding on #99 (record the AMBER checkpoint in the scorebook handoff and tracker) was fixed in `01283e0a40c4368a017318a82ea345a1cf6a13e1` and resolved before the merge.
+- **Hosted database (project DiamondAlibi):** read-only audit `supabase/audits/outcome-count-rules.sql` found one play: the November 7 "K Swinging" with 4 runs and 4 RBI from the issue (one league practice game, one batter, day revision 23; identifiers withheld from this record per CONTRIBUTING.md). Pre-migration function fingerprint read back as `e77b48012fb9d33395fce8510b6f3597`, matching #96's guard. Migrations applied through the Supabase migration tool, in order: `reject_roe_rbi` (hosted version `20261112110243`, source `20261111020047`) and `outcome_count_rules` (hosted version `20261112110305`, source `20261111200000`). Hosted versions differ from the source file timestamps, as with earlier migrations. Fingerprint after both: `eae2819419524d2993b0c73f514b5fff`; the next migration that touches `private.apply_scoring_game_change` must pin this value. The function text now contains the strikeout, ROE and DP checks.
+- **Audited correction:** sent through `public.da_apply_scoring_game_change` as the owner's account with the reason "Owner-approved audited correction 2026-11-12: a strikeout cannot score runs or earn RBI (PR #99). Applied by Claude Code via SQL." Accepted at day revision 34. The play now reads K Swinging, 0 runs, 0 RBI, not voided; revision 23 is preserved; the audit returns no rows; revisions went from 82 to 83 with nothing overwritten or deleted. No other hosted record needed a change.
+- **Status ladder:** Implemented, Tested, Merged (above). Database migrated (above). App deployment: the main build from `fcc590f` was not read back in this session, UNKNOWN. Owner-accepted: no. Open owner decisions from the November 11 entry still stand.
+- **Next action:** owner phone check on the deployed scorebook: a strikeout shows no Runs or RBI controls and saves 0/0; an ROE with runs saves 0 RBI; a DP with runs saves 0 RBI; a correction that would break a rule is explained and not saved. Acceptance recorded here and in tracker M6-8.
+
+## November 11, 2026 — Outcome count rules: strikeouts, ROE and DP (Claude)
+
+**AMBER.** Owner issue: a "K Swinging" plate appearance saved on November 7 (hosted, real-team test game, later deleted) with 4 runs and 4 RBI. Severity: data integrity, P1 before February 1, not a pilot blocker. Owner rules: strikeouts (K, K Looking, K Swinging, SOFO) score 0 runs and 0 RBI; ROE allows runs, never an RBI; DP allows runs, no RBI. The issue named Codex as implementer and Claude as reviewer, then "Claude reviews Claude code implementation"; this session (Claude Code) implemented on the issue's designated branch under the standing owner direction recorded in [PR #96](https://github.com/Chappy1740/DiamondAlibi/pull/96) that Claude Code handles Diamond Alibi implementation until reassigned. On November 11 the owner confirmed in chat: "Claude until I say other ways", so Claude Code remains the Diamond Alibi implementer until the owner reassigns it. Independent review is still required.
+
+- **Stack:** branch `claude/serene-hypatia-5t0rgr`, based on [PR #97](https://github.com/Chappy1740/DiamondAlibi/pull/97) head `4fcd81301f885ea1b82effdba937b14659afe8ff` (which sits on [PR #96](https://github.com/Chappy1740/DiamondAlibi/pull/96) head `a1f648db3828762a0649bc15bf9e3d4d347d41ca`, base main `9a50962ac787749b54b9c90575384edd53367870`). Merge order: #96, then #97, then this branch. The new migration pins the scoring function text that #96's ROE migration produces (`25eeb2f145cc10f1ce133eda2a33c7cf`) and fails closed otherwise. The implementing commit is the one that adds this section.
+- **What changed:** `src/lib/scoring.ts` adds `outcomeCountRule`, `outcomeCountError` and `correctionCountMessage` (replacing #97's ROE-only `roeRbiCorrectionMessage`); `validatePlay` enforces all three rules for score and correct in write mode, replay mode still accepts saved journals. `supabase/migrations/20261111200000_outcome_count_rules.sql` adds the same checks to `private.apply_scoring_game_change` for score and correct behind the reviewed-definition guard. `src/components/connected-scorebook.tsx` derives Runs and RBI from the rule, hides the Runs control and RBI override for strikeouts (quick and full modes, with a short hint), hides RBI for ROE and DP, credits 0 for typed or spoken counts that break a rule (the established "Get Better Rule" behavior for ROE), and the correction form explains the rule and flags the count to zero instead of saving. `supabase/audits/outcome-count-rules.sql` is the read-only audit of plays whose latest revision breaks a rule; fix any through the audited correction path. CI gains `tests/outcome-count-rules-sql.cjs`.
+- **Status ladder:** Implemented — Claude, this branch. Tested — Claude, this session, local, synthetic data, Node 22.23 with the project's pinned dependencies: `npm run typecheck` pass; unit suite 188/188 (`node --experimental-strip-types --test tests/*.test.ts tests/signout.cjs`; Node 22 lacks CI's `--test-isolation=none`); `tests/outcome-count-rules-sql.cjs`, `tests/hit-types-sql.cjs`, `tests/extended-outcomes-sql.cjs`, `tests/optional-lineups-sql.cjs` and `tests/archive-lifecycle-sql.cjs` pass; `tests/scorebook-modes-browser.cjs` and `tests/connected-scorebook-browser.cjs` pass on the preinstalled Chromium (`BROWSER_EXECUTABLE=/opt/pw-browsers/chromium`); WebKit not run. CI has not run on this head. Merged / Deployed / Owner-accepted — no.
+- **Hosted:** not touched. Before applying the migration to hosted data, run `supabase/audits/outcome-count-rules.sql` read-only under separate authorization and correct any listed plays through audited corrections; then confirm the hosted scoring function fingerprint still matches after #96's migration is applied.
+- **Decisions to confirm:** (1) typed or spoken counts that break a rule are credited as 0 rather than refused, matching the existing typed-ROE behavior; refusing with a message is a small follow-up if preferred. (2) Voiding a legacy play that breaks a rule still requires zeroing its counts in the same correction (same as #96 F2).
+- **Not authorized here:** merge, hosted migration, deployment, historical data changes, a pull request.
+
 ## November 10, 2026 — Team-visible profile photos
 
 **AMBER.** Will approved the photo design at 19:05 CT, recorded by Claude Code
@@ -45,17 +88,6 @@ Still open: Supabase backup/PITR check, real screen-reader pass, other Bluetooth
 ## November 6, 2026 — Roast Club owner acceptance
 
 **AMBER.** Owner accepted Roast Club for the pilot on 2026-11-06 at 12:44 CT, after the owner-run smoke test and announcer test (owner-reported; Claude did not independently verify the live Worker version or the ROAST_CLUB_ENABLED value). Spoken line stays roast-only. Welcome message drafted, not sent. Open: Cloudflare active-version check, Supabase backup/PITR check, real screen-reader pass, other Bluetooth speakers. See [Roast Club status](docs/screen-handoffs/31-roast-club-status.md).
-
-## November 6, 2026 — Player profile local candidate
-
-**AMBER.** The approved signup and private profile changes are tested locally
-on `codex/player-profile-signup`, based on main
-`496ef3ae767b77c88657385477e2358330891082`. The
-[profile handoff](docs/screen-handoffs/17-profile.md#november-6-2026--signup-and-private-player-profile)
-records scope, verification and the phone acceptance steps. Will approved
-commit and push of the profile branch. Draft PR publication remains a separate
-decision. The migration and private bucket require
-separate hosted approval and readback before the deployment gate can advance.
 
 ## November 5, 2026 — Clubhouse Extras pilot release
 
