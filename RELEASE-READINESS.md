@@ -1,5 +1,41 @@
 # Release readiness and recovery
 
+## November 12, 2026 — Hosted photo revocation passed
+
+**GREEN for hosted acceptance.** The fresh synthetic viewer could read through
+the revised app and JWT-protected function while on a shared team. Both denied
+the same valid session immediately after the last shared membership ended.
+Direct Storage and signed URL requests were denied. Both synthetic memberships
+were restored. The four hosted photo migration statements match the source.
+Integrate current main `d2427bcc3ce2966ff9b22e5fae07a40c8ddc3965`, update the
+migration fingerprint, and require exact-head CI and independent review before
+the approved merge and gated Worker deployment.
+[Profile handoff](docs/screen-handoffs/17-profile.md#november-12-2026--hosted-photo-revocation-passed).
+
+## November 12, 2026 — Hosted photo revocation failed
+
+**AMBER.** Both app routes denied the synthetic viewer after revocation, but
+both direct Storage routes still returned HTTP 200 to the same session.
+The two synthetic memberships were restored. With explicit owner approval,
+the direct teammate policy was removed as hosted migration `20261112193037`.
+The JWT-protected Edge Function and revised app path passed local checks. The
+owner approved deploying the function alone. Version 1 is active, JWT
+verification is enabled, and no-token, key-only and invalid-token probes
+returned 401. The fresh-session app and function check remains pending. Keep
+the deploy gate closed. [Profile handoff](docs/screen-handoffs/17-profile.md#november-12-2026--hosted-revocation-failed).
+
+## November 12, 2026 — Hosted photo policy applied
+
+**AMBER.** PR #87 migration `20261111011626_team_profile_photo_access.sql`
+applied as `20261112190015` with explicit owner approval. Hosted readback
+confirmed the private bucket, one synthetic photo and the new scoped policies.
+Both synthetic accounts share two test teams. Complete the same-session app
+and Storage revocation check before updating the deployment fingerprint.
+The initial roster read exposed a gateway metadata preflight. The scoped
+follow-up applied as `20261112191312`. Retest the roster downloads before
+running revocation.
+[Profile handoff](docs/screen-handoffs/17-profile.md#november-12-2026--hosted-photo-policy-applied).
+
 ## November 12, 2026 — Profile photo release reconciliation
 
 **AMBER.** Will renewed approval to commit, push and deploy the photo release
@@ -12,6 +48,12 @@ policy and the teammate-access migration is pending. Coordinate the hosted
 revocation check in the [profile handoff](docs/screen-handoffs/17-profile.md#november-12-2026--profile-photo-release-reconciliation)
 before applying the teammate policy. Keep the approved migration fingerprint
 at main's value until hosted verification is complete.
+
+Later November 12 readback confirmed one synthetic photo and the owner's
+active membership on both test teams. Stage the second synthetic account on
+both before enabling teammate reads. The owner requested a return to Sign in
+after email confirmation. The [profile handoff](docs/screen-handoffs/17-profile.md#november-12-2026--profile-photo-release-reconciliation)
+records the locally tested follow-up and remaining hosted verification.
 
 ## November 12, 2026 — Approve outcome-count migrations for Worker release (Claude)
 

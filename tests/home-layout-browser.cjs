@@ -149,6 +149,8 @@ const assert = require("node:assert/strict");
     browser = await engine.launch({ headless: true, ...(engine === chromium && process.env.BROWSER_EXECUTABLE ? { executablePath: process.env.BROWSER_EXECUTABLE } : {}) });
     const page = await browser.newPage({ viewport: { width: 390, height: 844 }, ...(engine === webkit ? { isMobile: true, hasTouch: true } : {}) });
     page.on("pageerror", error => errors.push(error.message));
+    await page.route(url => url.pathname === "/more/profile/photo" && url.searchParams.get("player") === "teammate",
+      route => route.fulfill({ path: "public/brand/diamond-alibi-icon-64.png" }));
     await page.addInitScript(() => {
       window.__refreshes=0;window.__polls=0;
       const original=window.setInterval;
@@ -269,6 +271,10 @@ const assert = require("node:assert/strict");
     await leaders.getByRole('button',{name:'View HR rankings',exact:true}).click();
     assert.deepEqual(await leaders.locator('.leaderboard-player strong').allTextContents(),['Other Synthetic Player','Test Player']);
     assert.deepEqual(await leaders.locator('.leaderboard-counts strong').allTextContents(),['9','1']);
+    await page.waitForFunction(() => {
+      const image = document.querySelector('.leaderboard-players img[src$="player=teammate"]');
+      return image?.naturalWidth > 0 && getComputedStyle(image).visibility === 'visible';
+    });
     await leaders.getByRole('button',{name:'← Back to leaders',exact:true}).click();
     assert.equal(await leaders.getByRole('button',{name:'View HR rankings',exact:true}).locator('.leaderboard-player').textContent(),'9 – Other Synthetic Player','Stats summary reads count, separator, then leader without repeating the category');
     assert.equal(await leaders.locator('.leaderboard-summary .leaderboard-player > .micro').count(),0,'The badge is the sole visible category label');
@@ -309,6 +315,8 @@ const assert = require("node:assert/strict");
     await page.setViewportSize({width:320,height:844});if(process.env.STATS_WIDE_SCREENSHOT)await leaders.screenshot({path:process.env.STATS_WIDE_SCREENSHOT});
     await page.setViewportSize({width:390,height:844});
     await page.goto('http://127.0.0.1:'+server.address().port+'/stats?sample=1');await page.getByRole('heading',{name:'Team leaders',exact:true}).waitFor();assert.equal(await leaders.locator('.leaderboard-summary button').count(),9,'Sample Stats keeps every category');
+    await leaders.getByRole('button',{name:'View HR rankings',exact:true}).click();
+    assert.equal(await leaders.locator('.roster-photo').count(),0,'Sample rankings never load account photos');
     await page.goto('http://127.0.0.1:'+server.address().port+'/stats');await page.getByRole('heading',{name:'Team leaders',exact:true}).waitFor();
     await page.locator(".bottom-nav").getByRole("link", { name: "More", exact: true }).click();
     await page.getByRole("link", { name: "Explore sample history" }).click();
@@ -357,7 +365,7 @@ const assert = require("node:assert/strict");
       const roster=await page.evaluate(()=>{
         const navTop=document.querySelector('.app-bottom-nav')?.getBoundingClientRect().top ?? innerHeight;
         const lines=el=>Math.round(el.getBoundingClientRect().height/parseFloat(getComputedStyle(el).lineHeight));
-        const splitWord=el=>{const text=el.firstChild;if(!text)return null;const range=document.createRange();let at=0;for(const part of text.textContent.split(/[\s-]/)){range.setStart(text,at);range.setEnd(text,at+part.length);if(range.getClientRects().length>1)return part;at+=part.length+1;}return null;};
+        const splitWord=el=>{const text=(el.querySelector('.roster-name > span:last-child')??el).firstChild;if(!text)return null;const range=document.createRange();let at=0;for(const part of text.textContent.split(/[\s-]/)){range.setStart(text,at);range.setEnd(text,at+part.length);if(range.getClientRects().length>1)return part;at+=part.length+1;}return null;};
         const rows=[...document.querySelectorAll('.beverage-roster .leader-row')].map(row=>{const box=row.getBoundingClientRect();const name=row.querySelector('strong');const balance=row.querySelector('.balance');return {name:name.textContent,balance:balance.textContent,shortName:name.textContent.length<=8,fits:box.top>=0&&box.bottom<=navTop,nameSize:parseFloat(getComputedStyle(name).fontSize),balanceSize:parseFloat(getComputedStyle(balance).fontSize),balanceLines:lines(balance),split:splitWord(name)||splitWord(balance)};});
         return {rows,overflow:document.documentElement.scrollWidth>innerWidth};
       });

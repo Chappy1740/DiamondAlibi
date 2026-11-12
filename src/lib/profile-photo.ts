@@ -1,9 +1,5 @@
-export const profilePhotoBucket = "da-player-profile-photos";
-export const profilePhotoMaxBytes = 512 * 1024;
-
-export function profilePhotoPath(userId: string) {
-  return `${userId}/avatar.jpg`;
-}
+import { profilePhotoMaxBytes } from "../../supabase/functions/_shared/profile-photo";
+export { profilePhotoBucket, profilePhotoMaxBytes, profilePhotoPath, rosterPhotoId } from "../../supabase/functions/_shared/profile-photo";
 
 export async function isProfilePhoto(file: File) {
   if (file.type !== "image/jpeg" || file.size < 4 || file.size > profilePhotoMaxBytes) return false;

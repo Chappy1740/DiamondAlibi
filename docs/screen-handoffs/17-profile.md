@@ -1,5 +1,88 @@
 # 17 — Bio and profile: Screen handoff
 
+## November 12, 2026 — Hosted photo revocation passed
+
+**GREEN for the hosted acceptance check.** On the revised laptop preview,
+the owner signed in with a fresh synthetic viewer session. Both app URLs and
+the authenticated `teammate-photo` function returned the sample photo when
+both teams were active. The two direct Storage URLs and signed URL issuance
+were denied. The remaining shared team kept access after the first membership
+was deactivated. After the last membership was deactivated, both app URLs,
+both function requests, and both direct Storage URLs denied the same still-valid
+session. Function logs corroborated both revocation steps. Both memberships
+were restored and verified. The bucket is private with one sample photo and
+the direct teammate policy remains absent.
+
+The four hosted photo migration statements match the source files. Update the
+release fingerprint for the tested migration tree and run required CI and
+independent review on the revised PR head. Main advanced to
+`d2427bcc3ce2966ff9b22e5fae07a40c8ddc3965` through the instructions-only #103.
+The existing authorization covers the photo release through the Worker gate.
+The Codex runtime is identified by the session. The exact model variant and
+effort are unavailable. The remaining release steps use deterministic checks
+and independent review. No purchased credits are authorized.
+
+## November 12, 2026 — Hosted revocation failed
+
+**AMBER.** With the same valid synthetic viewer session, both app photo URLs
+returned 404 after the last shared membership ended, while both warmed direct
+Storage URLs returned 200. The session still returned 200. With one active
+shared team, its app photo and both Storage URLs returned 200. The signed URL
+request was denied. Both temporary synthetic membership changes were restored
+and read back. The private bucket still holds only one synthetic photo.
+
+Automatic review initially blocked dropping `da_profile_photo_teammate_select`.
+After explicit owner approval, `20261112192946_disable_direct_teammate_photo_reads.sql`
+applied as hosted `20261112193037`. Readback confirms the teammate policy is
+gone, the private bucket still has its one sample photo, and owner policies
+are in place. Keep the deployment fingerprint on the previous approved tree.
+
+The local replacement sends roster photo reads through the `teammate-photo`
+Supabase Edge Function. A user JWT and the viewer's existing RLS-scoped roster
+and membership lookups gate every POST. The function uses the runtime's
+privileged key only to read the fixed avatar after those checks, returns private
+no-store bytes, and does not pass the key to the app. Owner photo edits retain
+the existing Storage path. Local typecheck, production build, 198 unit checks,
+and disposable SQL passed. With explicit owner approval the function deployed
+as version 1 (`f5a11600-f515-43eb-8ddc-9b071d54e1cd`), active with platform JWT
+verification enabled. No-token, publishable-key-only, and invalid-JWT probes
+returned 401. The key-only response also confirmed private no-store headers
+from the handler. The Worker release and previous fingerprint are held.
+Next, rerun the owner-led check with a fresh session on the revised app preview.
+
+## November 12, 2026 — Hosted photo policy applied
+
+**AMBER.** The owner explicitly approved production teammate photo reads
+while accounts have an active shared team. The exact reviewed migration
+`20261111011626_team_profile_photo_access.sql` from PR #87 head
+`277801d7192cdb12acbdb40bc7ec25f8c11a6cef` applied as hosted version
+`20261112190015`. Readback confirmed a private bucket, one synthetic photo,
+the owner write policies, and the authenticated shared-team read policy.
+The synthetic owner and viewer share two active test teams. The owner-run
+application and Storage revocation check is pending. The deployment fingerprint
+still points to the previously approved tree.
+
+The first laptop roster check showed initials for both teams. Hosted Storage
+logs showed that the download gateway calls `object.get_authenticated_info`
+before serving the file. The original operation filter denied that call even
+for active teammates. Follow-up `20261112191200_profile_photo_download_metadata.sql`
+applied as `20261112191312`. It allows that operation under the same owner or
+active shared-team conditions. Disposable SQL verifies that signing, listing,
+unrelated access and revoked access still fail. Hosted policy readback confirms
+the private bucket and the metadata operation under both read policies.
+
+After that change, the owner showed Pilot Test viewing the sample logo beside
+Test Player on M3-5 Synthetic TesT. Hosted download logs returned HTTP 200
+with cache hits. Both synthetic memberships remain active. This confirms
+visibility on that roster. The same-session access and revocation check is
+still required before the release fingerprint can change.
+
+The owner requested teammate photos across the app. The local follow-up
+reuses the roster avatar and existing authenticated photo route in the
+connected game's batter and stats views, detailed team and competition
+rankings, and the Beverage Board. Unlinked players use initials. Fictional
+sample views do not request account photos.
+
 ## November 12, 2026 — Profile photo release reconciliation
 
 **AMBER.** Will renewed approval to commit, push and deploy the existing
@@ -18,6 +101,21 @@ teammate policy and verify access and immediate revocation using the same
 authenticated viewer. The rollout gates below remain in force. The
 [release checkpoint](../../RELEASE-READINESS.md#november-12-2026--profile-photo-release-reconciliation)
 and tracker M3-9 carry the release state.
+
+Later November 12 owner testing used the laptop preview at PR #87 head
+`277801d7192cdb12acbdb40bc7ec25f8c11a6cef`. Hosted readback confirmed one
+sample photo saved by the synthetic owner, who is active on both test teams.
+The second synthetic account still needs to join both teams. The teammate
+policy and hosted revocation check remain pending.
+
+The owner requested that signup confirmation return to Sign in after a
+confirmation link opened Home in a browser with another account. The local
+follow-up reuses the recovery origin checks and callback, returns to `/login`
+without exchanging the signup code for a session, and initializes the profile
+on the subsequent password sign-in. Local signup, callback, recovery and
+type checks passed. Hosted Supabase accepted the canonical site and numeric
+loopback return URLs in an invalid-token redirect probe. A fresh hosted
+confirmation email has not been tested against this local follow-up.
 
 ## November 10, 2026 — Team-visible profile photos
 

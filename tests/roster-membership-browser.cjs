@@ -67,7 +67,7 @@ const { chromium, webkit } = require("playwright"),
     await photos.waitFor({ state: "visible" });
     assert.equal(await photos.count(), 1, "only linked accounts request a photo");
     assert.equal(await photos.getAttribute("src"), "/more/profile/photo?player=member");
-    assert.equal(await page.locator(".roster-photo").first().textContent(), "SA");
+    assert.equal(await page.locator(".roster-photo").first().getAttribute("data-initials"), "SA");
     assert.equal(
       await page.getByText("Guest", { exact: false }).count(),
       0,

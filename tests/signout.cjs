@@ -5,16 +5,18 @@ const path = require("node:path");
 const vm = require("node:vm");
 const { stripTypeScriptTypes } = require("node:module");
 
-function load(error, { auth = {}, rpc } = {}) {
+function load(error, { auth = {}, rpc, origin = "https://diamondalibi.eydrenworks.com", nodeEnv = "test" } = {}) {
   let calls = 0;
   const context = vm.createContext({
+    headers: async () => new Headers(origin ? { origin } : {}),
+    process: { env: { NODE_ENV: nodeEnv } },
     supabaseServer: async () => ({ rpc, auth: { ...auth, signOut: async () => {
       calls++;
       return { error };
     } } }),
     redirect: (destination) => { throw Object.assign(new Error("redirect"), { destination }); },
   });
-  for (const file of ["lib/player-profile.ts", "lib/complete-player-signup.ts", "app/login/actions.ts"]) {
+  for (const file of ["lib/player-profile.ts", "lib/complete-player-signup.ts", "lib/trusted-auth-origin.ts", "app/login/actions.ts"]) {
     const source = stripTypeScriptTypes(fs.readFileSync(path.join(__dirname, "../src", file), "utf8"))
       .replace(/^import .*;$/gm, "")
       .replace(/export /g, "");
@@ -54,10 +56,31 @@ test("signup requires a name and carries validated optional details through emai
   assert.equal(requests.length, 0);
   const result = await actions.signup({}, credentials({ nickname: " River ", play_level: "Not sure" }));
   assert.match(result.message, /confirmation email/);
+  assert.equal(requests[0].options.emailRedirectTo, "https://diamondalibi.eydrenworks.com/auth/callback?next=/login");
   const details = requests[0].options.data.da_signup_profile;
   assert.equal(details.nickname, "River");
   assert.equal(details.play_level, "Not sure");
   assert.equal(details.fielding_position, null);
+});
+
+test("signup uses the test origin locally and rejects untrusted email redirect origins", async () => {
+  const requests = [];
+  const auth = { signUp: async (input) => {
+    requests.push(input);
+    return { data: { session: null }, error: null };
+  } };
+  const form = credentials({ nickname: "River" });
+  const localOrigin = "http://127.0.0.1:3087";
+  assert.ok((await load(null, { auth, origin: localOrigin }).signup({}, form)).message);
+  assert.equal(requests[0].options.emailRedirectTo, `${localOrigin}/auth/callback?next=/login`);
+  assert.ok((await load(null, { auth, origin: "http://localhost:3000" }).signup({}, form)).message);
+  assert.equal(requests[1].options.emailRedirectTo, "http://127.0.0.1:3000/auth/callback?next=/login");
+  const workerOrigin = "https://diamond-alibi-preview.lanternmere-wow.workers.dev";
+  assert.ok((await load(null, { auth, origin: workerOrigin }).signup({}, form)).message);
+  assert.equal(requests[2].options.emailRedirectTo, "https://diamondalibi.eydrenworks.com/auth/callback?next=/login");
+  assert.ok((await load(null, { auth, origin: localOrigin, nodeEnv: "production" }).signup({}, form)).error);
+  assert.ok((await load(null, { auth, origin: "https://diamondalibi.eydrenworks.com.example.invalid" }).signup({}, form)).error);
+  assert.equal(requests.length, 3);
 });
 
 test("first verified login initializes the profile and offers a photo, with a normal return on later sign-ins", async () => {

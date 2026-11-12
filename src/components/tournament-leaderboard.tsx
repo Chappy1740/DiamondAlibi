@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { formatBaseballRate } from "@/lib/baseball-rate";
+import { RosterName } from "./roster-photo";
 import {
   rankTournamentPlayers,
   leaderboardValue,
@@ -60,12 +61,14 @@ export function PlayerLeaderboard({
   title,
   regionLabel,
   compactSummary = false,
+  photoPlayerIds,
 }: {
   players: TournamentPlayer[];
   scopeLabel: string;
   title: string;
   regionLabel: string;
   compactSummary?: boolean;
+  photoPlayerIds?: string[];
 }) {
   const [metric, setMetric] = useState<LeaderboardMetric | null>(null);
   const lastMetric = useRef<LeaderboardMetric | null>(null);
@@ -168,7 +171,9 @@ export function PlayerLeaderboard({
                   {row.rank ?? "—"}
                 </span>
                 <div className="leaderboard-player">
-                  <strong>{row.name}</strong>
+                  <strong>{photoPlayerIds
+                    ? <RosterName name={row.name} playerId={photoPlayerIds.includes(row.id) ? row.id : null} />
+                    : row.name}</strong>
                 </div>
                 <div className="leaderboard-counts">
                   <MetricValue row={row} metric={metric} />
