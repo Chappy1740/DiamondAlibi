@@ -203,6 +203,19 @@ function members(book: Scorebook, ids: string[]) {
 }
 type CommandMode = "write" | "replay";
 
+/**
+ * Message for a correction form that would submit reached on error with RBI.
+ * The scorer zeroes RBI explicitly; the form never changes it for them.
+ */
+export function roeRbiCorrectionMessage(
+  outcome: string,
+  rbi: number,
+): string | null {
+  return outcome === "ROE" && rbi > 0
+    ? "Reached on error cannot earn RBI. Set Correct RBI to 0, then save the correction."
+    : null;
+}
+
 function validatePlay(
   outcome: Outcome,
   runs: number,

@@ -73,7 +73,21 @@ const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
   await db.exec('reset role');
   const affected = await db.query("select count(*)::int from public.scoring_play_revisions where outcome = 'ROE' and rbi > 0");
   assert.equal(affected.rows[0].count, 1);
-  await db.exec(fs.readFileSync('supabase/migrations/20261111020047_reject_roe_rbi.sql', 'utf8'));
+  // The migration must refuse a scoring change function that differs from the reviewed one.
+  const roeMigration = fs.readFileSync('supabase/migrations/20261111020047_reject_roe_rbi.sql', 'utf8');
+  const scoringChange = 'private.apply_scoring_game_change(uuid,uuid,uuid,uuid,uuid,bigint,bigint,jsonb)';
+  const functionDefinition = async () => (await db.query(
+    `select pg_get_functiondef('${scoringChange}'::regprocedure) definition`,
+  )).rows[0].definition;
+  const reviewedDefinition = await functionDefinition();
+  await db.exec(`alter function ${scoringChange} cost 101`);
+  const alteredDefinition = await functionDefinition();
+  await assert.rejects(() => db.exec(roeMigration), /Scoring change definition changed/);
+  await db.exec('rollback');
+  assert.equal(await functionDefinition(), alteredDefinition, 'Refused migration leaves the function untouched');
+  await db.exec(reviewedDefinition);
+  assert.equal(await functionDefinition(), reviewedDefinition);
+  await db.exec(roeMigration);
   await db.exec('set role authenticated');
   assert.deepEqual(await revisions(), oldRows);
   assert.deepEqual((await read()).games[0].evaluation, oldGame.evaluation);
@@ -97,6 +111,6 @@ const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
   await score('ROE', { runs: 1, rbi: 0 });
   assert.equal((await read()).games[0].evaluation.rows.at(-1).rbi, 0);
   console.log('PASS hit types SQL: explicit 1B/2B/3B saves/readback, hit totals, unchanged legacy/rules/BEVs/HR allowance, corrections/voids, retries/conflicts and access isolation. Disposable PostgreSQL only.');
-  console.log('PASS ROE RBI SQL: preflight detects legacy revisions, migration preserves history, invalid writes are atomic, and audited correction to zero succeeds.');
+  console.log('PASS ROE RBI SQL: preflight detects legacy revisions, migration refuses a changed function, preserves history, invalid writes are atomic, and audited correction to zero succeeds.');
  }finally{await db.close();}
 })().catch(error=>{console.error(error.stack);process.exitCode=1});
