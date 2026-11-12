@@ -2,12 +2,16 @@ import type { User } from "@supabase/supabase-js";
 import type { supabaseServer } from "@/lib/supabase/server";
 import { profileArguments, signupDetails } from "@/lib/player-profile";
 
+export function hasVerifiedPlayerContact(user: User | null | undefined) {
+  return Boolean(user?.email_confirmed_at || user?.phone_confirmed_at);
+}
+
 export async function completePlayerSignup(
   client: Awaited<ReturnType<typeof supabaseServer>>,
   user: User | null | undefined,
 ) {
   const details = signupDetails(user?.user_metadata?.da_signup_profile);
-  if (!user?.email_confirmed_at || !details) return "/";
+  if (!hasVerifiedPlayerContact(user) || !details) return "/";
   const { data, error } = await client.rpc("da_save_player_details", {
     ...profileArguments(details),
     p_initialize: true,

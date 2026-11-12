@@ -1,5 +1,39 @@
 # 20 — Sign in and registration: Screen handoff
 
+## November 12, 2026 — Phone sign-in start
+
+**AMBER.** Will asked Codex to start phone sign-in. Local candidate
+`codex/phone-sign-in` is based on the open [profile PR #87](https://github.com/Chappy1740/DiamondAlibi/pull/87)
+at `277801d7192cdb12acbdb40bc7ec25f8c11a6cef`, which includes main
+`b796ed728ea1da046d2173fcd50d0b92f44ba7df`. Keep #87 as the parent of this
+work and recheck the diff if its head changes or after it merges.
+
+Use the installed Supabase Auth SDK and existing profile fields and
+initialization, with a server-side `DA_PHONE_SIGN_IN_ENABLED` switch that
+defaults to off. New players explicitly choose to create a phone account.
+Sign-in requests do not create accounts. Verified phone accounts can initialize
+their profile and save a photo. The first pass leaves existing email accounts
+on the current email flow until verified phone linking and recovery are reviewed.
+
+**Tested locally by Codex.** Production Next.js build with type checking,
+199 regression tests, and synthetic Chromium and WebKit checks passed. The
+browser checks covered choosing the phone flow, entering a six-digit code,
+retrying, explicit new-account registration, and returning to email.
+
+**Hosted checkpoint, November 12.** Will reported a successful Twilio Verify
+Console test and saved the Phone provider in DiamondAlibi's hosted Supabase
+dashboard. Codex read back that Phone and Email are both enabled and found
+zero phone accounts before the first app-side test. The initial owner-run
+request returned `sms_send_failed` (422) for an unverified Twilio recipient.
+Will confirmed the number in Verified Caller IDs and retried. At 10:41 a.m.
+Central, Supabase recorded HTTP 200 for both `/auth/v1/otp` and
+`/auth/v1/verify` and one confirmed phone account. This verifies the hosted
+provider for the owner's verified test number. The DiamondAlibi phone UI
+is a release candidate. Twilio approval to send to new recipients and
+the existing Cloudflare Access email gate remain separate launch dependencies.
+Will approved committing, pushing, and opening a draft PR for the phone branch.
+Next, run GitHub validation and independent review on the draft head.
+
 The [November 6 signup and profile candidate](17-profile.md#november-6-2026--signup-and-private-player-profile)
 records the approved signup fields, local verification and remaining approvals.
 The screen contract below preserves the original sign-in and recovery behavior.

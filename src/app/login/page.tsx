@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { AuthForm } from "@/components/auth-form";
 import { BrandLink } from "@/components/brand-link";
+import { phoneSignInEnabled } from "@/lib/phone-sign-in";
+
+export const dynamic = "force-dynamic";
 export default function LoginPage() {
   return (
     <main className="connected-wrap">
@@ -12,7 +15,7 @@ export default function LoginPage() {
           <p>Sign in to manage your own teams and seasons.</p>
         </div>
       </div>
-      <AuthForm />
+      <AuthForm phoneEnabled={phoneSignInEnabled()} />
       <Link className="text-link" href="/">
         Explore the sample shell instead
       </Link>

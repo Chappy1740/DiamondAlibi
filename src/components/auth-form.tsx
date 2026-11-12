@@ -3,12 +3,15 @@ import { useActionState, useState } from "react";
 import Link from "next/link";
 import { login, signup, type AuthResult } from "@/app/login/actions";
 import { PlayerProfileFields } from "./player-profile-fields";
-export function AuthForm() {
+import { PhoneAuthForm } from "./phone-auth-form";
+export function AuthForm({ phoneEnabled = false }: { phoneEnabled?: boolean }) {
   const [creating, setCreating] = useState(false);
+  const [usingPhone, setUsingPhone] = useState(false);
   const [result, submit, pending] = useActionState<AuthResult, FormData>(
     creating ? signup : login,
     {},
   );
+  if (phoneEnabled && usingPhone) return <PhoneAuthForm onUseEmail={() => setUsingPhone(false)} />;
   return (
     <section className="card detail-card auth-card">
       <h2>
@@ -67,6 +70,9 @@ export function AuthForm() {
           ? "Already have an account? Sign in"
           : "New here? Create an account"}
       </button>
+      {phoneEnabled && <button className="text-button" type="button" onClick={() => setUsingPhone(true)} disabled={pending}>
+        Use a mobile number
+      </button>}
       <p className="micro">
         Use a personal recreational account. Keep work/government information
         out of this app.

@@ -1,6 +1,7 @@
 "use server";
 
 import { supabaseServer } from "@/lib/supabase/server";
+import { hasVerifiedPlayerContact } from "@/lib/complete-player-signup";
 import { isProfilePhoto, profilePhotoBucket, profilePhotoPath } from "@/lib/profile-photo";
 
 export type ProfilePhotoResult = { error?: string; message?: string };
@@ -8,7 +9,9 @@ export type ProfilePhotoResult = { error?: string; message?: string };
 export async function changeProfilePhoto(form: FormData): Promise<ProfilePhotoResult> {
   const client = await supabaseServer();
   const { data: { user }, error } = await client.auth.getUser();
-  if (error || !user?.email_confirmed_at) return { error: "Confirm your email and sign in to save a photo." };
+  if (error || !user || !hasVerifiedPlayerContact(user)) {
+    return { error: "Verify your email or mobile number and sign in to save a photo." };
+  }
   const storage = client.storage.from(profilePhotoBucket);
   const path = profilePhotoPath(user.id);
 

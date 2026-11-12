@@ -1,5 +1,17 @@
 # Release readiness and recovery
 
+## November 12, 2026 — Phone sign-in local candidate
+
+**AMBER.** Will asked to start SMS-code sign-in. Codex prepared an opt-in
+candidate on `codex/phone-sign-in` based on [PR #87](https://github.com/Chappy1740/DiamondAlibi/pull/87)
+at `277801d7192cdb12acbdb40bc7ec25f8c11a6cef`. Will reported a successful
+Twilio Verify Console test and saved the Supabase Phone provider. Codex
+verified that Phone and Email are enabled and that the owner-run SMS send and
+code verification both returned HTTP 200 at 10:41 a.m. Central. The local
+phone UI still depends on #87 and needs its own review and release.
+See the [sign-in handoff](docs/screen-handoffs/20-sign-in.md#november-12-2026--phone-sign-in-start)
+for the scope, dependency, and next live-pilot decision.
+
 ## November 12, 2026 — Profile photo release reconciliation
 
 **AMBER.** Will renewed approval to commit, push and deploy the photo release
