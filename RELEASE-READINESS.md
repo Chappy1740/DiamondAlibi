@@ -1,5 +1,15 @@
 # Release readiness and recovery
 
+## November 12, 2026 — PR #87 deployed
+
+**GREEN for the verified photo release.** The owner merged PR #87 as
+`41eec59651257905aad9fb5bde5211f3b50f24af`. Exact-main CI passed in
+`43302204327`, and Cloudflare showed Worker version
+`982a8c6a-c68f-46a0-99b7-da727de37c05` serving 100% of traffic. The hosted
+revocation test passed before merge. The independent post-merge review found
+two follow-ups that passed local verification. The owner approved their release
+after CI and independent review. [Profile handoff](docs/screen-handoffs/17-profile.md#november-12-2026--production-photo-release-and-local-follow-up).
+
 ## November 12, 2026 — Hosted photo revocation passed
 
 **GREEN for hosted acceptance.** The fresh synthetic viewer could read through

@@ -5,11 +5,11 @@ const path = require("node:path");
 const vm = require("node:vm");
 const { stripTypeScriptTypes } = require("node:module");
 
-function load(error, { auth = {}, rpc, origin = "https://diamondalibi.eydrenworks.com", nodeEnv = "test" } = {}) {
+function load(error, { auth = {}, rpc, origin = "https://diamondalibi.eydrenworks.com", nodeEnv = "test", localWorker } = {}) {
   let calls = 0;
   const context = vm.createContext({
     headers: async () => new Headers(origin ? { origin } : {}),
-    process: { env: { NODE_ENV: nodeEnv } },
+    process: { env: { NODE_ENV: nodeEnv, DA_LOCAL_WORKER_PREVIEW: localWorker } },
     supabaseServer: async () => ({ rpc, auth: { ...auth, signOut: async () => {
       calls++;
       return { error };
@@ -81,6 +81,24 @@ test("signup uses the test origin locally and rejects untrusted email redirect o
   assert.ok((await load(null, { auth, origin: localOrigin, nodeEnv: "production" }).signup({}, form)).error);
   assert.ok((await load(null, { auth, origin: "https://diamondalibi.eydrenworks.com.example.invalid" }).signup({}, form)).error);
   assert.equal(requests.length, 3);
+});
+
+test("the built Worker trusts the documented loopback signup origin only in the local emulator", async () => {
+  const requests = [];
+  const auth = { signUp: async (input) => {
+    requests.push(input);
+    return { data: { session: null }, error: null };
+  } };
+  const form = credentials({ nickname: "River" });
+  const origin = "http://127.0.0.1:3002";
+  const production = { auth, origin, nodeEnv: "production" };
+  assert.ok((await load(null, production).signup({}, form)).error);
+  const result = await load(null, { ...production, localWorker: "1" }).signup({}, form);
+  assert.match(result.message, /confirmation email/);
+  assert.equal(requests[0].options.emailRedirectTo, `${origin}/auth/callback?next=/login`);
+  const lookalike = { ...production, localWorker: "1", origin: "http://127.0.0.1.example.invalid:3002" };
+  assert.ok((await load(null, lookalike).signup({}, form)).error);
+  assert.equal(requests.length, 1);
 });
 
 test("first verified login initializes the profile and offers a photo, with a normal return on later sign-ins", async () => {

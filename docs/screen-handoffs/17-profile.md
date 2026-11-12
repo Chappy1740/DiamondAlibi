@@ -1,5 +1,24 @@
 # 17 — Bio and profile: Screen handoff
 
+## November 12, 2026 — Production photo release and local follow-up
+
+The owner merged PR #87 as `41eec59651257905aad9fb5bde5211f3b50f24af`.
+GitHub validation run `43302204327` passed. The Cloudflare dashboard showed
+Worker version `982a8c6a-c68f-46a0-99b7-da727de37c05` serving 100% of traffic
+for that exact commit. The merged tree matches the tested branch. The deployed
+Edge Function sources match the committed function files.
+
+The independent post-merge review found two issues in `65f06307b5ea31f1759ca03f1d967362ff2664b9`.
+Photos that finished before hydration could stay hidden, and the local Worker
+emulator could reject valid signup forms. Both reproduced locally. Branch
+`codex/profile-photo-release-follow-up` reveals completed images when their refs
+attach and adds the exact port 3002 origin only for the local preview command.
+Chromium and WebKit regression checks, signup and recovery tests, typecheck, and
+the Worker build passed. The documented preview accepted signup and reached
+the synthetic Auth target without sending email. The owner approved committing,
+pushing, merging, and deploying the two fixes after CI and independent review.
+Codex owns this branch and will verify the resulting production Worker version.
+
 ## November 12, 2026 — Hosted photo revocation passed
 
 **GREEN for the hosted acceptance check.** On the revised laptop preview,
