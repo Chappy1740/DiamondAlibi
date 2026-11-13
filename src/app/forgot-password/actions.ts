@@ -8,6 +8,8 @@ export async function requestPasswordReset(
   _previous: AuthResult,
   form: FormData,
 ): Promise<AuthResult> {
+  if (process.env.DA_SANDBOX_ORIGIN)
+    return { error: "Contact the owner to reset your sandbox password." };
   const email = String(form.get("email") ?? "").trim();
   if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     return { error: "Enter a valid email address." };

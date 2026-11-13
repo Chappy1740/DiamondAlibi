@@ -7,6 +7,8 @@ export async function updatePassword(
   _previous: AuthResult,
   form: FormData,
 ): Promise<AuthResult> {
+  if (process.env.DA_SANDBOX_ORIGIN)
+    return { error: "Contact the owner to reset your sandbox password." };
   const password = String(form.get("password") ?? "");
   if (password.length < 12 || password.length > 256)
     return { error: "Use a password of 12–256 characters." };
