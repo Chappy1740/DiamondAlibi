@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { UserRound } from "lucide-react";
 import { signout } from "@/app/login/actions";
+import { ProfileAvatar } from "@/components/profile-avatar";
 import { navigationContext } from "@/lib/app-navigation";
 
 export function ProfileMenu({ signedIn = true, context = "" }: { signedIn?: boolean; context?: string }) {
@@ -8,7 +8,7 @@ export function ProfileMenu({ signedIn = true, context = "" }: { signedIn?: bool
   return (
     <details className="profile-menu">
       <summary aria-label="Open profile menu">
-        <UserRound size={22} aria-hidden />
+        <ProfileAvatar signedIn={signedIn} />
       </summary>
       <nav aria-label="Profile">
         {signedIn ? <>

@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState, type ChangeEvent } from "react";
 import { changeProfilePhoto, type ProfilePhotoResult } from "@/app/more/profile/actions";
 import { profileInitials } from "@/lib/player-profile";
+import { notifyProfilePhotoChange } from "@/lib/profile-photo-events";
 import { profilePhotoMaxBytes } from "@/lib/profile-photo";
 
 const maxSourceBytes = 20 * 1024 * 1024;
@@ -50,6 +51,7 @@ export function ProfilePhoto({ name }: { name: string }) {
       if (!response.error) {
         setPreview(null);
         setVersion((current) => current + 1);
+        notifyProfilePhotoChange(form.get("photo_action") === "remove" ? "removed" : "saved");
       }
       return response;
     },

@@ -1793,6 +1793,9 @@ blockquote {
 .profile-menu { position: relative; flex: none; margin-left: auto; }
 .profile-menu > summary { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--border); border-radius: 50%; background: var(--surface); list-style: none; }
 .profile-menu > summary::-webkit-details-marker { display: none; }
+.profile-menu > summary { overflow: hidden; }
+.profile-menu .profile-avatar-photo { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.profile-menu .profile-avatar-photo[hidden] { display: none; }
 .profile-menu nav { position: absolute; right: 0; top: 52px; z-index: 40; width: min(250px, calc(100vw - 32px)); display: grid; padding: 8px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); box-shadow: 0 12px 32px #0008; }
 .profile-menu nav a, .profile-menu nav button { display: flex; align-items: center; width: 100%; min-height: 44px; padding: 10px 12px; border: 0; background: transparent; text-align: left; color: var(--white); font-size: 14px; border-radius: 6px; }
 .profile-menu nav a:hover, .profile-menu nav button:hover { background: var(--surface-raised); }
