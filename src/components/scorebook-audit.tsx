@@ -1,4 +1,5 @@
 import type { ConnectedRoster } from "@/lib/scorebook-view";
+import { RosterName } from "./roster-photo";
 type Entry = {
   action?: string;
   actorId?: string;
@@ -57,6 +58,8 @@ export function ScorebookAudit({
 }) {
   const name = (id?: string) =>
     roster.find((p) => p.id === id)?.display_name ?? "Former roster player";
+  const identity = (player: ConnectedRoster[number] | undefined, fallback: string) =>
+    player ? <RosterName name={player.display_name} playerId={player.user_id && !player.is_guest ? player.id : null} /> : fallback;
   function describe(value: unknown, action?: string) {
     if (typeof value === "boolean") return value ? "HR Band" : "No HR Band";
     if (!value || typeof value !== "object") return "No prior entry";
@@ -86,20 +89,18 @@ export function ScorebookAudit({
     <ul className="scorebook-audit">
       {entries.map((raw, index) => {
         const e = raw as Entry;
-        const actor =
-          roster.find((p) => p.user_id === e.actorId)?.display_name ??
-          "Team member";
+        const actor = e.actorId ? roster.find((p) => p.user_id === e.actorId) : undefined;
         return (
           <li key={index}>
             <details>
               <summary>
-                {labels[e.action ?? ""] ?? "Scorebook change"} · {actor}
+                {labels[e.action ?? ""] ?? "Scorebook change"} · {identity(actor, "Team member")}
                 {e.at ? ` · ${new Date(e.at).toLocaleString()}` : ""}
               </summary>
               {e.revision != null && (
                 <p className="micro">Revision {e.revision}</p>
               )}
-              {e.playerId && <p>{name(e.playerId)}</p>}
+              {e.playerId && <p>{identity(roster.find((p) => p.id === e.playerId), "Former roster player")}</p>}
               {e.reason && <p>Reason: {e.reason}</p>}
               <dl>
                 <dt>Before</dt>
