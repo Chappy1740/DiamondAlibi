@@ -1,11 +1,14 @@
 "use client";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { login, signup, type AuthResult } from "@/app/login/actions";
+import { resetProfilePhotoState } from "@/lib/profile-photo-events";
 import { AuthCaptcha } from "./auth-captcha";
 import { PlayerProfileFields } from "./player-profile-fields";
 import { PhoneAuthForm } from "./phone-auth-form";
 export function AuthForm({ phoneEnabled = false, captchaSiteKey = null }: { phoneEnabled?: boolean; captchaSiteKey?: string | null }) {
+  // Nobody is signed in here, so a previous account's header photo state must not carry over.
+  useEffect(() => resetProfilePhotoState(), []);
   const [creating, setCreating] = useState(false);
   const [usingPhone, setUsingPhone] = useState(false);
   const [result, submit, pending] = useActionState<AuthResult, FormData>(

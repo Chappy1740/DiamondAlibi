@@ -92,23 +92,30 @@ const assert = require("node:assert/strict");
         if(fixtureQuery.has('no-team')){p.loaded=null;p.teams=[];p.seasons=[];p.teamId='';p.seasonId='';}
         if(fixtureQuery.has('load-error')){p.loaded=null;p.error='Synthetic records could not be loaded.';}
         const root=createRoot(document.getElementById('app'));
-        if (['/more/profile','/more/clubhouse-extras'].includes(location.pathname)) {
-          const AccountPage=location.pathname==='/more/profile'?ProfilePage:ClubhouseExtrasPage;
-          AccountPage({searchParams:Promise.resolve(Object.fromEntries(fixtureQuery))}).then(account=>root.render(<>{account}<BottomNavigationView pathname={location.pathname} context={fixtureQuery.toString()}/></>));
-        } else {
+        function show(){
+          p.route=location.pathname.slice(1);
+          p.sample=location.search.includes('sample=1');
+          if (['/more/profile','/more/clubhouse-extras'].includes(location.pathname)) {
+            const AccountPage=location.pathname==='/more/profile'?ProfilePage:ClubhouseExtrasPage;
+            return AccountPage({searchParams:Promise.resolve(Object.fromEntries(new URLSearchParams(location.search)))}).then(account=>root.render(<>{account}<BottomNavigationView pathname={location.pathname} context={new URLSearchParams(location.search).toString()}/></>));
+          }
           if (p.route === '' && !p.sample) {
             p.profileName = profileRecords.player_profiles[0].nickname;
           }
           const context=new URLSearchParams({team:p.teamId,season:p.seasonId,scope:p.scope,...(p.sample?{sample:'1',player:p.userId}:{})}).toString();
           root.render(<><PlayerDashboard {...p}/><BottomNavigationView pathname={location.pathname} context={context}/></>);
-        }` },
+        }
+        // Opt-in same-document navigation, like Next's client router: links swap the page without a reload.
+        window.__softNavigate=url=>{history.pushState({},'',url);return show()};
+        show();
+      `},
       bundle: true, write: false, platform: "browser", jsx: "automatic",
       plugins: [{ name: "synthetic-home", setup(build) {
         build.onResolve({ filter: /^(next\/(navigation|headers|link|image)|@\/lib\/supabase\/server|@\/app\/(login\/actions|more\/profile\/actions|club\/(actions|beverage-actions|roast-club-actions))|\.\/personal-alibis)$/ }, args => ({ path: args.path, namespace: "synthetic" }));
         build.onLoad({ filter: /.*/, namespace: "synthetic" }, args => ({ loader: "tsx", resolveDir: process.cwd(), contents:
           args.path === "next/navigation" ? "const router={refresh(){window.__refreshes=(window.__refreshes||0)+1}};export const useRouter=()=>router;export const usePathname=()=>location.pathname;export const useSearchParams=()=>new URLSearchParams(location.search);export const redirect=url=>location.assign(url);" :
           args.path === "next/headers" ? "export async function cookies(){return {get(){return {value:'team'}}}}" :
-          args.path === "next/link" ? "import React from 'react';export default function Link({children,...props}){return <a {...props}>{children}</a>}" :
+          args.path === "next/link" ? "import React from 'react';export default function Link({children,onClick,...props}){return <a {...props} onClick={event=>{onClick?.(event);if(window.__softNav&&!event.defaultPrevented&&event.button===0){event.preventDefault();window.__softNavigate(props.href)}}}>{children}</a>}" :
           args.path === "next/image" ? "import React from 'react';export default function Image({unoptimized,...props}){return <img {...props}/>}" :
           args.path === "./personal-alibis" ? "export function PersonalAlibis(){return null}" :
           args.path === "@/lib/supabase/server" ? "export const supabaseServer=async()=>window.__profileClient" :
@@ -152,6 +159,11 @@ const assert = require("node:assert/strict");
     browser = await engine.launch({ headless: true, ...(engine === chromium && process.env.BROWSER_EXECUTABLE ? { executablePath: process.env.BROWSER_EXECUTABLE } : {}) });
     const page = await browser.newPage({ viewport: { width: 390, height: 844 }, ...(engine === webkit ? { isMobile: true, hasTouch: true } : {}) });
     page.on("pageerror", error => errors.push(error.message));
+    const ownPhotoRequests = [];
+    page.on("request", request => {
+      const url = new URL(request.url());
+      if (url.pathname === "/more/profile/photo" && !url.searchParams.has("player") && request.method() === "GET") ownPhotoRequests.push(url.search);
+    });
     await page.route(url => url.pathname === "/more/profile/photo" && url.searchParams.get("player") === "teammate",
       route => route.fulfill({ path: "public/brand/diamond-alibi-icon-64.png" }));
     await page.addInitScript(() => {
@@ -495,28 +507,85 @@ const assert = require("node:assert/strict");
       });
       await page.getByRole("img", { name: "Profile photo preview" }).waitFor();
     }
+    // Header avatar: the signed-in user's own photo, generic icon when there is none.
+    const avatar = page.locator(".profile-menu > summary");
+    const avatarPhoto = avatar.locator("img.profile-avatar-photo");
+    const avatarIcon = avatar.locator("svg");
+    async function assertGenericAvatar(message) {
+      await avatarIcon.waitFor({ state: "visible" });
+      assert.equal(await avatarPhoto.isVisible().catch(() => false), false, message);
+      assert.equal(await avatar.getAttribute("aria-label"), "Open profile menu");
+    }
+    async function assertAvatarSize() {
+      const box = await avatar.boundingBox();
+      assert(box.width >= 44 && box.height >= 44, `Header avatar target is ${box.width}x${box.height}`);
+    }
+    await assertGenericAvatar("No saved photo shows the generic icon in the header");
+    await assertAvatarSize();
     await choose("red");
+    const requestsBeforeSave = ownPhotoRequests.length;
     assert.equal(storedPhoto, null, "preview stays in the browser until Save");
+    await assertGenericAvatar("A preview never reaches the header before Save");
+    const refreshesBeforeSave = await page.evaluate(() => window.__refreshes);
     await page.getByRole("button", { name: "Save photo", exact: true }).click();
     await page.getByRole("img", { name: "Your profile photo" }).waitFor();
     assert.equal(storedPhoto[0], 0xff);
     assert.equal(storedPhoto[1], 0xd8);
     const firstPhoto = storedPhoto;
+    await avatarPhoto.waitFor({ state: "visible" });
+    assert.equal(await avatarIcon.count(), 0, "Generic icon is replaced once the saved photo loads");
+    assert.equal(await avatar.getAttribute("aria-label"), "Open profile menu");
+    assert.equal(await avatarPhoto.getAttribute("alt"), "");
+    assert.equal(await avatarPhoto.evaluate(img => img.naturalWidth > 0), true);
+    assert.equal(await page.evaluate(() => window.__refreshes), refreshesBeforeSave, "Header updated without router.refresh()");
+    assert(ownPhotoRequests.length > requestsBeforeSave, "Header loaded the saved photo");
+    await assertAvatarSize();
+    const requestsAfterSave = ownPhotoRequests.length;
+    await choose("green");
+    await page.getByRole("button", { name: "Cancel preview" }).click();
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 150)));
+    assert.equal(ownPhotoRequests.length, requestsAfterSave, "Rerenders do not repeat photo requests");
     await page.reload();
     await page.getByRole("img", { name: "Your profile photo" }).waitFor();
+    await avatarPhoto.waitFor({ state: "visible" });
     await page.evaluate(() => { window.__failProfilePhoto = true; });
     await choose("blue");
     await page.getByRole("button", { name: "Save photo", exact: true }).click();
     await page.getByRole("alert").getByText("Could not save your photo. Try again.").waitFor();
     assert.equal(storedPhoto, firstPhoto);
     await page.evaluate(() => { window.__failProfilePhoto = false; });
+    await avatarPhoto.waitFor({ state: "visible" });
     await page.getByRole("button", { name: "Save photo", exact: true }).click();
     await page.getByRole("img", { name: "Your profile photo" }).waitFor();
     assert(!storedPhoto.equals(firstPhoto));
+    await avatarPhoto.waitFor({ state: "visible" });
+    assert.match(await avatarPhoto.getAttribute("src"), /^\/more\/profile\/photo\?v=1$/, "Header reloads the replaced photo");
+    const requestsBeforeRemoval = ownPhotoRequests.length;
     await page.getByRole("button", { name: "Remove photo" }).click();
     await page.getByText("Photo removed.").waitFor();
+    await assertGenericAvatar("Header returns to the generic icon right after removal");
+    assert.equal(await avatarPhoto.count(), 0);
+    assert(ownPhotoRequests.length <= requestsBeforeRemoval + 1, "Removal adds at most the profile form's own refresh, never a header request");
+    assert.equal(await page.evaluate(() => window.__refreshes), refreshesBeforeSave, "Removal updated the header without router.refresh()");
+    await assertAvatarSize();
+    // The next page's header must not bring the removed photo back when the tab keeps its document.
+    const requestsBeforeNavigation = ownPhotoRequests.length;
+    await page.evaluate(() => { window.__softNav = true; window.__sameDocument = true; });
+    await page.getByRole("link", { name: "Home", exact: true }).first().click();
+    await page.getByRole("heading", { name: "Your game, River Test.", exact: true }).waitFor();
+    assert.equal(await page.evaluate(() => window.__sameDocument), true, "The link changed pages without reloading the document");
+    await assertGenericAvatar("Generic icon stays after removal when the tab navigates without a reload");
+    assert.equal(await avatarPhoto.count(), 0, "No photo request is made for the next page's header");
+    assert.equal(ownPhotoRequests.length, requestsBeforeNavigation, "Same-tab navigation never reloads a removed photo");
+    await assertAvatarSize();
+    await page.locator(".profile-menu > summary").click();
+    await page.getByRole("link", { name: "Bio & profile", exact: true }).click();
+    await page.getByRole("heading", { name: "Bio & profile" }).waitFor();
+    await assertGenericAvatar("Generic icon stays after navigating back to the profile");
+    await page.evaluate(() => { window.__softNav = false; });
     await page.reload();
     assert.equal(await initials.innerText(), "RT");
+    await assertGenericAvatar("Removal persists after a refresh");
     assert.equal(storedPhoto, null);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     await page.addScriptTag({ path: require.resolve("axe-core") });

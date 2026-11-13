@@ -3,15 +3,17 @@
 **November 13, 2026 · AMBER · Hold SMS activation.** Codex owns the
 implementation. The objective is one invited pilot, with an SMS-based
 Diamond Alibi account and existing Cloudflare Access controls intact.
-No general phone registration, live SMS, provider writes, paid services,
-merge or deployment are approved in this pass.
+Hosted Supabase Phone was temporarily disabled under separate approval;
+Email remains enabled. Twilio Verify geography and Fraud Guard were
+updated under separate approval. Activation, live SMS, additional provider
+changes, paid services, merge and deployment still require approval.
 
 | Acceptance criterion | Status | Evidence or exit condition |
 | --- | --- | --- |
 | No unresolved Medium-or-higher security findings | **FAIL** | Direct managed Auth enumeration and direct SMS paths remain open review findings below. The app-level fix does not change the Supabase API. |
-| Final PR head passes required CI | **UNKNOWN** | GitHub last verified draft `c8bc01e79dff14b4ad9cea9a9bc15eef8ab66782` conflicted against its obsolete #87 base. Its green checks do not apply to the reconciled candidate. Main requires strict `validate`; also require the Workers Build, no conflicts and resolved review threads. |
+| Final PR head passes required CI | **UNKNOWN** | [Validation](https://github.com/Chappy1740/DiamondAlibi/actions/runs/43457167229) passed on the previous draft head `5e9c34bd1c61462ff24a08e1fd2cbf1f7b281c3d`. Main advanced to `109b0644aebb296c17a6adeb9c03a4ff855060d9`. The reconciliation passed local checks and needs a fresh GitHub run. Require strict `validate`, Workers Build, no conflicts and resolved review threads. |
 | Independent review approves the actual final commit | **UNKNOWN** | No approving review on the candidate. Obtain a read-only security review on the exact published head after changes; retest if it changes. |
-| Twilio and Supabase restrictions verified | **UNKNOWN** | Historical verified-recipient success is not provider control evidence. The Supabase advisor returned only informational notices; it does not audit OTP or Twilio settings. Read back the settings and run the isolated checks below. |
+| Twilio and Supabase restrictions verified | **UNKNOWN** | Twilio allows SMS & RCS only for the U.S., blocks Voice for all 249 destinations, and shows Standard Fraud Guard for the U.S. Safe List exceptions, effective rate limits, and controlled delivery are unverified. Supabase Phone is off and Email is on. Hosted CAPTCHA, SMS route behavior, and pilot-only enforcement remain unverified. |
 | Invited tester signs up without an email-based app workaround | **UNKNOWN** | No live test in this pass. The existing Access email identity requirement is separate from the SMS-only app account. Exact identity eligibility and delivery are unverified. |
 | Existing email authentication remains functional | **UNKNOWN** | Local synthetic sign-in, signup and reset request passed with CAPTCHA, and existing local validation also passed with CAPTCHA off. Hosted compatibility after enabling the project-wide control is untested. |
 | Deployment and rollback procedures documented | **PASS** | Sequencing, release holds, rollback and owner decisions are below. Procedures have not been executed on hosted services. |
@@ -204,12 +206,10 @@ Auth cannot enforce that policy on the direct API.
 
 ## Verified source
 - Branch: codex/phone-sign-in
-- Commit SHA (full 40 characters): c8bc01e79dff14b4ad9cea9a9bc15eef8ab66782
 - PR URL: https://github.com/Chappy1740/DiamondAlibi/pull/104
-- PR head SHA (full 40 characters, None or UNKNOWN): c8bc01e79dff14b4ad9cea9a9bc15eef8ab66782
-- PR base branch: codex/player-profile-signup (original); intended base main
-- PR base SHA (full 40 characters, None or UNKNOWN): 277801d7192cdb12acbdb40bc7ec25f8c11a6cef
-- Working tree: Staged candidate; latest reviewed main 79851732093c1a2db654eb024f052d1fc5aaef52. See PR for post-publication exact head.
+- Previously verified PR head: `5e9c34bd1c61462ff24a08e1fd2cbf1f7b281c3d`.
+- PR base branch: `main`.
+- Main merged into this candidate: `109b0644aebb296c17a6adeb9c03a4ff855060d9`. Use the PR for the current published head.
 - Verified how and when: November 13 GitHub PR/checks and isolated local fetch; the regular checkout's unrelated tracker edit is excluded.
 
 ## Status ladder
@@ -227,8 +227,8 @@ Auth cannot enforce that policy on the direct API.
 - EYD-MODEL-001 v1.1: owner-confirmed GPT-6.1 Sol High selector, configuration observed; runtime and exact remaining allowance UNKNOWN. No switch or paid action. Suitability of selected configuration PASS; no paid continuation approved.
 
 ## Bugs, blockers and dependencies
-- Parent/dependent PRs and merge order: #87 and #105 already merged; retain #106–#108 and #110. #109 is separately owned; not a dependency.
-- File overlap and post-parent reconciliation: Resolved RELEASE-READINESS.md and tests/signout.cjs; kept the origin and photo controls. Latest main changed only AGENTS.md.
+- #87 and #105 are ancestors of current main. Reconciliation retains #106–#110, including #109's sign-in mount reset for the previous profile photo.
+- [Main CI](https://github.com/Chappy1740/DiamondAlibi/actions/runs/43462176435) failed intermittently when WebKit reported a speculative `/review` fetch. This candidate turns off prefetch for the affected return link and tests the return navigation and same-origin frame. Existing error assertions still run. Local Chromium and eight consecutive WebKit runs passed the updated regression test.
 - Direct Supabase Auth response/timing, abuse paths, effective Twilio limits, phone change and hosted email compatibility are open.
 
 ## Authorization boundaries
