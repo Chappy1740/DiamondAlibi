@@ -2,7 +2,7 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 93,
+  revision: 94,
   updatedAt: "2026-11-13",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
@@ -10,6 +10,7 @@ export const projectTracker: ProjectTracker = {
     commit: "622b2ce",
     label: "Roast Club owner-accepted; Beverage Board fit deployed; live version verified",
     status:
+      "November 13 player photo coverage (AMBER). Owner accepted PR #108 photo removal and teammate viewing. The follow-up reuses authorized avatars beside account and player names, including narrow phone layouts. See RELEASE-READINESS.md and docs/screen-handoffs/17-profile.md. Publication and release are pending. " +
       "November 13 photo removal (AMBER). Storage accepted deletion but returned cached image bytes on the next read. Fresh owner and teammate downloads passed local checks. Draft publication, Worker and teammate-photo Function release, and hosted acceptance are pending. See RELEASE-READINESS.md and docs/screen-handoffs/17-profile.md. " +
       "November 13 Home greeting (AMBER). PR #107 uses the Bio & Profile display name on Home and passed local synthetic Chromium and WebKit checks. The owner approved merge and deploy. Exact-head CI, independent review, Worker deployment, and iPhone acceptance are pending. See RELEASE-READINESS.md and docs/screen-handoffs/01-home.md. " +
       "November 6 owner acceptance (AMBER). Owner said \"#78 accepted, #65 accepted\" on 2026-11-06 at 14:33 CT: #78 Clubhouse Extras and #65 private replies are Owner-accepted after phone checks. Open: Supabase backup/PITR check, real screen-reader pass, other Bluetooth speakers. " +

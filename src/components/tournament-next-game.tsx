@@ -4,6 +4,7 @@ import { revealInvalidField } from "@/lib/form-details";
 import { useEffect, useState } from "react";
 import type { LoadedScorebook } from "@/lib/scorebook-view";
 import type { TournamentContinuation } from "@/lib/tournament-continuation";
+import { RosterName } from "./roster-photo";
 
 const labels = BOARD_LABELS;
 export function TournamentNextGame({
@@ -133,7 +134,7 @@ export function TournamentNextGame({
                       value={p.id}
                       defaultChecked={position >= 0}
                     />
-                    {p.display_name}
+                    <RosterName name={p.display_name} playerId={p.user_id && !p.is_guest ? p.id : null} />
                   </label>
                   <label>
                     Batting position for {p.display_name}
