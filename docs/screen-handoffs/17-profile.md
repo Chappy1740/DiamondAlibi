@@ -27,6 +27,20 @@ Rerenders do not repeat requests; each page load makes one request, and a
 missing photo is a 404 handled by the fallback. A photo changed from another
 device shows after the next page load.
 
+**Review follow-up (Codex P2, same branch).** A removed photo could reappear when
+the next page's header mounted in the same tab, because each mount restarted at
+`?v=0` and the browser reused the decoded image for that URL despite `no-store`.
+`profile-photo-events` now also keeps, for the document only, a revision number
+that never repeats and a removed flag; no user data or photo bytes. Each header
+mount starts from that state, so a removed photo requests nothing on the next
+page, and a replacement loads from a URL not yet used. `AuthForm` and the
+signed-out menu reset it, so a different account never inherits it. The change
+touches `profile-avatar.tsx`, `profile-photo-events.ts`, `auth-form.tsx` and the
+tests. `tests/home-layout-browser.cjs` gained an opt-in same-document link
+navigation after removal; it fails on the previous commit (the photo returns) and
+passes now in Chromium. `tests/profile-avatar.test.ts` covers revisions, removal
+across mounts and reset. WebKit and a real iPhone were not run in this session.
+
 **Evidence (Claude Code, this session, Windows, local only).**
 
 - `tests/profile-avatar.test.ts`, `profile-photo-route.test.ts`,

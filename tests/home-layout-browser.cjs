@@ -92,23 +92,30 @@ const assert = require("node:assert/strict");
         if(fixtureQuery.has('no-team')){p.loaded=null;p.teams=[];p.seasons=[];p.teamId='';p.seasonId='';}
         if(fixtureQuery.has('load-error')){p.loaded=null;p.error='Synthetic records could not be loaded.';}
         const root=createRoot(document.getElementById('app'));
-        if (['/more/profile','/more/clubhouse-extras'].includes(location.pathname)) {
-          const AccountPage=location.pathname==='/more/profile'?ProfilePage:ClubhouseExtrasPage;
-          AccountPage({searchParams:Promise.resolve(Object.fromEntries(fixtureQuery))}).then(account=>root.render(<>{account}<BottomNavigationView pathname={location.pathname} context={fixtureQuery.toString()}/></>));
-        } else {
+        function show(){
+          p.route=location.pathname.slice(1);
+          p.sample=location.search.includes('sample=1');
+          if (['/more/profile','/more/clubhouse-extras'].includes(location.pathname)) {
+            const AccountPage=location.pathname==='/more/profile'?ProfilePage:ClubhouseExtrasPage;
+            return AccountPage({searchParams:Promise.resolve(Object.fromEntries(new URLSearchParams(location.search)))}).then(account=>root.render(<>{account}<BottomNavigationView pathname={location.pathname} context={new URLSearchParams(location.search).toString()}/></>));
+          }
           if (p.route === '' && !p.sample) {
             p.profileName = profileRecords.player_profiles[0].nickname;
           }
           const context=new URLSearchParams({team:p.teamId,season:p.seasonId,scope:p.scope,...(p.sample?{sample:'1',player:p.userId}:{})}).toString();
           root.render(<><PlayerDashboard {...p}/><BottomNavigationView pathname={location.pathname} context={context}/></>);
-        }` },
+        }
+        // Opt-in same-document navigation, like Next's client router: links swap the page without a reload.
+        window.__softNavigate=url=>{history.pushState({},'',url);return show()};
+        show();
+      `},
       bundle: true, write: false, platform: "browser", jsx: "automatic",
       plugins: [{ name: "synthetic-home", setup(build) {
         build.onResolve({ filter: /^(next\/(navigation|headers|link|image)|@\/lib\/supabase\/server|@\/app\/(login\/actions|more\/profile\/actions|club\/(actions|beverage-actions|roast-club-actions))|\.\/personal-alibis)$/ }, args => ({ path: args.path, namespace: "synthetic" }));
         build.onLoad({ filter: /.*/, namespace: "synthetic" }, args => ({ loader: "tsx", resolveDir: process.cwd(), contents:
           args.path === "next/navigation" ? "const router={refresh(){window.__refreshes=(window.__refreshes||0)+1}};export const useRouter=()=>router;export const usePathname=()=>location.pathname;export const useSearchParams=()=>new URLSearchParams(location.search);export const redirect=url=>location.assign(url);" :
           args.path === "next/headers" ? "export async function cookies(){return {get(){return {value:'team'}}}}" :
-          args.path === "next/link" ? "import React from 'react';export default function Link({children,...props}){return <a {...props}>{children}</a>}" :
+          args.path === "next/link" ? "import React from 'react';export default function Link({children,onClick,...props}){return <a {...props} onClick={event=>{onClick?.(event);if(window.__softNav&&!event.defaultPrevented&&event.button===0){event.preventDefault();window.__softNavigate(props.href)}}}>{children}</a>}" :
           args.path === "next/image" ? "import React from 'react';export default function Image({unoptimized,...props}){return <img {...props}/>}" :
           args.path === "./personal-alibis" ? "export function PersonalAlibis(){return null}" :
           args.path === "@/lib/supabase/server" ? "export const supabaseServer=async()=>window.__profileClient" :
@@ -561,6 +568,21 @@ const assert = require("node:assert/strict");
     assert(ownPhotoRequests.length <= requestsBeforeRemoval + 1, "Removal adds at most the profile form's own refresh, never a header request");
     assert.equal(await page.evaluate(() => window.__refreshes), refreshesBeforeSave, "Removal updated the header without router.refresh()");
     await assertAvatarSize();
+    // The next page's header must not bring the removed photo back when the tab keeps its document.
+    const requestsBeforeNavigation = ownPhotoRequests.length;
+    await page.evaluate(() => { window.__softNav = true; window.__sameDocument = true; });
+    await page.getByRole("link", { name: "Home", exact: true }).first().click();
+    await page.getByRole("heading", { name: "Your game, River Test.", exact: true }).waitFor();
+    assert.equal(await page.evaluate(() => window.__sameDocument), true, "The link changed pages without reloading the document");
+    await assertGenericAvatar("Generic icon stays after removal when the tab navigates without a reload");
+    assert.equal(await avatarPhoto.count(), 0, "No photo request is made for the next page's header");
+    assert.equal(ownPhotoRequests.length, requestsBeforeNavigation, "Same-tab navigation never reloads a removed photo");
+    await assertAvatarSize();
+    await page.locator(".profile-menu > summary").click();
+    await page.getByRole("link", { name: "Bio & profile", exact: true }).click();
+    await page.getByRole("heading", { name: "Bio & profile" }).waitFor();
+    await assertGenericAvatar("Generic icon stays after navigating back to the profile");
+    await page.evaluate(() => { window.__softNav = false; });
     await page.reload();
     assert.equal(await initials.innerText(), "RT");
     await assertGenericAvatar("Removal persists after a refresh");

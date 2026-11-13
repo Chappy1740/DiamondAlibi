@@ -14,7 +14,7 @@ async function load() {
         import React from "react";
         import { renderToStaticMarkup } from "react-dom/server";
         import { ProfileAvatar } from "./src/components/profile-avatar";
-        export { notifyProfilePhotoChange, subscribeProfilePhotoChange } from "./src/lib/profile-photo-events";
+        export { notifyProfilePhotoChange, profilePhotoState, resetProfilePhotoState, subscribeProfilePhotoChange } from "./src/lib/profile-photo-events";
         export const render = (signedIn) => renderToStaticMarkup(<ProfileAvatar signedIn={signedIn} />);
       `,
     },
@@ -60,4 +60,29 @@ test("photo change signals reach every subscriber until it unsubscribes and carr
   stopSecond();
   notifyProfilePhotoChange("saved");
   assert.deepEqual(seen, [["saved"], ["saved", "removed"]]);
+});
+
+test("a header mounted after removal asks for no photo, and later headers never reuse an earlier photo URL", async () => {
+  const { render, notifyProfilePhotoChange, resetProfilePhotoState, profilePhotoState } = await load();
+  const urls = new Set<string>([render(true).match(/photo\?v=(\d+)/)![1]]);
+  notifyProfilePhotoChange("saved");
+  const saved = render(true).match(/photo\?v=(\d+)/)![1];
+  assert.ok(!urls.has(saved), "a saved photo loads from a new URL");
+  urls.add(saved);
+
+  notifyProfilePhotoChange("removed");
+  const removed = render(true);
+  assert.doesNotMatch(removed, /<img/, "the next page's header does not request a removed photo");
+  assert.match(removed, /<svg/);
+
+  notifyProfilePhotoChange("saved");
+  const replaced = render(true).match(/photo\?v=(\d+)/)![1];
+  assert.ok(!urls.has(replaced), "a replacement loads from the latest revision");
+  urls.add(replaced);
+
+  notifyProfilePhotoChange("removed");
+  resetProfilePhotoState();
+  assert.deepEqual({ ...profilePhotoState(), revision: 0 }, { revision: 0, removed: false }, "a signed-out view clears the removal");
+  const another = render(true).match(/photo\?v=(\d+)/)![1];
+  assert.ok(!urls.has(another), "the next account never reuses a URL this document already loaded");
 });
