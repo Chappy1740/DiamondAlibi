@@ -1,5 +1,22 @@
 # 01 — Home: Screen handoff
 
+## November 13, 2026 — Home greeting uses the account display name
+
+**AMBER. Tested locally.** During the iPhone retest of PR #106, the owner
+confirmed the profile photo circle appeared and reported that Home still showed
+“Player.” Home took its greeting from the selected scorebook, while Bio & Profile
+read the account nickname. Home now shares the profile lookup and uses the
+account name even without a linked roster record or a team. The existing roster
+and sample fallbacks still apply when there is no account name. Profile saves
+refresh the Home route. Roster aliases and personal statistics still use their
+existing team and account identifiers.
+
+Codex tested the change on `codex/home-profile-display-name` from GitHub main
+`a4ec0a966be71c07e283d461d5fb8a22766bc3b4`. Typecheck, the dashboard loader,
+profile options, personal dashboard, Worker release gate, and the Chromium and
+WebKit Home and profile suites passed using synthetic data. The next action is
+to publish a draft PR for review after the owner authorizes the commit and push.
+
 **November 3 release update:** owner now authorizes publishing, merging and deploying H3 #46 with H1 #45 and the pending documentation through #46. H4 #47 remains excluded. See [current release handoff and completion receipt](00-WORKING-STANDARD.md#november-3-2026--uat-release-through-pr-46) and the release PR for `codex/uat-release-through-pr46` for actual source/check/activation state. Physical-phone acceptance remains open; the original draft-only boundary below is historical.
 
 ## November 3, 2026 — H3 Home/Stats compaction (owner-approved draft scope)

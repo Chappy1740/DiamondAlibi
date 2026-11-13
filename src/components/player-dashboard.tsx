@@ -32,6 +32,7 @@ export type DashboardProps = {
   route: string;
   sample: boolean;
   userId: string;
+  profileName?: string;
   teams: Option[];
   seasons: (Option & { archived: boolean })[];
   teamId: string;
@@ -194,7 +195,7 @@ export function PlayerDashboard(p: DashboardProps) {
                 </span>}
                 <h1>
                   {p.route === ""
-                    ? `Your game, ${view?.player?.name ?? "Player"}.`
+                    ? `Your game, ${p.profileName ?? view?.player?.name ?? "Player"}.`
                     : p.route === "more/beverage-rules" ? "Beverage Rules" : (tabs.find((t) => t.path === p.route)?.label ??
                       "Clubhouse")}
                 </h1>
