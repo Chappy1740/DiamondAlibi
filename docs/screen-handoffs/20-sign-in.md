@@ -1,5 +1,72 @@
 # 20 — Sign in and registration: Screen handoff
 
+## November 13, 2026 — PR #104 SMS pilot
+
+**DA-104-20261113 · Partially recovered · AMBER.** Continue this chat:
+the current objective and approvals agree with fresh source evidence.
+The remaining gaps are provider verification and independent review,
+not missing conversation context.
+
+- **Coordination:** Codex implements; independent Claude Code/security
+  reviewer reads the exact published head. Scope: invite-only phone
+  Auth actions, existing email CAPTCHA compatibility, profile setup,
+  tests, a review-only Auth hook proposal and these release records.
+  No other branch is owned or changed.
+- **Source:** [PR #104](https://github.com/Chappy1740/DiamondAlibi/pull/104),
+  `codex/phone-sign-in` at `c8bc01e79dff14b4ad9cea9a9bc15eef8ab66782`
+  originally targeted the old #87 branch and conflicted. Its
+  [validate](https://github.com/Chappy1740/DiamondAlibi/actions/runs/43262756470)
+  and [Workers Build](https://github.com/Chappy1740/DiamondAlibi/runs/131339643093)
+  were green. Main `7679ecdd759979c43753f039cc9deee13c6f8ce0` includes
+  #87 `41eec59651257905aad9fb5bde5211f3b50f24af` and
+  #105 `212c4aaa56b828d15fe742ca2da965a304b0429c`, plus #106–#108;
+  validate and Workers Build passed. Main then advanced to
+  `79851732093c1a2db654eb024f052d1fc5aaef52` via #110 (AGENTS.md only;
+  exact-main validate passed). #109 remains separate and open. The prior privacy patch informed this candidate; the
+  unrelated tracker edit in the normal checkout was left in place.
+- **Model:** Codex desktop, owner-confirmed selector GPT-6.1 Sol High on
+  November 13. Configuration suitable for authentication, abuse analysis
+  and multi-layer testing; runtime routing and remaining allowance were
+  not independently exposed. Keep this configuration for the bounded
+  draft work. No purchased credits, alternate provider or billable
+  services were authorized or requested.
+- **Reuse:** Keep the installed Supabase client, existing email forms,
+  verified contact checks, profile RPC and photo policies. Reuse
+  Supabase's built-in Turnstile validation instead of introducing a
+  duplicate verification proxy or a new widget dependency. A small
+  native widget wrapper handles single-use tokens; the reviewed SQL
+  proposal uses Supabase's supported Before User Created hook. No
+  package, schema migration or deployment fingerprint changes.
+
+**Completion receipt — Tested locally.** The Worker requires an opt-in
+flag, a configured CAPTCHA site key, a trusted request origin and one
+exact pilot number. After a valid-format request, success, provider
+rejections and non-pilot numbers get the same app result at the same
+minimum response window. The provider fetch has a shorter deadline.
+Invalid verification uses one generic response; successful verification
+requires a session for the expected confirmed number. Profile details
+are entered with the OTP, so a corrected retry does not reuse stale
+signup metadata. Existing initialized profiles are preserved. Email
+sign-in, signup and reset request pass a token when CAPTCHA is configured.
+
+Codex ran typecheck, the production Next/Worker build, 33 Worker release
+checks, the existing unit/action and disposable SQL regressions, a pinned
+dependency audit (zero advisories), and the new pilot SQL and Chromium
+and WebKit synthetic Auth checks. These tests did not exercise Twilio, the hosted
+OTP API, or an iPhone. The pilot SQL is a proposal, not an applied
+migration. The fresh Supabase advisor returned informational findings
+only; it does not check the OTP or Twilio control plane. Cloudflare Access
+readback confirmed individual email selectors; the tester's exact
+identity and login-method eligibility remain unknown.
+
+**Approval / next action:** Continue scoped draft implementation and
+review updates only. No merge, deployment, configuration changes, live
+SMS, paid service or Access weakening. First obtain exact-head validation
+and independent review, then resolve the provider security gates and
+confirm the existing Access identity through the owner. Use the
+[release report and iPhone runbook](20-phone-pilot-readiness.md) for
+PASS/FAIL/UNKNOWN, approval steps, rollback and owner acceptance.
+
 ## November 12, 2026 — Phone sign-in start
 
 **AMBER.** Will asked Codex to start phone sign-in. Local candidate

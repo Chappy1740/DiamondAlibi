@@ -96,6 +96,9 @@ const assert = require("node:assert/strict");
           const AccountPage=location.pathname==='/more/profile'?ProfilePage:ClubhouseExtrasPage;
           AccountPage({searchParams:Promise.resolve(Object.fromEntries(fixtureQuery))}).then(account=>root.render(<>{account}<BottomNavigationView pathname={location.pathname} context={fixtureQuery.toString()}/></>));
         } else {
+          if (p.route === '' && !p.sample) {
+            p.profileName = profileRecords.player_profiles[0].nickname;
+          }
           const context=new URLSearchParams({team:p.teamId,season:p.seasonId,scope:p.scope,...(p.sample?{sample:'1',player:p.userId}:{})}).toString();
           root.render(<><PlayerDashboard {...p}/><BottomNavigationView pathname={location.pathname} context={context}/></>);
         }` },
@@ -149,6 +152,8 @@ const assert = require("node:assert/strict");
     browser = await engine.launch({ headless: true, ...(engine === chromium && process.env.BROWSER_EXECUTABLE ? { executablePath: process.env.BROWSER_EXECUTABLE } : {}) });
     const page = await browser.newPage({ viewport: { width: 390, height: 844 }, ...(engine === webkit ? { isMobile: true, hasTouch: true } : {}) });
     page.on("pageerror", error => errors.push(error.message));
+    await page.route(url => url.pathname === "/more/profile/photo" && url.searchParams.get("player") === "teammate",
+      route => route.fulfill({ path: "public/brand/diamond-alibi-icon-64.png" }));
     await page.addInitScript(() => {
       window.__refreshes=0;window.__polls=0;
       const original=window.setInterval;
@@ -269,6 +274,10 @@ const assert = require("node:assert/strict");
     await leaders.getByRole('button',{name:'View HR rankings',exact:true}).click();
     assert.deepEqual(await leaders.locator('.leaderboard-player strong').allTextContents(),['Other Synthetic Player','Test Player']);
     assert.deepEqual(await leaders.locator('.leaderboard-counts strong').allTextContents(),['9','1']);
+    await page.waitForFunction(() => {
+      const image = document.querySelector('.leaderboard-players img[src$="player=teammate"]');
+      return image?.naturalWidth > 0 && getComputedStyle(image).visibility === 'visible';
+    });
     await leaders.getByRole('button',{name:'← Back to leaders',exact:true}).click();
     assert.equal(await leaders.getByRole('button',{name:'View HR rankings',exact:true}).locator('.leaderboard-player').textContent(),'9 – Other Synthetic Player','Stats summary reads count, separator, then leader without repeating the category');
     assert.equal(await leaders.locator('.leaderboard-summary .leaderboard-player > .micro').count(),0,'The badge is the sole visible category label');
@@ -309,6 +318,8 @@ const assert = require("node:assert/strict");
     await page.setViewportSize({width:320,height:844});if(process.env.STATS_WIDE_SCREENSHOT)await leaders.screenshot({path:process.env.STATS_WIDE_SCREENSHOT});
     await page.setViewportSize({width:390,height:844});
     await page.goto('http://127.0.0.1:'+server.address().port+'/stats?sample=1');await page.getByRole('heading',{name:'Team leaders',exact:true}).waitFor();assert.equal(await leaders.locator('.leaderboard-summary button').count(),9,'Sample Stats keeps every category');
+    await leaders.getByRole('button',{name:'View HR rankings',exact:true}).click();
+    assert.equal(await leaders.locator('.roster-photo').count(),0,'Sample rankings never load account photos');
     await page.goto('http://127.0.0.1:'+server.address().port+'/stats');await page.getByRole('heading',{name:'Team leaders',exact:true}).waitFor();
     await page.locator(".bottom-nav").getByRole("link", { name: "More", exact: true }).click();
     await page.getByRole("link", { name: "Explore sample history" }).click();
@@ -357,7 +368,7 @@ const assert = require("node:assert/strict");
       const roster=await page.evaluate(()=>{
         const navTop=document.querySelector('.app-bottom-nav')?.getBoundingClientRect().top ?? innerHeight;
         const lines=el=>Math.round(el.getBoundingClientRect().height/parseFloat(getComputedStyle(el).lineHeight));
-        const splitWord=el=>{const text=el.firstChild;if(!text)return null;const range=document.createRange();let at=0;for(const part of text.textContent.split(/[\s-]/)){range.setStart(text,at);range.setEnd(text,at+part.length);if(range.getClientRects().length>1)return part;at+=part.length+1;}return null;};
+        const splitWord=el=>{const text=(el.querySelector('.roster-name > span:last-child')??el).firstChild;if(!text)return null;const range=document.createRange();let at=0;for(const part of text.textContent.split(/[\s-]/)){range.setStart(text,at);range.setEnd(text,at+part.length);if(range.getClientRects().length>1)return part;at+=part.length+1;}return null;};
         const rows=[...document.querySelectorAll('.beverage-roster .leader-row')].map(row=>{const box=row.getBoundingClientRect();const name=row.querySelector('strong');const balance=row.querySelector('.balance');return {name:name.textContent,balance:balance.textContent,shortName:name.textContent.length<=8,fits:box.top>=0&&box.bottom<=navTop,nameSize:parseFloat(getComputedStyle(name).fontSize),balanceSize:parseFloat(getComputedStyle(balance).fontSize),balanceLines:lines(balance),split:splitWord(name)||splitWord(balance)};});
         return {rows,overflow:document.documentElement.scrollWidth>innerWidth};
       });
@@ -462,6 +473,14 @@ const assert = require("node:assert/strict");
     assert.equal(await page.getByLabel("What name do you go by?").inputValue(), "River Test");
     assert.equal(await page.getByLabel("What level of slow-pitch do you play? (optional)").inputValue(), "Not sure");
     await page.getByText("River Test", { exact: true }).waitFor();
+    // PWA-009: the profile avatar and its initials must remain visible at narrow widths.
+    for (const width of [320, 360, 390]) {
+      await page.setViewportSize({ width, height: 844 });
+      assert.equal(await page.locator(".avatar.profile-photo").evaluate(el =>
+        getComputedStyle(el).display !== "none" && el.getBoundingClientRect().width > 0
+      ), true, `Profile photo container hidden at ${width}px`);
+    }
+    await page.setViewportSize({ width: 390, height: 844 });
     async function choose(color) {
       const image = await page.evaluate((value) => {
         const canvas = document.createElement("canvas");
@@ -504,6 +523,16 @@ const assert = require("node:assert/strict");
     assert.deepEqual(await page.evaluate(async () => (await axe.run(document, {
       runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21aa"] },
     })).violations.map((violation) => violation.id)), []);
+    await page.getByRole("link", { name: "Home", exact: true }).first().click();
+    await page.getByRole("heading", { name: "Your game, River Test.", exact: true }).waitFor();
+    await page.goto(base + "/?unlinked=1");
+    await page.getByRole("heading", { name: "Your game, River Test.", exact: true }).waitFor();
+    await page.getByText("No player record is linked to this account.", { exact: false }).waitFor();
+    await page.goto(base + "/?no-team=1");
+    await page.getByRole("heading", { name: "Your game, River Test.", exact: true }).waitFor();
+    await page.getByRole("heading", { name: "Your season starts here" }).waitFor();
+    await page.goto(base + "/?sample=1");
+    await page.getByRole("heading", { name: "Your game, Test Player.", exact: true }).waitFor();
     console.log(`PASS ${engine.name()} Bio & profile: More entry, saved details and initials, local preview, save, reload, failed replacement, retry, and removal.`);
     assert.deepEqual(errors, []);
     console.log(`PASS ${engine.name()} Clubhouse Extras: one profile-menu link, two independent choices, team switching and reload, inactive denial, read-only balances, phone layout and accessibility.`);

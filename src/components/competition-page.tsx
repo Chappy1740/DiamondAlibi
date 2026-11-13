@@ -18,6 +18,7 @@ export function CompetitionPage({ data: p, kind, id, gamesOnly = false, fromGame
   query.set("scope", p.scope);
   if (p.sample) { query.set("sample", "1"); query.set("player", p.userId); }
   const context = query.toString();
+  const showPlayerPhotos = !!p.userId && !p.sample && !p.review;
   // Presentation query flags never grant access or change the loaded data scope.
   const matching = p.loaded?.snapshot.teamId === p.teamId && p.loaded?.snapshot.seasonId === p.seasonId;
   const leagueGames = matching ? p.loaded!.snapshot.games.filter(g => g.game.kind === "League" && (!id || g.game.league_id === id)) : [];
@@ -56,6 +57,7 @@ export function CompetitionPage({ data: p, kind, id, gamesOnly = false, fromGame
       {!leagueGames.length && <p>No league games recorded this season.</p>}
       {p.loaded.archived && <p className="connection-notice">Archived season · read only</p>}
       {(!id || selected) && <LeagueSeasonStats data={p.loaded} team={p.teamId} season={p.seasonId}
+        showPlayerPhotos={showPlayerPhotos}
         seasonName={p.seasons.find(s => s.id === p.seasonId)?.name ?? "Selected season"} leagueId={id} leagueName={selected?.competition.name} />}
       {!p.sample && <details className="games-context"><summary>League setup</summary><Link className="button secondary" href={id ? detail : list}>Manage leagues and add games</Link></details>}
     </>}
@@ -78,6 +80,7 @@ export function CompetitionPage({ data: p, kind, id, gamesOnly = false, fromGame
       </section>}
       {createView && p.sample && <p>Sign in to create a tournament. Sample records stay read only.</p>}
       {kind === "Tournament" && !createView && <TournamentSeasonStats data={p.loaded} team={p.teamId}
+        showPlayerPhotos={showPlayerPhotos}
         season={p.seasonId} seasonName={p.seasons.find(s => s.id === p.seasonId)?.name ?? "Selected season"} />}
     </>}
     {id && p.loaded && !selected && !leagueGameList && <p role="alert">That competition is not in the selected team and season.</p>}
@@ -113,8 +116,10 @@ export function CompetitionPage({ data: p, kind, id, gamesOnly = false, fromGame
       </div>}
       {!selected.games.length && <p>No games recorded.{!p.sample && !p.loaded?.archived && !tournamentArchived && " Add the first game to choose a lineup and start scoring."}</p>}
       {kind === "Tournament" && p.loaded && <TournamentSeasonStats data={p.loaded} team={p.teamId} season={p.seasonId}
+        showPlayerPhotos={showPlayerPhotos}
         seasonName={p.seasons.find(s => s.id === p.seasonId)?.name ?? "Selected season"} tournamentId={id} tournamentName={selected.competition.name} />}
       {kind === "League" && p.loaded && <LeagueSeasonStats data={p.loaded} team={p.teamId} season={p.seasonId}
+        showPlayerPhotos={showPlayerPhotos}
         seasonName={p.seasons.find(s => s.id === p.seasonId)?.name ?? "Selected season"} leagueId={id} leagueName={selected.competition.name} />}
       {!p.sample && kind === "League" && <details className="card detail-card"><summary>League settings</summary>
         <CompetitionForm team={p.teamId} season={p.seasonId} kind={kind} existing={selected.competition} archived={!!p.loaded?.archived} />

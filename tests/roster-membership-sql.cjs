@@ -80,6 +80,7 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
     `);
     await db.exec(fs.readFileSync("supabase/migrations/20261106164718_player_signup_profile.sql", "utf8"));
     await db.exec(fs.readFileSync("supabase/migrations/20261111011626_team_profile_photo_access.sql", "utf8"));
+    await db.exec(fs.readFileSync("supabase/migrations/20261112191200_profile_photo_download_metadata.sql", "utf8"));
     const actor = async (n) => {
       await db.exec("reset role");
       await db.query("select set_config('request.jwt.claim.sub',$1,false)", [
@@ -406,13 +407,19 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
       [{ nickname: "Legacy name", play_level: null, fielding_position: null }]);
     await operation("object.get_authenticated");
     assert.deepEqual((await visible()).rows, [], "unrelated team has no access");
+    await operation("object.get_authenticated_info");
+    assert.deepEqual((await visible()).rows, [], "unrelated team cannot read object info");
 
     for (const member of [1, 11]) {
       await actor(member);
       await operation("object.get_authenticated");
       assert.deepEqual((await visible()).rows, [{ version: "second" }], "both teams can read");
-      await operation("object.sign");
-      assert.deepEqual((await visible()).rows, [], "teammate cannot sign a read URL");
+      await operation("object.get_authenticated_info");
+      assert.deepEqual((await visible()).rows, [{ version: "second" }], "both teams pass the gateway's object info check");
+      for (const denied of ["object.sign", "object.sign_many", "object.list", "object.head_authenticated_info", ""]) {
+        await operation(denied);
+        assert.deepEqual((await visible()).rows, [], `teammate cannot read through ${denied || "an unset operation"}`);
+      }
     }
     await operation("object.delete_many");
     assert.equal((await remove()).rows.length, 0);
@@ -438,6 +445,8 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
     await db.query("delete from public.team_memberships where team_id=$1 and user_id=$2", [anotherTeam, id(1)]);
     await actor(1);
     assert.deepEqual((await visible()).rows, [], "removing the last active shared team revokes access");
+    await operation("object.get_authenticated_info");
+    assert.deepEqual((await visible()).rows, [], "revocation also blocks object info");
     await db.exec("reset role");
     await db.query("update public.team_memberships set active=true where team_id=$1 and user_id=$2", [team, id(1)]);
     await db.query("update public.team_memberships set active=false where team_id=$1 and user_id=$2",
@@ -452,8 +461,18 @@ const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
     await operation("object.delete_many");
     assert.equal((await remove()).rows.length, 0);
     await assert.rejects(rpc("da_save_player_details", ["Anonymous", null, null, false]), /permission denied/);
+    await db.exec("reset role");
+    await db.query("update public.team_memberships set active=true where team_id=$1 and user_id=$2", [team, id(9)]);
+    await db.exec(fs.readFileSync("supabase/migrations/20261112192946_disable_direct_teammate_photo_reads.sql", "utf8"));
+    await actor(1);
+    await operation("object.get_authenticated");
+    assert.deepEqual((await visible()).rows, [], "an active teammate cannot read directly after rollback");
+    await operation("object.get_authenticated_info");
+    assert.deepEqual((await visible()).rows, [], "an active teammate cannot read object info after rollback");
     await actor(9);
     assert.deepEqual((await visible()).rows, [{ version: "second" }]);
+    await operation("object.get_authenticated_info");
+    assert.deepEqual((await visible()).rows, [{ version: "second" }], "owner passes the gateway's object info check");
     await operation("object.sign_many");
     assert.deepEqual((await visible()).rows, [], "owner cannot sign a read URL");
     await operation("object.delete_many");

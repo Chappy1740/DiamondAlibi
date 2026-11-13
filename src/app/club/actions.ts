@@ -206,6 +206,7 @@ export async function clubAction(
     };
   revalidatePath("/club");
   if (operation === "archive-season") revalidatePath("/", "layout");
+  if (operation === "profile") revalidatePath("/");
   revalidatePath("/more/profile");
   return { message: "Saved to your clubhouse." };
 }

@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { BrandLink } from "@/components/brand-link";
+import { authCaptchaSiteKey } from "@/lib/auth-captcha";
 import { PasswordResetForm } from "@/components/password-reset-form";
+
+export const dynamic = "force-dynamic";
 
 export default async function ForgotPasswordPage({
   searchParams,
@@ -19,7 +22,7 @@ export default async function ForgotPasswordPage({
           it in the same browser.
         </p>
       )}
-      <PasswordResetForm />
+      <PasswordResetForm captchaSiteKey={authCaptchaSiteKey()} />
       <Link className="text-link" href="/login">
         Back to sign in
       </Link>

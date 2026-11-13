@@ -24,6 +24,7 @@ import { connectedScoreboard } from "@/lib/game-scoreboard";
 import { gameSetupHref, safeGameSetupReturn } from "@/lib/game-navigation";
 import { BeverageControls } from "./beverage-controls";
 import { AnnouncerSetup } from "./announcer-setup";
+import { RosterName } from "./roster-photo";
 
 type Option = { id: string; name: string };
 export type DashboardProps = {
@@ -31,6 +32,7 @@ export type DashboardProps = {
   route: string;
   sample: boolean;
   userId: string;
+  profileName?: string;
   teams: Option[];
   seasons: (Option & { archived: boolean })[];
   teamId: string;
@@ -61,6 +63,7 @@ const balance = (value: number | null) =>
       : "0";
 export function PlayerDashboard(p: DashboardProps) {
   const { loaded } = p;
+  const showPlayerPhotos = !!p.userId && !p.sample && !p.review;
   const fitHome = p.route === "" && !p.sample && !p.review;
   const view = loaded ? personalDashboard(loaded, p) : null;
   const team = p.teams.find((t) => t.id === p.teamId);
@@ -112,8 +115,9 @@ export function PlayerDashboard(p: DashboardProps) {
           ? !g.game.completed
           : p.scope === "Overall" || g.game.kind === p.scope,
       )
-      .map((g) => (
-        <article className="card detail-card" key={g.game.id}>
+      .map((g) => {
+        const batter = loaded?.roster.find((r) => r.id === g.lineup[g.game.next_batter_position]);
+        return <article className="card detail-card" key={g.game.id}>
           <span className="eyebrow">
             {g.game.completed ? "Completed" : "Active"} · {g.game.kind}
           </span>
@@ -130,16 +134,16 @@ export function PlayerDashboard(p: DashboardProps) {
           {!g.game.completed && (
             <p>
               Current batter:{" "}
-              {loaded?.roster.find(
-                (r) => r.id === g.lineup[g.game.next_batter_position],
-              )?.display_name ?? "Not available"}
+              {showPlayerPhotos && batter
+                ? <RosterName name={batter.display_name} playerId={batter.user_id && !batter.is_guest ? batter.id : null} />
+                : batter?.display_name ?? "Not available"}
             </p>
           )}
           <Link className="button primary" href={scoring(g.game.id)}>
             {p.sample ? "View sample scorebook" : "Open scoring"}
           </Link>
-        </article>
-      ));
+        </article>;
+      });
   const contextControls = (
     <section className={`dashboard-context-panel${p.route === "" ? " dashboard-context-panel--home" : p.route === "games" ? " dashboard-context-panel--compact" : ""}`} aria-label="Team, season and statistics controls">
           <form
@@ -191,7 +195,7 @@ export function PlayerDashboard(p: DashboardProps) {
                 </span>}
                 <h1>
                   {p.route === ""
-                    ? `Your game, ${view?.player?.name ?? "Player"}.`
+                    ? `Your game, ${p.profileName ?? view?.player?.name ?? "Player"}.`
                     : p.route === "more/beverage-rules" ? "Beverage Rules" : (tabs.find((t) => t.path === p.route)?.label ??
                       "Clubhouse")}
                 </h1>
@@ -322,6 +326,7 @@ export function PlayerDashboard(p: DashboardProps) {
                     regionLabel="Team player leaderboard"
                     scopeLabel={`${team?.name ?? "Your team"} · ${season?.name ?? "Selected season"} · ${p.scope}`}
                     players={teamLeaderboard(loaded, p.teamId, p.seasonId, p.scope)}
+                    photoPlayerIds={showPlayerPhotos ? loaded.roster.filter(r => r.user_id && !r.is_guest).map(r => r.id) : undefined}
                   />
                 )}
                 {p.route === "beverages" && (
@@ -344,7 +349,9 @@ export function PlayerDashboard(p: DashboardProps) {
                       <h2 id="team-beverage-balances">Team balances</h2>
                       {loaded.roster.length ? loaded.roster.map((r) => (
                         <div key={r.id} className="leader-row">
-                          <strong>{r.display_name}</strong>
+                          <strong>{showPlayerPhotos
+                            ? <RosterName name={r.display_name} playerId={r.user_id && !r.is_guest ? r.id : null} />
+                            : r.display_name}</strong>
                           <span className="balance">
                             {balance(loaded.snapshot.board[r.id] ?? null)}
                           </span>

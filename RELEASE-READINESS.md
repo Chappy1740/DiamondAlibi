@@ -1,5 +1,77 @@
 # Release readiness and recovery
 
+## November 13, 2026 — PR #104 SMS pilot security hold
+
+**AMBER · SMS remains off.** Codex reconciled the draft with main
+`79851732093c1a2db654eb024f052d1fc5aaef52` and verified the local app
+and disposable SQL controls. Direct managed Auth enumeration, SMS route
+coverage, provider readback, independent review and iPhone acceptance
+are release blockers. See the [sign-in completion receipt](docs/screen-handoffs/20-sign-in.md#november-13-2026--pr-104-sms-pilot)
+and [pilot readiness and rollback runbook](docs/screen-handoffs/20-phone-pilot-readiness.md).
+
+## November 13, 2026 — Removed profile photo still visible
+
+**AMBER.** Supabase accepted the deletion and served cached bytes to the
+next read. The owner and teammate read fixes passed local verification.
+Draft publication, Worker and Edge Function release, and hosted acceptance
+are pending. See the [profile handoff](docs/screen-handoffs/17-profile.md#november-13-2026--removed-photo-still-visible).
+
+## November 13, 2026 — Home account greeting
+
+**AMBER.** The owner confirmed the profile photo circle appeared on iPhone
+after PR #106 and reported that Home still greeted them as “Player.”
+[PR #107](https://github.com/Chappy1740/DiamondAlibi/pull/107) uses the account
+display name on Home and passed local synthetic Chromium and WebKit checks.
+The owner approved merge and deployment for #107. Exact-head CI, independent
+review, the gated Worker rollout, and an owner iPhone check remain pending.
+See the [Home handoff](docs/screen-handoffs/01-home.md#november-13-2026--home-greeting-uses-the-account-display-name).
+
+## November 12, 2026 — PR #87 deployed
+
+**GREEN for the verified photo release.** The owner merged PR #87 as
+`41eec59651257905aad9fb5bde5211f3b50f24af`. Exact-main CI passed in
+`43302204327`, and Cloudflare showed Worker version
+`982a8c6a-c68f-46a0-99b7-da727de37c05` serving 100% of traffic. The hosted
+revocation test passed before merge. The independent post-merge review found
+two follow-ups that passed local verification. The owner approved their release
+after CI and independent review. [Profile handoff](docs/screen-handoffs/17-profile.md#november-12-2026--production-photo-release-and-local-follow-up).
+
+## November 12, 2026 — Hosted photo revocation passed
+
+**GREEN for hosted acceptance.** The fresh synthetic viewer could read through
+the revised app and JWT-protected function while on a shared team. Both denied
+the same valid session immediately after the last shared membership ended.
+Direct Storage and signed URL requests were denied. Both synthetic memberships
+were restored. The four hosted photo migration statements match the source.
+Integrate current main `d2427bcc3ce2966ff9b22e5fae07a40c8ddc3965`, update the
+migration fingerprint, and require exact-head CI and independent review before
+the approved merge and gated Worker deployment.
+[Profile handoff](docs/screen-handoffs/17-profile.md#november-12-2026--hosted-photo-revocation-passed).
+
+## November 12, 2026 — Hosted photo revocation failed
+
+**AMBER.** Both app routes denied the synthetic viewer after revocation, but
+both direct Storage routes still returned HTTP 200 to the same session.
+The two synthetic memberships were restored. With explicit owner approval,
+the direct teammate policy was removed as hosted migration `20261112193037`.
+The JWT-protected Edge Function and revised app path passed local checks. The
+owner approved deploying the function alone. Version 1 is active, JWT
+verification is enabled, and no-token, key-only and invalid-token probes
+returned 401. The fresh-session app and function check remains pending. Keep
+the deploy gate closed. [Profile handoff](docs/screen-handoffs/17-profile.md#november-12-2026--hosted-revocation-failed).
+
+## November 12, 2026 — Hosted photo policy applied
+
+**AMBER.** PR #87 migration `20261111011626_team_profile_photo_access.sql`
+applied as `20261112190015` with explicit owner approval. Hosted readback
+confirmed the private bucket, one synthetic photo and the new scoped policies.
+Both synthetic accounts share two test teams. Complete the same-session app
+and Storage revocation check before updating the deployment fingerprint.
+The initial roster read exposed a gateway metadata preflight. The scoped
+follow-up applied as `20261112191312`. Retest the roster downloads before
+running revocation.
+[Profile handoff](docs/screen-handoffs/17-profile.md#november-12-2026--hosted-photo-policy-applied).
+
 ## November 12, 2026 — Phone sign-in local candidate
 
 **AMBER.** Will asked to start SMS-code sign-in. Codex prepared an opt-in
@@ -24,6 +96,12 @@ policy and the teammate-access migration is pending. Coordinate the hosted
 revocation check in the [profile handoff](docs/screen-handoffs/17-profile.md#november-12-2026--profile-photo-release-reconciliation)
 before applying the teammate policy. Keep the approved migration fingerprint
 at main's value until hosted verification is complete.
+
+Later November 12 readback confirmed one synthetic photo and the owner's
+active membership on both test teams. Stage the second synthetic account on
+both before enabling teammate reads. The owner requested a return to Sign in
+after email confirmation. The [profile handoff](docs/screen-handoffs/17-profile.md#november-12-2026--profile-photo-release-reconciliation)
+records the locally tested follow-up and remaining hosted verification.
 
 ## November 12, 2026 — Approve outcome-count migrations for Worker release (Claude)
 

@@ -20,6 +20,7 @@ import { AnnouncerControls } from "./announcer-controls";
 import { parseNamedPlay } from "@/lib/named-play";
 import { GameScoreboardPanel } from "@/components/game-scoreboard";
 import { connectedScoreboard } from "@/lib/game-scoreboard";
+import { RosterName } from "./roster-photo";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   DEFAULT_BOARD,
@@ -166,6 +167,12 @@ export function ConnectedScorebook({
   const playerName = (id: string) =>
     data?.roster.find((p) => p.id === id)?.display_name ??
     "Former roster player";
+  const playerWithPhoto = (id: string) => {
+    const player = data?.roster.find((p) => p.id === id);
+    return player
+      ? <RosterName name={player.display_name} playerId={player.user_id && !player.is_guest ? player.id : null} />
+      : "Former roster player";
+  };
   const disabled =
     busy || !online || paused || review || uncertain || !data || data.archived || tournamentArchived;
   const base = { teamId, seasonId };
@@ -808,14 +815,16 @@ export function ConnectedScorebook({
               {!current.game.completed && mode !== "manage" && (
                 <>
                   {manual ? <div className="manual-batter">
-                    <h3>{manualPlayer ? `Batting: ${playerName(manualPlayer)}` : "Who’s batting?"}</h3>
+                    <h3>{manualPlayer ? <>Batting: {playerWithPhoto(manualPlayer)}</> : "Who’s batting?"}</h3>
                     <input aria-label="Find player" placeholder="Player name" value={playerSearch} disabled={disabled} onChange={event => { setPlayerSearch(event.target.value); setManualPlayer(""); setFirstBand(null); pendingPlay.current = null; }} />
                     <div className="manual-player-buttons" role="group" aria-label="Choose batting player">
                       {data?.roster
                         .filter(player => player.display_name.toLocaleLowerCase().includes(playerSearch.toLocaleLowerCase()))
-                        .map(player => <button type="button" key={player.id} disabled={disabled} aria-pressed={manualPlayer === player.id} onClick={() => { setManualPlayer(player.id); setPlayerSearch(""); setFirstBand(null); pendingPlay.current = null; setEntryError(""); }}>{player.display_name}</button>)}
+                        .map(player => <button type="button" key={player.id} disabled={disabled} aria-pressed={manualPlayer === player.id} onClick={() => { setManualPlayer(player.id); setPlayerSearch(""); setFirstBand(null); pendingPlay.current = null; setEntryError(""); }}>
+                          <RosterName name={player.display_name} playerId={player.user_id && !player.is_guest ? player.id : null} />
+                        </button>)}
                     </div>
-                  </div> : <h3>Next batter: {playerName(battingPlayer)}</h3>}
+                  </div> : <h3>Next batter: {playerWithPhoto(battingPlayer)}</h3>}
                   {mode === "score" && <VoicePlayEntry key={`${current.game.id}:${confirmedPlays}`} disabled={disabled} onResult={spokenPlay} submitLabel="Use result" />}
                   {entryError && <p className="entry-error" role="alert">{entryError}</p>}
                   {manual && manualPlayer && current.game.kind === "Tournament" && !data?.bands.some(band => band.tournament_id === current.game.tournament_id && band.player_id === manualPlayer) && <div className="first-band-choice" role="group" aria-label="First tournament Band choice">
@@ -874,7 +883,7 @@ export function ConnectedScorebook({
                 <p className="micro">This game only</p>
                 {gameStatLines.map(([id, totals]) => (
                   <div className="game-stat-player" key={id}>
-                    <h4>{playerName(id)}</h4>
+                    <h4>{playerWithPhoto(id)}</h4>
                     <dl aria-label={`${playerName(id)} game stats`}>
                       {[
                         ["PA", totals.PA], ["H", totals.H], ["HR", totals.HR],
@@ -1165,7 +1174,7 @@ export function ConnectedScorebook({
                       r = rates(t);
                     return (
                       <tr key={p.id}>
-                        <th scope="row">{p.display_name}</th>
+                        <th scope="row"><RosterName name={p.display_name} playerId={p.user_id && !p.is_guest ? p.id : null} /></th>
                         <td>{t.PA}</td>
                         <td>{t.H}</td>
                         <td>{t.HR}</td>

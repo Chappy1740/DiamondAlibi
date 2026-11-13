@@ -1,9 +1,11 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { authCaptchaToken, captchaRequiredMessage } from "@/lib/auth-captcha";
 import { supabaseServer } from "@/lib/supabase/server";
 import { completePlayerSignup } from "@/lib/complete-player-signup";
 import { playerDetails } from "@/lib/player-profile";
+import { diamondAlibiOrigin, trustedAuthOrigin } from "@/lib/trusted-auth-origin";
 export type AuthResult = { error?: string; message?: string };
 export async function login(
   _previous: AuthResult,
@@ -13,8 +15,12 @@ export async function login(
   const password = String(form.get("password") ?? "");
   if (!email || !password || email.length > 254 || password.length > 256)
     return { error: "Enter your email and password." };
+  const captchaToken = authCaptchaToken(form);
+  if (captchaToken === null) return { error: captchaRequiredMessage };
   const supabase = await supabaseServer();
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email, password, ...(captchaToken && { options: { captchaToken } }),
+  });
   if (error)
     return {
       error:
@@ -37,11 +43,23 @@ export async function signup(
     return { error: "Use a valid email and a password of 12–256 characters." };
   const details = playerDetails(form.get("nickname"), form.get("play_level"), form.get("fielding_position"));
   if (!details) return { error: "Enter a name of 1–40 characters and choose only the listed options." };
+  const origin = await trustedAuthOrigin();
+  if (!origin) return { error: "Open Diamond Alibi directly and try again." };
+  const captchaToken = authCaptchaToken(form);
+  if (captchaToken === null) return { error: captchaRequiredMessage };
+  // Supabase accepts the canonical host and numeric loopback addresses for this callback.
+  const confirmationOrigin = origin.startsWith("https://")
+    ? diamondAlibiOrigin
+    : origin.replace("localhost", "127.0.0.1");
   const supabase = await supabaseServer();
   const { error, data } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { da_signup_profile: details } },
+    options: {
+      ...(captchaToken && { captchaToken }),
+      emailRedirectTo: `${confirmationOrigin}/auth/callback?next=/login`,
+      data: { da_signup_profile: details },
+    },
   });
   if (error)
     return {

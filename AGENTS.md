@@ -43,3 +43,25 @@ Codex and Claude Code both follow this file (Claude Code loads it through `CLAUD
 - **Same evidence rules.** State which agent ran which checks in the current session, keep stage labels distinct, and never present another agent's recorded results as freshly verified.
 - **Formal handoffs.** Use the central templates. From the governance repository, validate a new handoff with `python3 -I tests/handoff_check.py <handoff.md> --require-coordination`. Verify recovery and authorization separately.
 - **Scoped owner delegation.** The owner sets priorities, scope, acceptance and final approvals. Delegation covers only the named actions. Follow the explicit approval requirements in `CONTRIBUTING.md` and obtain explicit authorization for merges. Preserve data isolation, scoring and audited corrections, rule versions, HR limits and Bands, privacy, and the pilot, UAT and release gates.
+
+## EYD-MODEL-001 v1.1 — Mandatory model suitability and STOP gate
+
+Canonical standard: [EYD-MODEL-001](https://github.com/Chappy1740/eydren-governance/blob/main/governance/EYD-MODEL-001.md) (private). These local instructions apply independently if the canonical document cannot be accessed.
+
+Before substantial architecture, coding, review, analysis, or tool-intensive work, identify task complexity, risk, data restrictions, required capabilities and budget. Use the executing surface's supported controls or metadata where accessible:
+
+- **ChatGPT chat:** Check the current conversation's picker and exposed thinking effort. Use provider-reported evidence for the specific response when available. Routing and mode labels can leave the exact model UNKNOWN.
+- **ChatGPT Work:** Check the current Work chat's model and reasoning controls or supported task metadata. Record presets and workspace defaults as configuration.
+- **Codex:** Check the active Codex session's model and effort controls or supported run metadata. In the interactive CLI, use `/status` and inspect effort controls without applying changes.
+- **Claude:** Check the current conversation's model menu and exposed effort or thinking controls. Use supported session or response evidence where available.
+- **Claude Code:** Check the current session's `/status` or configured status line and any exposed effort. Resolve aliases and check effective overrides or fallback for that session.
+
+Grade the evidence. **Runtime verified** applies only to fields the provider confirms for that session or response. **Configuration observed** covers what a selector, settings view or owner screenshot displays. **Reference only** covers general provider guidance, stale handoffs and unresolved aliases. Mark unverified runtime fields **UNKNOWN** and request a supported check or owner evidence when material. Verify choices against the current account or workspace, refresh stale inventory, and use official documentation for capabilities. Never guess from output style or assume settings carry across surfaces.
+
+- **PASS** when current evidence verifies suitability and the authorized cost path.
+- **UNVERIFIED** when material evidence is missing or conflicting. Keep affected work to authorized low-risk, model-independent discovery.
+- **STOP** when the active model or effort is verified unsuitable. Stop affected work, explain the mismatch, recommend a verified suitable option or how to find one, and give switch and resume guidance. Await the owner, who controls switching. Verify the new session and approvals before resuming.
+
+Recommend the least costly suitable available model and effort. Check sufficient included allowance for the next step. Pause before paid or uncertain overage. Purchased credits, pay-as-you-go, billable APIs and provider setting changes require separate explicit approval. Record the risk, surface, model and effort, evidence grade, source and timestamp, recommendation, cost and decision in the existing task or PR.
+
+Reassess after a significant scope, risk, model, effort, provider or budget change, fallback, context recovery, usage exhaustion, or handoff. Preserve the sole implementer, branch, full head SHA, execution locks, and stricter local review, security and approval rules. Model selection creates no authority to merge, deploy, spend or transfer ownership.

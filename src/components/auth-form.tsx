@@ -2,16 +2,17 @@
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import { login, signup, type AuthResult } from "@/app/login/actions";
+import { AuthCaptcha } from "./auth-captcha";
 import { PlayerProfileFields } from "./player-profile-fields";
 import { PhoneAuthForm } from "./phone-auth-form";
-export function AuthForm({ phoneEnabled = false }: { phoneEnabled?: boolean }) {
+export function AuthForm({ phoneEnabled = false, captchaSiteKey = null }: { phoneEnabled?: boolean; captchaSiteKey?: string | null }) {
   const [creating, setCreating] = useState(false);
   const [usingPhone, setUsingPhone] = useState(false);
   const [result, submit, pending] = useActionState<AuthResult, FormData>(
     creating ? signup : login,
     {},
   );
-  if (phoneEnabled && usingPhone) return <PhoneAuthForm onUseEmail={() => setUsingPhone(false)} />;
+  if (phoneEnabled && captchaSiteKey && usingPhone) return <PhoneAuthForm siteKey={captchaSiteKey} onUseEmail={() => setUsingPhone(false)} />;
   return (
     <section className="card detail-card auth-card">
       <h2>
@@ -44,6 +45,7 @@ export function AuthForm({ phoneEnabled = false }: { phoneEnabled?: boolean }) {
             No teammate invitations are sent automatically.
           </p>
         </>}
+        {captchaSiteKey && !pending && <AuthCaptcha key={String(creating)} siteKey={captchaSiteKey} />}
         {result.error && (
           <p role="alert" className="form-error">
             {result.error}

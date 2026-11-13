@@ -41,6 +41,7 @@ jobs:
       - run: node tests/personal-alibis-sql.cjs
       - run: node tests/dashboard-loader.cjs
       - run: node tests/password-reset.cjs
+      - run: node tests/phone-signup-pilot-sql.cjs
       - run: node tests/feedback-api.cjs
       - run: node tests/feedback-sql.cjs
       - name: Prepare reliable Ubuntu package downloads
@@ -53,6 +54,8 @@ jobs:
           printf '%s\n' 'Acquire::Retries "3";' 'Acquire::https::Timeout "30";' 'Acquire::http::Timeout "30";' | sudo tee /etc/apt/apt.conf.d/80-ci-network >/dev/null
       - run: npx playwright install --with-deps chromium webkit
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+      - run: node tests/phone-auth-browser.cjs
+      - run: BROWSER_ENGINE=webkit node tests/phone-auth-browser.cjs
       - run: node tests/feedback-notifications-browser.cjs
       - run: BROWSER_ENGINE=webkit node tests/feedback-notifications-browser.cjs
       - run: node tests/personal-workflow-browser.cjs

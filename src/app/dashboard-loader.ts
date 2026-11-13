@@ -10,6 +10,7 @@ import {
 import type { DashboardProps } from "@/components/player-dashboard";
 import type { Scope } from "@/lib/scoring";
 import { scoringMetadataPages } from "@/lib/scoring-metadata-pages";
+import { loadPlayerProfile } from "@/lib/player-profile";
 import { loadActiveTeams, selectActiveTeam } from "@/lib/team-selection";
 import type { GameContextTeam } from "@/components/game-context-picker";
 
@@ -111,14 +112,19 @@ export async function dashboardProps(
         };
       return sample();
     }
-    const [jar, { options, unavailable }] = await Promise.all([
+    const [jar, { options, unavailable }, profile] = await Promise.all([
       cookies(),
       loadActiveTeams(client, user.id),
+      route === "" ? loadPlayerProfile(client, user).catch(() => null) : null,
     ]);
+    const account = {
+      userId: user.id,
+      profileName: profile?.details?.nickname,
+    };
     if (unavailable)
       return {
         ...empty,
-        userId: user.id,
+        ...account,
         error:
           "Could not load team access. Your records have not been replaced by sample data.",
       };
@@ -186,7 +192,7 @@ export async function dashboardProps(
     if (!team)
       return {
         ...empty,
-        userId: user.id,
+        ...account,
         teams: options,
         ...picker,
         ...(query.team
@@ -200,7 +206,7 @@ export async function dashboardProps(
       .order("created_at", { ascending: false });
     const base = {
       ...empty,
-      userId: user.id,
+      ...account,
       teams: options,
       ...picker,
       teamId: team.id,

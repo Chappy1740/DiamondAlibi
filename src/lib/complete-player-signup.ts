@@ -1,6 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 import type { supabaseServer } from "@/lib/supabase/server";
-import { profileArguments, signupDetails } from "@/lib/player-profile";
+import { profileArguments, signupDetails, type PlayerDetails } from "@/lib/player-profile";
 
 export function hasVerifiedPlayerContact(user: User | null | undefined) {
   return Boolean(user?.email_confirmed_at || user?.phone_confirmed_at);
@@ -9,8 +9,9 @@ export function hasVerifiedPlayerContact(user: User | null | undefined) {
 export async function completePlayerSignup(
   client: Awaited<ReturnType<typeof supabaseServer>>,
   user: User | null | undefined,
+  verifiedDetails?: PlayerDetails,
 ) {
-  const details = signupDetails(user?.user_metadata?.da_signup_profile);
+  const details = verifiedDetails ?? signupDetails(user?.user_metadata?.da_signup_profile);
   if (!hasVerifiedPlayerContact(user) || !details) return "/";
   const { data, error } = await client.rpc("da_save_player_details", {
     ...profileArguments(details),

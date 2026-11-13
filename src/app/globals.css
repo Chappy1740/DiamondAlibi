@@ -1446,6 +1446,10 @@ blockquote {
   .avatar {
     display: none;
   }
+  /* Keep the editable player photo (or fallback initials) visible on narrow phones. */
+  .avatar.profile-photo {
+    display: inline-flex;
+  }
   .scoreline {
     gap: 8px;
   }
@@ -2256,7 +2260,11 @@ body:has(.workspace--home) { padding-bottom: 0; }
 .roster-player-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; justify-content: space-between; overflow-wrap: anywhere; }
 .roster-player-name { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .avatar.roster-photo { position: relative; flex: 0 0 32px; width: 32px; height: 32px; overflow: hidden; font-size: 12px; }
+.roster-photo::before { content: attr(data-initials); }
 .roster-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.roster-name { display: inline-flex; align-items: center; gap: 0.5rem; max-width: 100%; vertical-align: middle; }
+.roster-name > .roster-photo { flex-basis: 24px; width: 24px; height: 24px; font-size: 10px; }
+.roster-name > span:last-child { min-width: 0; overflow-wrap: anywhere; }
 .regular-roster .club-form { margin-top: 12px; }
 .regular-roster .button { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
 

@@ -1,3 +1,5 @@
+import type { SupabaseClient, User } from "@supabase/supabase-js";
+
 export const playLevels = [
   "New to softball", "Recreational league", "Competitive league (unclassified)",
   "Class E", "Class D", "Class C", "Class B", "Class A", "Class AA", "Major",
@@ -31,6 +33,18 @@ export function signupDetails(metadata: unknown) {
   if (!metadata || typeof metadata !== "object") return null;
   const values = metadata as Partial<Record<keyof PlayerDetails, unknown>>;
   return playerDetails(values.nickname, values.play_level, values.fielding_position);
+}
+
+export async function loadPlayerProfile(client: SupabaseClient, user: User) {
+  const { data: saved, error } = await client
+    .from("player_profiles")
+    .select("nickname,play_level,fielding_position")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const details = saved
+    ? playerDetails(saved.nickname, saved.play_level, saved.fielding_position)
+    : error ? null : signupDetails(user.user_metadata?.da_signup_profile);
+  return { saved, error, details };
 }
 
 export function profileArguments(details: PlayerDetails) {
