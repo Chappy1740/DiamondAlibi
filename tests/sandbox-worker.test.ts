@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { build } from "esbuild";
 import { exportJWK, generateKeyPair, SignJWT } from "jose";
+import { unstable_readConfig } from "wrangler";
 
 const config = JSON.parse(readFileSync("wrangler.sandbox.jsonc", "utf8"));
 const origin = config.vars.DA_SANDBOX_ORIGIN;
@@ -24,6 +25,15 @@ test("sandbox Worker has no public routes or cron and only binds to itself", () 
   assert.equal(config.assets.run_worker_first, true);
   assert.equal(config.vars.FEEDBACK_NOTIFICATIONS_ENABLED, "false");
   assert.equal(config.vars.NEXT_PUBLIC_SUPABASE_URL, undefined);
+  assert.deepEqual(config.secrets.required, [
+    "DA_SANDBOX_SUPABASE_REF",
+    "DA_SANDBOX_SUPABASE_PUBLISHABLE_KEY",
+    "DA_SANDBOX_ACCESS_ISSUER",
+    "DA_SANDBOX_ACCESS_AUDIENCE",
+  ]);
+  for (const name of config.secrets.required) {
+    assert.ok(!Object.hasOwn(config.vars, name), name);
+  }
 });
 
 test("sandbox Worker rejects alternate hosts, unsafe bindings and invalid Access tokens", async (t) => {
@@ -85,6 +95,24 @@ test("sandbox Worker rejects alternate hosts, unsafe bindings and invalid Access
     new Request(host + "/brand/diamond-alibi-icon-32.png", {
       headers: token ? { "Cf-Access-Jwt-Assertion": token } : {},
     });
+  const productionUrl = unstable_readConfig({ config: "wrangler.jsonc" }).vars
+    .NEXT_PUBLIC_SUPABASE_URL;
+  assert.equal(typeof productionUrl, "string");
+  const productionProject = /^https:\/\/([a-z]{20})\.supabase\.co\/?$/.exec(
+    String(productionUrl),
+  )?.[1];
+  assert.ok(productionProject, "Expected the production Supabase project URL");
+  assert.equal(
+    (
+      await worker.fetch(
+        request(origin, validToken),
+        { ...bindings, DA_SANDBOX_SUPABASE_REF: productionProject },
+        {},
+      )
+    ).status,
+    503,
+    "Sandbox must reject the project configured in production",
+  );
   assert.equal(
     (
       await worker.fetch(
@@ -97,7 +125,6 @@ test("sandbox Worker rejects alternate hosts, unsafe bindings and invalid Access
   );
   for (const unsafe of [
     { DA_SANDBOX_SUPABASE_REF: undefined },
-    { DA_SANDBOX_SUPABASE_REF: "twfyeoywjexxnhnluomv" },
     { DA_SANDBOX_SUPABASE_PUBLISHABLE_KEY: "sb_secret_synthetic" },
     { DA_SANDBOX_ACCESS_AUDIENCE: "" },
     { NEXT_PUBLIC_SUPABASE_URL: "https://unexpected.supabase.co" },

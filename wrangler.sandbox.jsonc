@@ -9,6 +9,14 @@
   "keep_vars": false,
   "routes": [],
   "triggers": { "crons": [] },
+  "secrets": {
+    "required": [
+      "DA_SANDBOX_SUPABASE_REF",
+      "DA_SANDBOX_SUPABASE_PUBLISHABLE_KEY",
+      "DA_SANDBOX_ACCESS_ISSUER",
+      "DA_SANDBOX_ACCESS_AUDIENCE"
+    ]
+  },
   "vars": {
     "DA_SANDBOX_ORIGIN": "https://diamondalibi-sandbox.eydrenworks.com",
     "FEEDBACK_NOTIFICATIONS_ENABLED": "false",
