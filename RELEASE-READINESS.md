@@ -1,5 +1,12 @@
 # Release readiness and recovery
 
+## November 13, 2026 — Removed profile photo still visible
+
+**AMBER.** Supabase accepted the deletion and served cached bytes to the
+next read. The owner and teammate read fixes passed local verification.
+Draft publication, Worker and Edge Function release, and hosted acceptance
+are pending. See the [profile handoff](docs/screen-handoffs/17-profile.md#november-13-2026--removed-photo-still-visible).
+
 ## November 13, 2026 — Home account greeting
 
 **AMBER.** The owner confirmed the profile photo circle appeared on iPhone

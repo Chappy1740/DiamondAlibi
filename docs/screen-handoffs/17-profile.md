@@ -1,5 +1,23 @@
 # 17 — Bio and profile: Screen handoff
 
+## November 13, 2026 — Removed photo still visible
+
+**AMBER. Tested locally.** The owner reported that Remove photo left the
+image visible. Storage returned success for deletion, then served the
+previous image from its CDN. Owner and teammate photo downloads now use
+Supabase's cache nonce to request fresh bytes after the existing access
+checks. The private bucket and its permissions stay in place.
+
+Codex prepared `codex/profile-photo-removal` from deployed main
+`a0a99eb05744d865539f4bbb176e1f17b8b4de68`. A synthetic CDN regression
+reproduced the stale image and passed after the fix for both read paths.
+Typecheck and the Chromium and WebKit Home/Profile suites passed.
+
+Next: publish a draft for independent review after owner approval. The
+Worker and `teammate-photo` Edge Function each need a scoped release.
+After both are live, verify immediate initials on the owner's iPhone
+after removal and no stale photo on an authorized synthetic teammate view.
+
 ## November 12, 2026 — Production photo release and local follow-up
 
 The owner merged PR #87 as `41eec59651257905aad9fb5bde5211f3b50f24af`.
