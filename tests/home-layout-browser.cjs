@@ -470,6 +470,14 @@ const assert = require("node:assert/strict");
     assert.equal(await page.getByLabel("What name do you go by?").inputValue(), "River Test");
     assert.equal(await page.getByLabel("What level of slow-pitch do you play? (optional)").inputValue(), "Not sure");
     await page.getByText("River Test", { exact: true }).waitFor();
+    // PWA-009: the profile avatar and its initials must remain visible at narrow widths.
+    for (const width of [320, 360, 390]) {
+      await page.setViewportSize({ width, height: 844 });
+      assert.equal(await page.locator(".avatar.profile-photo").evaluate(el =>
+        getComputedStyle(el).display !== "none" && el.getBoundingClientRect().width > 0
+      ), true, `Profile photo container hidden at ${width}px`);
+    }
+    await page.setViewportSize({ width: 390, height: 844 });
     async function choose(color) {
       const image = await page.evaluate((value) => {
         const canvas = document.createElement("canvas");
