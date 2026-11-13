@@ -11,6 +11,8 @@ test("teammate photos require current membership before each private download", 
   let guest = false;
   let shared = true;
   let available = true;
+  let simulateCdn = false;
+  const cachedPhotos = new Map<string, Blob>();
   const downloads: string[] = [];
   const queries: { table: string; filters: [string, unknown][] }[] = [];
   const client = {
@@ -34,10 +36,15 @@ test("teammate photos require current membership before each private download", 
       from(bucket: string) {
         assert.equal(bucket, "da-player-profile-photos");
         return {
-          async download(path: string, options: unknown, fetchOptions: unknown) {
+          async download(path: string, options: { cacheNonce?: string }, fetchOptions: unknown) {
             assert.deepEqual(JSON.parse(JSON.stringify(fetchOptions)), { cache: "no-store" });
             downloads.push(path);
-            return { data: available ? new Blob(["synthetic photo"], { type: "image/jpeg" }) : null };
+            const cacheKey = JSON.stringify([path, options.cacheNonce]);
+            const cached = simulateCdn ? cachedPhotos.get(cacheKey) : undefined;
+            if (cached) return { data: cached };
+            const data = available ? new Blob(["synthetic photo"], { type: "image/jpeg" }) : null;
+            if (simulateCdn && data) cachedPhotos.set(cacheKey, data);
+            return { data };
           },
         };
       },
@@ -77,7 +84,7 @@ test("teammate photos require current membership before each private download", 
       privilegedReads++;
       return { storage: client.storage };
     },
-    Response,
+    Response, crypto,
   });
   const edgeRequest = (player: string, authorization = "Bearer synthetic.valid.token") => edge(new Request("https://synthetic.invalid/functions/v1/teammate-photo", {
     method: "POST",
@@ -99,7 +106,7 @@ test("teammate photos require current membership before each private download", 
   });
   const module = { exports: {} as { GET: (request: Request) => Promise<Response> } };
   runInNewContext(result.outputFiles[0].text, {
-    module, exports: module.exports, Response, URL, Blob,
+    module, exports: module.exports, Response, URL, Blob, crypto,
     __profileClient: {
       ...client,
       functions: {
@@ -153,6 +160,22 @@ test("teammate photos require current membership before each private download", 
   await t.test("owner entry keeps its existing account path", async () => {
     assert.equal((await get("")).status, 200);
     assert.equal(downloads.at(-1), "viewer/avatar.jpg");
+  });
+  await t.test("cached owner and teammate photos disappear immediately after deletion", async () => {
+    simulateCdn = true;
+    try {
+      assert.equal((await get("?v=0")).status, 200);
+      assert.equal((await get()).status, 200);
+      available = false;
+      const responses = await Promise.all([get("?v=1"), get("?v=0"), get()]);
+      assert.deepEqual(responses.map((response) => response.status), [404, 404, 404]);
+      available = true;
+      assert.equal((await get("?v=0")).status, 200, "a new upload can be read after removal");
+      assert.equal((await get()).status, 200);
+    } finally {
+      available = true;
+      simulateCdn = false;
+    }
   });
   await t.test("signed-out requests receive no bytes", async () => {
     signedIn = false;

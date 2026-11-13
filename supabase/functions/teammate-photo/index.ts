@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { profilePhotoBucket, profilePhotoMaxBytes, profilePhotoPath, rosterPhotoId } from "../_shared/profile-photo.ts";
+import { profilePhotoBucket, profilePhotoDownloadOptions, profilePhotoMaxBytes, profilePhotoPath, rosterPhotoId } from "../_shared/profile-photo.ts";
 
 declare const Deno: {
   env: { get(name: string): string | undefined };
@@ -51,7 +51,9 @@ Deno.serve(async (request) => {
     const secret = defaultKey("SUPABASE_SECRET_KEYS", "SUPABASE_SERVICE_ROLE_KEY");
     if (!secret) return new Response(null, { status: 503, headers });
     const storage = createClient(url, secret, { auth }).storage.from(profilePhotoBucket);
-    const { data: photo, error: photoError } = await storage.download(profilePhotoPath(roster.user_id), {}, { cache: "no-store" });
+    const { data: photo, error: photoError } = await storage.download(
+      profilePhotoPath(roster.user_id), profilePhotoDownloadOptions(), { cache: "no-store" },
+    );
     if (photoError || !photo || !photo.size || photo.size > profilePhotoMaxBytes || photo.type !== "image/jpeg") return missing();
     return new Response(photo, { headers: { ...headers, "Content-Type": "application/octet-stream" } });
   } catch {

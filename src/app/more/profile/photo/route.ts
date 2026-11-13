@@ -1,4 +1,4 @@
-import { profilePhotoBucket, profilePhotoPath, rosterPhotoId } from "@/lib/profile-photo";
+import { profilePhotoBucket, profilePhotoDownloadOptions, profilePhotoPath, rosterPhotoId } from "@/lib/profile-photo";
 import { supabaseServer } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
@@ -17,6 +17,6 @@ export async function GET(request: Request) {
   const { data: { user }, error } = await client.auth.getUser();
   if (error || !user) return new Response(null, { status: 401, headers });
   const { data: photo } = await client.storage.from(profilePhotoBucket)
-    .download(profilePhotoPath(user.id), {}, { cache: "no-store" });
+    .download(profilePhotoPath(user.id), profilePhotoDownloadOptions(), { cache: "no-store" });
   return photo ? image(photo) : notFound();
 }
