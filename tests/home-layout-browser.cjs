@@ -152,6 +152,11 @@ const assert = require("node:assert/strict");
     browser = await engine.launch({ headless: true, ...(engine === chromium && process.env.BROWSER_EXECUTABLE ? { executablePath: process.env.BROWSER_EXECUTABLE } : {}) });
     const page = await browser.newPage({ viewport: { width: 390, height: 844 }, ...(engine === webkit ? { isMobile: true, hasTouch: true } : {}) });
     page.on("pageerror", error => errors.push(error.message));
+    const ownPhotoRequests = [];
+    page.on("request", request => {
+      const url = new URL(request.url());
+      if (url.pathname === "/more/profile/photo" && !url.searchParams.has("player") && request.method() === "GET") ownPhotoRequests.push(url.search);
+    });
     await page.route(url => url.pathname === "/more/profile/photo" && url.searchParams.get("player") === "teammate",
       route => route.fulfill({ path: "public/brand/diamond-alibi-icon-64.png" }));
     await page.addInitScript(() => {
@@ -495,28 +500,70 @@ const assert = require("node:assert/strict");
       });
       await page.getByRole("img", { name: "Profile photo preview" }).waitFor();
     }
+    // Header avatar: the signed-in user's own photo, generic icon when there is none.
+    const avatar = page.locator(".profile-menu > summary");
+    const avatarPhoto = avatar.locator("img.profile-avatar-photo");
+    const avatarIcon = avatar.locator("svg");
+    async function assertGenericAvatar(message) {
+      await avatarIcon.waitFor({ state: "visible" });
+      assert.equal(await avatarPhoto.isVisible().catch(() => false), false, message);
+      assert.equal(await avatar.getAttribute("aria-label"), "Open profile menu");
+    }
+    async function assertAvatarSize() {
+      const box = await avatar.boundingBox();
+      assert(box.width >= 44 && box.height >= 44, `Header avatar target is ${box.width}x${box.height}`);
+    }
+    await assertGenericAvatar("No saved photo shows the generic icon in the header");
+    await assertAvatarSize();
     await choose("red");
+    const requestsBeforeSave = ownPhotoRequests.length;
     assert.equal(storedPhoto, null, "preview stays in the browser until Save");
+    await assertGenericAvatar("A preview never reaches the header before Save");
+    const refreshesBeforeSave = await page.evaluate(() => window.__refreshes);
     await page.getByRole("button", { name: "Save photo", exact: true }).click();
     await page.getByRole("img", { name: "Your profile photo" }).waitFor();
     assert.equal(storedPhoto[0], 0xff);
     assert.equal(storedPhoto[1], 0xd8);
     const firstPhoto = storedPhoto;
+    await avatarPhoto.waitFor({ state: "visible" });
+    assert.equal(await avatarIcon.count(), 0, "Generic icon is replaced once the saved photo loads");
+    assert.equal(await avatar.getAttribute("aria-label"), "Open profile menu");
+    assert.equal(await avatarPhoto.getAttribute("alt"), "");
+    assert.equal(await avatarPhoto.evaluate(img => img.naturalWidth > 0), true);
+    assert.equal(await page.evaluate(() => window.__refreshes), refreshesBeforeSave, "Header updated without router.refresh()");
+    assert(ownPhotoRequests.length > requestsBeforeSave, "Header loaded the saved photo");
+    await assertAvatarSize();
+    const requestsAfterSave = ownPhotoRequests.length;
+    await choose("green");
+    await page.getByRole("button", { name: "Cancel preview" }).click();
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 150)));
+    assert.equal(ownPhotoRequests.length, requestsAfterSave, "Rerenders do not repeat photo requests");
     await page.reload();
     await page.getByRole("img", { name: "Your profile photo" }).waitFor();
+    await avatarPhoto.waitFor({ state: "visible" });
     await page.evaluate(() => { window.__failProfilePhoto = true; });
     await choose("blue");
     await page.getByRole("button", { name: "Save photo", exact: true }).click();
     await page.getByRole("alert").getByText("Could not save your photo. Try again.").waitFor();
     assert.equal(storedPhoto, firstPhoto);
     await page.evaluate(() => { window.__failProfilePhoto = false; });
+    await avatarPhoto.waitFor({ state: "visible" });
     await page.getByRole("button", { name: "Save photo", exact: true }).click();
     await page.getByRole("img", { name: "Your profile photo" }).waitFor();
     assert(!storedPhoto.equals(firstPhoto));
+    await avatarPhoto.waitFor({ state: "visible" });
+    assert.match(await avatarPhoto.getAttribute("src"), /^\/more\/profile\/photo\?v=1$/, "Header reloads the replaced photo");
+    const requestsBeforeRemoval = ownPhotoRequests.length;
     await page.getByRole("button", { name: "Remove photo" }).click();
     await page.getByText("Photo removed.").waitFor();
+    await assertGenericAvatar("Header returns to the generic icon right after removal");
+    assert.equal(await avatarPhoto.count(), 0);
+    assert(ownPhotoRequests.length <= requestsBeforeRemoval + 1, "Removal adds at most the profile form's own refresh, never a header request");
+    assert.equal(await page.evaluate(() => window.__refreshes), refreshesBeforeSave, "Removal updated the header without router.refresh()");
+    await assertAvatarSize();
     await page.reload();
     assert.equal(await initials.innerText(), "RT");
+    await assertGenericAvatar("Removal persists after a refresh");
     assert.equal(storedPhoto, null);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     await page.addScriptTag({ path: require.resolve("axe-core") });

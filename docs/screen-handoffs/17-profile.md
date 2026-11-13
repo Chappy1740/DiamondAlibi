@@ -1,5 +1,63 @@
 # 17 — Bio and profile: Screen handoff
 
+## November 13, 2026 — DA PWA Test 13: header profile avatar
+
+**AMBER. Implemented and tested locally; awaiting independent review.** The
+upper-right profile icon now shows the signed-in user's own saved photo and
+keeps the generic `UserRound` icon when there is none, for signed-out or sample
+views, and while the photo loads.
+
+**Roles (task-specific swap, owner-approved November 13).** Claude Code
+implements and Codex independently reviews; the default roles in `AGENTS.md`
+are reversed for this task only. Branch `claude/da-pwa-test-13-header-avatar`
+from verified `origin/main` `7679ecdd759979c43753f039cc9deee13c6f8ce0`.
+
+**Model gate (EYD-MODEL-001).** Owner-provided model-selector screenshot shows
+Sonnet 5.5 at Medium effort, accepted by the owner as verification for this
+low-risk UI task. The serving model remains unverified. No STOP condition seen.
+
+**Design.** `ProfileAvatar` (client) loads only `/more/profile/photo?v=N`, the
+authenticated no-store endpoint for the signed-in user; the `?player=` form is
+never used. `ProfilePhoto` announces a successful save or removal through
+`profile-photo-events`, a keyless same-tab signal with no user data. A save
+bumps the header's version and shows the new photo once it loads; a removal
+shows the icon immediately with no request. No `router.refresh()`, and
+`src/app/more/profile/actions.ts` is untouched, so PR #104 is not affected.
+Rerenders do not repeat requests; each page load makes one request, and a
+missing photo is a 404 handled by the fallback. A photo changed from another
+device shows after the next page load.
+
+**Evidence (Claude Code, this session, Windows, local only).**
+
+- `tests/profile-avatar.test.ts`, `profile-photo-route.test.ts`,
+  `player-profile-options.test.ts`: 11 passed.
+- `tests/home-layout-browser.cjs` (extended: generic icon with no photo, preview
+  never reaches the header, header updates after save and replacement and after
+  removal without `router.refresh()`, no repeat requests on rerender, persistence
+  after reload, 44px target, existing axe checks): passed in Chromium
+  (installed Chrome via `BROWSER_EXECUTABLE`).
+- `personal-pages-browser`, `games-flow-browser`, `scorebook-modes-browser`,
+  `tournament-start-time-browser`: passed in Chromium.
+- `tsc --noEmit` passed. `next build --webpack` passed.
+
+**Not run or limited.** WebKit and a real iPhone were not run. The default
+Turbopack `npm run build` fails here only because the isolated worktree links
+`node_modules` through a junction, which Turbopack rejects. `dashboard`,
+`practice` and `alibi` browser tests need a dev server on port 3000, and
+`archive-controls-browser` ignores `BROWSER_EXECUTABLE` and needs a Playwright
+browser download; it fails identically on clean `origin/main`. No lint script
+exists. Hosted behavior and production release are not verified or authorized.
+
+**Codex review.** Check out the branch, confirm the diff touches only
+`profile-avatar.tsx`, `profile-photo-events.ts`, `profile-menu.tsx`,
+`profile-photo.tsx`, `globals.css`, two tests and this handoff, and that
+`actions.ts` and `project-tracker.ts` are unchanged. Run
+`node --experimental-strip-types --test tests/profile-avatar.test.ts` and
+`node tests/home-layout-browser.cjs` (WebKit with `BROWSER_ENGINE=webkit`).
+Focus on header update after save and removal, the pre-hydration image path,
+and keeping the teammate photo path out of the header. Findings go in PR
+comments with severity, file:line, evidence and a suggested fix.
+
 ## November 13, 2026 — Removed photo still visible
 
 **AMBER. Tested locally.** The owner reported that Remove photo left the
