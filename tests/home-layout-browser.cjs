@@ -96,6 +96,9 @@ const assert = require("node:assert/strict");
           const AccountPage=location.pathname==='/more/profile'?ProfilePage:ClubhouseExtrasPage;
           AccountPage({searchParams:Promise.resolve(Object.fromEntries(fixtureQuery))}).then(account=>root.render(<>{account}<BottomNavigationView pathname={location.pathname} context={fixtureQuery.toString()}/></>));
         } else {
+          if (p.route === '' && !p.sample) {
+            p.profileName = profileRecords.player_profiles[0].nickname;
+          }
           const context=new URLSearchParams({team:p.teamId,season:p.seasonId,scope:p.scope,...(p.sample?{sample:'1',player:p.userId}:{})}).toString();
           root.render(<><PlayerDashboard {...p}/><BottomNavigationView pathname={location.pathname} context={context}/></>);
         }` },
@@ -520,6 +523,16 @@ const assert = require("node:assert/strict");
     assert.deepEqual(await page.evaluate(async () => (await axe.run(document, {
       runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21aa"] },
     })).violations.map((violation) => violation.id)), []);
+    await page.getByRole("link", { name: "Home", exact: true }).first().click();
+    await page.getByRole("heading", { name: "Your game, River Test.", exact: true }).waitFor();
+    await page.goto(base + "/?unlinked=1");
+    await page.getByRole("heading", { name: "Your game, River Test.", exact: true }).waitFor();
+    await page.getByText("No player record is linked to this account.", { exact: false }).waitFor();
+    await page.goto(base + "/?no-team=1");
+    await page.getByRole("heading", { name: "Your game, River Test.", exact: true }).waitFor();
+    await page.getByRole("heading", { name: "Your season starts here" }).waitFor();
+    await page.goto(base + "/?sample=1");
+    await page.getByRole("heading", { name: "Your game, Test Player.", exact: true }).waitFor();
     console.log(`PASS ${engine.name()} Bio & profile: More entry, saved details and initials, local preview, save, reload, failed replacement, retry, and removal.`);
     assert.deepEqual(errors, []);
     console.log(`PASS ${engine.name()} Clubhouse Extras: one profile-menu link, two independent choices, team switching and reload, inactive denial, read-only balances, phone layout and accessibility.`);

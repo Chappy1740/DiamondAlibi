@@ -8,7 +8,7 @@ import { ClubForm } from "@/components/club-form";
 import { PlayerProfileFields } from "@/components/player-profile-fields";
 import { ProfilePhoto } from "@/components/profile-photo";
 import { navigationContext } from "@/lib/app-navigation";
-import { playerDetails, signupDetails } from "@/lib/player-profile";
+import { loadPlayerProfile } from "@/lib/player-profile";
 import { loadActiveTeams, selectActiveTeam } from "@/lib/team-selection";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +21,7 @@ export default async function Page({
   const { data: { user }, error } = await client.auth.getUser();
   if (error || !user) redirect("/login");
   const [profile, { options }, query, jar] = await Promise.all([
-    client.from("player_profiles").select("nickname,play_level,fielding_position").eq("user_id", user.id).maybeSingle(),
+    loadPlayerProfile(client, user),
     loadActiveTeams(client, user.id),
     searchParams,
     cookies(),
@@ -35,10 +35,7 @@ export default async function Page({
   const returnContext = navigationContext("", context.toString(), "/more/profile");
   const homeHref = returnContext ? `/?${returnContext}` : "/";
   const bio = typeof user.user_metadata?.bio === "string" ? user.user_metadata.bio : "";
-  const saved = profile.data;
-  const details = saved
-    ? playerDetails(saved.nickname, saved.play_level, saved.fielding_position)
-    : profile.error ? null : signupDetails(user.user_metadata?.da_signup_profile);
+  const { saved, details } = profile;
   const name = details?.nickname ?? "";
   return <main className="connected-wrap">
     <header className="connected-header"><BrandLink href={homeHref} /><ProfileMenu context={returnContext} /></header>

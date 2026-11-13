@@ -1,5 +1,15 @@
 # Release readiness and recovery
 
+## November 13, 2026 — Home account greeting
+
+**AMBER.** The owner confirmed the profile photo circle appeared on iPhone
+after PR #106 and reported that Home still greeted them as “Player.”
+[PR #107](https://github.com/Chappy1740/DiamondAlibi/pull/107) uses the account
+display name on Home and passed local synthetic Chromium and WebKit checks.
+The owner approved merge and deployment for #107. Exact-head CI, independent
+review, the gated Worker rollout, and an owner iPhone check remain pending.
+See the [Home handoff](docs/screen-handoffs/01-home.md#november-13-2026--home-greeting-uses-the-account-display-name).
+
 ## November 12, 2026 — PR #87 deployed
 
 **GREEN for the verified photo release.** The owner merged PR #87 as

@@ -105,16 +105,57 @@ const assert = require("node:assert/strict");
     assert.equal(denied.loaded, null);
     assert.equal(denied.sample, false);
     assert.equal(loads, before);
+    const profileClient = global.__dashboardTest;
+    const from = profileClient.from;
+    const profileUser = {
+      id: "member",
+      user_metadata: { da_signup_profile: { nickname: "Signup Name" } },
+    };
+    profileClient.auth.getUser = async () => ({
+      data: { user: profileUser },
+      error: null,
+    });
+    let savedProfile = { nickname: "  River Test  " };
+    let profileError = null;
+    let profileReads = 0;
+    profileClient.from = (table) => {
+      if (table !== "player_profiles") return from(table);
+      profileReads++;
+      return {
+        select: () => ({
+          eq: (column, value) => {
+            assert.equal(column, "user_id");
+            assert.equal(value, profileUser.id);
+            return {
+              maybeSingle: async () => ({ data: savedProfile, error: profileError }),
+            };
+          },
+        }),
+      };
+    };
+    assert.equal((await loader("", {})).profileName, "River Test");
+    const noTeam = await loader("", { team: "unauthorized" });
+    assert.equal(noTeam.profileName, "River Test");
+    assert.equal(noTeam.loaded, null);
+    assert.equal((await loader("stats", {})).profileName, undefined);
+    assert.equal((await loader("", { sample: "1" })).profileName, undefined);
+    assert.equal(profileReads, 2);
+    savedProfile = null;
+    assert.equal((await loader("", {})).profileName, "Signup Name");
+    profileError = { code: "unavailable" };
+    const profileUnavailable = await loader("", {});
+    assert.equal(profileUnavailable.profileName, undefined);
+    assert.ok(profileUnavailable.loaded, "Profile read failure leaves the scorebook available");
     // Games-only picker: active memberships, cross-team/season metadata and fail-closed reads.
     const reads=[];
     let directoryError=false;
-    const records={teams:[{id:'team',name:'Synthetic'},{id:'other',name:'Other team'},{id:'foreign',name:'Foreign team'},{id:'inactive',name:'Inactive team'}],
+    const records={player_profiles:[],teams:[{id:'team',name:'Synthetic'},{id:'other',name:'Other team'},{id:'foreign',name:'Foreign team'},{id:'inactive',name:'Inactive team'}],
       team_memberships:[{team_id:'team',user_id:'member',active:true},{team_id:'other',user_id:'member',active:true},{team_id:'inactive',user_id:'member',active:false}],
       team_seasons:[{id:'season',team_id:'team',name:'Season',archived:false},{id:'other-season',team_id:'other',name:'Other season',archived:false},{id:'foreign-season',team_id:'foreign',name:'Forbidden',archived:false}],
       scoring_leagues:[{id:'league',team_id:'team',season_id:'season',name:'Thursday'},{id:'other-league',team_id:'other',season_id:'other-season',name:'Other league'},{id:'foreign-league',team_id:'foreign',season_id:'foreign-season',name:'Forbidden'},{id:'wrong-season-league',team_id:'team',season_id:'other-season',name:'Wrong season'}]};
     global.__dashboardTest.from=table=>{
       const filters=[];let start,end;
-      const builder={select(columns){reads.push({table,columns});return builder},order(){return builder},eq(column,value){filters.push([column,value]);return builder},
+      const builder={select(columns){reads.push({table,columns});return builder},order(){return builder},eq(column,value){filters.push([column,value]);return builder},maybeSingle:async()=>({data:null,error:null}),
         in(column,values){reads.push({table,column,values});return builder},range(first,last){start=first;end=last;return builder},
         then(resolve,reject){let rows=records[table].filter(row=>filters.every(([key,value])=>row[key]===value));if(start!==undefined)rows=rows.slice(start,end+1);return Promise.resolve({data:directoryError&&table==='scoring_leagues'?null:rows,error:directoryError&&table==='scoring_leagues'?{code:'unavailable'}:null}).then(resolve,reject)}};
       return builder;
