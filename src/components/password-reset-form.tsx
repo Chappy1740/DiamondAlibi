@@ -1,5 +1,6 @@
 "use client";
 
+import { AuthCaptcha } from "./auth-captcha";
 import { useActionState } from "react";
 import { requestPasswordReset } from "@/app/forgot-password/actions";
 import { updatePassword } from "@/app/reset-password/actions";
@@ -7,8 +8,10 @@ import type { AuthResult } from "@/app/login/actions";
 
 export function PasswordResetForm({
   updating = false,
+  captchaSiteKey = null,
 }: {
   updating?: boolean;
+  captchaSiteKey?: string | null;
 }) {
   const [result, submit, pending] = useActionState<AuthResult, FormData>(
     updating ? updatePassword : requestPasswordReset,
@@ -54,6 +57,7 @@ export function PasswordResetForm({
             />
           </>
         )}
+        {!updating && captchaSiteKey && !pending && !result.message && <AuthCaptcha siteKey={captchaSiteKey} />}
         {result.error && (
           <p role="alert" className="form-error">
             {result.error}

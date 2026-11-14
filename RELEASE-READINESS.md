@@ -1,5 +1,25 @@
 # Release readiness and recovery
 
+## November 14, 2026 — PR #104 sandbox reconciliation
+
+**AMBER · Hold SMS activation.** Codex resolved the draft's three
+conflicts with main `973337b40f415e4683938d90a206eb18b6346ece` in an
+uncommitted local candidate. Sandbox password sign-in and sign-out,
+hidden SMS, and server rejection of both phone actions passed local
+tests with the SMS flag enabled. The [completion receipt](docs/screen-handoffs/20-sign-in.md#november-14-2026--pr-104-local-sandbox-reconciliation)
+records the verified SHAs, checks and local-only authorization. The
+[pilot security hold](docs/screen-handoffs/20-phone-pilot-readiness.md)
+still applies. Next action is Will's review of the local diff.
+
+## November 13, 2026 — PR #104 SMS pilot security hold
+
+**AMBER · SMS remains off.** Codex reconciled the draft with main
+`79851732093c1a2db654eb024f052d1fc5aaef52` and verified the local app
+and disposable SQL controls. Direct managed Auth enumeration, SMS route
+coverage, provider readback, independent review and iPhone acceptance
+are release blockers. See the [sign-in completion receipt](docs/screen-handoffs/20-sign-in.md#november-13-2026--pr-104-sms-pilot)
+and [pilot readiness and rollback runbook](docs/screen-handoffs/20-phone-pilot-readiness.md).
+
 ## November 13, 2026 — Removed profile photo still visible
 
 **AMBER.** Supabase accepted the deletion and served cached bytes to the
@@ -62,6 +82,18 @@ The initial roster read exposed a gateway metadata preflight. The scoped
 follow-up applied as `20261112191312`. Retest the roster downloads before
 running revocation.
 [Profile handoff](docs/screen-handoffs/17-profile.md#november-12-2026--hosted-photo-policy-applied).
+
+## November 12, 2026 — Phone sign-in local candidate
+
+**AMBER.** Will asked to start SMS-code sign-in. Codex prepared an opt-in
+candidate on `codex/phone-sign-in` based on [PR #87](https://github.com/Chappy1740/DiamondAlibi/pull/87)
+at `277801d7192cdb12acbdb40bc7ec25f8c11a6cef`. Will reported a successful
+Twilio Verify Console test and saved the Supabase Phone provider. Codex
+verified that Phone and Email are enabled and that the owner-run SMS send and
+code verification both returned HTTP 200 at 10:41 a.m. Central. The local
+phone UI still depends on #87 and needs its own review and release.
+See the [sign-in handoff](docs/screen-handoffs/20-sign-in.md#november-12-2026--phone-sign-in-start)
+for the scope, dependency, and next live-pilot decision.
 
 ## November 12, 2026 — Profile photo release reconciliation
 

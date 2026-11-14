@@ -13,8 +13,11 @@ export default async function Page() {
     <Link className="text-link" href="/">Home</Link>
     <div className="page-heading"><h1>Account settings</h1></div>
     <section className="card detail-card"><h2>Your account</h2>
-      <p>{user.email}</p><p>{user.email_confirmed_at ? "Email confirmed" : "Email confirmation pending"}</p>
-      <Link className="button secondary" href="/forgot-password">Reset password</Link>
+      {user.email && <>
+        <p>{user.email}</p><p>{user.email_confirmed_at ? "Email confirmed" : "Email confirmation pending"}</p>
+        <Link className="button secondary" href="/forgot-password">Reset password</Link>
+      </>}
+      {user.phone && <p>{user.phone_confirmed_at ? "Mobile number verified" : "Mobile number verification pending"}</p>}
       <Link className="button secondary" href="/more/profile">Edit bio & profile</Link>
     </section>
   </main>;

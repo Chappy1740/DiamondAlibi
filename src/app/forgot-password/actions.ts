@@ -1,5 +1,6 @@
 "use server";
 
+import { authCaptchaToken, captchaRequiredMessage } from "@/lib/auth-captcha";
 import { supabaseServer } from "@/lib/supabase/server";
 import { trustedAuthOrigin } from "@/lib/trusted-auth-origin";
 import type { AuthResult } from "@/app/login/actions";
@@ -16,9 +17,12 @@ export async function requestPasswordReset(
   const origin = await trustedAuthOrigin();
   if (!origin)
     return { error: "Open Diamond Alibi directly and try again." };
+  const captchaToken = authCaptchaToken(form);
+  if (captchaToken === null) return { error: captchaRequiredMessage };
   try {
     const supabase = await supabaseServer();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      ...(captchaToken && { captchaToken }),
       redirectTo: `${origin}/auth/callback?next=/reset-password`,
     });
     if (error)

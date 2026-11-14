@@ -20,7 +20,7 @@ export function GameDayReview() {
   const [notice, setNotice] = useState("");
   return <main className="game-day-review connected-wrap">
     <header>
-      <Link href="/review" className="text-link">Back to phone preview</Link>
+      <Link href="/review" prefetch={false} className="text-link">Back to phone preview</Link>
       <p className="eyebrow">Diamond Alibi · Owner review</p>
       <h1>Easy at the field. Solid behind it.</h1>
       <p>One place to review what’s next. Keep the game moving, even when the dugout gets loud.</p>

@@ -2,6 +2,9 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { AuthForm } from "@/components/auth-form";
 import { BrandLink } from "@/components/brand-link";
+import { authCaptchaSiteKey } from "@/lib/auth-captcha";
+import { phoneSignInEnabled } from "@/lib/phone-sign-in";
+
 export default async function LoginPage() {
   await connection();
   return (
@@ -14,7 +17,11 @@ export default async function LoginPage() {
           <p>Sign in to manage your own teams and seasons.</p>
         </div>
       </div>
-      <AuthForm passwordOnly={Boolean(process.env.DA_SANDBOX_ORIGIN)} />
+      <AuthForm
+        passwordOnly={Boolean(process.env.DA_SANDBOX_ORIGIN)}
+        phoneEnabled={phoneSignInEnabled()}
+        captchaSiteKey={authCaptchaSiteKey()}
+      />
       <Link className="text-link" href="/">
         Explore the sample shell instead
       </Link>

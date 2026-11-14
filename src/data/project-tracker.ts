@@ -2,7 +2,7 @@
 import type { ProjectTracker } from "../lib/project-status";
 export const projectTracker: ProjectTracker = {
   schemaVersion: 1,
-  revision: 93,
+  revision: 94,
   updatedAt: "2026-11-13",
   scope:
     "Required first-release work. Optional future ideas are excluded from percentages.",
@@ -743,6 +743,9 @@ export const projectTracker: ProjectTracker = {
             "Resolve password protection warning with appropriate service approval",
           status: "in_progress",
           evidence:
+            "November 14: PR #104's three conflicts with main were resolved and tested in an isolated local checkout. The sandbox hides SMS and rejects code requests and verification even with the flag set. Local password sign-in and sign-out passed. The uncommitted diff awaits Will's review. Hosted SMS stays off. See docs/screen-handoffs/20-sign-in.md. " +
+            "November 13: PR #104 reconciled with current main and tested locally with an exact pilot number, CAPTCHA, uniform OTP responses and post-verification profile setup. Direct managed Auth, Twilio controls, Access eligibility, exact-head review and hosted iPhone acceptance remain open. SMS stays off. See docs/screen-handoffs/20-sign-in.md and RELEASE-READINESS.md. " +
+            "November 12: Codex prepared opt-in phone sign-in locally on a branch based on PR #87. Will enabled the Supabase Phone provider and successfully completed a text-code sign-in with a verified Twilio recipient. Codex read back successful Auth requests and one confirmed phone account. App review and release are pending. See docs/screen-handoffs/20-sign-in.md. " +
             "October 22: owner approved the recommended fixes. Leaked-password protection alone was enabled in the Diamond Alibi Supabase Email provider; saved dashboard readback and a fresh security-advisor result confirm the disabled-protection warning is removed. Existing Pro entitlement supports it. No accounts, passwords, schema or other auth settings were changed. This verifies configuration, not hosted authentication behavior.",
           next: "November 2: owner selected diamondalibi.eydrenworks.com. Production route and signed-out HTTPS/Access redirect were verified; owner screenshots show old and new exact callback entries retained. PR #41 hostname support and scoped dependency patches passed exact-source CI and were deployed as main 5964cd8 / Worker 8e7da978. Owner confirmed new-host sign-in/clubhouse/games load and saving the new Site URL; live password recovery remains untested. Completion receipt: https://github.com/Chappy1740/DiamondAlibi/pull/41 . See docs/screen-handoffs/21-forgot-password.md and RELEASE-READINESS.md. Retain separately approved isolated weak-password rejection and strong-password/sign-in/recovery acceptance using only synthetic identity data. No real account/reset/password mutation is implied by local verification.",
           kind: "acceptance",

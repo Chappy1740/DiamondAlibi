@@ -3,15 +3,31 @@ import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { login, signup, type AuthResult } from "@/app/login/actions";
 import { resetProfilePhotoState } from "@/lib/profile-photo-events";
+import { AuthCaptcha } from "./auth-captcha";
 import { PlayerProfileFields } from "./player-profile-fields";
-export function AuthForm({ passwordOnly = false }: { passwordOnly?: boolean }) {
+import { PhoneAuthForm } from "./phone-auth-form";
+
+export function AuthForm({
+  passwordOnly = false,
+  phoneEnabled = false,
+  captchaSiteKey = null,
+}: {
+  passwordOnly?: boolean;
+  phoneEnabled?: boolean;
+  captchaSiteKey?: string | null;
+}) {
   // Nobody is signed in here, so a previous account's header photo state must not carry over.
   useEffect(() => resetProfilePhotoState(), []);
   const [creating, setCreating] = useState(false);
+  const [usingPhone, setUsingPhone] = useState(false);
   const [result, submit, pending] = useActionState<AuthResult, FormData>(
     creating ? signup : login,
     {},
   );
+  const phoneSiteKey = !passwordOnly && phoneEnabled ? captchaSiteKey : null;
+  if (phoneSiteKey && usingPhone) {
+    return <PhoneAuthForm siteKey={phoneSiteKey} onUseEmail={() => setUsingPhone(false)} />;
+  }
   return (
     <section className="card detail-card auth-card">
       <h2>
@@ -44,6 +60,7 @@ export function AuthForm({ passwordOnly = false }: { passwordOnly?: boolean }) {
             No teammate invitations are sent automatically.
           </p>
         </>}
+        {captchaSiteKey && !pending && <AuthCaptcha key={String(creating)} siteKey={captchaSiteKey} />}
         {result.error && (
           <p role="alert" className="form-error">
             {result.error}
@@ -70,6 +87,11 @@ export function AuthForm({ passwordOnly = false }: { passwordOnly?: boolean }) {
           {creating
             ? "Already have an account? Sign in"
             : "New here? Create an account"}
+        </button>
+      )}
+      {phoneSiteKey && (
+        <button className="text-button" type="button" onClick={() => setUsingPhone(true)} disabled={pending}>
+          Use a mobile number
         </button>
       )}
       <p className="micro">

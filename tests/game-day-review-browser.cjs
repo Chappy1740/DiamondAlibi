@@ -102,6 +102,9 @@ if(require.main===module)(async()=>{
     await page.frameLocator('iframe').getByRole('heading',{name:/Your game,/}).waitFor();
     await navigate(()=>page.getByRole('link',{name:'Review what’s next',exact:true}).click());
     await page.getByRole('heading',{name:'Easy at the field. Solid behind it.',exact:true}).waitFor();
+    await navigate(()=>page.getByRole('link',{name:'Back to phone preview',exact:true}).click());
+    await page.waitForURL(base+'/review');
+    await page.frameLocator('iframe').getByRole('heading',{name:/Your game,/}).waitFor();
     assert.deepEqual(errors.filter(message=>!isExpectedPrefetchPageError(message,engine.name(),abortedPrefetches)),[]);
     console.log(JSON.stringify({engine:engine.name(),headers:true,savedRules:true,proposalsNoWrites:true,widths:[320,390,430,800,1440],accessibility:true,keyboard:true,sameOriginReview:true}));
   } finally {if(browser)await browser.close();if(app)app.kill();}
