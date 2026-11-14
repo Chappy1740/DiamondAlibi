@@ -1,8 +1,7 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Workspace } from "@/components/workspace";
 import { PlayerDashboard } from "@/components/player-dashboard";
 import { dashboardProps, type DashboardQuery } from "@/app/dashboard-loader";
-import { redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
 const routes = [
   "",
@@ -34,7 +33,11 @@ export default async function Page({
   if (
     ["", "games", "stats", "beverages", "more", "more/alibi", "more/beverage-rules"].includes(route) ||
     (route === "games/live" && query.sample === "1")
-  )
-    return <PlayerDashboard {...await dashboardProps(route, query)} setupReturnHref={route === "more/beverage-rules" ? query.returnTo : undefined} />;
+  ) {
+    const dashboard = await dashboardProps(route, query);
+    if (route === "" && dashboard.sample && query.sample !== "1")
+      redirect("/login");
+    return <PlayerDashboard {...dashboard} setupReturnHref={route === "more/beverage-rules" ? query.returnTo : undefined} />;
+  }
   redirect(route === "games/live" ? "/club/score" : "/club");
 }
