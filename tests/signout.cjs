@@ -5,11 +5,11 @@ const path = require("node:path");
 const vm = require("node:vm");
 const { stripTypeScriptTypes } = require("node:module");
 
-function load(error, { auth = {}, rpc, origin = "https://diamondalibi.eydrenworks.com", nodeEnv = "test", localWorker } = {}) {
+function load(error, { auth = {}, rpc, origin = "https://diamondalibi.eydrenworks.com", nodeEnv = "test", localWorker, sandboxOrigin } = {}) {
   let calls = 0;
   const context = vm.createContext({
     headers: async () => new Headers(origin ? { origin } : {}),
-    process: { env: { NODE_ENV: nodeEnv, DA_LOCAL_WORKER_PREVIEW: localWorker } },
+    process: { env: { NODE_ENV: nodeEnv, DA_LOCAL_WORKER_PREVIEW: localWorker, DA_SANDBOX_ORIGIN: sandboxOrigin } },
     supabaseServer: async () => ({ rpc, auth: { ...auth, signOut: async () => {
       calls++;
       return { error };
@@ -44,6 +44,17 @@ function credentials(fields = {}) {
   })) form.set(key, value);
   return form;
 }
+
+test("sandbox signup is disabled before calling Supabase", async () => {
+  const sandboxOrigin = "https://diamondalibi-sandbox.eydrenworks.com";
+  const actions = load(null, {
+    sandboxOrigin,
+    origin: sandboxOrigin,
+    auth: { signUp: async () => assert.fail("sandbox must not send confirmation email") },
+  });
+  const result = await actions.signup({}, credentials({ nickname: "River" }));
+  assert.match(result.error, /created by the owner/);
+});
 
 test("signup requires a name and carries validated optional details through email confirmation", async () => {
   const requests = [];

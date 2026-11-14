@@ -1,0 +1,33 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "diamond-alibi-sandbox",
+  "main": "sandbox-worker.mjs",
+  "compatibility_date": "2026-10-09",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "keep_vars": false,
+  "routes": [],
+  "triggers": { "crons": [] },
+  "secrets": {
+    "required": [
+      "DA_SANDBOX_SUPABASE_REF",
+      "DA_SANDBOX_SUPABASE_PUBLISHABLE_KEY",
+      "DA_SANDBOX_ACCESS_ISSUER",
+      "DA_SANDBOX_ACCESS_AUDIENCE"
+    ]
+  },
+  "vars": {
+    "DA_SANDBOX_ORIGIN": "https://diamondalibi-sandbox.eydrenworks.com",
+    "FEEDBACK_NOTIFICATIONS_ENABLED": "false",
+    "ROAST_CLUB_ENABLED": "false"
+  },
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  },
+  "services": [
+    { "binding": "WORKER_SELF_REFERENCE", "service": "diamond-alibi-sandbox" }
+  ]
+}

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { login, signup, type AuthResult } from "@/app/login/actions";
 import { resetProfilePhotoState } from "@/lib/profile-photo-events";
 import { PlayerProfileFields } from "./player-profile-fields";
-export function AuthForm() {
+export function AuthForm({ passwordOnly = false }: { passwordOnly?: boolean }) {
   // Nobody is signed in here, so a previous account's header photo state must not carry over.
   useEffect(() => resetProfilePhotoState(), []);
   const [creating, setCreating] = useState(false);
@@ -50,7 +50,7 @@ export function AuthForm() {
           </p>
         )}
         {result.message && <p role="status">{result.message}</p>}
-        {!creating && (
+        {!creating && !passwordOnly && (
           <p>
             <Link className="text-link" href="/forgot-password">
               Forgot password?
@@ -61,15 +61,17 @@ export function AuthForm() {
           {pending ? "Please wait…" : creating ? "Create account" : "Sign in"}
         </button>
       </form>
-      <button
-        className="text-button"
-        onClick={() => setCreating(!creating)}
-        disabled={pending}
-      >
-        {creating
-          ? "Already have an account? Sign in"
-          : "New here? Create an account"}
-      </button>
+      {!passwordOnly && (
+        <button
+          className="text-button"
+          onClick={() => setCreating(!creating)}
+          disabled={pending}
+        >
+          {creating
+            ? "Already have an account? Sign in"
+            : "New here? Create an account"}
+        </button>
+      )}
       <p className="micro">
         Use a personal recreational account. Keep work/government information
         out of this app.

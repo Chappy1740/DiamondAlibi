@@ -3,6 +3,21 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
+const sandbox = process.argv[2] === "--sandbox";
+if (sandbox && fs.readdirSync(path.join(__dirname, "..")).some(
+  (name) => (name === ".env" || name.startsWith(".env.")) && name !== ".env.example",
+)) {
+  throw new Error("Build the sandbox in a clean checkout without Next.js .env files.");
+}
+const buildEnv = {
+  ...process.env,
+  NEXT_TELEMETRY_DISABLED: "1",
+  WRANGLER_SEND_METRICS: "false",
+};
+if (sandbox) {
+  delete buildEnv.NEXT_PUBLIC_SUPABASE_URL;
+  delete buildEnv.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+}
 const root = path.join(
   __dirname,
   "..",
@@ -38,14 +53,14 @@ fs.writeFileSync(target, patched);
 try {
   const result = spawnSync(
     process.execPath,
-    [path.join(root, metadata.bin["opennextjs-cloudflare"]), "build"],
+    [
+      path.join(root, metadata.bin["opennextjs-cloudflare"]),
+      "build",
+      ...(sandbox ? ["--config", "wrangler.sandbox.jsonc"] : []),
+    ],
     {
       stdio: "inherit",
-      env: {
-        ...process.env,
-        NEXT_TELEMETRY_DISABLED: "1",
-        WRANGLER_SEND_METRICS: "false",
-      },
+      env: buildEnv,
     },
   );
   if (result.error) throw result.error;

@@ -2,6 +2,12 @@ import { NextResponse, type NextRequest } from "next/server";
 import { supabaseServer } from "@/lib/supabase/server";
 import { completePlayerSignup } from "@/lib/complete-player-signup";
 export async function GET(request: NextRequest) {
+  if (process.env.DA_SANDBOX_ORIGIN) {
+    return new NextResponse(null, {
+      status: 404,
+      headers: { "Cache-Control": "private, no-store" },
+    });
+  }
   const next = request.nextUrl.searchParams.get("next");
   if (next === "/login") {
     // Supabase confirms the email before redirecting here. Sign-in starts separately.
