@@ -15,8 +15,8 @@ export default async function LoginPage() {
         </div>
       </div>
       <AuthForm passwordOnly={Boolean(process.env.DA_SANDBOX_ORIGIN)} />
-      <Link className="text-link" href="/">
-        Explore the sample shell instead
+      <Link className="button secondary" href="/?sample=1">
+        App demo
       </Link>
     </main>
   );

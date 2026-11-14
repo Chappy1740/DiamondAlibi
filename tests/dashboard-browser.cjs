@@ -15,7 +15,13 @@ const fs = require("node:fs");
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
     const base = process.env.PREVIEW_URL || "http://127.0.0.1:3000";
-    await page.goto(base + "/?sample=1");
+    await page.goto(base);
+    await page.waitForURL(base + "/login");
+    await page.getByRole("button", { name: "Sign in", exact: true }).waitFor();
+    await page.getByRole("button", { name: "New here? Create an account", exact: true }).click();
+    await page.getByRole("heading", { name: "Create your player account", exact: true }).waitFor();
+    await page.getByRole("link", { name: "App demo", exact: true }).click();
+    await page.waitForURL(base + "/?sample=1");
     await page
       .getByRole("heading", { name: "Live now", exact: true })
       .waitFor();
