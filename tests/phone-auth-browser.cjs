@@ -1,9 +1,10 @@
-// Built Next.js + real Supabase SDK, isolated HTTP provider and synthetic Turnstile.
+// Local Next.js + real Supabase SDK, isolated HTTP provider and synthetic Turnstile.
 const assert = require("node:assert/strict");
 const { spawn } = require("node:child_process");
 const http = require("node:http");
 const { chromium, webkit } = require("playwright");
 
+const sandbox = process.argv.includes("--sandbox");
 const base = "http://127.0.0.1:3087";
 const pilot = "13125550100";
 const id = "1f806ed6-e1dc-42a5-b835-f63a28b4fcd1";
@@ -34,7 +35,7 @@ function session(user) {
       res.end(JSON.stringify(value));
     };
     calls.push({ path: pathname, input });
-    if (["/auth/v1/otp", "/auth/v1/token", "/auth/v1/signup", "/auth/v1/recover"].includes(pathname)) {
+    if (!sandbox && ["/auth/v1/otp", "/auth/v1/token", "/auth/v1/signup", "/auth/v1/recover"].includes(pathname)) {
       const token = input.gotrue_meta_security?.captcha_token;
       if (!token || used.has(token)) return json(400, { code: "captcha_failed", msg: "Synthetic security check failed" });
       used.add(token);
@@ -71,6 +72,7 @@ function session(user) {
       env: { ...process.env, NEXT_TELEMETRY_DISABLED: "1", NODE_ENV: "development",
         NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:" + provider.address().port,
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "synthetic-local-key",
+        DA_SANDBOX_ORIGIN: sandbox ? "https://diamondalibi-sandbox.eydrenworks.com" : "",
         DA_PHONE_SIGN_IN_ENABLED: "true", DA_PHONE_PILOT_NUMBER: "+" + pilot, DA_AUTH_TURNSTILE_SITE_KEY: "synthetic-site-key" },
       stdio: ["ignore", "pipe", "pipe"],
     });
@@ -101,6 +103,37 @@ function session(user) {
       return route.abort();
     });
     const button = (name) => page.getByRole("button", { name, exact: true });
+    const signInWithPassword = async () => {
+      await page.getByLabel("Sign-in email").fill("player@example.invalid");
+      await page.getByLabel("Password", { exact: true }).fill("synthetic-password");
+      await button("Sign in").click();
+      await page.waitForURL(base + "/");
+    };
+    const signOut = async () => {
+      const signedInCookie = (await page.context().cookies()).find(({ name }) => name.endsWith("-auth-token"));
+      assert.ok(signedInCookie, "Expected a session cookie before sign-out");
+      await page.getByLabel("Open profile menu").click();
+      await button("Sign out").click();
+      await page.waitForURL(base + "/login");
+      assert.equal((await page.context().cookies()).some(({ name }) => name === signedInCookie.name), false);
+    };
+
+    if (sandbox) {
+      await page.goto(base + "/login");
+      await button("Sign in").waitFor();
+      assert.equal(await button("Use a mobile number").count(), 0);
+      assert.equal(await button("New here? Create an account").count(), 0);
+      assert.equal(await page.getByRole("link", { name: "Forgot password?" }).count(), 0);
+      assert.equal(await page.locator("[name=captchaToken]").count(), 0);
+      await signInWithPassword();
+      await signOut();
+      assert.deepEqual(calls.filter(({ path }) => /^\/auth\/v1\/(otp|verify|signup|recover)$/.test(path)), []);
+      assert.equal(calls.filter(({ path }) => path === "/auth/v1/logout").length, 1);
+      assert.deepEqual(errors, []);
+      console.log(engine.name() + ": sandbox hid SMS, signup and recovery with the SMS pilot configured; password sign-in and sign-out passed against local synthetic Auth");
+      return;
+    }
+
     const waitChallenge = () => page.waitForFunction(() => document.querySelector("[name=captchaToken]")?.value);
     const go = async (pathname) => { await page.goto(base + pathname); await waitChallenge(); };
     const mobile = page.getByLabel("Mobile number", { exact: true });
@@ -155,11 +188,8 @@ function session(user) {
 
     await page.context().clearCookies();
     await go("/login");
-    await page.getByLabel("Sign-in email").fill("player@example.invalid");
-    await page.getByLabel("Password", { exact: true }).fill("synthetic-password");
-    await button("Sign in").click();
-    await page.waitForURL(base + "/");
-    await page.context().clearCookies();
+    await signInWithPassword();
+    await signOut();
     await go("/login");
     await button("New here? Create an account").click();
     await waitChallenge();

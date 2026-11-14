@@ -1,5 +1,16 @@
 # Release readiness and recovery
 
+## November 14, 2026 — PR #104 sandbox reconciliation
+
+**AMBER · Hold SMS activation.** Codex resolved the draft's three
+conflicts with main `973337b40f415e4683938d90a206eb18b6346ece` in an
+uncommitted local candidate. Sandbox password sign-in and sign-out,
+hidden SMS, and server rejection of both phone actions passed local
+tests with the SMS flag enabled. The [completion receipt](docs/screen-handoffs/20-sign-in.md#november-14-2026--pr-104-local-sandbox-reconciliation)
+records the verified SHAs, checks and local-only authorization. The
+[pilot security hold](docs/screen-handoffs/20-phone-pilot-readiness.md)
+still applies. Next action is Will's review of the local diff.
+
 ## November 13, 2026 — PR #104 SMS pilot security hold
 
 **AMBER · SMS remains off.** Codex reconciled the draft with main

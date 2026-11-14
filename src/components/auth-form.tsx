@@ -6,7 +6,16 @@ import { resetProfilePhotoState } from "@/lib/profile-photo-events";
 import { AuthCaptcha } from "./auth-captcha";
 import { PlayerProfileFields } from "./player-profile-fields";
 import { PhoneAuthForm } from "./phone-auth-form";
-export function AuthForm({ phoneEnabled = false, captchaSiteKey = null }: { phoneEnabled?: boolean; captchaSiteKey?: string | null }) {
+
+export function AuthForm({
+  passwordOnly = false,
+  phoneEnabled = false,
+  captchaSiteKey = null,
+}: {
+  passwordOnly?: boolean;
+  phoneEnabled?: boolean;
+  captchaSiteKey?: string | null;
+}) {
   // Nobody is signed in here, so a previous account's header photo state must not carry over.
   useEffect(() => resetProfilePhotoState(), []);
   const [creating, setCreating] = useState(false);
@@ -15,7 +24,10 @@ export function AuthForm({ phoneEnabled = false, captchaSiteKey = null }: { phon
     creating ? signup : login,
     {},
   );
-  if (phoneEnabled && captchaSiteKey && usingPhone) return <PhoneAuthForm siteKey={captchaSiteKey} onUseEmail={() => setUsingPhone(false)} />;
+  const phoneSiteKey = !passwordOnly && phoneEnabled ? captchaSiteKey : null;
+  if (phoneSiteKey && usingPhone) {
+    return <PhoneAuthForm siteKey={phoneSiteKey} onUseEmail={() => setUsingPhone(false)} />;
+  }
   return (
     <section className="card detail-card auth-card">
       <h2>
@@ -55,7 +67,7 @@ export function AuthForm({ phoneEnabled = false, captchaSiteKey = null }: { phon
           </p>
         )}
         {result.message && <p role="status">{result.message}</p>}
-        {!creating && (
+        {!creating && !passwordOnly && (
           <p>
             <Link className="text-link" href="/forgot-password">
               Forgot password?
@@ -66,18 +78,22 @@ export function AuthForm({ phoneEnabled = false, captchaSiteKey = null }: { phon
           {pending ? "Please wait…" : creating ? "Create account" : "Sign in"}
         </button>
       </form>
-      <button
-        className="text-button"
-        onClick={() => setCreating(!creating)}
-        disabled={pending}
-      >
-        {creating
-          ? "Already have an account? Sign in"
-          : "New here? Create an account"}
-      </button>
-      {phoneEnabled && <button className="text-button" type="button" onClick={() => setUsingPhone(true)} disabled={pending}>
-        Use a mobile number
-      </button>}
+      {!passwordOnly && (
+        <button
+          className="text-button"
+          onClick={() => setCreating(!creating)}
+          disabled={pending}
+        >
+          {creating
+            ? "Already have an account? Sign in"
+            : "New here? Create an account"}
+        </button>
+      )}
+      {phoneSiteKey && (
+        <button className="text-button" type="button" onClick={() => setUsingPhone(true)} disabled={pending}>
+          Use a mobile number
+        </button>
+      )}
       <p className="micro">
         Use a personal recreational account. Keep work/government information
         out of this app.

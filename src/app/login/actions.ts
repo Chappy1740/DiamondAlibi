@@ -32,6 +32,8 @@ export async function signup(
   _previous: AuthResult,
   form: FormData,
 ): Promise<AuthResult> {
+  if (process.env.DA_SANDBOX_ORIGIN)
+    return { error: "Sandbox accounts are created by the owner." };
   const email = String(form.get("email") ?? "").trim();
   const password = String(form.get("password") ?? "");
   if (

@@ -5,14 +5,20 @@ const path = require("node:path");
 const vm = require("node:vm");
 const { stripTypeScriptTypes } = require("node:module");
 
-function load(error, { auth = {}, rpc, origin = "https://diamondalibi.eydrenworks.com", nodeEnv = "test", localWorker, phoneEnabled = false, siteKey = "", pilot = "", clock = { ms: 0 } } = {}) {
+function load(error, {
+  auth = {}, rpc, origin = "https://diamondalibi.eydrenworks.com", nodeEnv = "test",
+  localWorker, sandboxOrigin, phoneEnabled = false, siteKey = "", pilot = "", clock = { ms: 0 },
+} = {}) {
   let calls = 0;
   const context = vm.createContext({
     headers: async () => new Headers(origin ? { origin } : {}),
     performance: { now: () => clock.ms },
     setTimeout: (fn, ms) => { clock.ms += ms; queueMicrotask(fn); },
-    process: { env: { NODE_ENV: nodeEnv, DA_LOCAL_WORKER_PREVIEW: localWorker,
-      DA_PHONE_SIGN_IN_ENABLED: String(phoneEnabled), DA_AUTH_TURNSTILE_SITE_KEY: siteKey, DA_PHONE_PILOT_NUMBER: pilot } },
+    process: { env: {
+      NODE_ENV: nodeEnv, DA_LOCAL_WORKER_PREVIEW: localWorker, DA_SANDBOX_ORIGIN: sandboxOrigin,
+      DA_PHONE_SIGN_IN_ENABLED: String(phoneEnabled), DA_AUTH_TURNSTILE_SITE_KEY: siteKey,
+      DA_PHONE_PILOT_NUMBER: pilot,
+    } },
     supabaseServer: async () => ({ rpc, auth: { ...auth, signOut: async () => {
       calls++;
       return { error };
@@ -47,6 +53,17 @@ function credentials(fields = {}) {
   })) form.set(key, value);
   return form;
 }
+
+test("sandbox signup is disabled before calling Supabase", async () => {
+  const sandboxOrigin = "https://diamondalibi-sandbox.eydrenworks.com";
+  const actions = load(null, {
+    sandboxOrigin,
+    origin: sandboxOrigin,
+    auth: { signUp: async () => assert.fail("sandbox must not send confirmation email") },
+  });
+  const result = await actions.signup({}, credentials({ nickname: "River" }));
+  assert.match(result.error, /created by the owner/);
+});
 
 test("signup requires a name and carries validated optional details through email confirmation", async () => {
   const requests = [];
@@ -134,6 +151,33 @@ function phoneFields(overrides = {}) {
   })) form.set(name, value);
   return form;
 }
+
+test("sandbox permits password sign-in and blocks both phone actions with the SMS pilot configured", async () => {
+  let phoneCalls = 0;
+  const passwordRequests = [];
+  const actions = load(null, {
+    sandboxOrigin: "https://diamondalibi-sandbox.eydrenworks.com",
+    phoneEnabled: true, siteKey: "test-key", pilot: "+13125550100",
+    auth: {
+      signInWithOtp: async () => { phoneCalls++; },
+      verifyOtp: async () => { phoneCalls++; },
+      signInWithPassword: async (input) => {
+        passwordRequests.push(input);
+        return { data: { user: {} }, error: null };
+      },
+    },
+  });
+  // The fixture sends an otherwise trusted Origin so only the sandbox gate can reject the calls.
+  for (const intent of ["sign-in", "register"]) {
+    const form = phoneFields({ intent, code: "012345", nickname: "River" });
+    assert.equal((await actions.requestPhoneCode({}, form)).error, "Phone sign-in is unavailable.");
+    assert.equal((await actions.verifyPhoneCode({}, form)).error, "Phone sign-in is unavailable.");
+  }
+  assert.equal(phoneCalls, 0);
+  await assert.rejects(actions.login({}, credentials()), (error) => error.destination === "/");
+  assert.equal(passwordRequests.length, 1);
+  assert.equal(passwordRequests[0].options, undefined);
+});
 
 test("pilot gates keep disabled, untrusted, other numbers, and missing CAPTCHA away from Supabase", async () => {
   const sent = [];

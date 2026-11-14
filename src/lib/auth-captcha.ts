@@ -1,4 +1,5 @@
 export function authCaptchaSiteKey() {
+  if (process.env.DA_SANDBOX_ORIGIN) return null;
   return process.env.DA_AUTH_TURNSTILE_SITE_KEY?.trim() || null;
 }
 

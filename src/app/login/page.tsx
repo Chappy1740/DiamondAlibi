@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { AuthForm } from "@/components/auth-form";
 import { BrandLink } from "@/components/brand-link";
 import { authCaptchaSiteKey } from "@/lib/auth-captcha";
 import { phoneSignInEnabled } from "@/lib/phone-sign-in";
 
-export const dynamic = "force-dynamic";
-export default function LoginPage() {
+export default async function LoginPage() {
+  await connection();
   return (
     <main className="connected-wrap">
       <BrandLink className="login-logo" href="/" variant="primary" />
@@ -16,7 +17,11 @@ export default function LoginPage() {
           <p>Sign in to manage your own teams and seasons.</p>
         </div>
       </div>
-      <AuthForm phoneEnabled={phoneSignInEnabled()} captchaSiteKey={authCaptchaSiteKey()} />
+      <AuthForm
+        passwordOnly={Boolean(process.env.DA_SANDBOX_ORIGIN)}
+        phoneEnabled={phoneSignInEnabled()}
+        captchaSiteKey={authCaptchaSiteKey()}
+      />
       <Link className="text-link" href="/">
         Explore the sample shell instead
       </Link>

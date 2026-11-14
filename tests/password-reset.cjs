@@ -96,6 +96,24 @@ const { NextResponse } = require("next/server");
       Object.entries(values).forEach(([k, v]) => f.set(k, v));
       return f;
     };
+    const sandboxOrigin = "https://diamondalibi-sandbox.eydrenworks.com";
+    process.env.DA_SANDBOX_ORIGIN = sandboxOrigin;
+    try {
+      origin = sandboxOrigin;
+      const blocked = await requestPasswordReset({}, form({ email: "synthetic@example.invalid" }));
+      assert.match(blocked.error, /reset your sandbox password/);
+      const update = await updatePassword({}, form({
+        password: "synthetic-password",
+        confirmPassword: "synthetic-password",
+      }));
+      assert.match(update.error, /reset your sandbox password/);
+      const callbackResponse = await callback("next=/reset-password&code=synthetic");
+      assert.equal(callbackResponse.status, 404);
+      assert.equal(callbackResponse.headers.get("location"), null);
+      assert.equal(calls.length, 0);
+    } finally {
+      delete process.env.DA_SANDBOX_ORIGIN;
+    }
     assert.ok(
       (await requestPasswordReset({}, form({ email: "invalid" }))).error,
     );

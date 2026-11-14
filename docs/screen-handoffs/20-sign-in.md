@@ -1,5 +1,41 @@
 # 20 — Sign in and registration: Screen handoff
 
+## November 14, 2026 — PR #104 local sandbox reconciliation
+
+**HANDOFF-20261114-DA-104 · Tested locally · AMBER for release.** Codex
+reconciled the [draft PR #104](https://github.com/Chappy1740/DiamondAlibi/pull/104)
+head `287f7281d502b677f44e6213e7133fe9b74c8b9f` with current `main`
+`973337b40f415e4683938d90a206eb18b6346ece` in an isolated clone on
+`codex/reconcile-pr104`. GitHub readback and the isolated fetch matched both
+full SHAs. The three conflicts from Claude Code's read-only receipt
+were the login page, auth form and sign-out test harness. All three are
+resolved in the local index. The candidate is awaiting Will's review.
+
+**Completion receipt.** The login page and both phone actions reuse the
+same server-side pilot gate, which is closed in the sandbox even with
+the SMS flag, pilot number and CAPTCHA site key configured. Sandbox
+sign-in uses an owner-created email/password account. The UI hides SMS,
+signup, recovery and CAPTCHA. The server rejects phone-code requests
+and verification before calling Supabase. Outside the sandbox, the
+pilot still requires its existing flag, number, CAPTCHA and trusted
+origin. No package or migration changes were needed for reconciliation.
+
+**Codex local verification.** Typecheck and 15 focused action, Worker
+isolation and migration replay tests passed. Password reset and the
+disposable phone-hook SQL checks passed. Chromium and WebKit each passed
+the synthetic pilot and sandbox flows, including email/password sign-in
+and sign-out with session-cookie removal. The initial browser run timed
+out at local readiness. The loopback rerun completed on both engines.
+
+**Approval and next action.** Will authorized local reconciliation
+and tests only. Review the uncommitted diff and results. Commits,
+pushes, GitHub comments, hosted tests, provider changes, merges,
+deployments, SMS sends and spending require separate approval.
+Hosted SMS stays off. Claude Code's direct Auth and provider findings
+remain open. Confirm that Supabase rejects invalid CAPTCHA before any
+future activation, as part of the
+[pilot release gates](20-phone-pilot-readiness.md#release-and-rollback).
+
 ## November 13, 2026 — PR #104 SMS pilot
 
 **DA-104-20261113 · Partially recovered · AMBER.** Continue this chat:

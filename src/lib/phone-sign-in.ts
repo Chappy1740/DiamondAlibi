@@ -1,7 +1,8 @@
 import { authCaptchaSiteKey } from "./auth-captcha";
 
 export function phoneSignInEnabled() {
-  return process.env.DA_PHONE_SIGN_IN_ENABLED === "true" &&
+  return !process.env.DA_SANDBOX_ORIGIN &&
+    process.env.DA_PHONE_SIGN_IN_ENABLED === "true" &&
     Boolean(authCaptchaSiteKey() && pilotPhone());
 }
 
