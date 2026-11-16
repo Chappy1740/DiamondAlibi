@@ -39,6 +39,11 @@ export async function loadScorebook(
             ? result.status
             : "unavailable",
       };
+    const snapshot = result.data as ScorebookView;
+    const games = new Set(snapshot.games.map((g) => g.game.id));
+    // Ask only for this season's games; the row count must not grow with every season.
+    // shortcut: IDs travel in the URL, so past 150 games (or with none yet) read the whole team as before; move the filter into the database if a season gets that big.
+    const gameIds = games.size > 0 && games.size <= 150 ? [...games] : null;
     const [players, bands, season, participation, leagueBands] =
       await Promise.all([
         scoringMetadataPages((start, end) =>
@@ -65,23 +70,17 @@ export async function loadScorebook(
           .eq("team_id", teamId)
           .eq("id", seasonId)
           .maybeSingle(),
-        scoringMetadataPages((start, end) =>
-          client
-            .from("scoring_game_players")
-            .select("game_id,player_id")
-            .eq("team_id", teamId)
-            .order("game_id")
-            .order("player_id")
-            .range(start, end),
-        ),
-        scoringMetadataPages((start, end) =>
-          client
-            .from("scoring_bands")
-            .select("game_id,player_id")
-            .eq("team_id", teamId)
-            .order("game_id")
-            .order("player_id")
-            .range(start, end),
+        ...(["scoring_game_players", "scoring_bands"] as const).map((table) =>
+          scoringMetadataPages((start, end) => {
+            const rows = client
+              .from(table)
+              .select("game_id,player_id")
+              .eq("team_id", teamId);
+            return (gameIds ? rows.in("game_id", gameIds) : rows)
+              .order("game_id")
+              .order("player_id")
+              .range(start, end);
+          }),
         ),
       ]);
     if (
@@ -94,8 +93,6 @@ export async function loadScorebook(
       return { status: "unavailable" };
     if (!season.data) return { status: "access-denied" };
     // Metadata can change after the RPC snapshot. Write revisions always decide acceptance.
-    const snapshot = result.data as ScorebookView;
-    const games = new Set(snapshot.games.map((g) => g.game.id));
     return {
       status: "ok",
       data: {
