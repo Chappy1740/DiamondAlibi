@@ -40,6 +40,7 @@ jobs:
       - run: node tests/roster-membership-sql.cjs
       - run: node tests/personal-alibis-sql.cjs
       - run: node tests/dashboard-loader.cjs
+      - run: node tests/scorebook-season-filter.cjs
       - run: node tests/password-reset.cjs
       - run: node tests/feedback-api.cjs
       - run: node tests/feedback-sql.cjs
