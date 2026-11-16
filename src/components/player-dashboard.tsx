@@ -25,6 +25,7 @@ import { gameSetupHref, safeGameSetupReturn } from "@/lib/game-navigation";
 import { BeverageControls } from "./beverage-controls";
 import { AnnouncerSetup } from "./announcer-setup";
 import { RosterName } from "./roster-photo";
+import { OwnProfileName } from "./profile-avatar";
 
 type Option = { id: string; name: string };
 export type DashboardProps = {
@@ -66,6 +67,7 @@ export function PlayerDashboard(p: DashboardProps) {
   const showPlayerPhotos = !!p.userId && !p.sample && !p.review;
   const fitHome = p.route === "" && !p.sample && !p.review;
   const view = loaded ? personalDashboard(loaded, p) : null;
+  const greetingName = p.profileName ?? view?.player?.name ?? "Player";
   const team = p.teams.find((t) => t.id === p.teamId);
   const season = p.seasons.find((s) => s.id === p.seasonId);
   const selectedLeague = loaded?.snapshot.leagues?.find(option => option.id === p.leagueId);
@@ -193,9 +195,9 @@ export function PlayerDashboard(p: DashboardProps) {
                   {team?.name ?? "Your team"} ·{" "}
                   {season?.name ?? "Choose a season"}{p.route !== "games" && p.route !== "beverages" && ` · ${p.scope}`}
                 </span>}
-                <h1>
+                <h1 aria-label={p.route === "" ? `Your game, ${greetingName}.` : undefined}>
                   {p.route === ""
-                    ? `Your game, ${p.profileName ?? view?.player?.name ?? "Player"}.`
+                    ? <>Your game, {showPlayerPhotos ? <OwnProfileName name={greetingName} suffix="." /> : `${greetingName}.`}</>
                     : p.route === "more/beverage-rules" ? "Beverage Rules" : (tabs.find((t) => t.path === p.route)?.label ??
                       "Clubhouse")}
                 </h1>

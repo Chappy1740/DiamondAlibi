@@ -125,7 +125,7 @@ export function ConnectedScorebook({
   const [confirmedPlays, setConfirmedPlays] = useState(0);
   const [outcomeChosen, setOutcomeChosen] = useState(false);
   const [outcomePlayer, setOutcomePlayer] = useState("");
-  const [recordedPlay, setRecordedPlay] = useState<{ gameId: string; player: string; summary: string } | null>(null);
+  const [recordedPlay, setRecordedPlay] = useState<{ gameId: string; playerId: string; summary: string } | null>(null);
   const pendingPlay = useRef<{ playerId: string; outcome: Outcome; runs: number; rbi: number } | null>(null);
   const snapshot = data?.snapshot;
   const allGames = snapshot?.games ?? [];
@@ -399,7 +399,7 @@ export function ConnectedScorebook({
           const savedGame = loaded.snapshot.games.find(game => game.game.id === submitted.gameId);
           const row = savedGame?.evaluation.rows.find(play => play.id === submitted.change?.playId);
           if (savedGame && row) {
-            setRecordedPlay({ gameId: savedGame.game.id, player: loaded.roster.find(player => player.id === row.playerId)?.display_name ?? "Former roster player", summary: scoreRowSummary(row) });
+            setRecordedPlay({ gameId: savedGame.game.id, playerId: row.playerId, summary: scoreRowSummary(row) });
           }
           setConfirmedPlays(value => value + 1); setOutcomeChosen(false); setOutcome(defaultHit); setRuns(0); setRbiOverride(null); countsEdited.current = false; setFirstBand(null); pendingPlay.current = null; setManualPlayer(""); setPlayerSearch("");
         }
@@ -516,7 +516,7 @@ export function ConnectedScorebook({
               value={p.id}
               defaultChecked={chosen}
             />
-            {p.display_name}
+            <RosterName name={p.display_name} playerId={p.user_id && !p.is_guest ? p.id : null} />
           </label>
           <label>
             Batting position for {p.display_name}
@@ -810,7 +810,7 @@ export function ConnectedScorebook({
               </p>
               {mode === "score" && recordedPlay?.gameId === current.game.id && <div className="recorded-play" role="status">
                 <strong>This is the play that was recorded</strong>
-                <p>{recordedPlay.player} · {recordedPlay.summary}</p>
+                <p>{playerWithPhoto(recordedPlay.playerId)} · {recordedPlay.summary}</p>
               </div>}
               {!current.game.completed && mode !== "manage" && (
                 <>
@@ -1005,7 +1005,7 @@ export function ConnectedScorebook({
               {current.evaluation.rows.map((row) => (
                 <details key={row.id} className="scorebook-play">
                   <summary>
-                    {playerName(row.playerId)} · {scoreRowSummary(row)}
+                    {playerWithPhoto(row.playerId)} · {scoreRowSummary(row)}
                   </summary>
                   {!row.voided && row.official === "OLHR" && <p className="micro">Over-limit fence home run — scored as an out. No runs or RBI credited. Correction fields retain the original entry.</p>}
                   <p className="micro">

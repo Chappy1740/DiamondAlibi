@@ -7,6 +7,7 @@ import { SeasonManager } from "@/components/season-manager";
 import { ClubForm } from "@/components/club-form";
 import { BrandLink } from "@/components/brand-link";
 import { ProfileMenu } from "@/components/profile-menu";
+import { OwnProfileName } from "@/components/profile-avatar";
 export const dynamic = "force-dynamic";
 type Team = { id: string; name: string };
 type Membership = {
@@ -102,7 +103,7 @@ export default async function ClubPage({
         <div>
           <span className="eyebrow">Connected to your clubhouse</span>
           <h1>Team management</h1>
-          <p>{nickname} · Your teams, roster and season history.</p>
+          <p><OwnProfileName name={nickname} /> · Your teams, roster and season history.</p>
         </div>
       </div>
       {(failed || detailError) && (

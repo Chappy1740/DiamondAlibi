@@ -99,14 +99,17 @@ export function PlayerLeaderboard({
             const leaders = ranked.filter((row) => row.rank === 1);
             const leader = leaders[0];
             let leaderLabel = leader?.name ?? "No recorded value";
+            let showLeaderName = Boolean(leader);
             if (leaders.length > 1) {
               leaderLabel = compactSummary ? "Tied" : `${leaders.length} tied`;
+              showLeaderName = false;
             } else if (
               leader &&
               leaderboardValue(leader, key) === 0 &&
               !ranked.some((row) => row.rank !== null && row.id !== leader.id)
             ) {
               leaderLabel = "No leader";
+              showLeaderName = false;
             }
             const value = leader ? (
               <MetricValue row={leader} metric={key} showLabel={false} />
@@ -132,7 +135,9 @@ export function PlayerLeaderboard({
                 </span>
                 <span className={`leaderboard-player${compactSummary ? " leaderboard-player--count-first" : ""}`}>
                   {compactSummary && <><span className="leaderboard-counts">{value}</span><span className="leaderboard-separator" aria-hidden="true"> – </span></>}
-                  <strong>{leaderLabel}</strong>
+                  <strong>{photoPlayerIds && leader && showLeaderName
+                    ? <RosterName name={leader.name} playerId={photoPlayerIds.includes(leader.id) ? leader.id : null} />
+                    : leaderLabel}</strong>
                   {!compactSummary && <span className="micro">{labels[key]}</span>}
                 </span>
                 {!compactSummary && <span className="leaderboard-counts">{value}</span>}

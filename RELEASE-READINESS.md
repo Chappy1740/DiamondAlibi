@@ -1,5 +1,13 @@
 # Release readiness and recovery
 
+## November 13, 2026 — Photos beside player names
+
+**AMBER.** The owner accepted PR #108 photo removal and teammate viewing.
+The follow-up adds existing account and roster avatars beside signed-in
+player names and restores roster photo visibility on narrow phones.
+The [profile handoff](docs/screen-handoffs/17-profile.md#november-13-2026--photos-beside-player-names)
+records the scope and synthetic verification. Publication and release are pending.
+
 ## November 13, 2026 — Removed profile photo still visible
 
 **AMBER.** Supabase accepted the deletion and served cached bytes to the

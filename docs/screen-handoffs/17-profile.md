@@ -1,5 +1,26 @@
 # 17 — Bio and profile: Screen handoff
 
+## November 13, 2026 — Photos beside player names
+
+**AMBER.** The owner asked for saved photos beside player names and confirmed
+they have no team data for testing. The owner assigned Codex to implement this
+follow-up on `codex/player-photo-name-coverage`, based on GitHub main
+`109b0644aebb296c17a6adeb9c03a4ff855060d9`.
+
+The signed-in Home and Clubhouse name displays reuse the account avatar.
+Rankings summaries, lineup choices, scorebook receipts, plate appearances,
+audit entries, and player invitations reuse the authorized roster avatar.
+Roster avatars remain visible at 320 and 360 CSS pixels. Guests and
+players without a photo use initials. Native selects and names in sentence
+copy remain text. Sample and signed-out views use no private photo lookup.
+
+Codex verified the visible Home photo, initials after removal, leaderboard
+and Beverage Board photos, and a linked batter's photo in plate appearance
+history at 320 CSS pixels using synthetic data. Chromium and WebKit Home,
+scorebook modes, and tournament browser suites passed, as did typecheck,
+profile photo and avatar tests, and tracker checks. Next action is draft
+publication after owner approval, followed by independent review and GitHub CI.
+
 ## November 13, 2026 — DA PWA Test 13: header profile avatar
 
 **AMBER. Implemented and tested locally; awaiting independent review.** The

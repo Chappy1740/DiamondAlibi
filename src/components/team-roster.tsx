@@ -1,5 +1,5 @@
 import { ClubForm } from "./club-form";
-import { RosterPhoto } from "./roster-photo";
+import { RosterName, RosterPhoto } from "./roster-photo";
 export type RosterPlayer = {
   id: string;
   display_name: string;
@@ -85,8 +85,7 @@ export function TeamInvitations({
   const linkedPlayers = new Map(
     playerInvites.map((link) => [
       link.invite_id,
-      players.find((p) => p.id === link.player_id)?.display_name ??
-        "Roster player",
+      players.find((p) => p.id === link.player_id),
     ]),
   );
   return (
@@ -134,34 +133,39 @@ export function TeamInvitations({
           </label>
         </ClubForm>
       </details>
-      {invites.map((invite) => (
-        <div className="invite-row" key={invite.id}>
-          <p>
-            {linkedPlayers.has(invite.id)
-              ? `Player membership invite: ${linkedPlayers.get(invite.id)}`
-              : playerInvitesAvailable
-                ? "New teammate invitation"
-                : "Membership invitation"}{" "}
-            · {invite.uses}/{invite.max_uses} uses ·{" "}
-            {invite.revoked_at
-              ? "Revoked"
-              : new Date(invite.expires_at) < new Date()
-                ? "Expired"
-                : invite.uses >= invite.max_uses
-                  ? "Used"
-                  : `Expires ${new Date(invite.expires_at).toISOString().slice(0, 10)}`}
-          </p>
-          {!invite.revoked_at && (
-            <ClubForm
-              operation="revoke-invite"
-              team={team}
-              hidden={{ invite: invite.id }}
-              label="Revoke this invite"
-              confirmation="Revoke this invitation? It will no longer allow anyone to join. Existing memberships stay unchanged."
-            />
-          )}
-        </div>
-      ))}
+      {invites.map((invite) => {
+        const player = linkedPlayers.get(invite.id);
+        return (
+          <div className="invite-row" key={invite.id}>
+            <p>
+              {linkedPlayers.has(invite.id)
+                ? <>Player membership invite: {player
+                    ? <RosterName name={player.display_name} playerId={player.is_guest ? null : player.id} />
+                    : "Roster player"}</>
+                : playerInvitesAvailable
+                  ? "New teammate invitation"
+                  : "Membership invitation"}{" "}
+              · {invite.uses}/{invite.max_uses} uses ·{" "}
+              {invite.revoked_at
+                ? "Revoked"
+                : new Date(invite.expires_at) < new Date()
+                  ? "Expired"
+                  : invite.uses >= invite.max_uses
+                    ? "Used"
+                    : `Expires ${new Date(invite.expires_at).toISOString().slice(0, 10)}`}
+            </p>
+            {!invite.revoked_at && (
+              <ClubForm
+                operation="revoke-invite"
+                team={team}
+                hidden={{ invite: invite.id }}
+                label="Revoke this invite"
+                confirmation="Revoke this invitation? It will no longer allow anyone to join. Existing memberships stay unchanged."
+              />
+            )}
+          </div>
+        );
+      })}
     </section>
   );
 }

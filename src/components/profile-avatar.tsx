@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { UserRound } from "lucide-react";
+import { profileInitials } from "@/lib/player-profile";
 import { profilePhotoState, resetProfilePhotoState, subscribeProfilePhotoChange } from "@/lib/profile-photo-events";
 
 type Status = "loading" | "ready" | "missing";
@@ -11,7 +12,7 @@ type Status = "loading" | "ready" | "missing";
 // the profile form reports a save or removal, so a rerender never repeats the request. Each
 // header mount starts from the latest shared state, so a photo removed on one page stays
 // removed on the next page of the same tab.
-export function ProfileAvatar({ signedIn }: { signedIn: boolean }) {
+export function ProfileAvatar({ signedIn, name }: { signedIn: boolean; name?: string }) {
   const [view, setView] = useState<{ version: number; status: Status }>(() => {
     const { revision, removed } = profilePhotoState();
     return { version: revision, status: removed ? "missing" : "loading" };
@@ -38,10 +39,13 @@ export function ProfileAvatar({ signedIn }: { signedIn: boolean }) {
       : { version, status: image.naturalWidth > 0 ? "ready" : "missing" });
   }, [version, signedIn]);
 
-  if (!signedIn || status === "missing") return <UserRound size={22} aria-hidden />;
+  const fallback = name
+    ? <span aria-hidden="true">{profileInitials(name)}</span>
+    : <UserRound size={22} aria-hidden />;
+  if (!signedIn || status === "missing") return fallback;
   return (
     <>
-      {status !== "ready" && <UserRound size={22} aria-hidden />}
+      {status !== "ready" && fallback}
       <img
         ref={photo}
         key={version}
@@ -55,4 +59,13 @@ export function ProfileAvatar({ signedIn }: { signedIn: boolean }) {
       />
     </>
   );
+}
+
+export function OwnProfileName({ name, suffix = "" }: { name: string; suffix?: string }) {
+  return <span className="roster-name">
+    <span className="avatar roster-photo" aria-hidden="true">
+      <ProfileAvatar signedIn name={name} />
+    </span>
+    <span>{name}{suffix}</span>
+  </span>;
 }
